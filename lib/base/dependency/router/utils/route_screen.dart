@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:untitled/base/bloc/bloc_base.dart';
-import 'package:untitled/base/bloc/bloc_provider.dart';
-import 'package:untitled/features/counter/counter_bloc.dart';
+import 'package:untitled/base/store/store_base.dart';
+import 'package:untitled/base/store/store_provider.dart';
+import 'package:untitled/features/counter/counter_store.dart';
 import 'package:untitled/features/counter/counter_screen.dart';
 import 'package:untitled/features/home/home_screen.dart';
 import 'package:untitled/features/root/root_screen.dart';
@@ -17,8 +17,8 @@ class RouteScreen {
   }
 
   static PageRoute counterPageRoute(RouteSettings settings) {
-    BlocProvider.counter = createAutoDisposeBloc(
-      (ref) => CounterBloc(ref),
+    StoreProvider.counter = createAutoDisposeStore(
+      (ref) => CounterStore(ref),
     );
     return MaterialPageRoute(
       settings: settings,

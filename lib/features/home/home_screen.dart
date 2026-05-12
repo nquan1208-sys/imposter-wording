@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/base/dependency/router/utils/route_input.dart';
-import 'package:untitled/shared/providers/bottom_navigation_provider.dart';
+import 'package:untitled/providers/bottom_navigation_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final homeRouter = ref.watch(BottomNavigationProvider.home);
     return Scaffold(
       appBar: AppBar(),

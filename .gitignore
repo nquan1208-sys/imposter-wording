@@ -5,9 +5,11 @@
 *.swp
 .DS_Store
 .atom/
+.build/
 .buildlog/
 .history
 .svn/
+.swiftpm/
 migrate_working_dir/
 
 # IntelliJ related
@@ -48,4 +50,10 @@ app.*.map.json
 
 # Generated files
 lib/l10n/gen_l10n/*
-CLAUDE.md
+
+# Build outputs
+*.ipa
+ios/build/
+
+# iOS
+**/Pods/
