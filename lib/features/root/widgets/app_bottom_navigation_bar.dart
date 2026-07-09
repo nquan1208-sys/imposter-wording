@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/base/store/store_provider.dart';
-import 'package:untitled/base/rx/obs_builder.dart';
 import 'package:untitled/features/root/enums/navigation_bottom_tab_enum.dart';
 
 class AppBottomNavigationBar extends ConsumerWidget {
@@ -10,12 +10,11 @@ class AppBottomNavigationBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appStore = ref.watch(StoreProvider.app);
-    return ObsBuilder(
-      streams: [appStore.selectedBottomTabSubject],
+    return SignalBuilder(
       builder: (ctx) => BottomNavigationBar(
         backgroundColor: Colors.white,
         currentIndex: NavigationBottomTabExtension.toIndex(
-          appStore.selectedBottomTabSubject.value,
+          appStore.selectedBottomTab.value,
         ),
         type: BottomNavigationBarType.fixed,
         onTap: (index) {

@@ -3,6 +3,8 @@ import 'package:untitled/base/dependency/router/utils/route_name.dart';
 enum NavigatorBottomTabEnum { home, settings }
 
 extension NavigationBottomTabExtension on NavigatorBottomTabEnum {
+  bool get isHome => this == NavigatorBottomTabEnum.home;
+
   String get initialRoute {
     switch (this) {
       case NavigatorBottomTabEnum.home:

@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+import 'package:untitled/base/store/auto_dispose_manager.dart';
 import 'package:untitled/base/store/store_base.dart';
-import 'package:untitled/base/store/stream_subscription_manager.dart';
 import 'package:untitled/base/dependency/app_service.dart';
 import 'package:untitled/base/dependency/router/router_service.dart';
 import 'package:untitled/features/root/enums/navigation_bottom_tab_enum.dart';
 
 class AppStore extends StoreBase {
   final Ref ref;
-  final _subscriptionManager = StreamSubscriptionManager();
+  final _autoDisposeManager = AutoDisposeManager();
 
   late final RouterService routerService = ref.watch(AppService.router);
 
-  late final selectedBottomTabSubject =
-      BehaviorSubject<NavigatorBottomTabEnum>.seeded(
+  late final selectedBottomTab = signal(
     NavigatorBottomTabEnum.home,
-  ).manageBy(_subscriptionManager);
+  ).manageBy(_autoDisposeManager);
 
   final navigatorKeysMap = NavigatorBottomTabEnum.values
       .fold<Map<NavigatorBottomTabEnum, GlobalKey<NavigatorState>>>(
@@ -28,12 +27,12 @@ class AppStore extends StoreBase {
   AppStore(this.ref);
 
   void onBottomTabChange(NavigatorBottomTabEnum currentTab) {
-    selectedBottomTabSubject.value = currentTab;
+    selectedBottomTab.value = currentTab;
   }
 
   @override
   void dispose() {
-    _subscriptionManager.cancelAll();
+    _autoDisposeManager.cancelAll();
     super.dispose();
   }
 }

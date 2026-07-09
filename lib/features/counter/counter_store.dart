@@ -1,23 +1,27 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+import 'package:untitled/base/store/auto_dispose_manager.dart';
 import 'package:untitled/base/store/store_base.dart';
-import 'package:untitled/base/store/stream_subscription_manager.dart';
 
 class CounterStore extends StoreBase {
-  final _subscriptionManager = StreamSubscriptionManager();
+  final _autoDisposeManager = AutoDisposeManager();
 
-  late final counterSubject =
-      BehaviorSubject<int>.seeded(0).manageBy(_subscriptionManager);
+  late final counter = signal(0).manageBy(_autoDisposeManager);
 
-  CounterStore(Ref ref);
+  CounterStore(Ref ref) {
+    effect(() {
+      debugPrint('counter changed: ${counter.value}');
+    }).manageBy(_autoDisposeManager);
+  }
 
   void increment() {
-    counterSubject.value++;
+    counter.value++;
   }
 
   @override
   void dispose() {
-    _subscriptionManager.cancelAll();
+    _autoDisposeManager.cancelAll();
     super.dispose();
   }
 }

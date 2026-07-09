@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/base/store/store_provider.dart';
 import 'package:untitled/base/dependency/router/utils/route_page.dart';
-import 'package:untitled/base/rx/obs_builder.dart';
 import 'package:untitled/features/root/enums/navigation_bottom_tab_enum.dart';
 import 'package:untitled/features/root/widgets/app_bottom_navigation_bar.dart';
 
@@ -15,10 +15,9 @@ class RootScreen extends ConsumerWidget {
     return Scaffold(
       body: Stack(
         children: NavigatorBottomTabEnum.values.map((tab) {
-          return ObsBuilder(
-            streams: [appStore.selectedBottomTabSubject],
+          return SignalBuilder(
             builder: (ctx) => Offstage(
-              offstage: tab != appStore.selectedBottomTabSubject.value,
+              offstage: tab != appStore.selectedBottomTab.value,
               child: Navigator(
                 key: appStore.navigatorKeysMap[tab],
                 onGenerateRoute: buildRouteFactory(tab),

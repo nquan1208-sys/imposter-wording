@@ -57,3 +57,6 @@ ios/build/
 
 # iOS
 **/Pods/
+
+# AI
+.ai
