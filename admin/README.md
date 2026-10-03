@@ -2,7 +2,9 @@
 
 Admin dashboard built with Vue 3 and Vite.
 
-Environment setup and Supabase commands are documented in
+For setting up the project on a new device, see
+[`docs/admin-supabase-new-device-guide.md`](../docs/admin-supabase-new-device-guide.md).
+The shorter environment reference is available at
 [`docs/admin-supabase-environment-guide.md`](../docs/admin-supabase-environment-guide.md).
 
 ## Environments

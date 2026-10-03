@@ -1,5 +1,9 @@
 # Hướng dẫn môi trường Admin và Supabase
 
+> Nếu đang setup trên một thiết bị mới, hãy đọc
+> [`admin-supabase-new-device-guide.md`](./admin-supabase-new-device-guide.md).
+> Tài liệu này là bản tham khảo ngắn cho việc chuyển đổi giữa các environment.
+
 Tài liệu này hướng dẫn chạy Admin Vue với ba môi trường:
 
 - Local: Supabase chạy trên máy.
