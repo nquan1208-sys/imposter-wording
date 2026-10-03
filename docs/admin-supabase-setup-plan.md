@@ -30,6 +30,55 @@ Xây dựng Admin Vue để:
 - Database diagram: `docs/database-schema.dbml`
 - Screen layout: `docs/app/screen-layout.md`
 - Admin app: `admin/`
+- Environment guide: `docs/admin-supabase-environment-guide.md`
+
+---
+
+## Phase 0 — Thiết lập environment cho Admin (local/dev/prod)
+
+Admin là Vue 3 chạy bằng Vite, vì vậy app đọc biến môi trường qua
+`import.meta.env`. Vite nạp file theo mode; `localdev` là mode tùy chỉnh, còn
+`development` và `production` là mode chuẩn.
+
+### Quy ước môi trường
+
+| Môi trường | Vite mode | File local | Supabase target | Trạng thái |
+| --- | --- | --- | --- | --- |
+| Local | `localdev` | `admin/.env.local` | Supabase CLI local stack | Đã điền |
+| Dev | `development` | `admin/.env.development.local` | Project `imposter-word`, ref `pxycsjwjakzehcuygngv` | Đã điền |
+| Prod | `production` | `admin/.env.production.local` | Production project | Chưa cấu hình |
+
+Các file `*.local` không commit vào Git. File mẫu được commit là
+`admin/.env.example`. `admin/.env.production` là file guard rỗng được commit
+để build production không fallback nhầm vào `.env.local` khi project prod chưa
+có.
+
+### Các biến được phép dùng trong frontend
+
+```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
+```
+
+`VITE_*` được Vite bundle vào browser. Publishable key được phép dùng ở
+frontend khi RLS và quyền Data API được cấu hình đúng. Không đặt
+`service_role`, Supabase secret key, database password hoặc JWT secret vào
+bất kỳ file `VITE_*` nào.
+
+### Lệnh chạy/build
+
+```bash
+cd admin
+yarn dev:local           # local, mode localdev
+yarn dev:development     # dev cloud, mode development
+yarn build:production    # prod, mode production
+```
+
+- [x] Tạo `admin/.env.local` với local URL và local publishable key.
+- [x] Tạo `admin/.env.development.local` với dev URL và publishable key.
+- [x] Thêm script Vite cho ba mode.
+- [x] Thêm `admin/.env.example`.
+- [ ] Tạo và điền `admin/.env.production.local` sau khi có project prod.
 
 ---
 
@@ -58,7 +107,7 @@ SUPABASE_PUBLISHABLE_KEY
 ### Thực hiện trong code
 
 - [ ] Cài Supabase CLI nếu máy chưa có.
-- [ ] Chạy `supabase init` tại thư mục gốc repository.
+- [x] Chạy `supabase init` tại thư mục gốc repository.
 - [ ] Chạy `supabase migration new initial_schema`.
 - [ ] Kiểm tra thư mục `supabase/migrations/`.
 
@@ -259,15 +308,16 @@ yarn add @supabase/supabase-js
 
 ### Tạo biến môi trường
 
-Tạo `admin/.env.local`:
+Phần setup ba môi trường đã được thực hiện ở Phase 0. Khi viết Supabase
+client, dùng các biến giống nhau ở cả ba mode:
 
 ```env
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 ```
 
-- [ ] Thêm `.env.local` vào `.gitignore` nếu cần.
-- [ ] Không commit secret/service key.
+- [x] Các file `*.local` đã được `admin/.gitignore` bỏ qua.
+- [x] Không dùng secret/service key trong frontend.
 
 ### Tạo Supabase client
 

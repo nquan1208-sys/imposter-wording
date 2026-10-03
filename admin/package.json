@@ -5,8 +5,11 @@
   "packageManager": "yarn@1.22.22",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev:local": "vite --mode localdev",
+    "dev:development": "vite --mode development",
+    "build:local": "vite build --mode localdev",
+    "build:development": "vite build --mode development",
+    "build:production": "vite build --mode production",
     "preview": "vite preview"
   },
   "dependencies": {
