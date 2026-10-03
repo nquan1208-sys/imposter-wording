@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:untitled/base/store/store_base.dart';
 import 'package:untitled/features/counter/counter_store.dart';
 import 'package:untitled/store/app_store.dart';
 
