@@ -86,12 +86,12 @@ yarn build:production    # prod, mode production
 
 ### Thực hiện trên Supabase Dashboard
 
-- [ ] Tạo Supabase project.
-- [ ] Lưu Project URL.
-- [ ] Lấy Publishable key.
-- [ ] Không sử dụng `service_role` hoặc Secret key trong frontend.
-- [ ] Vào `Authentication → Providers` và bật Email/Password.
-- [ ] Quyết định có bật email confirmation hay không.
+- [x] Tạo Supabase project.
+- [x] Lưu Project URL.
+- [x] Lấy Publishable key.
+- [x] Không sử dụng `service_role` hoặc Secret key trong frontend.
+- [x] Vào `Authentication → Providers` và bật Email/Password.
+- [x] Quyết định có bật email confirmation hay không.
 
 ### Kết quả cần có
 
@@ -100,16 +100,20 @@ SUPABASE_URL
 SUPABASE_PUBLISHABLE_KEY
 ```
 
+Project Development hiện tại là `imposter-word`, ref
+`pxycsjwjakzehcuygngv`. Credential được lưu trong
+`admin/.env.development.local` và không commit vào Git.
+
 ---
 
 ## Phase 2 — Khởi tạo Supabase trong repository
 
 ### Thực hiện trong code
 
-- [ ] Cài Supabase CLI nếu máy chưa có.
+- [x] Cài Supabase CLI nếu máy chưa có.
 - [x] Chạy `supabase init` tại thư mục gốc repository.
-- [ ] Chạy `supabase migration new initial_schema`.
-- [ ] Kiểm tra thư mục `supabase/migrations/`.
+- [x] Chạy `supabase migration new initial_schema`.
+- [x] Kiểm tra thư mục `supabase/migrations/`.
 
 Expected structure:
 
@@ -117,8 +121,12 @@ Expected structure:
 supabase/
 ├── config.toml
 └── migrations/
-    └── <timestamp>_initial_schema.sql
+    ├── 20261003072606_initial_schema.sql
+    └── 20261003072909_rls_and_policies.sql
 ```
+
+Hai migration được tạo bằng Supabase CLI: migration đầu tiên chứa schema,
+migration thứ hai chứa RLS và policies.
 
 ### Lưu ý
 
@@ -132,16 +140,16 @@ supabase/
 
 ### Các enum cần tạo
 
-- [ ] `game_type`: `word`, `question`.
-- [ ] `content_status`: `draft`, `published`, `archived`.
-- [ ] `difficulty_level`: `easy`, `medium`, `hard`.
+- [x] `game_type`: `word`, `question`.
+- [x] `content_status`: `draft`, `published`, `archived`.
+- [x] `difficulty_level`: `easy`, `medium`, `hard`.
 
 ### Các bảng cần tạo
 
-- [ ] `public.admin_users`.
-- [ ] `public.game_categories`.
-- [ ] `public.word_prompts`.
-- [ ] `public.question_prompts`.
+- [x] `public.admin_users`.
+- [x] `public.game_categories`.
+- [x] `public.word_prompts`.
+- [x] `public.question_prompts`.
 
 ### Field quan trọng
 
@@ -171,6 +179,10 @@ supabase/
 - `is_family_friendly`.
 - `status`.
 
+Schema đã có trong `20261003072606_initial_schema.sql`. Ngoài các enum
+trên, migration tạo `admin_role`, index cho các query chính và trigger kiểm
+tra category của prompt phải khớp `game_type`.
+
 `question_prompts`:
 
 - `category_id`.
@@ -187,47 +199,55 @@ supabase/
 
 ### Function kiểm tra admin
 
-- [ ] Tạo `private.is_admin()`.
-- [ ] Function kiểm tra `auth.uid()` với `public.admin_users`.
-- [ ] Function dùng `SECURITY DEFINER` an toàn và `search_path = ''`.
-- [ ] Không expose function này như public API.
+- [x] Tạo `private.is_admin()`.
+- [x] Function kiểm tra `auth.uid()` với `public.admin_users`.
+- [x] Function dùng `SECURITY DEFINER` an toàn và `search_path = ''`.
+- [x] Không expose function này như public API.
 
 ### Bật RLS
 
-- [ ] Bật RLS cho `admin_users`.
-- [ ] Bật RLS cho `game_categories`.
-- [ ] Bật RLS cho `word_prompts`.
-- [ ] Bật RLS cho `question_prompts`.
+- [x] Bật RLS cho `admin_users`.
+- [x] Bật RLS cho `game_categories`.
+- [x] Bật RLS cho `word_prompts`.
+- [x] Bật RLS cho `question_prompts`.
 
 ### Public app policies
 
-- [ ] `anon` được đọc category đang active.
-- [ ] `anon` được đọc word prompt có `status = published`.
-- [ ] `anon` được đọc question prompt có `status = published`.
-- [ ] `anon` không được insert, update hoặc delete.
+- [x] `anon` được đọc category đang active.
+- [x] `anon` được đọc word prompt có `status = published`.
+- [x] `anon` được đọc question prompt có `status = published`.
+- [x] `anon` không được insert, update hoặc delete.
 
 ### Admin policies
 
-- [ ] Admin được đọc toàn bộ content.
-- [ ] Admin được tạo content.
-- [ ] Admin được cập nhật content.
-- [ ] Admin được archive content.
-- [ ] User đã login nhưng không có trong `admin_users` không được thao tác.
+- [x] Admin được đọc toàn bộ content.
+- [x] Admin được tạo content.
+- [x] Admin được cập nhật content.
+- [x] Admin được archive content.
+- [x] User đã login nhưng không có trong `admin_users` không được thao tác.
+
+RLS và policies nằm trong `20261003072909_rls_and_policies.sql`. Function
+`private.is_admin()` bị revoke khỏi `public`, chỉ được cấp execute cho role
+`authenticated`; schema `private` cũng không nằm trong Data API schemas.
 
 ---
 
 ## Phase 5 — Test migration local
+
+> Không dùng Phase 5 làm gate của workflow hiện tại. Migration local đã từng
+> được reset/apply để kiểm tra SQL, nhưng các kiểm tra hành vi local được bỏ qua;
+> workflow tiếp tục trực tiếp trên project Dev ở Phase 6.
 
 ```bash
 supabase start
 supabase db reset
 ```
 
-- [ ] Migration chạy thành công từ đầu.
-- [ ] Tất cả bảng được tạo.
-- [ ] RLS được bật.
-- [ ] Không có lỗi foreign key.
-- [ ] Không có lỗi policy/function.
+- [x] Migration chạy thành công từ đầu bằng `supabase db reset --local`.
+- [x] Tất cả bảng được tạo.
+- [x] RLS được bật.
+- [x] Không có lỗi foreign key.
+- [x] Không có lỗi policy/function.
 
 ### Kiểm tra nhanh
 
@@ -243,17 +263,52 @@ supabase db reset
 
 ```bash
 supabase login
-supabase link --project-ref YOUR_PROJECT_REF
-supabase db push
+supabase link --project-ref pxycsjwjakzehcuygngv
+supabase db push --linked
 ```
 
-- [ ] Kiểm tra migration đã applied trên project thật.
-- [ ] Kiểm tra các bảng trong Table Editor.
-- [ ] Kiểm tra RLS trong Authentication/Data API.
+- [x] Link repository với project Dev `pxycsjwjakzehcuygngv`.
+- [x] Kiểm tra dry-run trước khi push.
+- [x] Push hai migration lên project Dev.
+- [x] Kiểm tra migration đã applied trên project thật.
+- [x] Kiểm tra bốn bảng trong database Dev.
+- [x] Kiểm tra RLS policies bằng Supabase CLI.
+- [ ] Bật Leaked Password Protection trong Auth settings của project Dev.
 
 ---
 
 ## Phase 7 — Tạo admin đầu tiên
+
+### Tạo Auth user local để test trước (tạm bỏ qua)
+
+Đang tạm bỏ qua bước local để test trực tiếp trên project Dev. User local nếu
+tạo sau này chỉ tồn tại trong Supabase local và không dùng được để đăng nhập
+project Dev.
+
+```bash
+supabase start
+```
+
+- [ ] Mở Supabase Studio local tại `http://127.0.0.1:54323`.
+- [ ] Vào `Authentication → Users` → `Add user`.
+- [ ] Tạo email/password test, ví dụ `admin.local@example.com`.
+- [ ] Bật `Auto Confirm` để đăng nhập ngay.
+- [ ] Copy UUID của user local.
+- [ ] Trong SQL Editor local, chạy câu lệnh dưới đây để gán quyền admin:
+
+```sql
+insert into public.admin_users (user_id, role, is_active)
+select id, 'admin', true
+from auth.users
+where email = 'admin.local@example.com'
+on conflict (user_id) do update
+set role = 'admin',
+    is_active = true;
+```
+
+Chạy Admin bằng `yarn dev:local`, sau đó dùng email/password local để test
+login, route guard và quyền RLS. Không dùng password test hoặc UUID local
+trong migration/repository.
 
 ### Tạo Auth user trên Dashboard
 
@@ -270,6 +325,8 @@ Tạo file:
 ```text
 supabase/scripts/grant_admin.sql
 ```
+
+- [x] Tạo file script với email placeholder, không chứa password hoặc secret.
 
 Nội dung:
 

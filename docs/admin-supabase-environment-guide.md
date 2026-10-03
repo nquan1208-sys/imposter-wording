@@ -205,8 +205,10 @@ supabase db reset --local
 `db reset --local` sẽ xóa và tạo lại database local, vì vậy không dùng nếu
 cần giữ dữ liệu local.
 
-Hiện repository mới có `supabase/config.toml`, chưa có migration schema nên
-chưa có thay đổi database để push.
+Repository hiện có `supabase/config.toml` và các migration schema trong
+`supabase/migrations/`. Sau khi kiểm tra local, dùng `supabase db push
+--linked --dry-run` để xem các migration còn pending trên project Dev trước
+khi push thật.
 
 ## 7. Phân biệt dev và build
 
