@@ -363,6 +363,8 @@ cd admin
 yarn add @supabase/supabase-js
 ```
 
+- [x] Cài `@supabase/supabase-js`.
+
 ### Tạo biến môi trường
 
 Phần setup ba môi trường đã được thực hiện ở Phase 0. Khi viết Supabase
@@ -384,8 +386,8 @@ Tạo file:
 admin/src/lib/supabase.js
 ```
 
-- [ ] Khởi tạo `createClient()`.
-- [ ] Đọc URL và publishable key từ `import.meta.env`.
+- [x] Khởi tạo `createClient()`.
+- [x] Đọc URL và publishable key từ `import.meta.env`.
 
 ---
 
