@@ -28,7 +28,8 @@ Xây dựng Admin Vue để:
 ## Tài liệu liên quan
 
 - Database diagram: `docs/database-schema.dbml`
-- Screen layout: `docs/app/screen-layout.md`
+- App screen layout: `docs/layout/screen-layout.md`
+- Admin screen layout: `docs/layout/admin-screen-layout.md`
 - Admin app: `admin/`
 - Environment guide: `docs/admin-supabase-environment-guide.md`
 
