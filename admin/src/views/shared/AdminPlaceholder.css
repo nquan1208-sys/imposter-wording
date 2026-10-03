@@ -1,0 +1,59 @@
+.placeholder-page {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.placeholder-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 390px;
+  padding: var(--space-10) 24px;
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.placeholder-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary);
+  color: var(--color-charcoal);
+}
+
+.placeholder-card__icon .app-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--color-teal-deep);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.placeholder-card h2 {
+  margin: 0 0 var(--space-2);
+  color: var(--color-charcoal);
+  font: 600 1.5rem/1.4 var(--font-heading);
+}
+
+.placeholder-card__description {
+  max-width: 480px;
+  margin: 0;
+  color: var(--color-charcoal-soft);
+  font-size: 1rem;
+  line-height: 1.6;
+}
