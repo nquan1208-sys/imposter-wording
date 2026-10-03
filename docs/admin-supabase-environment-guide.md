@@ -118,6 +118,65 @@ database password, không phải publishable key và không được lưu vào G
 
 `supabase db push` chỉ push database migrations; nó không deploy Vue app.
 
+### Khi nào cần push nhiều lần?
+
+Có thể cần push nhiều lần trong quá trình phát triển, nhưng chỉ khi có thay
+đổi database hoặc quyền Supabase, ví dụ:
+
+- Tạo bảng, enum hoặc cột mới.
+- Sửa RLS policy.
+- Thêm function, trigger hoặc Storage policy.
+- Tạo migration schema ban đầu.
+
+Không cần `supabase db push` khi chỉ sửa Vue component, CSS, frontend logic,
+màn hình login hoặc file `admin/.env.development.local`. Những thay đổi đó
+được kiểm tra bằng:
+
+```bash
+cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording/admin
+yarn dev:development
+```
+
+### Quy trình local → Dev cloud
+
+Sau mỗi thay đổi database có ý nghĩa và đã kiểm tra local:
+
+```bash
+cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
+
+# Kiểm tra/reset database local nếu cần
+supabase db reset --local
+
+# Xem trước migration sẽ áp dụng trên Dev
+supabase db push --linked --dry-run
+
+# Áp dụng migration lên Dev cloud
+supabase db push --linked
+```
+
+Không cần push sau mỗi lần lưu file. Nên gom một thay đổi database hoàn chỉnh
+thành một migration rồi push khi cần cho Dev dùng hoặc kiểm thử.
+
+### Không sửa migration đã push
+
+Sau khi một migration đã được áp dụng trên Dev, không sửa nội dung file cũ.
+Tạo migration mới cho thay đổi tiếp theo:
+
+```text
+supabase/migrations/
+├── 202610030001_initial_schema.sql
+├── 202610040001_add_categories.sql
+└── 202610050001_update_rls.sql
+```
+
+### Git commit khác với database push
+
+- `git commit`: lưu code và migration vào repository.
+- `supabase db push`: áp dụng migration vào database Dev.
+
+Thông thường cần commit migration để lưu lịch sử, sau đó push migration lên
+Dev khi muốn database Dev được cập nhật.
+
 Sau khi có file migration trong `supabase/migrations/`, kiểm tra trước:
 
 ```bash
