@@ -1,0 +1,112 @@
+Project imposter_word {
+  database_type: "PostgreSQL"
+
+  Note: '''
+  Supabase database for Imposter Word Game.
+  Player names, game state, answers and votes are stored locally
+  according to Linear tickets IMP-15, IMP-16, IMP-17, IMP-18 and IMP-34.
+  '''
+}
+
+Enum game_type {
+  word
+  question
+}
+
+Enum content_status {
+  draft
+  published
+  archived
+}
+
+Enum difficulty_level {
+  easy
+  medium
+  hard
+}
+
+Enum admin_role {
+  admin
+}
+
+// Logical representation of Supabase auth.users.
+// The real table is managed by Supabase and is not created manually.
+Table auth_users {
+  id uuid [pk]
+  email varchar
+  created_at timestamp
+}
+
+Table admin_users {
+  user_id uuid [pk, note: "FK to auth.users.id"]
+  role admin_role [not null, default: 'admin']
+  is_active boolean [not null, default: true]
+  created_at timestamp [not null]
+}
+
+Table game_categories {
+  id uuid [pk]
+  game_type game_type [not null]
+  slug varchar [not null]
+  name varchar [not null]
+  description text
+  locale varchar [not null, default: 'vi']
+  sort_order int [not null, default: 0]
+  is_active boolean [not null, default: true]
+  created_by uuid [note: "FK to auth.users.id"]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    (game_type, slug, locale) [unique]
+    (game_type, is_active, sort_order)
+  }
+}
+
+Table word_prompts {
+  id uuid [pk]
+  category_id uuid [not null, note: "Category must have game_type = word"]
+  civilian_text varchar [not null, note: "Secret shown to normal players"]
+  imposter_text varchar [note: "Optional different word for imposter"]
+  imposter_hint varchar [note: "Optional hint shown to imposter"]
+  image_path varchar [note: "Optional Supabase Storage path for the word prompt image"]
+  difficulty difficulty_level [not null, default: 'medium']
+  is_family_friendly boolean [not null, default: false, note: "Included when Family Mode is enabled"]
+  status content_status [not null, default: 'draft']
+  locale varchar [not null, default: 'vi']
+  created_by uuid [note: "FK to auth.users.id"]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    (category_id, status, difficulty)
+    (status, locale)
+  }
+}
+
+Table question_prompts {
+  id uuid [pk]
+  category_id uuid [not null, note: "Category must have game_type = question"]
+  civilian_question text [not null, note: "Question shown to normal players"]
+  imposter_question text [not null, note: "Different question shown to imposter"]
+  imposter_hint varchar [note: "Optional hint shown to imposter"]
+  difficulty difficulty_level [not null, default: 'medium']
+  is_family_friendly boolean [not null, default: false, note: "Included when Family Mode is enabled"]
+  status content_status [not null, default: 'draft']
+  locale varchar [not null, default: 'vi']
+  created_by uuid [note: "FK to auth.users.id"]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
+
+  Indexes {
+    (category_id, status, difficulty)
+    (status, locale)
+  }
+}
+
+Ref: admin_users.user_id > auth_users.id
+Ref: game_categories.created_by > auth_users.id
+Ref: word_prompts.category_id > game_categories.id
+Ref: word_prompts.created_by > auth_users.id
+Ref: question_prompts.category_id > game_categories.id
+Ref: question_prompts.created_by > auth_users.id

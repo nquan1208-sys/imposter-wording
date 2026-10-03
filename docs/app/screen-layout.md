@@ -114,21 +114,30 @@ Cho phép người chơi cấu hình ván chơi trước khi bắt đầu.
    - Mỗi thẻ có biểu tượng, nhãn mô tả và giá trị số lớn.
    - Có thể chạm vào thẻ để thay đổi giá trị.
 
-3. **Khu vực chọn chế độ trò chơi**
+3. **Khu vực chọn loại trò chơi**
    - Tiêu đề nhóm: `Chế độ trò chơi`.
    - Hai thẻ lựa chọn xếp thành hai cột:
      - `Trò chơi từ ngữ` — tìm người không biết từ bí mật.
      - `Trò chơi câu hỏi` — tìm người nhận câu hỏi khác.
    - Một thẻ luôn ở trạng thái được chọn.
 
-4. **Khu vực danh mục**
+4. **Khu vực chọn mode**
+   - Chỉ hiển thị sau khi đã chọn loại trò chơi.
+   - Hai lựa chọn:
+     - `Cổ điển` — sử dụng toàn bộ content cổ điển.
+     - `Gia đình` — chỉ sử dụng content có `is_family_friendly = true`.
+   - Một mode luôn ở trạng thái được chọn.
+
+5. **Khu vực danh mục**
    - Tiêu đề nhóm: `Danh mục`.
    - Một thẻ cấu hình lớn chứa:
      - Tên danh mục hiện tại: `Tất cả danh mục` khi chưa chọn danh mục cụ thể.
+     - Cho phép chọn một hoặc nhiều danh mục.
      - Nút mũi tên để mở màn hình chọn danh mục.
-     - Các tùy chọn dạng công tắc.
+     - Nếu không chọn danh mục, app random trong tất cả content phù hợp với loại game và mode.
+     - Nếu chọn danh mục, app chỉ random trong các danh mục đã chọn.
 
-5. **Các tùy chọn trong danh mục**
+6. **Các tùy chọn trong ván chơi**
    - `Hiển thị danh mục cho kẻ mạo danh`.
    - `Kẻ giả mạo biết nhau`.
    - Mỗi tùy chọn gồm biểu tượng, nhãn và công tắc bật/tắt.
@@ -136,22 +145,26 @@ Cho phép người chơi cấu hình ván chơi trước khi bắt đầu.
    - Riêng chế độ `Trò chơi từ ngữ` có thêm tùy chọn `Hiển thị gợi ý cho kẻ mạo danh`.
    - Chế độ `Trò chơi câu hỏi` không hiển thị tùy chọn gợi ý này.
 
-6. **Nút bắt đầu**
+7. **Nút bắt đầu**
    - Nút cố định gần cuối màn hình: `Bắt đầu trò chơi`.
    - Nút luôn dễ nhìn thấy khi người dùng cuộn nội dung.
 
 ### Trạng thái được quan sát
 
-- Ảnh 1: `Trò chơi từ ngữ` được chọn, danh mục hiển thị là `Tất cả danh mục`; hiển thị danh mục đang bật.
-- Ảnh 2: `Trò chơi từ ngữ` được chọn; các tùy chọn gợi ý và biết nhau đang tắt.
-- Ảnh 3: `Trò chơi câu hỏi` được chọn, danh mục là `Tất cả danh mục`; không có tùy chọn hiển thị gợi ý cho kẻ mạo danh.
+- `Trò chơi từ ngữ` + `Cổ điển` được chọn, danh mục là `Tất cả danh mục`.
+- `Trò chơi từ ngữ` + `Gia đình` được chọn, danh sách danh mục chỉ hiển thị content phù hợp gia đình.
+- `Trò chơi câu hỏi` + `Gia đình` được chọn, danh sách danh mục chỉ hiển thị question prompt phù hợp gia đình.
 
 ### Hành vi
 
 - Có thể cuộn dọc để xem toàn bộ tùy chọn.
 - Nút `Bắt đầu trò chơi` vẫn nằm ở vùng cuối màn hình.
-- Chế độ được chọn quyết định nội dung các bước chơi tiếp theo.
-- Cả hai chế độ đều có lựa chọn danh mục, mặc định là `Tất cả danh mục`.
+- Loại trò chơi và mode được chọn quyết định tập content được phép random.
+- Cả hai loại trò chơi đều có hai mode `Cổ điển` và `Gia đình`.
+- Danh mục là tùy chọn, mặc định là `Tất cả danh mục`.
+- Có thể chọn nhiều danh mục cùng lúc.
+- Không chọn danh mục sẽ random trong toàn bộ content đã publish phù hợp với loại game và mode.
+- Chọn một hoặc nhiều danh mục sẽ giới hạn random trong các category đó.
 - Chỉ chế độ `Trò chơi từ ngữ` mới có công tắc hiển thị gợi ý cho kẻ mạo danh.
 - Số kẻ mạo danh phải phù hợp với số người chơi.
 - Nút quay lại đưa người dùng về màn hình trước đó.
@@ -173,7 +186,7 @@ Cho phép người chơi cấu hình ván chơi trước khi bắt đầu.
 
 ### Mục đích
 
-Cho phép chọn một danh mục từ hoặc dùng toàn bộ danh mục có sẵn.
+Cho phép chọn một hoặc nhiều danh mục, hoặc dùng toàn bộ danh mục có sẵn.
 
 ### Khung màn hình
 
@@ -181,54 +194,48 @@ Cho phép chọn một danh mục từ hoặc dùng toàn bộ danh mục có s�
    - Nút quay lại ở bên trái.
    - Tiêu đề lớn: `Chọn danh mục`.
 
-2. **Thanh chọn tab**
-   - Chỉ xuất hiện trong chế độ `Trò chơi từ ngữ`.
-   - Tab `Cổ điển`.
-   - Tab `Chế độ gia đình`.
-   - Chỉ một tab được chọn tại một thời điểm.
+2. **Thông tin loại game và mode**
+   - Hiển thị dạng badge ở đầu màn hình, ví dụ:
+     - `Trò chơi từ ngữ · Cổ điển`.
+     - `Trò chơi câu hỏi · Gia đình`.
+   - Mode được chọn ở màn hình cài đặt trò chơi; màn hình này chỉ hiển thị danh mục phù hợp với mode đó.
 
-3. **Tab Cổ điển**
+3. **Danh sách danh mục**
    - Hiển thị các danh mục trong lưới hai cột.
-   - Mỗi thẻ gồm tên danh mục và số lượng từ, ví dụ:
-     - Giáng Sinh.
-     - Động vật.
-     - Thực phẩm.
-     - Đồ vật.
-     - Phim ảnh.
-     - Địa điểm.
-     - Thể thao.
-   - Có thẻ `Tạo Tùy Chỉnh` để mở danh mục do người dùng tạo.
-   - Khi chưa chọn thẻ cụ thể, màn hình cài đặt trò chơi hiển thị `Tất cả danh mục`.
-
-4. **Tab Chế độ gia đình**
-   - Chỉ xuất hiện trong chế độ `Trò chơi từ ngữ`.
-   - Hiển thị phần giới thiệu ngắn về các từ phù hợp để chơi với trẻ em.
-   - Có tùy chọn `Hiển thị hình ảnh màu sắc` dạng công tắc.
-   - Mô tả tùy chọn: hình ảnh vui nhộn hỗ trợ người chơi nhỏ tuổi.
-   - Hiển thị các danh mục trong lưới hai cột, ví dụ:
+   - Có thể chọn nhiều danh mục cùng lúc.
+   - Mỗi thẻ gồm:
+     - Checkbox hoặc trạng thái được chọn.
+     - Tên danh mục.
+     - Số lượng content hợp lệ theo loại game và mode hiện tại.
+   - Nội dung ví dụ cho game từ ngữ:
      - Động vật.
      - Đồ ăn.
-     - Trò chơi.
-     - Thế giới.
+     - Phim ảnh.
+     - Địa điểm.
+   - Nội dung ví dụ cho game câu hỏi:
+     - Cuộc sống & xã hội.
+     - Tình yêu & mối quan hệ.
+     - Tiền bạc & danh vọng.
+     - Tương lai & công nghệ.
 
-5. **Chế độ Trò chơi câu hỏi**
-   - Không hiển thị thanh chọn tab.
-   - Hiển thị trực tiếp một lưới danh mục câu hỏi gồm hai cột.
-   - Thẻ `Tạo Tùy Chỉnh` có mô tả `Câu hỏi của bạn`.
-   - Các thẻ danh mục hiển thị tên danh mục và số lượng câu hỏi, ví dụ:
-     - Cuộc Sống & Xã Hội.
-     - Tình Yêu & Mối Quan Hệ.
-     - Tiền Bạc & Danh Vọng.
-     - Tương Lai & Công Nghệ.
-     - Giáng sinh.
-   - Khi chưa chọn danh mục cụ thể, màn hình cài đặt trò chơi vẫn hiển thị `Tất cả danh mục`.
+4. **Trạng thái tất cả danh mục**
+   - Có lựa chọn `Tất cả danh mục` ở đầu danh sách.
+   - Đây là trạng thái mặc định.
+   - Khi được chọn, các category cụ thể được bỏ chọn.
+   - App random trong toàn bộ content đã publish thuộc loại game và mode hiện tại.
+
+5. **Danh mục tùy chỉnh**
+   - Có thẻ `Tạo tùy chỉnh` nếu tính năng content tùy chỉnh được bật.
+   - Danh mục tùy chỉnh chỉ được áp dụng cho ván hiện tại và lưu local.
 
 ### Hành vi
 
-- Chạm vào một thẻ danh mục sẽ chọn danh mục đó và quay về màn hình cài đặt trò chơi.
+- Chạm vào một hoặc nhiều thẻ danh mục để chọn/bỏ chọn.
+- Chọn `Tất cả danh mục` sẽ bỏ chọn toàn bộ danh mục cụ thể.
+- Nút `Xác nhận` quay về màn hình cài đặt trò chơi và hiển thị số category đã chọn.
 - Nếu không chọn danh mục cụ thể, giữ giá trị `Tất cả danh mục`.
-- Với `Trò chơi từ ngữ`, chuyển tab chỉ thay đổi danh sách danh mục đang hiển thị.
-- Với `Trò chơi câu hỏi`, hiển thị trực tiếp danh sách danh mục câu hỏi và không có tab.
+- Danh sách và số lượng content được lọc theo loại game và mode đã chọn.
+- Với mode `Gia đình`, chỉ hiển thị category có ít nhất một content `is_family_friendly = true`.
 - Không mô tả hoặc triển khai các danh mục Premium trong phạm vi bản nháp này.
 
 ## 5. Màn hình tạo tùy chỉnh
@@ -592,10 +599,16 @@ Màn hình bắt đầu
 │       ├── Cài đặt
 │       │   ├── Ngôn ngữ
 │       │   └── Cách chơi
+│       ├── Chọn loại trò chơi
+│       │   ├── Trò chơi từ ngữ
+│       │   └── Trò chơi câu hỏi
+│       ├── Chọn mode
+│       │   ├── Cổ điển
+│       │   └── Gia đình
 │       ├── Chọn danh mục
-│           ├── Cổ điển
-│           │   └── Tạo danh mục tùy chỉnh
-│           └── Chế độ gia đình
+│       │   ├── Tất cả danh mục
+│       │   ├── Một hoặc nhiều danh mục cụ thể
+│       │   └── Tạo danh mục tùy chỉnh
 │       ├── Tên người chơi
 │           ├── Danh sách đã lưu
 │           │   ├── Lưu thành danh sách mới
@@ -623,3 +636,200 @@ Màn hình bắt đầu
 - Bỏ phiếu.
 - Kết quả ván chơi.
 - Các màn hình phụ khác nếu có.
+
+## 20. React Admin
+
+### Mục đích
+
+Admin dùng để quản lý danh mục và nội dung từ backend. Người chơi không đăng nhập; tên người chơi, câu trả lời, lượt vote và trạng thái ván được lưu local trên thiết bị theo phạm vi R1.
+
+### Admin shell
+
+Admin sử dụng bố cục desktop-first, có thể responsive trên tablet. UI MVP chỉ tập trung vào quản lý content, không có các màn hình quản trị mở rộng.
+
+1. **Sidebar cố định bên trái**
+   - Logo/tên ứng dụng: `Imposter Admin`.
+   - `Tổng quan`.
+   - `Danh mục`.
+   - `Nội dung từ ngữ`.
+   - `Nội dung câu hỏi`.
+   - Ở cuối sidebar: thông tin email admin và nút `Đăng xuất`.
+
+2. **Thanh đầu trang**
+   - Breadcrumb của màn hình hiện tại.
+   - Tiêu đề màn hình hiện tại.
+
+3. **Vùng nội dung chính**
+   - Tiêu đề màn hình.
+   - Mô tả ngắn nếu cần.
+   - Nút hành động chính nằm ở góc trên bên phải.
+
+### 20.1. Màn hình Tổng quan admin
+
+#### Mục đích
+
+Cho admin biết nhanh tình trạng content và các việc cần xử lý.
+
+#### Bố cục
+
+- Hàng thẻ thống kê:
+  - `Đề từ ngữ đã publish`.
+  - `Đề câu hỏi đã publish`.
+  - `Danh mục đang hoạt động`.
+  - `Nội dung bản nháp`.
+- Khu vực `Nội dung cập nhật gần đây`.
+- Khu vực `Nội dung bản nháp cần xử lý`.
+- Khu vực cảnh báo:
+  - Danh mục không có content.
+  - Question civilian và imposter bị trùng.
+  - Content chưa được gắn Family Mode nhưng có difficulty `easy`.
+
+### 20.2. Màn hình Danh mục
+
+#### Bố cục
+
+- Nút chính: `+ Thêm danh mục`.
+- Bộ lọc:
+  - Loại game: `Từ ngữ` hoặc `Câu hỏi`.
+  - Ngôn ngữ.
+  - Trạng thái active/inactive.
+- Bảng danh mục gồm:
+  - Tên danh mục.
+  - Loại game.
+  - Số lượng content.
+  - Ngôn ngữ.
+  - Trạng thái.
+  - Thời gian cập nhật.
+  - Menu thao tác.
+
+#### Form danh mục
+
+- Tên danh mục.
+- Slug.
+- Loại game.
+- Mô tả.
+- Ngôn ngữ.
+- Thứ tự hiển thị.
+- Active/inactive.
+
+Loại game không được thay đổi nếu danh mục đã có content. Nếu cần đổi loại, admin phải tạo danh mục mới.
+
+### 20.3. Màn hình Nội dung từ ngữ
+
+#### Danh sách
+
+- Nút chính: `+ Thêm đề từ ngữ`.
+- Bộ lọc:
+  - Danh mục.
+  - Độ khó.
+  - Family Mode.
+  - Ngôn ngữ.
+  - Trạng thái: `Draft`, `Published`, `Archived`.
+- Bảng gồm:
+  - Ảnh thumbnail.
+  - Từ của civilian.
+  - Từ của imposter.
+  - Danh mục.
+  - Độ khó.
+  - Family Mode.
+  - Trạng thái.
+  - Ngày cập nhật.
+
+#### Form tạo/sửa đề từ ngữ
+
+- Từ cho civilian.
+- Từ cho imposter, có thể để trống nếu imposter không được xem từ.
+- Hint cho imposter.
+- Upload ảnh.
+- Preview ảnh.
+- Thay ảnh hoặc xóa ảnh.
+- Danh mục.
+- Độ khó: `Easy`, `Medium`, `Hard`.
+- Checkbox: `Phù hợp chế độ gia đình`.
+- Ngôn ngữ.
+
+Khu vực preview nên mô phỏng hai trạng thái:
+
+- `Civilian thấy`: ảnh và từ bí mật.
+- `Imposter thấy`: từ/hint/ảnh tương ứng theo cấu hình.
+
+Nút cuối form:
+
+- `Lưu nháp`.
+- `Publish`.
+- `Archive`.
+
+### 20.4. Màn hình Nội dung câu hỏi
+
+#### Danh sách
+
+- Nút chính: `+ Thêm đề câu hỏi`.
+- Bộ lọc giống màn hình nội dung từ ngữ.
+- Bảng gồm:
+  - Câu hỏi civilian.
+  - Câu hỏi imposter.
+  - Danh mục.
+  - Độ khó.
+  - Family Mode.
+  - Trạng thái.
+  - Ngày cập nhật.
+
+#### Form tạo/sửa đề câu hỏi
+
+Form chia thành hai cột:
+
+```text
+┌────────────────────────┬────────────────────────┐
+│ Câu hỏi cho civilian   │ Câu hỏi cho imposter   │
+│ [textarea]             │ [textarea]             │
+└────────────────────────┴────────────────────────┘
+```
+
+- Câu hỏi civilian.
+- Câu hỏi imposter.
+- Hint cho imposter.
+- Danh mục câu hỏi.
+- Độ khó.
+- Checkbox `Phù hợp chế độ gia đình`.
+- Ngôn ngữ.
+- Preview câu hỏi hiển thị cho từng vai trò.
+
+Validation:
+
+- Hai câu hỏi không được rỗng.
+- Hai câu hỏi không được giống nhau.
+- Câu hỏi phải thuộc đúng category loại `question`.
+- Không được publish content chưa đủ dữ liệu.
+
+### 20.5. Quy tắc UI và trạng thái
+
+- `Draft`: badge màu vàng.
+- `Published`: badge màu xanh.
+- `Archived`: badge màu xám.
+- Nút `Publish` cần nổi bật hơn `Lưu nháp`.
+- Archive hoặc deactivate phải có hộp thoại xác nhận.
+- Các bảng hỗ trợ phân trang, tìm kiếm và sắp xếp.
+- Text dài trong bảng được truncate; click vào dòng để xem đầy đủ.
+- Upload ảnh hiển thị tiến trình, preview và lỗi định dạng/kích thước.
+- Family Mode là một thuộc tính độc lập với độ khó; app chỉ lấy content có `is_family_friendly = true` khi chế độ gia đình được bật.
+- Nút `Đăng xuất` nằm cố định ở cuối sidebar, tách biệt với các mục content.
+- Khi nhấn `Đăng xuất`, hiển thị trạng thái loading ngắn rồi chuyển về màn hình đăng nhập admin.
+- Nếu admin chưa lưu thay đổi trong form, hiển thị cảnh báo trước khi đăng xuất.
+
+### 20.6. Luồng điều hướng admin
+
+```text
+Đăng nhập admin
+└── Tổng quan
+    ├── Danh mục
+    │   ├── Tạo danh mục
+    │   └── Sửa danh mục
+    ├── Nội dung từ ngữ
+    │   ├── Danh sách
+    │   ├── Tạo/sửa đề từ ngữ
+    │   └── Upload ảnh
+    ├── Nội dung câu hỏi
+    │   ├── Danh sách
+    │   └── Tạo/sửa đề câu hỏi
+    └── Đăng xuất
+```
