@@ -1,27 +1,38 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
+import { supabase } from '../../lib/supabase.js'
+import { signInAdmin } from '../../utils/adminAuth.js'
 
 const router = useRouter()
 const route = useRoute()
 const email = ref('')
 const password = ref('')
-const isSubmitting = ref(false)
+const queryClient = useQueryClient()
+const { mutate, isPending: isSubmitting, error } = useMutation({
+  retry: false,
+  gcTime: 0,
+  mutationFn: async (credentials) => {
+    await signInAdmin(supabase, credentials)
+    queryClient.removeQueries()
 
-async function submitLogin() {
+    const redirect =
+      typeof route.query.redirect === 'string' &&
+      route.query.redirect.startsWith('/') &&
+      !route.query.redirect.startsWith('//')
+        ? route.query.redirect
+        : '/dashboard'
+    await router.replace(redirect)
+  },
+})
+const errorMessage = computed(() =>
+  error.value ? error.value.message || 'Đăng nhập không thành công.' : '',
+)
+
+function submitLogin() {
   if (isSubmitting.value) return
-  isSubmitting.value = true
-
-  // UI-only flow for this phase: any non-empty form values can continue.
-  const redirect =
-    typeof route.query.redirect === 'string' &&
-    route.query.redirect.startsWith('/') &&
-    !route.query.redirect.startsWith('//')
-      ? route.query.redirect
-      : '/dashboard'
-
-  await router.replace(redirect)
-  isSubmitting.value = false
+  mutate({ email: email.value.trim(), password: password.value })
 }
 </script>
 
@@ -48,6 +59,7 @@ async function submitLogin() {
           <label for="password">Mật khẩu</label>
           <input id="password" v-model="password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" required :disabled="isSubmitting" />
         </div>
+        <p v-if="errorMessage" class="form-error" role="alert">{{ errorMessage }}</p>
         <button class="primary-button login-button" type="submit" :disabled="isSubmitting">
           <span v-if="isSubmitting" class="spinner" />
           <span>{{ isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập' }}</span>

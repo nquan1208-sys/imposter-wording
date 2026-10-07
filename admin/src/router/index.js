@@ -5,6 +5,8 @@ import DashboardView from "../views/dashboard/DashboardView.vue";
 import CategoriesView from "../views/categories/CategoriesView.vue";
 import WordPromptsView from "../views/word-prompts/WordPromptsView.vue";
 import QuestionPromptsView from "../views/question-prompts/QuestionPromptsView.vue";
+import { supabase } from "../lib/supabase.js";
+import { getAdminSession } from "../utils/adminAuth.js";
 
 const routes = [
   {
@@ -64,6 +66,12 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior: () => ({ top: 0 }),
+});
+
+router.beforeEach(async (to) => {
+  if (!to.matched.some((record) => record.meta.adminShell)) return true;
+  if (await getAdminSession(supabase)) return true;
+  return { name: "login", query: { redirect: to.fullPath } };
 });
 
 export default router;

@@ -1,13 +1,28 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
+import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import AppIcon from "./AppIcon.vue";
+import { supabase } from "../../lib/supabase.js";
+import { signOutAdmin } from "../../utils/adminAuth.js";
 
 const route = useRoute();
 const router = useRouter();
 const isMenuOpen = ref(false);
-const isLoggingOut = ref(false);
 const email = ref("");
+const queryClient = useQueryClient();
+const { mutate, isPending: isLoggingOut, error } = useMutation({
+  retry: false,
+  gcTime: 0,
+  mutationFn: async () => {
+    await signOutAdmin(supabase);
+    queryClient.removeQueries();
+    await router.replace({ name: "login" });
+  },
+});
+const logoutError = computed(() =>
+  error.value ? "Không thể đăng xuất. Vui lòng thử lại." : "",
+);
 const navItems = [
   { name: "dashboard", label: "Tổng quan", icon: "dashboard" },
   { name: "categories", label: "Danh mục", icon: "categories" },
@@ -16,19 +31,17 @@ const navItems = [
 ];
 const pageTitle = computed(() => route.meta.title || "Tổng quan");
 
-onMounted(() => {
-  email.value = "admin@example.com";
+supabase.auth.getUser().then(({ data }) => {
+  email.value = data.user?.email || "";
 });
 
 function closeMenu() {
   isMenuOpen.value = false;
 }
 
-async function logout() {
+function logout() {
   if (isLoggingOut.value) return;
-  isLoggingOut.value = true;
-  await router.replace({ name: "login" });
-  isLoggingOut.value = false;
+  mutate();
 }
 </script>
 
@@ -79,6 +92,7 @@ async function logout() {
             }}</small></span
           >
         </div>
+        <p v-if="logoutError" class="logout-error" role="alert">{{ logoutError }}</p>
         <button
           class="logout-button"
           type="button"
