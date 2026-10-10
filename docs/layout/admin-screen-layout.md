@@ -6,6 +6,8 @@
 
 Admin dùng để quản lý danh mục và nội dung từ backend. Người chơi không đăng nhập; tên người chơi, câu trả lời, lượt vote và trạng thái ván được lưu local trên thiết bị theo phạm vi R1.
 
+Thứ tự triển khai và tiêu chí hoàn thành được mô tả trong [Kế hoạch triển khai màn hình Admin](../admin-screen-implementation-plan.md).
+
 ## Admin shell
 
 Admin sử dụng bố cục desktop-first, có thể responsive trên tablet. UI MVP chỉ tập trung vào quản lý content, không có các màn hình quản trị mở rộng.
