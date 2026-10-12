@@ -9,9 +9,10 @@ test('category components render backend rows, immutable fields and destructive 
   const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, mode: 'localdev' })
   try {
     const ui = (await server.ssrLoadModule('@nuxt/ui/vue-plugin')).default
+    const { i18n } = await server.ssrLoadModule('/src/i18n/index.js')
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: { template: '<div />' } }] })
     await router.push('/')
-    const render = async (component, props) => (await renderToString(createSSRApp(component, props).use(router).use(ui))).replace(/<!--[\s\S]*?-->/g, '')
+    const render = async (component, props) => (await renderToString(createSSRApp(component, props).use(router).use(ui).use(i18n))).replace(/<!--[\s\S]*?-->/g, '')
     const table = (await server.ssrLoadModule('/src/components/categories/CategoryTable.vue')).default
     const row = { id: 'id', name: 'Đồ ăn', slug: 'do-an', game_type: 'word', locale: 'vi', is_active: true, updated_at: '2026-10-12T10:00:00Z', word_prompts: [{ count: 3 }], question_prompts: [{ count: 0 }] }
     const html = await render(table, { rows: [row], pending: false })

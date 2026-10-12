@@ -6,4 +6,4 @@ export function provideUnsavedChanges() {
   return state
 }
 export function useUnsavedChanges() { return inject(unsavedKey) }
-export function confirmDiscard() { return window.confirm('Bạn có thay đổi chưa lưu. Bạn muốn bỏ các thay đổi này?') }
+export function confirmDiscard(message) { return window.confirm(message) }

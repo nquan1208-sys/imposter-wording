@@ -29,7 +29,7 @@ export async function saveCategory(client, form, id) {
   if (id) return resultOrThrow(await client.from('game_categories').update(payload).eq('id', id).select().single())
   const { data, error } = await client.auth.getUser()
   if (error) throw error
-  if (!data.user) throw new Error('Phiên đăng nhập đã hết hạn.')
+  if (!data.user) throw new Error('common.errors.sessionExpired')
   return resultOrThrow(await client.from('game_categories').insert({ ...payload, created_by: data.user.id }).select().single())
 }
 

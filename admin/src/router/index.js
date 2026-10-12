@@ -8,7 +8,7 @@ const routes = [
     path: "/login",
     name: "login",
     component: () => import("../views/login/LoginView.vue"),
-    meta: { title: "Đăng nhập" },
+    meta: { titleKey: "auth.login.routeTitle" },
   },
   {
     path: "/",
@@ -21,9 +21,8 @@ const routes = [
         name: "dashboard",
         component: () => import("../views/dashboard/DashboardView.vue"),
         meta: {
-          title: "Tổng quan",
-          description:
-            "Theo dõi nhanh tình trạng nội dung và các việc cần xử lý.",
+          titleKey: "dashboard.title",
+          descriptionKey: "dashboard.description",
         },
       },
       {
@@ -31,19 +30,19 @@ const routes = [
         name: "categories",
         component: () => import("../views/categories/CategoriesView.vue"),
         meta: {
-          title: "Danh mục",
-          description: "Quản lý các danh mục cho trò chơi từ ngữ và câu hỏi.",
+          titleKey: "categories.title",
+          descriptionKey: "categories.description",
         },
       },
-      { path: "categories/new", name: "category-new", component: () => import("../views/categories/CategoryFormView.vue"), meta: { title: "Thêm danh mục" } },
-      { path: "categories/:id/edit", name: "category-edit", component: () => import("../views/categories/CategoryFormView.vue"), meta: { title: "Sửa danh mục" } },
+      { path: "categories/new", name: "category-new", component: () => import("../views/categories/CategoryFormView.vue"), meta: { titleKey: "categories.actions.create" } },
+      { path: "categories/:id/edit", name: "category-edit", component: () => import("../views/categories/CategoryFormView.vue"), meta: { titleKey: "categories.form.editTitle" } },
       {
         path: "word-prompts",
         name: "word-prompts",
         component: () => import("../views/word-prompts/WordPromptsView.vue"),
         meta: {
-          title: "Nội dung từ ngữ",
-          description: "Quản lý các cặp từ bí mật cho trò chơi từ ngữ.",
+          titleKey: "wordPrompts.title",
+          descriptionKey: "wordPrompts.description",
         },
       },
       {
@@ -51,8 +50,8 @@ const routes = [
         name: "question-prompts",
         component: () => import("../views/question-prompts/QuestionPromptsView.vue"),
         meta: {
-          title: "Nội dung câu hỏi",
-          description: "Quản lý các câu hỏi dành cho civilian và imposter.",
+          titleKey: "questionPrompts.title",
+          descriptionKey: "questionPrompts.description",
         },
       },
     ],

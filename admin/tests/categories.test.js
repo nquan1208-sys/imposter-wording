@@ -50,12 +50,12 @@ test('save creation gets current user and edit cannot change identity', async ()
   assert.equal('game_type' in updateClient.calls.find(call => call[0] === 'update')[1], false)
   assert.deepEqual(updateClient.calls.at(-1), ['single'])
   client.auth.getUser = async () => ({ data: { user: null } })
-  await assert.rejects(saveCategory(client, form), /hết hạn/)
+  await assert.rejects(saveCategory(client, form), { message: 'common.errors.sessionExpired' })
 })
 test('API failures propagate, including zero-row update', async () => {
   const error = { code: 'PGRST116', message: 'no rows' }
   for (const action of [client => getCategory(client, 'id'), client => setCategoryActive(client, 'id', false), client => saveCategory(client, form, 'id')]) await assert.rejects(action(mockClient({ data: null, error })), value => value === error)
-  assert.match(categoryError({ code: '23505' }), /Slug đã tồn tại/)
+  assert.equal(categoryError({ code: '23505' }), 'categories.errors.slugExists')
 })
 test('transfer target discovery reads all pages', async () => {
   const client = mockClient(calls => ({ data: calls.filter(call => call[0] === 'range').length === 1 ? Array.from({ length: 100 }, (_, id) => ({ id })) : [{ id: 'last' }] }))

@@ -1,9 +1,11 @@
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { computed, reactive } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase.js'
-import { signInAdmin } from '../../utils/adminAuth.js'
+import { signInAdmin, adminAuthError } from '../../utils/adminAuth.js'
+const { t } = useI18n({ useScope: 'global' })
 
 const router = useRouter()
 const route = useRoute()
@@ -26,7 +28,7 @@ const { mutate, isPending: isSubmitting, error } = useMutation({
   },
 })
 const errorMessage = computed(() =>
-  error.value ? error.value.message || 'Đăng nhập không thành công.' : '',
+  error.value ? t(adminAuthError(error.value)) : '',
 )
 
 function submitLogin() {
@@ -40,22 +42,22 @@ function submitLogin() {
     <section class="login-card" aria-labelledby="login-title">
       <div class="login-card__brand">
         <span class="brand__mark">I</span>
-        <span><strong>Imposter</strong><small>Admin</small></span>
+        <span><strong>Imposter</strong><small>{{ t('navigation.account.admin') }}</small></span>
       </div>
 
       <div class="login-card__heading">
-        <p class="eyebrow">Khu vực quản trị</p>
-        <h1 id="login-title">Chào mừng trở lại</h1>
-        <p>Đăng nhập để quản lý nội dung trò chơi của bạn.</p>
+        <p class="eyebrow">{{ t('auth.login.eyebrow') }}</p>
+        <h1 id="login-title">{{ t('auth.login.title') }}</h1>
+        <p>{{ t('auth.login.description') }}</p>
       </div>
 
       <UForm :state="credentials" :disabled="isSubmitting" class="login-form" @submit="submitLogin">
-        <UFormField label="Email" name="email" required><UInput v-model="credentials.email" type="email" autocomplete="email" placeholder="admin@example.com" required class="tw:w-full" /></UFormField>
-        <UFormField label="Mật khẩu" name="password" required><UInput v-model="credentials.password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" required class="tw:w-full" /></UFormField>
+        <UFormField :label="t('auth.login.email')" name="email" required><UInput v-model="credentials.email" type="email" autocomplete="email" placeholder="admin@example.com" required class="tw:w-full" /></UFormField>
+        <UFormField :label="t('auth.login.password')" name="password" required><UInput v-model="credentials.password" type="password" autocomplete="current-password" :placeholder="t('auth.login.passwordPlaceholder')" required class="tw:w-full" /></UFormField>
         <UAlert v-if="errorMessage" color="error" :description="errorMessage" role="alert" />
-        <UButton type="submit" :loading="isSubmitting" :disabled="isSubmitting" block label="Đăng nhập" />
+        <UButton type="submit" :loading="isSubmitting" :disabled="isSubmitting" block :label="t('auth.login.submit')" />
       </UForm>
     </section>
-    <p class="login-footer">Chỉ dành cho tài khoản quản trị được cấp quyền.</p>
+    <p class="login-footer">{{ t('auth.login.footer') }}</p>
   </main>
 </template>

@@ -1,4 +1,4 @@
-export const gameTypeLabels = { word: 'Từ ngữ', question: 'Câu hỏi' }
+export const gameTypeLabels = { word: 'common.gameTypes.word', question: 'common.gameTypes.question' }
 export const pageSize = 20
 
 export function slugFromName(name) {
@@ -9,14 +9,14 @@ export function slugFromName(name) {
 export function categoryPayload(form, editing = false) {
   const name = form.name.trim()
   const slug = form.slug.trim()
-  if (!name) throw new Error('Vui lòng nhập tên danh mục.')
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error('Slug chỉ gồm chữ thường, số và dấu gạch ngang giữa các từ.')
+  if (!name) throw new Error('categories.errors.nameRequired')
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error('categories.errors.invalidSlug')
   if (String(form.sort_order).trim() === '' || !Number.isSafeInteger(Number(form.sort_order)) || Number(form.sort_order) < 0 || Number(form.sort_order) > 2147483647) {
-    throw new Error('Thứ tự phải là số nguyên không âm trong giới hạn 2147483647.')
+    throw new Error('categories.errors.invalidSortOrder')
   }
   const payload = { name, slug, description: form.description?.trim() || null, sort_order: Number(form.sort_order), is_active: Boolean(form.is_active) }
   if (!editing) {
-    if (!Object.hasOwn(gameTypeLabels, form.game_type)) throw new Error('Loại trò chơi không hợp lệ.')
+    if (!Object.hasOwn(gameTypeLabels, form.game_type)) throw new Error('categories.errors.invalidGameType')
     Object.assign(payload, { game_type: form.game_type, locale: 'vi' })
   }
   return payload
@@ -28,10 +28,18 @@ export function searchPattern(value) {
   return `"%${literal.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}%"`
 }
 
+const validationKeys = new Set(['categories.errors.nameRequired', 'categories.errors.invalidSlug', 'categories.errors.invalidSortOrder', 'categories.errors.invalidGameType'])
+const errorKeys = {
+  '23505': 'categories.errors.slugExists',
+  '42501': 'common.errors.forbidden',
+  '23514': 'categories.errors.invalidData',
+  '22023': 'categories.errors.invalidData',
+  PGRST116: 'categories.errors.notFound',
+}
 export function categoryError(error) {
-  if (error?.code === '23505') return 'Slug đã tồn tại trong loại trò chơi và ngôn ngữ này.'
-  if (error?.code === '42501') return 'Bạn không có quyền thực hiện thao tác này. Vui lòng đăng nhập lại.'
-  return error?.message || 'Không thể thực hiện thao tác. Vui lòng thử lại.'
+  if (validationKeys.has(error?.message)) return error.message
+  if (error?.message === 'common.errors.sessionExpired') return 'common.errors.sessionExpired'
+  return errorKeys[error?.code] || 'common.errors.operationFailed'
 }
 
 export function listFilters(query) {

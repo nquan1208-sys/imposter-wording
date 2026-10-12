@@ -1,4 +1,5 @@
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
@@ -7,6 +8,7 @@ import { getCategory, saveCategory } from '../../api/categories.js'
 import { categoryError, categoryPayload, slugFromName } from '../../utils/categories.js'
 import { confirmDiscard, useUnsavedChanges } from '../../utils/unsavedChanges.js'
 import CategoryForm from '../../components/categories/CategoryForm.vue'
+const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
@@ -44,13 +46,13 @@ const mutation = useMutation({
 })
 function submit() {
   if (mutation.isPending.value) return
-  try { categoryPayload(form, editing.value) } catch (error) { localError.value = categoryError(error); return }
-  if (loadedId.value && detail.data.value?.is_active && !form.is_active && !window.confirm('Tắt danh mục này? Content bên trong sẽ được giữ nguyên.')) return
+  try { categoryPayload(form, editing.value) } catch (error) { localError.value = error; return }
+  if (loadedId.value && detail.data.value?.is_active && !form.is_active && !window.confirm(t('categories.confirmations.deactivate'))) return
   localError.value = ''; unsaved.busy = true; mutation.mutate()
 }
 function canLeave() {
   if (unsaved.busy) return false
-  return !unsaved.dirty || confirmDiscard()
+  return !unsaved.dirty || confirmDiscard(t('common.confirmations.discardChanges'))
 }
 onBeforeRouteLeave(canLeave)
 onBeforeRouteUpdate((to, from) => to.path === from.path || canLeave())
@@ -63,8 +65,8 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
 </script>
 <template>
   <section class="categories-page">
-    <UCard v-if="editing && detail.isPending.value" role="status" aria-label="Đang tải danh mục"><USkeleton class="tw:h-64 tw:w-full" /></UCard>
-    <UAlert v-else-if="editing && detail.isError.value" color="error" :description="detail.error.value?.code === 'PGRST116' ? 'Danh mục không tồn tại hoặc bạn không có quyền truy cập.' : categoryError(detail.error.value)" role="alert"><template #actions><UButton color="error" variant="outline" label="Thử lại" @click="detail.refetch()" /><UButton color="neutral" variant="outline" label="Về danh sách" @click="back" /></template></UAlert>
-    <CategoryForm v-else :form="form" :editing="editing" :pending="mutation.isPending.value || unsaved.busy" :error="localError || (mutation.error.value ? categoryError(mutation.error.value) : '')" @update="update" @submit="submit" @cancel="back" />
+    <UCard v-if="editing && detail.isPending.value" role="status" :aria-label="t('categories.status.loading')"><USkeleton class="tw:h-64 tw:w-full" /></UCard>
+    <UAlert v-else-if="editing && detail.isError.value" color="error" :description="t(categoryError(detail.error.value))" role="alert"><template #actions><UButton color="error" variant="outline" :label="t('common.actions.retry')" @click="detail.refetch()" /><UButton color="neutral" variant="outline" :label="t('categories.actions.back')" @click="back" /></template></UAlert>
+    <CategoryForm v-else :form="form" :editing="editing" :pending="mutation.isPending.value || unsaved.busy" :error="(localError || mutation.error.value) ? t(categoryError(localError || mutation.error.value)) : ''" @update="update" @submit="submit" @cancel="back" />
   </section>
 </template>

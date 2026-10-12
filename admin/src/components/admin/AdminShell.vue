@@ -1,4 +1,5 @@
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { computed, ref } from "vue";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
@@ -7,6 +8,7 @@ import { supabase } from "../../lib/supabase.js";
 import { signOutAdmin } from "../../utils/adminAuth.js";
 
 import { provideUnsavedChanges, confirmDiscard } from "../../utils/unsavedChanges.js";
+const { t } = useI18n({ useScope: 'global' })
 
 const unsaved = provideUnsavedChanges();
 const route = useRoute();
@@ -27,15 +29,15 @@ const { mutate, isPending: isLoggingOut, error } = useMutation({
   onSettled: () => { unsaved.busy = false; },
 });
 const logoutError = computed(() =>
-  error.value ? "Không thể đăng xuất. Vui lòng thử lại." : "",
+  error.value ? t('auth.errors.logoutFailed') : "",
 );
-const navItems = [
-  { name: "dashboard", label: "Tổng quan", icon: "dashboard" },
-  { name: "categories", label: "Danh mục", icon: "categories" },
-  { name: "word-prompts", label: "Nội dung từ ngữ", icon: "word" },
-  { name: "question-prompts", label: "Nội dung câu hỏi", icon: "question" },
-];
-const pageTitle = computed(() => route.meta.title || "Tổng quan");
+const navItems = computed(() => [
+  { name: "dashboard", label: t('dashboard.title'), icon: "dashboard" },
+  { name: "categories", label: t('categories.title'), icon: "categories" },
+  { name: "word-prompts", label: t('wordPrompts.title'), icon: "word" },
+  { name: "question-prompts", label: t('questionPrompts.title'), icon: "question" },
+]);
+const pageTitle = computed(() => t(route.meta.titleKey || 'dashboard.title'));
 
 supabase.auth.getUser().then(({ data }) => {
   email.value = data.user?.email || "";
@@ -47,7 +49,7 @@ function closeMenu() {
 
 function logout() {
   if (isLoggingOut.value || unsaved.busy) return;
-  if (unsaved.dirty && !confirmDiscard()) return;
+  if (unsaved.dirty && !confirmDiscard(t('common.confirmations.discardChanges'))) return;
   unsaved.busy = true;
   mutate();
 }
@@ -64,7 +66,7 @@ function logout() {
           @click="closeMenu"
         >
           <span class="brand__mark">I</span>
-          <span><strong>Imposter</strong><small>Admin</small></span>
+          <span><strong>Imposter</strong><small>{{ t('navigation.account.admin') }}</small></span>
         </RouterLink>
         <UButton
           class="sidebar__close"
@@ -72,12 +74,12 @@ function logout() {
           variant="ghost"
           icon="i-lucide-x"
           type="button"
-          aria-label="Đóng menu"
+          :aria-label="t('navigation.accessibility.closeMenu')"
           @click="closeMenu"
         />
       </div>
-      <nav class="sidebar__nav" aria-label="Điều hướng chính">
-        <p class="sidebar__label">Quản trị nội dung</p>
+      <nav class="sidebar__nav" :aria-label="t('navigation.accessibility.main')">
+        <p class="sidebar__label">{{ t('navigation.contentManagement') }}</p>
         <RouterLink
           v-for="item in navItems"
           :key="item.name"
@@ -92,11 +94,11 @@ function logout() {
       </nav>
       <div class="sidebar__account">
         <div class="account-card">
-          <UAvatar :alt="email || 'Admin'" size="md" />
+          <UAvatar :alt="email || t('navigation.account.admin')" size="md" />
           <span class="account-card__details"
-            ><strong>Admin</strong
+            ><strong>{{ t('navigation.account.admin') }}</strong
             ><small :title="email">{{
-              email || "Tài khoản quản trị"
+              email || t('navigation.account.fallback')
             }}</small></span
           >
         </div>
@@ -107,7 +109,7 @@ function logout() {
           variant="ghost"
           icon="i-lucide-log-out"
           :loading="isLoggingOut"
-          :label="isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'"
+          :label="isLoggingOut ? t('auth.logout.pending') : t('auth.logout.submit')"
           type="button"
           :disabled="isLoggingOut || unsaved.busy"
           @click="logout"
@@ -122,11 +124,11 @@ function logout() {
           variant="ghost"
           icon="i-lucide-menu"
           type="button"
-          aria-label="Mở menu"
+          :aria-label="t('navigation.accessibility.openMenu')"
           @click="isMenuOpen = true"
         />
         <div>
-          <UBreadcrumb :items="[{ label: 'Admin', to: { name: 'dashboard' } }, { label: pageTitle }]" class="breadcrumb" />
+          <UBreadcrumb :items="[{ label: t('navigation.account.admin'), to: { name: 'dashboard' } }, { label: pageTitle }]" class="breadcrumb" />
           <h1>{{ pageTitle }}</h1>
         </div>
       </header>
