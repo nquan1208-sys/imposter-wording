@@ -63,19 +63,3 @@ h3 {
   height: 20px;
   flex: 0 0 auto;
 }
-
-.spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(32, 32, 32, 0.25);
-  border-top-color: currentColor;
-  border-radius: var(--radius-pill);
-  animation: spin 0.75s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}

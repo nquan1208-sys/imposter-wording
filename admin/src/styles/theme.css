@@ -70,3 +70,10 @@
   --sidebar-width: 264px;
   --topbar-height: 88px;
 }
+
+:root, .light {
+  --ui-primary: var(--color-primary);
+  --ui-color-primary-500: var(--color-primary);
+  --ui-color-primary-600: var(--color-primary-hover);
+  --ui-color-primary-700: var(--color-primary-active);
+}

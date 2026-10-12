@@ -1,10 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
 import AdminShell from "../components/admin/AdminShell.vue";
-import LoginView from "../views/login/LoginView.vue";
-import DashboardView from "../views/dashboard/DashboardView.vue";
-import CategoriesView from "../views/categories/CategoriesView.vue";
-import WordPromptsView from "../views/word-prompts/WordPromptsView.vue";
-import QuestionPromptsView from "../views/question-prompts/QuestionPromptsView.vue";
 import { supabase } from "../lib/supabase.js";
 import { getAdminSession } from "../utils/adminAuth.js";
 
@@ -12,7 +7,7 @@ const routes = [
   {
     path: "/login",
     name: "login",
-    component: LoginView,
+    component: () => import("../views/login/LoginView.vue"),
     meta: { title: "Đăng nhập" },
   },
   {
@@ -24,7 +19,7 @@ const routes = [
       {
         path: "dashboard",
         name: "dashboard",
-        component: DashboardView,
+        component: () => import("../views/dashboard/DashboardView.vue"),
         meta: {
           title: "Tổng quan",
           description:
@@ -34,16 +29,18 @@ const routes = [
       {
         path: "categories",
         name: "categories",
-        component: CategoriesView,
+        component: () => import("../views/categories/CategoriesView.vue"),
         meta: {
           title: "Danh mục",
           description: "Quản lý các danh mục cho trò chơi từ ngữ và câu hỏi.",
         },
       },
+      { path: "categories/new", name: "category-new", component: () => import("../views/categories/CategoryFormView.vue"), meta: { title: "Thêm danh mục" } },
+      { path: "categories/:id/edit", name: "category-edit", component: () => import("../views/categories/CategoryFormView.vue"), meta: { title: "Sửa danh mục" } },
       {
         path: "word-prompts",
         name: "word-prompts",
-        component: WordPromptsView,
+        component: () => import("../views/word-prompts/WordPromptsView.vue"),
         meta: {
           title: "Nội dung từ ngữ",
           description: "Quản lý các cặp từ bí mật cho trò chơi từ ngữ.",
@@ -52,7 +49,7 @@ const routes = [
       {
         path: "question-prompts",
         name: "question-prompts",
-        component: QuestionPromptsView,
+        component: () => import("../views/question-prompts/QuestionPromptsView.vue"),
         meta: {
           title: "Nội dung câu hỏi",
           description: "Quản lý các câu hỏi dành cho civilian và imposter.",

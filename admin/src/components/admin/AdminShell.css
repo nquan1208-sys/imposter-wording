@@ -130,20 +130,6 @@
   padding: 0 var(--space-1) var(--space-3);
 }
 
-.account-card__avatar {
-  display: flex;
-  flex: 0 0 36px;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-pill);
-  background: var(--color-teal-deep);
-  color: var(--color-white);
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
-
 .account-card__details {
   min-width: 0;
 }
@@ -188,21 +174,6 @@
   color: var(--color-white);
 }
 
-.logout-button .app-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.logout-button .spinner {
-  border-color: rgba(255, 255, 255, 0.28);
-  border-top-color: var(--color-white);
-}
-
-.spinner--small {
-  width: 14px;
-  height: 14px;
-}
-
 .admin-shell__body {
   display: flex;
   flex: 1;
@@ -229,15 +200,6 @@
   color: var(--color-charcoal-soft);
   font-size: 0.8125rem;
   line-height: 1.4;
-}
-
-.breadcrumb span {
-  color: var(--color-charcoal-soft);
-}
-
-.breadcrumb .app-icon {
-  width: 14px;
-  height: 14px;
 }
 
 .topbar h1 {

@@ -6,6 +6,9 @@ import AppIcon from "./AppIcon.vue";
 import { supabase } from "../../lib/supabase.js";
 import { signOutAdmin } from "../../utils/adminAuth.js";
 
+import { provideUnsavedChanges, confirmDiscard } from "../../utils/unsavedChanges.js";
+
+const unsaved = provideUnsavedChanges();
 const route = useRoute();
 const router = useRouter();
 const isMenuOpen = ref(false);
@@ -16,9 +19,12 @@ const { mutate, isPending: isLoggingOut, error } = useMutation({
   gcTime: 0,
   mutationFn: async () => {
     await signOutAdmin(supabase);
+    unsaved.dirty = false;
+    unsaved.busy = false;
     queryClient.removeQueries();
     await router.replace({ name: "login" });
   },
+  onSettled: () => { unsaved.busy = false; },
 });
 const logoutError = computed(() =>
   error.value ? "Không thể đăng xuất. Vui lòng thử lại." : "",
@@ -40,7 +46,9 @@ function closeMenu() {
 }
 
 function logout() {
-  if (isLoggingOut.value) return;
+  if (isLoggingOut.value || unsaved.busy) return;
+  if (unsaved.dirty && !confirmDiscard()) return;
+  unsaved.busy = true;
   mutate();
 }
 </script>
@@ -58,14 +66,15 @@ function logout() {
           <span class="brand__mark">I</span>
           <span><strong>Imposter</strong><small>Admin</small></span>
         </RouterLink>
-        <button
+        <UButton
           class="sidebar__close"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-x"
           type="button"
           aria-label="Đóng menu"
           @click="closeMenu"
-        >
-          ×
-        </button>
+        />
       </div>
       <nav class="sidebar__nav" aria-label="Điều hướng chính">
         <p class="sidebar__label">Quản trị nội dung</p>
@@ -75,6 +84,7 @@ function logout() {
           class="nav-item"
           :to="{ name: item.name }"
           :title="item.label"
+          :class="{ 'router-link-active': item.name === 'categories' && route.path.startsWith('/categories') }"
           @click="closeMenu"
         >
           <AppIcon :name="item.icon" /><span>{{ item.label }}</span>
@@ -82,9 +92,7 @@ function logout() {
       </nav>
       <div class="sidebar__account">
         <div class="account-card">
-          <span class="account-card__avatar">{{
-            email.charAt(0).toUpperCase() || "A"
-          }}</span>
+          <UAvatar :alt="email || 'Admin'" size="md" />
           <span class="account-card__details"
             ><strong>Admin</strong
             ><small :title="email">{{
@@ -92,39 +100,37 @@ function logout() {
             }}</small></span
           >
         </div>
-        <p v-if="logoutError" class="logout-error" role="alert">{{ logoutError }}</p>
-        <button
+        <UAlert v-if="logoutError" color="error" :description="logoutError" role="alert" />
+        <UButton
           class="logout-button"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-log-out"
+          :loading="isLoggingOut"
+          :label="isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'"
           type="button"
-          :disabled="isLoggingOut"
+          :disabled="isLoggingOut || unsaved.busy"
           @click="logout"
-        >
-          <span v-if="isLoggingOut" class="spinner spinner--small" /><AppIcon
-            v-else
-            name="logout"
-          />
-          <span>{{ isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất" }}</span>
-        </button>
+        />
       </div>
     </aside>
     <div class="admin-shell__body">
       <header class="topbar">
-        <button
+        <UButton
           class="mobile-menu-button"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-menu"
           type="button"
           aria-label="Mở menu"
           @click="isMenuOpen = true"
-        >
-          ☰
-        </button>
+        />
         <div>
-          <p class="breadcrumb">
-            <span>Admin</span><AppIcon name="arrow" />{{ pageTitle }}
-          </p>
+          <UBreadcrumb :items="[{ label: 'Admin', to: { name: 'dashboard' } }, { label: pageTitle }]" class="breadcrumb" />
           <h1>{{ pageTitle }}</h1>
         </div>
       </header>
-      <main class="page-content"><RouterView /></main>
+      <main class="page-content"><RouterView v-slot="{ Component }"><component :is="Component" :key="route.path" /></RouterView></main>
     </div>
   </div>
 </template>
