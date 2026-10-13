@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase.js'
 import { signInAdmin, adminAuthError } from '../../utils/adminAuth.js'
+import { loginSchema } from '../../utils/loginSchema.js'
 const { t } = useI18n({ useScope: 'global' })
 
 const router = useRouter()
@@ -31,9 +32,9 @@ const errorMessage = computed(() =>
   error.value ? t(adminAuthError(error.value)) : '',
 )
 
-function submitLogin() {
+function submitLogin(event) {
   if (isSubmitting.value) return
-  mutate({ email: credentials.email.trim(), password: credentials.password })
+  mutate(event.data)
 }
 </script>
 
@@ -51,9 +52,9 @@ function submitLogin() {
         <p>{{ t('auth.login.description') }}</p>
       </div>
 
-      <UForm :state="credentials" :disabled="isSubmitting" class="login-form" @submit="submitLogin">
-        <UFormField :label="t('auth.login.email')" name="email" required><UInput v-model="credentials.email" type="email" autocomplete="email" placeholder="admin@example.com" required class="tw:w-full" /></UFormField>
-        <UFormField :label="t('auth.login.password')" name="password" required><UInput v-model="credentials.password" type="password" autocomplete="current-password" :placeholder="t('auth.login.passwordPlaceholder')" required class="tw:w-full" /></UFormField>
+      <UForm :schema="loginSchema" :state="credentials" :disabled="isSubmitting" novalidate v-slot="{ errors }" class="login-form" @submit="submitLogin">
+        <UFormField :label="t('auth.login.email')" name="email" required><UInput v-model="credentials.email" type="email" autocomplete="email" placeholder="admin@example.com" required class="tw:w-full" /><template v-if="errors.some(issue => issue.name === 'email')" #error="{ error }">{{ t(error) }}</template></UFormField>
+        <UFormField :label="t('auth.login.password')" name="password" required><UInput v-model="credentials.password" type="password" autocomplete="current-password" :placeholder="t('auth.login.passwordPlaceholder')" required class="tw:w-full" /><template v-if="errors.some(issue => issue.name === 'password')" #error="{ error }">{{ t(error) }}</template></UFormField>
         <UAlert v-if="errorMessage" color="error" :description="errorMessage" role="alert" />
         <UButton type="submit" :loading="isSubmitting" :disabled="isSubmitting" block :label="t('auth.login.submit')" />
       </UForm>

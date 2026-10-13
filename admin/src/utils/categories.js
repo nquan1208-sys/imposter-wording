@@ -1,5 +1,24 @@
+import { z } from 'zod'
+
 export const gameTypeLabels = { word: 'common.gameTypes.word', question: 'common.gameTypes.question' }
 export const pageSize = 20
+
+const categoryFields = z.object({
+  name: z.string({ error: 'categories.errors.nameRequired' }).trim().min(1, 'categories.errors.nameRequired'),
+  slug: z.string({ error: 'categories.errors.invalidSlug' }).trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'categories.errors.invalidSlug'),
+  description: z.string({ error: 'categories.errors.invalidData' }).nullish().transform(value => value?.trim() || null),
+  sort_order: z.union([z.string(), z.number()], { error: 'categories.errors.invalidSortOrder' })
+    .refine(value => String(value).trim() !== '' && Number.isSafeInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 2147483647, 'categories.errors.invalidSortOrder')
+    .transform(Number),
+  is_active: z.boolean({ error: 'categories.errors.invalidData' }).default(false),
+})
+const newCategorySchema = categoryFields.extend({
+  game_type: z.enum(Object.keys(gameTypeLabels), { error: 'categories.errors.invalidGameType' }),
+}).transform(payload => ({ ...payload, locale: 'vi' }))
+
+export function categorySchema(editing = false) {
+  return editing ? categoryFields : newCategorySchema
+}
 
 export function slugFromName(name) {
   return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd')
@@ -7,19 +26,9 @@ export function slugFromName(name) {
 }
 
 export function categoryPayload(form, editing = false) {
-  const name = form.name.trim()
-  const slug = form.slug.trim()
-  if (!name) throw new Error('categories.errors.nameRequired')
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error('categories.errors.invalidSlug')
-  if (String(form.sort_order).trim() === '' || !Number.isSafeInteger(Number(form.sort_order)) || Number(form.sort_order) < 0 || Number(form.sort_order) > 2147483647) {
-    throw new Error('categories.errors.invalidSortOrder')
-  }
-  const payload = { name, slug, description: form.description?.trim() || null, sort_order: Number(form.sort_order), is_active: Boolean(form.is_active) }
-  if (!editing) {
-    if (!Object.hasOwn(gameTypeLabels, form.game_type)) throw new Error('categories.errors.invalidGameType')
-    Object.assign(payload, { game_type: form.game_type, locale: 'vi' })
-  }
-  return payload
+  const result = categorySchema(editing).safeParse(form)
+  if (!result.success) throw new Error(result.error.issues[0].message)
+  return result.data
 }
 
 // Escape PostgREST quoted values and LIKE wildcards: search is literal substring matching.
@@ -28,7 +37,7 @@ export function searchPattern(value) {
   return `"%${literal.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}%"`
 }
 
-const validationKeys = new Set(['categories.errors.nameRequired', 'categories.errors.invalidSlug', 'categories.errors.invalidSortOrder', 'categories.errors.invalidGameType'])
+const validationKeys = new Set(['categories.errors.nameRequired', 'categories.errors.invalidSlug', 'categories.errors.invalidSortOrder', 'categories.errors.invalidGameType', 'categories.errors.invalidData'])
 const errorKeys = {
   '23505': 'categories.errors.slugExists',
   '42501': 'common.errors.forbidden',

@@ -5,7 +5,7 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vu
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { supabase } from '../../lib/supabase.js'
 import { getCategory, saveCategory } from '../../api/categories.js'
-import { categoryError, categoryPayload, slugFromName } from '../../utils/categories.js'
+import { categoryError, slugFromName } from '../../utils/categories.js'
 import { confirmDiscard, useUnsavedChanges } from '../../utils/unsavedChanges.js'
 import CategoryForm from '../../components/categories/CategoryForm.vue'
 const { t } = useI18n({ useScope: 'global' })
@@ -18,7 +18,6 @@ const editing = computed(() => Boolean(id.value))
 const form = reactive({ name: '', slug: '', game_type: 'word', description: '', locale: 'vi', sort_order: 0, is_active: true })
 const baseline = ref(JSON.stringify(form))
 const slugEdited = ref(false)
-const localError = ref('')
 const loadedId = ref('')
 const detail = useQuery({ queryKey: computed(() => ['categories', 'detail', id.value]), enabled: editing, queryFn: () => getCategory(supabase, id.value), retry: false, refetchOnWindowFocus: false })
 watch(detail.data, data => {
@@ -31,7 +30,7 @@ function update(key, value) {
   form[key] = value
   if (key === 'slug') slugEdited.value = true
   if (key === 'name' && !editing.value && !slugEdited.value) form.slug = slugFromName(value)
-  localError.value = ''; mutation.reset()
+  mutation.reset()
 }
 function back() { return router.push({ name: 'categories', query: route.query }) }
 const mutation = useMutation({
@@ -46,9 +45,8 @@ const mutation = useMutation({
 })
 function submit() {
   if (mutation.isPending.value) return
-  try { categoryPayload(form, editing.value) } catch (error) { localError.value = error; return }
   if (loadedId.value && detail.data.value?.is_active && !form.is_active && !window.confirm(t('categories.confirmations.deactivate'))) return
-  localError.value = ''; unsaved.busy = true; mutation.mutate()
+  unsaved.busy = true; mutation.mutate()
 }
 function canLeave() {
   if (unsaved.busy) return false
@@ -67,6 +65,6 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
   <section class="categories-page">
     <UCard v-if="editing && detail.isPending.value" role="status" :aria-label="t('categories.status.loading')"><USkeleton class="tw:h-64 tw:w-full" /></UCard>
     <UAlert v-else-if="editing && detail.isError.value" color="error" :description="t(categoryError(detail.error.value))" role="alert"><template #actions><UButton color="error" variant="outline" :label="t('common.actions.retry')" @click="detail.refetch()" /><UButton color="neutral" variant="outline" :label="t('categories.actions.back')" @click="back" /></template></UAlert>
-    <CategoryForm v-else :form="form" :editing="editing" :pending="mutation.isPending.value || unsaved.busy" :error="(localError || mutation.error.value) ? t(categoryError(localError || mutation.error.value)) : ''" @update="update" @submit="submit" @cancel="back" />
+    <CategoryForm v-else :form="form" :editing="editing" :pending="mutation.isPending.value || unsaved.busy" :error="mutation.error.value ? t(categoryError(mutation.error.value)) : ''" @update="update" @submit="submit" @cancel="back" />
   </section>
 </template>

@@ -59,6 +59,8 @@
       "submit": "Đăng xuất"
     },
     "errors": {
+      "invalidEmail": "Vui lòng nhập email hợp lệ.",
+      "passwordRequired": "Vui lòng nhập mật khẩu.",
       "loginFailed": "Đăng nhập không thành công.",
       "invalidCredentials": "Email hoặc mật khẩu không đúng.",
       "emailNotConfirmed": "Email chưa được xác nhận.",

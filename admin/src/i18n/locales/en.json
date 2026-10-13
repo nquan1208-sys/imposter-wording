@@ -1,1 +1,8 @@
-{}
+{
+  "auth": {
+    "errors": {
+      "invalidEmail": "Please enter a valid email address.",
+      "passwordRequired": "Please enter your password."
+    }
+  }
+}
