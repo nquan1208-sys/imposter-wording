@@ -55,6 +55,7 @@ test('literal translations, route metadata and dynamic key maps exist in Vietnam
   for (const [path, source] of await sources(new URL('../src/', import.meta.url))) {
     for (const match of source.matchAll(/\bt\(\s*['"]([^'"]+)['"]|(?:titleKey|descriptionKey):\s*['"]([^'"]+)['"]|['"]((?:common|auth|categories|navigation|dashboard|wordPrompts|questionPrompts|placeholder)\.[a-zA-Z0-9.]+)['"]/g)) {
       const key = match[1] || match[2] || match[3]
+      if (key.endsWith('.')) { assert.ok(Object.keys(viKeys).some(value => value.startsWith(key)), key); continue }
       assert.ok(Object.hasOwn(viKeys, key), `${path.pathname}: ${key}`)
     }
   }

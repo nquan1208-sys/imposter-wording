@@ -70,10 +70,11 @@ test('mounted components react to locale changes and preserve delete/leave guard
     const signIn = supabase.auth.signInWithPassword
     try {
       supabase.auth.signInWithPassword = async () => ({ error: new Error('backend diagnostic') })
-      login.submitLogin()
+      login.submitLogin({ data: { email: 'admin@example.com', password: 'password' } })
       await new Promise(resolve => setTimeout(resolve, 0))
     } finally { supabase.auth.signInWithPassword = signIn }
     editor.submit()
+    await new Promise(resolve => setTimeout(resolve, 0))
     assert.equal(shell.navItems[0].label, 'Tổng quan')
     assert.equal(filters.gameTypes[1].label, 'Từ ngữ')
     assert.equal(form.gameTypes[0].label, 'Từ ngữ')
@@ -81,7 +82,7 @@ test('mounted components react to locale changes and preserve delete/leave guard
     assert.equal(table.dateFormat.resolvedOptions().locale, 'vi-VN')
     assert.equal(list.t(list.message), 'Đã cập nhật trạng thái.')
     assert.equal(login.errorMessage, 'Đăng nhập không thành công.')
-    assert.equal(editor.localError.message, 'categories.errors.nameRequired')
+    assert.equal(editor.mutation.error.value.message, 'categories.errors.nameRequired')
     i18n.global.locale.value = 'en'
     await nextTick()
     assert.equal(shell.navItems[0].label, 'Dashboard')
@@ -92,7 +93,7 @@ test('mounted components react to locale changes and preserve delete/leave guard
     assert.equal(table.dateFormat.resolvedOptions().locale, 'en-US')
     assert.equal(list.t(list.message), 'Status updated')
     assert.equal(login.errorMessage, 'Login failed')
-    assert.equal(editor.t(editor.localError.message), 'Name required')
+    assert.equal(editor.t(editor.mutation.error.value.message), 'Name required')
     assert.equal(editor.form.locale, 'vi')
     editor.update('name', 'Food')
     assert.equal(editor.canLeave(), false)

@@ -66,7 +66,7 @@ Giải thích luật chơi theo từng bước trước khi người dùng bắt
 
 - Mỗi người lần lượt xem thông tin của mình.
 - Người chơi bình thường nhìn thấy từ bí mật.
-- Kẻ mạo danh chỉ nhìn thấy danh mục.
+- Kẻ mạo danh thấy vai trò; chỉ thấy tên danh mục nếu bật hiển thị danh mục.
 - Biểu tượng: con mắt.
 
 #### Bước 3 — Đưa ra gợi ý
@@ -344,7 +344,7 @@ Cho phép từng người chơi lần lượt mở thông tin bí mật của m�
 
 - Chạm vào thẻ bí mật sẽ chuyển từ trạng thái che sang trạng thái hiển thị.
 - Người chơi thường nhìn thấy từ bí mật.
-- Kẻ mạo danh nhìn thấy thông tin theo cấu hình của ván, có thể là danh mục hoặc gợi ý.
+- Kẻ mạo danh thấy vai trò và tên danh mục của từ được chọn khi bật `Hiển thị danh mục cho kẻ mạo danh`; khi tắt chỉ thấy vai trò. Không hiển thị từ, hint hoặc ảnh bí mật. Thiết lập thuộc ván và lưu local, không thuộc từng đề.
 - Chạm `Hiểu rồi!` sẽ quay về màn hình `Người chơi` và đánh dấu người chơi hiện tại đã hoàn tất.
 - Không cho phép hiển thị lại từ của người chơi đã hoàn tất.
 

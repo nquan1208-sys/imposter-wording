@@ -158,7 +158,88 @@
   },
   "wordPrompts": {
     "title": "Nội dung từ ngữ",
-    "description": "Quản lý các cặp từ bí mật cho trò chơi từ ngữ."
+    "description": "Quản lý các từ bí mật cho trò chơi từ ngữ.",
+    "actions": {
+      "create": "Tạo đề từ ngữ",
+      "edit": "Sửa đề",
+      "save": "Lưu",
+      "publish": "Publish",
+      "draft": "Đưa về nháp",
+      "archive": "Archive",
+      "delete": "Xóa vĩnh viễn",
+      "reload": "Tải lại đề",
+      "removeImage": "Bỏ ảnh",
+      "retryImage": "Tải lại ảnh"
+    },
+    "fields": {
+      "civilianText": "Từ civilian",
+      "categoryId": "Danh mục",
+      "difficulty": "Độ khó",
+      "isFamilyFriendly": "Family Mode",
+      "locale": "Ngôn ngữ",
+      "imagePath": "Ảnh",
+      "status": "Trạng thái",
+      "updatedAt": "Cập nhật"
+    },
+    "statuses": {
+      "draft": "Nháp",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "difficulties": {
+      "easy": "Dễ",
+      "medium": "Trung bình",
+      "hard": "Khó"
+    },
+    "errors": {
+      "civilianRequired": "Nhập từ civilian.",
+      "categoryRequired": "Chọn danh mục phù hợp.",
+      "localeRequired": "Nhập ngôn ngữ.",
+      "invalidData": "Dữ liệu không hợp lệ hoặc danh mục không phù hợp để publish.",
+      "invalidImage": "Ảnh phải đọc được, thuộc JPEG, PNG hoặc WebP và không quá 5 MiB.",
+      "conflict": "Đề đã thay đổi ở nơi khác. Hãy tải lại trước khi xác nhận.",
+      "notFound": "Đề không còn tồn tại.",
+      "confirmation": "Nhập chính xác XÓA để xác nhận."
+    },
+    "deleteDialog": {
+      "warning": "Không thể khôi phục đề sau khi xóa. Thay đổi chưa lưu sẽ bị bỏ. Toàn bộ file ảnh vẫn được giữ.",
+      "confirmation": "Nhập chính xác XÓA"
+    },
+    "confirmations": {
+      "save": "Đề đang published. Lưu nội dung và thay đổi trạng thái ngay cho người chơi?"
+    },
+    "messages": {
+      "deleted": "Đã xóa vĩnh viễn đề. File ảnh vẫn được giữ.",
+      "saved": "Đã lưu đề."
+    },
+    "preview": {
+      "civilian": "Preview civilian",
+      "imposter": "Preview imposter",
+      "role": "Bạn là kẻ mạo danh.",
+      "categoryVisible": "Bật hiển thị danh mục",
+      "categoryHidden": "Tắt hiển thị danh mục",
+      "selectCategory": "Chọn danh mục để xem trước."
+    },
+    "upload": {
+      "uploading": "Đang upload ảnh…",
+      "uploaded": "Đã upload ảnh.",
+      "failed": "Lưu ảnh hoặc đề không thành công."
+    },
+    "all": "Tất cả",
+    "yes": "Có",
+    "no": "Không",
+    "inactive": "Đã tắt",
+    "search": "Tìm hai trường từ",
+    "sort": "Sắp xếp",
+    "actionsLabel": "Hành động",
+    "loading": "Đang tải đề…",
+    "loadingImage": "Đang tải ảnh…",
+    "empty": "Không có đề phù hợp.",
+    "imageHelp": "JPEG, PNG hoặc WebP; tối đa 5 MiB. Ảnh chỉ upload khi lưu.",
+    "pagination": {
+      "summary": "{count} đề · Trang {page} / {pages}",
+      "label": "Phân trang đề từ ngữ"
+    }
   },
   "questionPrompts": {
     "title": "Nội dung câu hỏi",
