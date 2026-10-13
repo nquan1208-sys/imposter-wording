@@ -19,10 +19,20 @@ Thứ tự triển khai khác với thứ tự menu: `Tổng quan` vẫn là mà
 
 ### Phạm vi bước tiếp theo: Danh mục
 
-1. Làm bảng danh mục với bộ lọc loại game, ngôn ngữ, trạng thái; tìm kiếm, phân trang và sắp xếp theo tài liệu layout.
-2. Làm form thêm/sửa với các trường đã quy định; khóa loại game khi danh mục đã có content.
-3. Nối thao tác đọc/ghi backend, hiển thị lỗi lưu và xác nhận trước khi deactivate.
-4. Kiểm tra tạo → sửa → lọc → deactivate → tải lại trang để xác nhận dữ liệu được lưu đúng.
+1. Danh sách `/categories`: tìm kiếm backend theo tên/slug (debounce 300 ms), lọc loại game/trạng thái, phân trang 20 dòng và sắp xếp. Giữ bộ lọc trong URL.
+2. Form `/categories/new` và `/categories/:id/edit`: tạo tiếng Việt; khi sửa giữ nguyên ngôn ngữ và khóa loại trò chơi.
+3. Backend đọc/ghi qua `admin/src/api/categories.js`; component hiển thị, utils và CSS tách riêng. Vue Query tải lại dữ liệu sau thao tác.
+4. Xóa rỗng; chuyển toàn bộ content sang danh mục đang hoạt động cùng loại/locale rồi xóa; hoặc xóa toàn bộ content và danh mục. RPC xử lý nguyên tử, kiểm tra quyền admin, khóa dữ liệu và xác nhận phiên bản content trước purge.
+5. Xóa toàn bộ phải nhập đúng tên và xem số content theo trạng thái. File Storage được giữ lại; chưa có luồng dọn ảnh.
+6. Tắt danh mục cần xác nhận; cảnh báo thay đổi chưa lưu khi điều hướng, tải lại hoặc đăng xuất.
+
+### Kiểm thử và triển khai danh mục
+
+- `cd admin && yarn test` và `yarn build:local`.
+- Áp dụng migration mới bằng `supabase migration up --local`; không reset dữ liệu.
+- Chạy `supabase/tests/category_management.sql` bằng psql với `ON_ERROR_STOP=1`; script rollback fixture.
+- Chạy `python3 supabase/tests/category_concurrency.py` để kiểm tra thêm content đồng thời trên container local.
+- Deployment backend phải áp dụng migration `20261012155821_category_management.sql` trước khi phát hành frontend; bản triển khai này không tự push lên remote.
 
 ### Tiêu chí hoàn thành mỗi màn
 

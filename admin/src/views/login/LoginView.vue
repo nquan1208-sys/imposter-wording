@@ -1,14 +1,16 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { computed, reactive } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase.js'
-import { signInAdmin } from '../../utils/adminAuth.js'
+import { signInAdmin, adminAuthError } from '../../utils/adminAuth.js'
+import { loginSchema } from '../../utils/loginSchema.js'
+const { t } = useI18n({ useScope: 'global' })
 
 const router = useRouter()
 const route = useRoute()
-const email = ref('')
-const password = ref('')
+const credentials = reactive({ email: '', password: '' })
 const queryClient = useQueryClient()
 const { mutate, isPending: isSubmitting, error } = useMutation({
   retry: false,
@@ -27,12 +29,12 @@ const { mutate, isPending: isSubmitting, error } = useMutation({
   },
 })
 const errorMessage = computed(() =>
-  error.value ? error.value.message || 'Đăng nhập không thành công.' : '',
+  error.value ? t(adminAuthError(error.value)) : '',
 )
 
-function submitLogin() {
+function submitLogin(event) {
   if (isSubmitting.value) return
-  mutate({ email: email.value.trim(), password: password.value })
+  mutate(event.data)
 }
 </script>
 
@@ -41,31 +43,22 @@ function submitLogin() {
     <section class="login-card" aria-labelledby="login-title">
       <div class="login-card__brand">
         <span class="brand__mark">I</span>
-        <span><strong>Imposter</strong><small>Admin</small></span>
+        <span><strong>Imposter</strong><small>{{ t('navigation.account.admin') }}</small></span>
       </div>
 
       <div class="login-card__heading">
-        <p class="eyebrow">Khu vực quản trị</p>
-        <h1 id="login-title">Chào mừng trở lại</h1>
-        <p>Đăng nhập để quản lý nội dung trò chơi của bạn.</p>
+        <p class="eyebrow">{{ t('auth.login.eyebrow') }}</p>
+        <h1 id="login-title">{{ t('auth.login.title') }}</h1>
+        <p>{{ t('auth.login.description') }}</p>
       </div>
 
-      <form class="login-form" @submit.prevent="submitLogin">
-        <div class="form-field">
-          <label for="email">Email</label>
-          <input id="email" v-model="email" type="text" autocomplete="email" placeholder="admin@example.com" required :disabled="isSubmitting" />
-        </div>
-        <div class="form-field">
-          <label for="password">Mật khẩu</label>
-          <input id="password" v-model="password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" required :disabled="isSubmitting" />
-        </div>
-        <p v-if="errorMessage" class="form-error" role="alert">{{ errorMessage }}</p>
-        <button class="primary-button login-button" type="submit" :disabled="isSubmitting">
-          <span v-if="isSubmitting" class="spinner" />
-          <span>{{ isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập' }}</span>
-        </button>
-      </form>
+      <UForm :schema="loginSchema" :state="credentials" :disabled="isSubmitting" novalidate v-slot="{ errors }" class="login-form" @submit="submitLogin">
+        <UFormField :label="t('auth.login.email')" name="email" required><UInput v-model="credentials.email" type="email" autocomplete="email" placeholder="admin@example.com" required class="tw:w-full" /><template v-if="errors.some(issue => issue.name === 'email')" #error="{ error }">{{ t(error) }}</template></UFormField>
+        <UFormField :label="t('auth.login.password')" name="password" required><UInput v-model="credentials.password" type="password" autocomplete="current-password" :placeholder="t('auth.login.passwordPlaceholder')" required class="tw:w-full" /><template v-if="errors.some(issue => issue.name === 'password')" #error="{ error }">{{ t(error) }}</template></UFormField>
+        <UAlert v-if="errorMessage" color="error" :description="errorMessage" role="alert" />
+        <UButton type="submit" :loading="isSubmitting" :disabled="isSubmitting" block :label="t('auth.login.submit')" />
+      </UForm>
     </section>
-    <p class="login-footer">Chỉ dành cho tài khoản quản trị được cấp quyền.</p>
+    <p class="login-footer">{{ t('auth.login.footer') }}</p>
   </main>
 </template>

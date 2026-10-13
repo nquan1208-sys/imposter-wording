@@ -1,10 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
 import AdminShell from "../components/admin/AdminShell.vue";
-import LoginView from "../views/login/LoginView.vue";
-import DashboardView from "../views/dashboard/DashboardView.vue";
-import CategoriesView from "../views/categories/CategoriesView.vue";
-import WordPromptsView from "../views/word-prompts/WordPromptsView.vue";
-import QuestionPromptsView from "../views/question-prompts/QuestionPromptsView.vue";
 import { supabase } from "../lib/supabase.js";
 import { getAdminSession } from "../utils/adminAuth.js";
 
@@ -12,8 +7,8 @@ const routes = [
   {
     path: "/login",
     name: "login",
-    component: LoginView,
-    meta: { title: "Đăng nhập" },
+    component: () => import("../views/login/LoginView.vue"),
+    meta: { titleKey: "auth.login.routeTitle" },
   },
   {
     path: "/",
@@ -24,38 +19,39 @@ const routes = [
       {
         path: "dashboard",
         name: "dashboard",
-        component: DashboardView,
+        component: () => import("../views/dashboard/DashboardView.vue"),
         meta: {
-          title: "Tổng quan",
-          description:
-            "Theo dõi nhanh tình trạng nội dung và các việc cần xử lý.",
+          titleKey: "dashboard.title",
+          descriptionKey: "dashboard.description",
         },
       },
       {
         path: "categories",
         name: "categories",
-        component: CategoriesView,
+        component: () => import("../views/categories/CategoriesView.vue"),
         meta: {
-          title: "Danh mục",
-          description: "Quản lý các danh mục cho trò chơi từ ngữ và câu hỏi.",
+          titleKey: "categories.title",
+          descriptionKey: "categories.description",
         },
       },
+      { path: "categories/new", name: "category-new", component: () => import("../views/categories/CategoryFormView.vue"), meta: { titleKey: "categories.actions.create" } },
+      { path: "categories/:id/edit", name: "category-edit", component: () => import("../views/categories/CategoryFormView.vue"), meta: { titleKey: "categories.form.editTitle" } },
       {
         path: "word-prompts",
         name: "word-prompts",
-        component: WordPromptsView,
+        component: () => import("../views/word-prompts/WordPromptsView.vue"),
         meta: {
-          title: "Nội dung từ ngữ",
-          description: "Quản lý các cặp từ bí mật cho trò chơi từ ngữ.",
+          titleKey: "wordPrompts.title",
+          descriptionKey: "wordPrompts.description",
         },
       },
       {
         path: "question-prompts",
         name: "question-prompts",
-        component: QuestionPromptsView,
+        component: () => import("../views/question-prompts/QuestionPromptsView.vue"),
         meta: {
-          title: "Nội dung câu hỏi",
-          description: "Quản lý các câu hỏi dành cho civilian và imposter.",
+          titleKey: "questionPrompts.title",
+          descriptionKey: "questionPrompts.description",
         },
       },
     ],

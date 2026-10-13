@@ -1,5 +1,9 @@
+@import "tailwindcss" prefix(tw);
+@import "@nuxt/ui";
 @import "./theme.css";
 @import "./base.css";
 @import "../components/admin/AdminShell.css";
 @import "../views/login/LoginView.css";
 @import "../views/shared/AdminPlaceholder.css";
+
+@import "../views/categories/CategoriesView.css";

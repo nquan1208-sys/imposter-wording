@@ -56,7 +56,7 @@ Cho admin biết nhanh tình trạng content và các việc cần xử lý.
 - Nút chính: `+ Thêm danh mục`.
 - Bộ lọc:
   - Loại game: `Từ ngữ` hoặc `Câu hỏi`.
-  - Ngôn ngữ.
+  - Ngôn ngữ hiển thị trong bảng; bản tạo mới cố định tiếng Việt.
   - Trạng thái active/inactive.
 - Bảng danh mục gồm:
   - Tên danh mục.
@@ -77,7 +77,15 @@ Cho admin biết nhanh tình trạng content và các việc cần xử lý.
 - Thứ tự hiển thị.
 - Active/inactive.
 
-Loại game không được thay đổi nếu danh mục đã có content. Nếu cần đổi loại, admin phải tạo danh mục mới.
+Loại game và ngôn ngữ được cố định khi sửa. Nếu cần đổi loại, admin phải tạo danh mục mới.
+
+### Xóa danh mục
+
+- Danh mục rỗng: xác nhận rồi xóa vĩnh viễn.
+- Danh mục có content: chuyển toàn bộ content sang danh mục đang hoạt động cùng loại/ngôn ngữ rồi xóa, hoặc xóa cả danh mục và toàn bộ content.
+- Xóa toàn bộ hiển thị số nháp/published/archived và yêu cầu nhập đúng tên danh mục. Nếu content thay đổi sau khi mở hộp thoại, tải lại thống kê để xác nhận lại.
+- Backend xử lý trong một giao dịch; không cascade tự động. Xóa bản ghi không dọn file ảnh Storage.
+
 
 ## Màn hình Nội dung từ ngữ
 

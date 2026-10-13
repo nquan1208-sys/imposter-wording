@@ -92,7 +92,7 @@ test("login rejects non-admin users and signs them out", async () => {
     signedOut = true;
     return { error: null };
   };
-  await assert.rejects(signInAdmin(client, {}), /chưa được cấp quyền quản trị/);
+  await assert.rejects(signInAdmin(client, {}), { message: 'auth.errors.adminRequired' });
   assert.equal(signedOut, true);
 });
 

@@ -5,6 +5,7 @@
   "packageManager": "yarn@1.22.22",
   "type": "module",
   "scripts": {
+    "test": "node --test tests/*.test.js",
     "dev:local": "vite --mode localdev",
     "dev:development": "vite --mode development",
     "build:local": "vite build --mode localdev",
@@ -13,10 +14,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@iconify-json/lucide": "^1.2.143",
+    "@nuxt/ui": "4.11.3",
     "@supabase/supabase-js": "^2.117.2",
     "@tanstack/vue-query": "^5",
+    "tailwindcss": "^4",
     "vue": "^3.5.42",
-    "vue-router": "^4.6.3"
+    "vue-i18n": "^11",
+    "vue-router": "^4.6.3",
+    "zod": "^4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.8",

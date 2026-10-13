@@ -1,0 +1,172 @@
+{
+  "common": {
+    "actions": {
+      "cancel": "Hủy",
+      "retry": "Thử lại",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "activate": "Bật",
+      "deactivate": "Tắt"
+    },
+    "fields": {
+      "gameType": "Loại trò chơi",
+      "locale": "Ngôn ngữ",
+      "status": "Trạng thái"
+    },
+    "status": {
+      "active": "Đang hoạt động",
+      "inactive": "Đã tắt"
+    },
+    "gameTypes": {
+      "word": "Từ ngữ",
+      "question": "Câu hỏi"
+    },
+    "errors": {
+      "operationFailed": "Không thể thực hiện thao tác. Vui lòng thử lại.",
+      "forbidden": "Bạn không có quyền thực hiện thao tác này. Vui lòng đăng nhập lại.",
+      "sessionExpired": "Phiên đăng nhập đã hết hạn."
+    },
+    "confirmations": {
+      "discardChanges": "Bạn có thay đổi chưa lưu. Bạn muốn bỏ các thay đổi này?"
+    }
+  },
+  "navigation": {
+    "accessibility": {
+      "closeMenu": "Đóng menu",
+      "openMenu": "Mở menu",
+      "main": "Điều hướng chính"
+    },
+    "contentManagement": "Quản trị nội dung",
+    "account": {
+      "fallback": "Tài khoản quản trị",
+      "admin": "Admin"
+    }
+  },
+  "auth": {
+    "login": {
+      "routeTitle": "Đăng nhập",
+      "eyebrow": "Khu vực quản trị",
+      "title": "Chào mừng trở lại",
+      "description": "Đăng nhập để quản lý nội dung trò chơi của bạn.",
+      "email": "Email",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "Nhập mật khẩu",
+      "submit": "Đăng nhập",
+      "footer": "Chỉ dành cho tài khoản quản trị được cấp quyền."
+    },
+    "logout": {
+      "pending": "Đang đăng xuất...",
+      "submit": "Đăng xuất"
+    },
+    "errors": {
+      "invalidEmail": "Vui lòng nhập email hợp lệ.",
+      "passwordRequired": "Vui lòng nhập mật khẩu.",
+      "loginFailed": "Đăng nhập không thành công.",
+      "invalidCredentials": "Email hoặc mật khẩu không đúng.",
+      "emailNotConfirmed": "Email chưa được xác nhận.",
+      "rateLimited": "Quá nhiều lần đăng nhập. Vui lòng thử lại sau.",
+      "adminRequired": "Tài khoản này chưa được cấp quyền quản trị.",
+      "logoutFailed": "Không thể đăng xuất. Vui lòng thử lại."
+    }
+  },
+  "dashboard": {
+    "title": "Tổng quan",
+    "description": "Theo dõi nhanh tình trạng nội dung và các việc cần xử lý."
+  },
+  "categories": {
+    "title": "Danh mục",
+    "description": "Quản lý các danh mục cho trò chơi từ ngữ và câu hỏi.",
+    "help": {
+      "overview": "Quản lý danh mục cho nội dung từ ngữ và câu hỏi.",
+      "slug": "Chữ thường, số và dấu gạch ngang.",
+      "immutableGameType": "Loại trò chơi được cố định sau khi tạo."
+    },
+    "actions": {
+      "create": "Thêm danh mục",
+      "save": "Lưu danh mục",
+      "back": "Về danh sách"
+    },
+    "form": {
+      "editTitle": "Sửa danh mục"
+    },
+    "fields": {
+      "name": "Tên danh mục",
+      "slug": "Slug",
+      "sortOrder": "Thứ tự hiển thị",
+      "description": "Mô tả"
+    },
+    "filters": {
+      "all": "Tất cả",
+      "search": "Tìm kiếm",
+      "searchPlaceholder": "Tên hoặc slug",
+      "sort": "Sắp xếp",
+      "nameAscending": "Tên A–Z",
+      "latestUpdated": "Cập nhật mới nhất"
+    },
+    "table": {
+      "content": "Content",
+      "updated": "Cập nhật",
+      "actions": "Thao tác",
+      "caption": "Danh sách danh mục",
+      "empty": "Không có danh mục phù hợp."
+    },
+    "status": {
+      "loading": "Đang tải danh mục",
+      "refreshing": "Đang cập nhật danh sách…"
+    },
+    "pagination": {
+      "summary": "{count} danh mục · Trang {page} / {pages}",
+      "label": "Phân trang danh mục"
+    },
+    "messages": {
+      "statusUpdated": "Đã cập nhật trạng thái.",
+      "deleted": "Đã xóa danh mục."
+    },
+    "confirmations": {
+      "deactivate": "Tắt danh mục này? Content bên trong sẽ được giữ nguyên.",
+      "deactivateNamed": "Tắt danh mục “{name}”? Content bên trong sẽ được giữ nguyên."
+    },
+    "errors": {
+      "nameRequired": "Vui lòng nhập tên danh mục.",
+      "invalidSlug": "Slug chỉ gồm chữ thường, số và dấu gạch ngang giữa các từ.",
+      "invalidSortOrder": "Thứ tự phải là số nguyên không âm trong giới hạn 2147483647.",
+      "invalidGameType": "Loại trò chơi không hợp lệ.",
+      "slugExists": "Slug đã tồn tại trong loại trò chơi và ngôn ngữ này.",
+      "notFound": "Danh mục không tồn tại hoặc bạn không có quyền truy cập.",
+      "invalidData": "Dữ liệu không hợp lệ hoặc nội dung liên kết đã thay đổi. Vui lòng kiểm tra và tải lại thống kê."
+    },
+    "deleteDialog": {
+      "title": "Xóa danh mục",
+      "description": "Kiểm tra nội dung liên kết trước khi xóa vĩnh viễn.",
+      "loading": "Đang tải thống kê mới nhất…",
+      "category": "Danh mục: {name}",
+      "counts": "Nháp: {draft} · Published: {published} · Archived: {archived}",
+      "empty": "Danh mục đang rỗng. Xóa vĩnh viễn danh mục này?",
+      "linkedContent": "Cách xử lý {count} content đang liên kết",
+      "transfer": "Chuyển content rồi xóa",
+      "purge": "Xóa danh mục và toàn bộ content",
+      "target": "Danh mục nhận",
+      "targetPlaceholder": "Chọn danh mục",
+      "targetsLoading": "Đang tải danh mục nhận…",
+      "noTargets": "Không có danh mục nhận đang hoạt động, cùng loại và ngôn ngữ.",
+      "irreversible": "Không thể hoàn tác",
+      "warning": "Toàn bộ content, kể cả published, sẽ bị xóa vĩnh viễn. File ảnh Storage được giữ lại.",
+      "confirmName": "Nhập đúng tên danh mục để xác nhận",
+      "confirm": "Xác nhận xóa",
+      "refresh": "Tải lại thống kê"
+    }
+  },
+  "wordPrompts": {
+    "title": "Nội dung từ ngữ",
+    "description": "Quản lý các cặp từ bí mật cho trò chơi từ ngữ."
+  },
+  "questionPrompts": {
+    "title": "Nội dung câu hỏi",
+    "description": "Quản lý các câu hỏi dành cho civilian và imposter."
+  },
+  "placeholder": {
+    "eyebrow": "Đang phát triển",
+    "title": "Màn hình đang được phát triển",
+    "description": "Tính năng quản lý chi tiết cho màn hình này sẽ được bổ sung trong phiên bản tiếp theo."
+  }
+}

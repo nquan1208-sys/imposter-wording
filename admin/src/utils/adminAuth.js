@@ -5,7 +5,7 @@ export async function signInAdmin(supabase, credentials) {
   const session = await getAdminSession(supabase);
   if (!session) {
     await signOutAdmin(supabase);
-    throw new Error("Tài khoản này chưa được cấp quyền quản trị.");
+    throw new Error("auth.errors.adminRequired");
   }
   return session;
 }
@@ -27,4 +27,15 @@ export async function getAdminSession(supabase) {
     .maybeSingle();
 
   return result.error || !result.data ? null : session;
+}
+
+const loginErrorKeys = {
+  invalid_credentials: 'auth.errors.invalidCredentials',
+  email_not_confirmed: 'auth.errors.emailNotConfirmed',
+  over_request_rate_limit: 'auth.errors.rateLimited',
+  over_email_send_rate_limit: 'auth.errors.rateLimited',
+}
+export function adminAuthError(error) {
+  if (error?.message === 'auth.errors.adminRequired') return 'auth.errors.adminRequired'
+  return loginErrorKeys[error?.code] || 'auth.errors.loginFailed'
 }
