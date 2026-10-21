@@ -107,11 +107,14 @@ test('dashboard renders statistics, prompt links and warning destinations', asyn
     harness.queryClient.setQueryData(['dashboard', 'summary'], summary)
     const html = (await renderToString(harness.ssrApp())).replaceAll('&amp;', '&')
     for (const value of ['11', '22', '33', '44', 'Recent word', 'Recent question', 'Draft word', 'Draft question', 'Food', 'Travel']) assert.ok(html.includes(value), `missing ${value}`)
+    for (const value of ['aria-label="Xem tất cả từ ngữ"', 'aria-label="Xem tất cả câu hỏi"', 'aria-label="Xem bản nháp từ ngữ"', 'aria-label="Xem bản nháp câu hỏi"', '>Tất cả từ ngữ</a>', '>Tất cả câu hỏi</a>', '>Nháp · Từ ngữ</a>', '>Nháp · Câu hỏi</a>']) assert.ok(html.includes(value), `missing ${value}`)
+    assert.doesNotMatch(html, /Tối đa 5 (nội dung|bản nháp)/)
     for (const warning of ['Danh mục không có nội dung: 1', 'Cặp câu hỏi civilian và imposter bị trùng: 2', 'Nội dung mức dễ chưa được đánh dấu phù hợp với Family Mode: 3']) assert.ok(html.includes(warning), `missing ${warning}`)
     for (const href of [
       '/word-prompts/word-recent/edit', '/question-prompts/question-recent/edit',
       '/word-prompts/word-draft/edit', '/question-prompts/question-draft/edit',
-      '/categories', '/question-prompts',
+      '/word-prompts', '/question-prompts', '/word-prompts?status=draft', '/question-prompts?status=draft',
+      '/categories',
       '/word-prompts?difficulty=easy&family=false', '/question-prompts?difficulty=easy&family=false',
     ]) assert.ok(html.includes(`href="${href}"`), `missing link ${href}`)
     assert.deepEqual(harness.queryClient.getQueryCache().getAll().map(query => query.queryKey), [['dashboard', 'summary']])

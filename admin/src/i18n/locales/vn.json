@@ -90,10 +90,16 @@
     },
     "recent": {
       "title": "Nội dung cập nhật gần đây",
+      "allWords": "Xem tất cả từ ngữ",
+      "allQuestions": "Xem tất cả câu hỏi",
+      "allWordsShort": "Tất cả từ ngữ",
+      "allQuestionsShort": "Tất cả câu hỏi",
       "empty": "Chưa có nội dung cập nhật."
     },
     "drafts": {
       "title": "Nội dung bản nháp cần xử lý",
+      "allWords": "Xem bản nháp từ ngữ",
+      "allQuestions": "Xem bản nháp câu hỏi",
       "empty": "Không có bản nháp cần xử lý."
     },
     "warnings": {

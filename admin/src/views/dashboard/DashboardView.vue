@@ -53,7 +53,15 @@ function retry() { return summary.refetch() }
 
       <div class="dashboard-panels">
         <section class="dashboard-panel" aria-labelledby="dashboard-recent-heading">
-          <h2 id="dashboard-recent-heading">{{ t('dashboard.recent.title') }}</h2>
+          <div class="dashboard-panel__header">
+            <div>
+              <h2 id="dashboard-recent-heading">{{ t('dashboard.recent.title') }}</h2>
+            </div>
+            <nav class="dashboard-panel__actions" :aria-label="t('dashboard.recent.title')">
+              <RouterLink class="dashboard-view-all" :to="{ name: 'word-prompts' }" :aria-label="t('dashboard.recent.allWords')">{{ t('dashboard.recent.allWordsShort') }}</RouterLink>
+              <RouterLink class="dashboard-view-all" :to="{ name: 'question-prompts' }" :aria-label="t('dashboard.recent.allQuestions')">{{ t('dashboard.recent.allQuestionsShort') }}</RouterLink>
+            </nav>
+          </div>
           <ul v-if="summary.data.value.recent.length" class="dashboard-items">
             <li v-for="item in summary.data.value.recent" :key="`${item.game_type}-${item.id}`">
               <RouterLink
@@ -62,7 +70,10 @@ function retry() { return summary.refetch() }
                 :aria-label="t('dashboard.editItem', { title: item.title })"
               >
                 <span class="dashboard-item__title">{{ item.title }}</span>
-                <span class="dashboard-item__meta">{{ item.category_name }} · {{ t(`dashboard.statuses.${item.status}`) }}</span>
+                <span class="dashboard-item__meta">
+                  {{ item.category_name }}
+                  <span class="dashboard-item__status" :class="`dashboard-item__status--${item.status}`">{{ t(`dashboard.statuses.${item.status}`) }}</span>
+                </span>
                 <time class="dashboard-item__date" :datetime="item.updated_at">{{ dateFormat.format(new Date(item.updated_at)) }}</time>
               </RouterLink>
             </li>
@@ -71,7 +82,15 @@ function retry() { return summary.refetch() }
         </section>
 
         <section class="dashboard-panel" aria-labelledby="dashboard-drafts-heading">
-          <h2 id="dashboard-drafts-heading">{{ t('dashboard.drafts.title') }}</h2>
+          <div class="dashboard-panel__header">
+            <div>
+              <h2 id="dashboard-drafts-heading">{{ t('dashboard.drafts.title') }}</h2>
+            </div>
+            <nav class="dashboard-panel__actions" :aria-label="t('dashboard.drafts.title')">
+              <RouterLink class="dashboard-view-all" :to="{ name: 'word-prompts', query: { status: 'draft' } }" :aria-label="t('dashboard.drafts.allWords')">{{ t('dashboard.statuses.draft') }} · {{ t('dashboard.warnings.wordPrompts') }}</RouterLink>
+              <RouterLink class="dashboard-view-all" :to="{ name: 'question-prompts', query: { status: 'draft' } }" :aria-label="t('dashboard.drafts.allQuestions')">{{ t('dashboard.statuses.draft') }} · {{ t('dashboard.warnings.questionPrompts') }}</RouterLink>
+            </nav>
+          </div>
           <ul v-if="summary.data.value.drafts.length" class="dashboard-items">
             <li v-for="item in summary.data.value.drafts" :key="`${item.game_type}-${item.id}`">
               <RouterLink
@@ -80,7 +99,10 @@ function retry() { return summary.refetch() }
                 :aria-label="t('dashboard.editItem', { title: item.title })"
               >
                 <span class="dashboard-item__title">{{ item.title }}</span>
-                <span class="dashboard-item__meta">{{ item.category_name }} · {{ t(`dashboard.statuses.${item.status}`) }}</span>
+                <span class="dashboard-item__meta">
+                  {{ item.category_name }}
+                  <span class="dashboard-item__status dashboard-item__status--draft">{{ t(`dashboard.statuses.${item.status}`) }}</span>
+                </span>
                 <time class="dashboard-item__date" :datetime="item.updated_at">{{ dateFormat.format(new Date(item.updated_at)) }}</time>
               </RouterLink>
             </li>
