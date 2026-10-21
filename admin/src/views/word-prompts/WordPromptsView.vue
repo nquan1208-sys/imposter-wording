@@ -52,7 +52,7 @@ onBeforeRouteUpdate(() => !unsaved.busy)
 onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload); unsaved.busy = false })
 </script>
 <template>
-  <section class="categories-page">
+  <section class="categories-page word-prompts-page">
     <div class="category-toolbar"><p>{{ t('wordPrompts.description') }}</p><UButton :to="{ name: 'word-prompt-new', query: route.query }" :label="t('wordPrompts.actions.create')" icon="i-lucide-plus" :disabled="unsaved.busy" /></div>
     <fieldset :disabled="unsaved.busy" class="category-form-fields word-filters">
       <UFormField :label="t('wordPrompts.search')"><UInput :model-value="filters.search" class="tw:w-full" @update:model-value="setFilter('search', $event)" /></UFormField>
@@ -69,9 +69,9 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
     <p v-else-if="list.isPending.value" role="status">{{ t('wordPrompts.loading') }}</p>
     <template v-else>
       <p v-if="!rows.length">{{ t('wordPrompts.empty') }}</p>
-      <div v-else class="word-table-scroll"><table class="word-table"><thead><tr><th v-for="field in ['image_path', 'text', 'category_id', 'difficulty', 'is_family_friendly', 'status', 'updated_at']" :key="field" scope="col">{{ t(fieldLabel(field)) }}</th><th scope="col">{{ t('wordPrompts.actionsLabel') }}</th></tr></thead>
+      <div v-else class="word-table-scroll"><table class="word-table"><thead><tr><th v-for="field in ['image_path', 'text', 'category_id', 'difficulty', 'is_family_friendly', 'status', 'updated_at']" :key="field" :class="`word-column-${field}`" scope="col">{{ t(fieldLabel(field)) }}</th><th scope="col">{{ t('wordPrompts.actionsLabel') }}</th></tr></thead>
         <tbody><tr v-for="row in rows" :key="row.id">
-          <td><WordImage :path="row.image_path" :alt="row.text" /></td><td><UButton color="neutral" variant="link" :label="row.text" :disabled="unsaved.busy" @click="edit(row)" /></td><td>{{ row.game_categories?.name }}</td><td>{{ t(`wordPrompts.difficulties.${row.difficulty}`) }}</td><td>{{ t(row.is_family_friendly ? 'wordPrompts.yes' : 'wordPrompts.no') }}</td><td>{{ t(`wordPrompts.statuses.${row.status}`) }}</td><td>{{ dateFormat.format(new Date(row.updated_at)) }}</td>
+          <td><WordImage :path="row.image_path" :alt="row.text" /></td><td class="word-text-cell"><UButton color="neutral" variant="link" :label="row.text" class="word-text-link" :disabled="unsaved.busy" @click="edit(row)" /></td><td class="word-category-cell">{{ row.game_categories?.name }}</td><td>{{ t(`wordPrompts.difficulties.${row.difficulty}`) }}</td><td>{{ t(row.is_family_friendly ? 'wordPrompts.yes' : 'wordPrompts.no') }}</td><td>{{ t(`wordPrompts.statuses.${row.status}`) }}</td><td>{{ dateFormat.format(new Date(row.updated_at)) }}</td>
           <td><div class="category-actions"><UButton color="neutral" :label="t('wordPrompts.actions.edit')" variant="outline" :disabled="unsaved.busy" @click="edit(row)" /><UButton color="neutral" v-if="row.status !== 'archived'" :label="t('wordPrompts.actions.archive')" variant="outline" :disabled="unsaved.busy" @click="archive(row)" /><UButton color="error" variant="outline" :label="t('wordPrompts.actions.delete')" :disabled="unsaved.busy" @click="openDelete(row)" /></div></td>
         </tr></tbody></table></div>
       <div class="category-pagination"><span>{{ t('wordPrompts.pagination.summary', { count: total, page: filters.page, pages }) }}</span><UPagination :page="filters.page" :items-per-page="pageSize" :total="total" :disabled="unsaved.busy || list.isFetching.value" :aria-label="t('wordPrompts.pagination.label')" @update:page="changePage" /></div>
