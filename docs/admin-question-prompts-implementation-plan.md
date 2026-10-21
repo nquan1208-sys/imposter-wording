@@ -4,6 +4,10 @@
 
 Hoàn thiện danh sách, tạo/sửa, preview và quản lý trạng thái câu hỏi theo [Kế hoạch triển khai màn hình Admin](admin-screen-implementation-plan.md). Giao diện bám sát Word Prompts hiện tại. Bỏ hoàn toàn `imposter_hint`; app tự xử lý hiển thị danh mục khi bật hint.
 
+## Tài liệu tham chiếu
+
+- [Quy tắc style danh sách Admin](layout/admin-style-rules.md): áp dụng cho màn danh sách Question Prompts, gồm token, class CSS chung, bộ lọc, bảng, nút và responsive. Form tạo/sửa và dialog tiếp tục theo style Word Prompts hiện tại.
+
 ## Giao diện và luồng thao tác
 
 - Giữ cùng shell, khoảng cách, typography, card, bộ lọc, bảng, nút và cách responsive của Word Prompts; tái sử dụng CSS phù hợp, không đổi thiết kế màn từ ngữ.

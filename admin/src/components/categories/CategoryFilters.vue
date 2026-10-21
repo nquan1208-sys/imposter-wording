@@ -10,10 +10,10 @@ const statuses = computed(() => [{ value: 'all', label: t('categories.filters.al
 const sorts = computed(() => [{ value: 'sort_order', label: t('categories.fields.sortOrder') }, { value: 'name', label: t('categories.filters.nameAscending') }, { value: 'updated_at', label: t('categories.filters.latestUpdated') }])
 </script>
 <template>
-  <UCard><div class="category-filters">
+  <div class="admin-filter-grid">
     <UFormField :label="t('categories.filters.search')"><UInput type="search" icon="i-lucide-search" :model-value="search" :placeholder="t('categories.filters.searchPlaceholder')" class="tw:w-full" @update:model-value="$emit('search', $event)" /></UFormField>
     <UFormField :label="t('common.fields.gameType')"><USelect :model-value="filters.gameType || 'all'" :items="gameTypes" class="tw:w-full" @update:model-value="$emit('filter', 'type', $event === 'all' ? '' : $event)" /></UFormField>
     <UFormField :label="t('common.fields.status')"><USelect :model-value="filters.active || 'all'" :items="statuses" class="tw:w-full" @update:model-value="$emit('filter', 'active', $event === 'all' ? '' : $event)" /></UFormField>
     <UFormField :label="t('categories.filters.sort')"><USelect :model-value="filters.sort" :items="sorts" class="tw:w-full" @update:model-value="$emit('filter', 'sort', $event)" /></UFormField>
-  </div></UCard>
+  </div>
 </template>

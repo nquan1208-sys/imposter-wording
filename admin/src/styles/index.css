@@ -5,6 +5,7 @@
 @import "../components/admin/AdminShell.css";
 @import "../views/login/LoginView.css";
 @import "../views/shared/AdminPlaceholder.css";
+@import "./admin-lists.css";
 
 @import "../views/categories/CategoriesView.css";
 @import "../views/word-prompts/WordPromptsView.css";
