@@ -32,10 +32,19 @@ test('category components render backend rows, immutable fields and destructive 
     const dialog = (await server.ssrLoadModule('/src/components/categories/CategoryDeleteDialog.vue')).default
     const dialogProps = { portal: false, unmountOnHide: false, preview: { category: row, counts: { draft: 1, published: 1, archived: 1 }, version: 'snapshot' }, targets: [], loading: false, pending: false }
     const dialogHtml = await render(dialog, dialogProps)
-    assert.match(dialogHtml, /Published: 1/)
-    assert.match(dialogHtml, /Xóa danh mục và toàn bộ content/)
+    assert.match(dialogHtml, /Đã xuất bản<\/dt><dd[^>]*>1/)
+    assert.match(dialogHtml, /Xóa danh mục cùng toàn bộ nội dung/)
     assert.match(dialogHtml, /Không có danh mục nhận/)
-    assert.match(dialogHtml, /<button[^>]* disabled[^>]*><span[^>]*>Xác nhận xóa<\/span>/)
+    assert.match(dialogHtml, /<button[^>]* disabled[^>]*><span[^>]*>Chuyển nội dung và xóa<\/span>/)
+    assert.match(dialogHtml, /Giữ lại toàn bộ nội dung/)
+    assert.doesNotMatch(dialogHtml, /<input[^>]*type="text"|Nhập đúng tên/)
+    const wordDialog = (await server.ssrLoadModule('/src/components/word-prompts/WordDeleteDialog.vue')).default
+    const wordHtml = await render(wordDialog, { portal: false, unmountOnHide: false, prompt: { text: 'Quả táo', category_id: 'food', game_categories: { name: 'Đồ ăn' }, status: 'published' } })
+    assert.match(wordHtml, /Quả táo/)
+    assert.match(wordHtml, /Đồ ăn/)
+    assert.match(wordHtml, /Không thể hoàn tác/)
+    assert.match(wordHtml, /Xóa vĩnh viễn/)
+    assert.doesNotMatch(wordHtml, /<input|Nhập chính xác XÓA/)
     const pendingHtml = await render(dialog, { ...dialogProps, pending: true })
     assert.match(pendingHtml, /<button[^>]* disabled[^>]*><span[^>]*>Hủy<\/span>/)
     assert.doesNotMatch(pendingHtml, /data-slot="close"/)

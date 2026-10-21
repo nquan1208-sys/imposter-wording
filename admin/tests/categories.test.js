@@ -62,12 +62,12 @@ test('transfer target discovery reads all pages', async () => {
   assert.equal((await transferTargets(client, { id: 'source', game_type: 'word', locale: 'vi' })).length, 101)
   assert.ok(client.calls.some(call => call[0] === 'neq' && call[1] === 'id' && call[2] === 'source'))
 })
-test('delete RPC includes snapshot and confirmation, propagates errors', async () => {
+test('delete RPC includes snapshot without typed confirmation, propagates errors', async () => {
   const calls = []
   const client = { rpc: async (name, args) => { calls.push([name, args]); return { data: null } } }
   await previewCategoryDelete(client, 'source')
-  await deleteCategory(client, { id: 'source', mode: 'purge', confirmation: 'Đồ ăn', version: 'snapshot' })
-  assert.deepEqual(calls[1], ['delete_category', { p_id: 'source', p_mode: 'purge', p_target_id: null, p_confirmation: 'Đồ ăn', p_expected_version: 'snapshot' }])
+  await deleteCategory(client, { id: 'source', mode: 'purge', version: 'snapshot' })
+  assert.deepEqual(calls[1], ['delete_category', { p_id: 'source', p_mode: 'purge', p_target_id: null, p_expected_version: 'snapshot' }])
   client.rpc = async () => ({ error: new Error('changed') })
   await assert.rejects(deleteCategory(client, { id: 'source', mode: 'empty' }), /changed/)
 })

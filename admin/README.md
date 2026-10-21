@@ -16,8 +16,9 @@ Keep page CSS for layout, and avoid styling native inputs/buttons inside
 Nuxt UI components.
 
 Categories retain server filtering, ordering and pagination with Vue Query.
-Keep payload validation, unsaved-change guards and delete confirmation checks
-when editing UI components. The table renders the rows returned by the API,
+Keep payload validation, unsaved-change guards and the delete confirmation dialog
+when editing UI components. Confirmation is a UI action; deletion RPCs accept no
+confirmation text. The table renders the rows returned by the API,
 without adding another client pagination layer.
 
 References: [Vue setup](https://ui.nuxt.com/docs/getting-started/installation/vue),
@@ -89,3 +90,17 @@ UI locale never changes database content, enum values, URLs, filters or the
 `vi` locale in category creation payloads. Browser validation and beforeunload
 messages follow the browser/OS language. Run `yarn test` for dictionary,
 fallback, locale switching and existing category/auth behavior checks.
+
+## Deletion RPCs
+
+- `delete_word_prompt(p_id uuid, p_expected_updated_at timestamptz)`
+- `delete_category(p_id uuid, p_mode text, p_target_id uuid default null, p_expected_version text default null)`
+
+Both RPCs require an active admin. Word deletion requires the saved timestamp;
+category `purge` requires the preview snapshot version. Missing or stale versions
+are rejected. Category `empty` and `transfer` retain their existing validation.
+Storage files are retained.
+
+The migration removing confirmation changes the RPC signatures. Deploy it and
+the matching admin build together, pause delete operations during rollout, and
+reload open admin tabs afterward. Old RPC signatures are not retained.

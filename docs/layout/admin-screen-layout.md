@@ -101,7 +101,6 @@ Loại game và ngôn ngữ được cố định khi sửa. Nếu cần đổi 
 - Bảng gồm:
   - Ảnh thumbnail.
   - Từ của civilian.
-  - Từ của imposter.
   - Danh mục.
   - Độ khó.
   - Family Mode.
@@ -111,8 +110,6 @@ Loại game và ngôn ngữ được cố định khi sửa. Nếu cần đổi 
 ### Form tạo/sửa đề từ ngữ
 
 - Từ cho civilian.
-- Từ cho imposter, có thể để trống nếu imposter không được xem từ.
-- Hint cho imposter.
 - Upload ảnh.
 - Preview ảnh.
 - Thay ảnh hoặc xóa ảnh.
@@ -124,7 +121,7 @@ Loại game và ngôn ngữ được cố định khi sửa. Nếu cần đổi 
 Khu vực preview nên mô phỏng hai trạng thái:
 
 - `Civilian thấy`: ảnh và từ bí mật.
-- `Imposter thấy`: từ/hint/ảnh tương ứng theo cấu hình.
+- `Imposter thấy`: vai trò và tên danh mục nếu bật hiển thị danh mục; khi tắt chỉ thấy vai trò. Preview mô phỏng cả hai trường hợp, không lưu cấu hình vào đề.
 
 Nút cuối form:
 

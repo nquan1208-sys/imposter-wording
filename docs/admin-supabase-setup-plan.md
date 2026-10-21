@@ -172,9 +172,7 @@ migration thứ hai chứa RLS và policies.
 `word_prompts`:
 
 - `category_id`.
-- `civilian_text`.
-- `imposter_text`.
-- `imposter_hint`.
+- `text`.
 - `image_path`.
 - `difficulty`.
 - `is_family_friendly`.

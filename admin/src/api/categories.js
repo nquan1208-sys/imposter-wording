@@ -56,6 +56,6 @@ export async function transferTargets(client, category) {
 export async function deleteCategory(client, input) {
   return resultOrThrow(await client.rpc('delete_category', {
     p_id: input.id, p_mode: input.mode, p_target_id: input.targetId || null,
-    p_confirmation: input.confirmation || null, p_expected_version: input.version || null,
+    p_expected_version: input.version || null,
   }))
 }

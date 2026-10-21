@@ -45,6 +45,8 @@ const routes = [
           descriptionKey: "wordPrompts.description",
         },
       },
+      { path: "word-prompts/new", name: "word-prompt-new", component: () => import("../views/word-prompts/WordPromptFormView.vue"), meta: { titleKey: "wordPrompts.actions.create" } },
+      { path: "word-prompts/:id/edit", name: "word-prompt-edit", component: () => import("../views/word-prompts/WordPromptFormView.vue"), meta: { titleKey: "wordPrompts.actions.edit" } },
       {
         path: "question-prompts",
         name: "question-prompts",

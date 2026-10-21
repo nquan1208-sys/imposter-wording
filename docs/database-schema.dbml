@@ -66,9 +66,7 @@ Table game_categories {
 Table word_prompts {
   id uuid [pk]
   category_id uuid [not null, note: "Category must have game_type = word"]
-  civilian_text varchar [not null, note: "Secret shown to normal players"]
-  imposter_text varchar [note: "Optional different word for imposter"]
-  imposter_hint varchar [note: "Optional hint shown to imposter"]
+  text varchar [not null, note: "Secret shown to normal players"]
   image_path varchar [note: "Optional Supabase Storage path for the word prompt image"]
   difficulty difficulty_level [not null, default: 'medium']
   is_family_friendly boolean [not null, default: false, note: "Included when Family Mode is enabled"]
