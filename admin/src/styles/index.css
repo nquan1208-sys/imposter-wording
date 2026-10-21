@@ -7,6 +7,7 @@
 @import "../views/shared/AdminPlaceholder.css";
 @import "./admin-lists.css";
 
+@import "../views/dashboard/DashboardView.css";
 @import "../views/categories/CategoriesView.css";
 @import "../views/word-prompts/WordPromptsView.css";
 @import "../views/word-prompts/WordPromptFormView.css";
