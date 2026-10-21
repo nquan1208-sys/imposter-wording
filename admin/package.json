@@ -5,13 +5,16 @@
   "packageManager": "yarn@1.22.22",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.js",
+    "test": "node --import tsx --test tests/*.test.ts",
     "dev:local": "vite --mode localdev",
     "dev:development": "vite --mode development",
-    "build:local": "vite build --mode localdev",
-    "build:development": "vite build --mode development",
-    "build:production": "vite build --mode production",
-    "preview": "vite preview"
+    "build:local": "yarn typecheck && vite build --mode localdev",
+    "build:development": "yarn typecheck && vite build --mode development",
+    "build:production": "yarn typecheck && vite build --mode production",
+    "preview": "vite preview",
+    "typecheck": "node --import tsx scripts/prepare-types.ts && vue-tsc --noEmit -p tsconfig.app.json && vue-tsc --noEmit -p tsconfig.node.json",
+    "test:storage": "node --import tsx tests/wordStorage.local.ts",
+    "types:database": "node --import tsx scripts/generate-database-types.ts"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.143",
@@ -25,7 +28,11 @@
     "zod": "^4"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "@vitejs/plugin-vue": "^6.0.8",
-    "vite": "^8.3.0"
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3",
+    "vite": "^8.3.0",
+    "vue-tsc": "^3.3.13"
   }
 }

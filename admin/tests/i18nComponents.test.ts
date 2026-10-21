@@ -1,3 +1,5 @@
+import { testWindow, setupState } from './helpers.ts'
+import type { HostNode, TestApp, StubContext, ClientStub } from './helpers.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
@@ -7,17 +9,17 @@ import { createI18n } from 'vue-i18n'
 import { createMemoryHistory, createRouter, matchedRouteKey } from 'vue-router'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 
-const vn = JSON.parse(await readFile(new URL('../src/i18n/locales/vn.json', import.meta.url)))
+const vn = JSON.parse(await readFile(new URL('../src/i18n/locales/vn.json', import.meta.url), 'utf8'))
 
 // In-memory host mounts real Vue components without a browser or UI library DOM.
-const node = (text = '') => ({ text, children: [], parent: null })
-const renderer = createRenderer({
+const node = (text = ''): HostNode => ({ text, children: [], parent: null })
+const renderer = createRenderer<HostNode, HostNode>({
   createElement: () => node(), createText: node, createComment: () => node(),
   setText: (element, text) => { element.text = text },
   setElementText: (element, text) => { element.text = text },
   patchProp() {},
   parentNode: element => element.parent,
-  nextSibling: element => element.parent?.children[element.parent.children.indexOf(element) + 1],
+  nextSibling: element => element.parent?.children[element.parent.children.indexOf(element) + 1] ?? null,
   insert(element, parent, anchor) {
     if (element.parent) element.parent.children.splice(element.parent.children.indexOf(element), 1)
     const index = anchor ? parent.children.indexOf(anchor) : -1
@@ -26,15 +28,15 @@ const renderer = createRenderer({
   },
   remove(element) { element.parent?.children.splice(element.parent.children.indexOf(element), 1) },
 })
-const stub = { setup: (_, { slots }) => () => h('div', Object.values(slots).flatMap(slot => slot({}))) }
+const stub = { setup: (_: unknown, { slots }: StubContext) => () => h('div', Object.values(slots).flatMap(slot => slot?.({}))) }
 
 test('mounted components react to locale changes and preserve delete/leave guards', async () => {
   const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, mode: 'localdev' })
-  const apps = []
+  const apps: TestApp[] = []
   const originalWindow = globalThis.window
   const queryClient = new QueryClient({ defaultOptions: { queries: { enabled: false, gcTime: Infinity } } })
   try {
-    globalThis.window = { addEventListener() {}, removeEventListener() {}, confirm: () => false }
+    globalThis.window = testWindow({ addEventListener() {}, removeEventListener() {}, confirm: () => false })
     const i18n = createI18n({ legacy: false, locale: 'vi', fallbackLocale: 'vi', messages: { vi: vn, en: {
       dashboard: { title: 'Dashboard' },
       common: { gameTypes: { word: 'Word' } },
@@ -43,11 +45,11 @@ test('mounted components react to locale changes and preserve delete/leave guard
     } }, missingWarn: false, fallbackWarn: false })
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', name: 'dashboard', meta: { titleKey: 'dashboard.title' }, component: stub }] })
     await router.push('/')
-    const { provideUnsavedChanges } = await server.ssrLoadModule('/src/utils/unsavedChanges.js')
-    const { supabase } = await server.ssrLoadModule('/src/lib/supabase.js')
+    const { provideUnsavedChanges } = await server.ssrLoadModule('/src/utils/unsavedChanges.ts')
+    const supabase = (await server.ssrLoadModule('/src/lib/supabase.ts')).supabase as ClientStub
     const getUser = supabase.auth.getUser
     supabase.auth.getUser = async () => ({ data: { user: null } })
-    async function mount(path, props = {}) {
+    async function mount(path: string, props: Record<string, unknown> = {}) {
       const component = (await server.ssrLoadModule(path)).default
       // SSR templates are covered by categoryComponents; mount setup for reactive state.
       const child = { ...component, render: () => h('div') }
@@ -56,7 +58,7 @@ test('mounted components react to locale changes and preserve delete/leave guard
       app.provide(ssrContextKey, {})
       app.provide(matchedRouteKey, computed(() => router.currentRoute.value.matched[0]))
       apps.push(app)
-      return app.mount(node()).$.subTree.component.setupState
+      return setupState(app.mount(node()).$.subTree.component)
     }
     const shell = await mount('/src/components/admin/AdminShell.vue')
     supabase.auth.getUser = getUser
@@ -103,8 +105,8 @@ test('mounted components react to locale changes and preserve delete/leave guard
     assert.equal(editor.canLeave(), false)
     editor.unsaved.busy = false
 
-    const deletions = []
-    const dialog = await mount('/src/components/categories/CategoryDeleteDialog.vue', { onDelete: input => deletions.push(input), preview: { category: { id: 'source', name: 'Food' }, counts: { draft: 1 }, version: 'snapshot' }, targets: [] })
+    const deletions: unknown[] = []
+    const dialog = await mount('/src/components/categories/CategoryDeleteDialog.vue', { onDelete: (input: unknown) => deletions.push(input), preview: { category: { id: 'source', name: 'Food' }, counts: { draft: 1 }, version: 'snapshot' }, targets: [] })
     assert.equal(dialog.canDelete, false)
     dialog.targetId = 'target'
     assert.equal(dialog.canDelete, true)

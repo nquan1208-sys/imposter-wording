@@ -1,7 +1,7 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router"
 import AdminShell from "../components/admin/AdminShell.vue";
-import { supabase } from "../lib/supabase.js";
-import { getAdminSession } from "../utils/adminAuth.js";
+import { supabase } from "../lib/supabase.ts"
+import { getAdminSession } from "../utils/adminAuth.ts"
 
 const routes = [
   {

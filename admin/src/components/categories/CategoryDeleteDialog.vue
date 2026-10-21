@@ -1,19 +1,20 @@
-<script setup>
+<script setup lang="ts">
+import type { CategoryPreview, CategoryTarget, DeleteCategory } from '../../types/admin.ts'
 import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
 const { t } = useI18n({ useScope: 'global' })
-const props = defineProps({ preview: Object, targets: Array, targetsLoading: Boolean, targetsError: String, loading: Boolean, pending: Boolean, error: String })
-const emit = defineEmits(['close', 'refresh', 'delete', 'retry-targets'])
+const props = defineProps<{ preview?: CategoryPreview; targets?: CategoryTarget[]; targetsLoading?: boolean; targetsError?: string; loading?: boolean; pending?: boolean; error?: string }>()
+const emit = defineEmits<{ close: []; refresh: []; delete: [input: DeleteCategory]; 'retry-targets': [] }>()
 const mode = ref('transfer')
 const targetId = ref('')
 const total = computed(() => Object.values(props.preview?.counts || {}).reduce((sum, count) => sum + count, 0))
 const canDelete = computed(() => props.preview && !props.loading && !props.pending && (total.value === 0 || mode.value === 'purge' || Boolean(targetId.value)))
 const modes = computed(() => ['transfer', 'purge'].map(value => ({ value, label: t(`categories.deleteDialog.${value}`), description: t(`categories.deleteDialog.${value}Description`) })))
-const countStatuses = ['draft', 'published', 'archived']
+const countStatuses = ['draft', 'published', 'archived'] as const
 const deleteLabel = computed(() => t(total.value === 0 ? 'categories.deleteDialog.confirm' : mode.value === 'transfer' ? 'categories.deleteDialog.confirmTransfer' : 'categories.deleteDialog.confirmPurge'))
 const targetItems = computed(() => (props.targets || []).map(target => ({ value: target.id, label: `${target.name} (${target.slug})` })))
 function submit() {
-  if (!canDelete.value) return
+  if (!canDelete.value || !props.preview) return
   emit('delete', { id: props.preview.category.id, mode: total.value === 0 ? 'empty' : mode.value, targetId: targetId.value, version: props.preview.version })
 }
 function refresh() { emit('refresh') }

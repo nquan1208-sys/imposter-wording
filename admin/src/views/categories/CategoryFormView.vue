@@ -1,12 +1,13 @@
-<script setup>
+<script setup lang="ts">
+import type { CategoryForm as CategoryFormState } from '../../types/admin.ts'
 import { useI18n } from 'vue-i18n'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { supabase } from '../../lib/supabase.js'
-import { getCategory, saveCategory } from '../../api/categories.js'
-import { categoryError, slugFromName } from '../../utils/categories.js'
-import { confirmDiscard, useUnsavedChanges } from '../../utils/unsavedChanges.js'
+import { supabase } from '../../lib/supabase.ts'
+import { getCategory, saveCategory } from '../../api/categories.ts'
+import { categoryError, slugFromName } from '../../utils/categories.ts'
+import { confirmDiscard, useUnsavedChanges } from '../../utils/unsavedChanges.ts'
 import CategoryForm from '../../components/categories/CategoryForm.vue'
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
@@ -15,21 +16,21 @@ const queryClient = useQueryClient()
 const unsaved = useUnsavedChanges()
 const id = computed(() => typeof route.params.id === 'string' ? route.params.id : '')
 const editing = computed(() => Boolean(id.value))
-const form = reactive({ name: '', slug: '', game_type: 'word', description: '', locale: 'vi', sort_order: 0, is_active: true })
+const form = reactive<CategoryFormState>({ name: '', slug: '', game_type: 'word', description: '', locale: 'vi', sort_order: 0, is_active: true })
 const baseline = ref(JSON.stringify(form))
 const slugEdited = ref(false)
 const loadedId = ref('')
 const detail = useQuery({ queryKey: computed(() => ['categories', 'detail', id.value]), enabled: editing, queryFn: () => getCategory(supabase, id.value), retry: false, refetchOnWindowFocus: false })
 watch(detail.data, data => {
   if (!data || loadedId.value === id.value) return
-  for (const key of Object.keys(form)) form[key] = data[key] ?? ''
+  Object.assign(form, { name: data.name, slug: data.slug, game_type: data.game_type, description: data.description ?? '', locale: data.locale, sort_order: data.sort_order, is_active: data.is_active })
   baseline.value = JSON.stringify(form); loadedId.value = id.value; unsaved.dirty = false
 }, { immediate: true })
 watch(form, () => { unsaved.dirty = JSON.stringify(form) !== baseline.value }, { deep: true, flush: 'sync' })
-function update(key, value) {
-  form[key] = value
+function update(key: keyof CategoryFormState, value: string | number | boolean) {
+  Object.assign(form, { [key]: value })
   if (key === 'slug') slugEdited.value = true
-  if (key === 'name' && !editing.value && !slugEdited.value) form.slug = slugFromName(value)
+  if (key === 'name' && !editing.value && !slugEdited.value) form.slug = slugFromName(String(value))
   mutation.reset()
 }
 function back() { return router.push({ name: 'categories', query: route.query }) }
@@ -54,7 +55,7 @@ function canLeave() {
 }
 onBeforeRouteLeave(canLeave)
 onBeforeRouteUpdate((to, from) => to.path === from.path || canLeave())
-function beforeUnload(event) {
+function beforeUnload(event: BeforeUnloadEvent) {
   if (!unsaved.dirty && !unsaved.busy) return
   event.preventDefault(); event.returnValue = ''
 }

@@ -1,8 +1,9 @@
-<script setup>
+<script setup lang="ts">
+import type { QuestionRow, DeletePrompt } from '../../types/admin.ts'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-const props = defineProps({ prompt: Object, pending: Boolean, error: String, conflict: Boolean })
-const emit = defineEmits(['close', 'delete', 'reload'])
+const props = defineProps<{ prompt: QuestionRow; pending?: boolean; error?: string; conflict?: boolean }>()
+const emit = defineEmits<{ close: []; delete: [input: DeletePrompt]; reload: [] }>()
 const { t } = useI18n({ useScope: 'global' })
 const canDelete = computed(() => !props.pending && !props.conflict)
 function submit() {

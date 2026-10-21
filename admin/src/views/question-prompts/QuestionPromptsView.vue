@@ -1,19 +1,20 @@
-<script setup>
+<script setup lang="ts">
+import type { QuestionRow, DeletePrompt } from '../../types/admin.ts'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useI18n } from 'vue-i18n'
-import { supabase } from '../../lib/supabase.js'
-import { listQuestionPrompts, questionCategories, getQuestionPrompt, deleteQuestionPrompt, saveQuestionPrompt } from '../../api/questionPrompts.js'
-import { difficulties, statuses, questionPromptFilters, questionPromptError } from '../../utils/questionPrompts.js'
-import { pageSize } from '../../utils/categories.js'
-import { useUnsavedChanges } from '../../utils/unsavedChanges.js'
+import { supabase } from '../../lib/supabase.ts'
+import { listQuestionPrompts, questionCategories, getQuestionPrompt, deleteQuestionPrompt, saveQuestionPrompt } from '../../api/questionPrompts.ts'
+import { difficulties, statuses, questionPromptFilters, questionPromptError } from '../../utils/questionPrompts.ts'
+import { pageSize } from '../../utils/categories.ts'
+import { useUnsavedChanges } from '../../utils/unsavedChanges.ts'
 import QuestionDeleteDialog from '../../components/question-prompts/QuestionDeleteDialog.vue'
-function fieldLabel(field) { return 'questionPrompts.fields.' + field.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase()) }
+function fieldLabel(field: string) { return 'questionPrompts.fields.' + field.replace(/_([a-z])/g, (_: string, letter: string) => letter.toUpperCase()) }
 const { t, locale } = useI18n({ useScope: 'global' })
 const route = useRoute(), router = useRouter(), cache = useQueryClient(), unsaved = useUnsavedChanges()
 const search = ref(typeof route.query.search === 'string' ? route.query.search : '')
-let searchTimer
+let searchTimer: ReturnType<typeof setTimeout> | undefined
 watch(search, value => { clearTimeout(searchTimer); searchTimer = setTimeout(() => setFilter('search', value), 300) })
 watch(() => route.query.search, value => { clearTimeout(searchTimer); search.value = typeof value === 'string' ? value : '' })
 const filters = computed(() => questionPromptFilters(route.query))
@@ -23,26 +24,26 @@ const rows = computed(() => list.data.value?.rows || [])
 const total = computed(() => list.data.value?.total || 0)
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
 const categoryItems = computed(() => [{ label: t('questionPrompts.all'), value: 'all' }, ...(categoryOptions.data.value || []).map(row => ({ label: `${row.name} (${row.locale})`, value: row.id }))])
-function items(values, group) { return [{ label: t('questionPrompts.all'), value: 'all' }, ...values.map(value => ({ label: t(`questionPrompts.${group}.${value}`), value }))] }
-function setFilter(key, value) { if (!unsaved.busy) router.replace({ name: 'question-prompts', query: { ...route.query, [key]: value || undefined, page: undefined } }) }
-function changePage(page) { if (!unsaved.busy) router.replace({ name: 'question-prompts', query: { ...route.query, page: page === 1 ? undefined : String(page) } }) }
+function items(values: readonly string[], group: string) { return [{ label: t('questionPrompts.all'), value: 'all' }, ...values.map(value => ({ label: t(`questionPrompts.${group}.${value}`), value }))] }
+function setFilter(key: string, value: string | number) { if (!unsaved.busy) router.replace({ name: 'question-prompts', query: { ...route.query, [key]: value || undefined, page: undefined } }) }
+function changePage(page: number) { if (!unsaved.busy) router.replace({ name: 'question-prompts', query: { ...route.query, page: page === 1 ? undefined : String(page) } }) }
 watch([total, () => filters.value.page, list.isFetching, () => unsaved.busy], () => { if (list.data.value && !list.isFetching.value && filters.value.page > pages.value) changePage(pages.value) })
 const dateFormat = computed(() => new Intl.DateTimeFormat(locale.value === 'en' ? 'en-US' : 'vi-VN', { dateStyle: 'short', timeStyle: 'short' }))
-const selected = ref(null), message = ref(''), actionError = ref(null)
+const selected = ref<QuestionRow | null>(null), message = ref(''), actionError = ref<unknown>(null)
 async function invalidate() { await Promise.all([cache.invalidateQueries({ queryKey: ['question-prompts'] }), cache.invalidateQueries({ queryKey: ['categories'] })]) }
-const deletion = useMutation({ mutationFn: input => deleteQuestionPrompt(supabase, input), retry: false,
+const deletion = useMutation({ mutationFn: (input: DeletePrompt) => deleteQuestionPrompt(supabase, input), retry: false,
   onSuccess: async () => { selected.value = null; message.value = 'questionPrompts.messages.deleted'; await invalidate() }, onSettled: () => { unsaved.busy = false },
 })
-const archiveMutation = useMutation({ mutationFn: row => saveQuestionPrompt(supabase, row, { id: row.id, updatedAt: row.updated_at, status: 'archived' }), retry: false,
+const archiveMutation = useMutation({ mutationFn: (row: QuestionRow) => saveQuestionPrompt(supabase, row, { id: row.id, updatedAt: row.updated_at, status: 'archived' }), retry: false,
   onSuccess: async () => { message.value = 'questionPrompts.messages.saved'; await invalidate() }, onSettled: () => { unsaved.busy = false },
 })
-function openDelete(row) { if (unsaved.busy) return; deletion.reset(); actionError.value = null; selected.value = { ...row }; message.value = '' }
-function remove(input) { if (unsaved.busy || deletion.isPending.value || questionPromptError(deletion.error.value) === 'questionPrompts.errors.conflict') return; unsaved.busy = true; deletion.mutate(input) }
+function openDelete(row: QuestionRow) { if (unsaved.busy) return; deletion.reset(); actionError.value = null; selected.value = { ...row }; message.value = '' }
+function remove(input: DeletePrompt) { if (unsaved.busy || deletion.isPending.value || questionPromptError(deletion.error.value) === 'questionPrompts.errors.conflict') return; unsaved.busy = true; deletion.mutate(input) }
 async function reloadDelete() {
   if (unsaved.busy) return
   actionError.value = null
   unsaved.busy = true
-  try { const row = await getQuestionPrompt(supabase, selected.value.id); selected.value = null; deletion.reset(); selected.value = row }
+  try { const row = await getQuestionPrompt(supabase, selected.value!.id); selected.value = null; deletion.reset(); selected.value = row }
   catch (error) { actionError.value = error }
   finally { unsaved.busy = false }
 }
@@ -51,9 +52,9 @@ async function reloadList() {
   archiveMutation.reset(); actionError.value = null
   await list.refetch()
 }
-function archive(row) { if (unsaved.busy || !window.confirm(t('questionPrompts.confirmations.save'))) return; unsaved.busy = true; archiveMutation.mutate(row) }
-function edit(row) { if (!unsaved.busy) router.push({ name: 'question-prompt-edit', params: { id: row.id }, query: route.query }) }
-function beforeUnload(event) { if (unsaved.busy) { event.preventDefault(); event.returnValue = '' } }
+function archive(row: QuestionRow) { if (unsaved.busy || !window.confirm(t('questionPrompts.confirmations.save'))) return; unsaved.busy = true; archiveMutation.mutate(row) }
+function edit(row: QuestionRow) { if (!unsaved.busy) router.push({ name: 'question-prompt-edit', params: { id: row.id }, query: route.query }) }
+function beforeUnload(event: BeforeUnloadEvent) { if (unsaved.busy) { event.preventDefault(); event.returnValue = '' } }
 window.addEventListener('beforeunload', beforeUnload)
 onBeforeRouteLeave(() => !unsaved.busy)
 onBeforeRouteUpdate(() => !unsaved.busy)

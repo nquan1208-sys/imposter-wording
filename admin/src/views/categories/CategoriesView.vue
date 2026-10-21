@@ -1,12 +1,13 @@
-<script setup>
+<script setup lang="ts">
+import type { Category, DeleteCategory } from '../../types/admin.ts'
 import { useI18n } from 'vue-i18n'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { supabase } from '../../lib/supabase.js'
-import { listCategories, setCategoryActive, previewCategoryDelete, transferTargets, deleteCategory } from '../../api/categories.js'
-import { useUnsavedChanges } from '../../utils/unsavedChanges.js'
-import { categoryError, listFilters, pageSize } from '../../utils/categories.js'
+import { supabase } from '../../lib/supabase.ts'
+import { listCategories, setCategoryActive, previewCategoryDelete, transferTargets, deleteCategory } from '../../api/categories.ts'
+import { useUnsavedChanges } from '../../utils/unsavedChanges.ts'
+import { categoryError, listFilters, pageSize } from '../../utils/categories.ts'
 import CategoryFilters from '../../components/categories/CategoryFilters.vue'
 import CategoryTable from '../../components/categories/CategoryTable.vue'
 import CategoryDeleteDialog from '../../components/categories/CategoryDeleteDialog.vue'
@@ -18,15 +19,16 @@ const router = useRouter()
 const queryClient = useQueryClient()
 const filters = computed(() => listFilters(route.query))
 const search = ref(filters.value.search)
-let timer
+let timer: ReturnType<typeof setTimeout> | undefined
 watch(() => filters.value.search, value => { search.value = value })
 onBeforeUnmount(() => clearTimeout(timer))
-function setFilter(key, value) {
+function setFilter(key: string, value: string) {
   clearTimeout(timer)
   const query = { ...route.query, search: search.value || undefined, [key]: value || undefined, page: undefined }
   router.replace({ name: 'categories', query })
 }
-function setSearch(value) {
+function setSearch(input: string | number) {
+  const value = String(input)
   search.value = value
   clearTimeout(timer)
   timer = setTimeout(() => setFilter('search', value), 300)
@@ -38,26 +40,26 @@ const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
 watch([total, () => filters.value.page, list.isFetching], () => {
   if (list.data.value && !list.isFetching.value && filters.value.page > pages.value) changePage(pages.value)
 })
-function changePage(page) { clearTimeout(timer); router.replace({ name: 'categories', query: { ...route.query, page: page === 1 ? undefined : String(page) } }) }
-function edit(row) { router.push({ name: 'category-edit', params: { id: row.id }, query: route.query }) }
+function changePage(page: number) { clearTimeout(timer); router.replace({ name: 'categories', query: { ...route.query, page: page === 1 ? undefined : String(page) } }) }
+function edit(row: Category) { router.push({ name: 'category-edit', params: { id: row.id }, query: route.query }) }
 const message = ref('')
 const statusMutation = useMutation({
-  mutationFn: row => setCategoryActive(supabase, row.id, !row.is_active), retry: false,
+  mutationFn: (row: Category) => setCategoryActive(supabase, row.id, !row.is_active), retry: false,
   onSuccess: async () => { message.value = 'categories.messages.statusUpdated'; await queryClient.invalidateQueries({ queryKey: ['categories'] }) },
 })
-function toggle(row) {
+function toggle(row: Category) {
   if (statusMutation.isPending.value || deleteMutation.isPending.value) return
   if (row.is_active && !window.confirm(t('categories.confirmations.deactivateNamed', { name: row.name }))) return
   message.value = ''; statusMutation.mutate(row)
 }
 const deleteId = ref('')
 const preview = useQuery({ queryKey: computed(() => ['categories', 'delete-preview', deleteId.value]), enabled: computed(() => Boolean(deleteId.value)), queryFn: () => previewCategoryDelete(supabase, deleteId.value), retry: false, staleTime: 0 })
-const targets = useQuery({ queryKey: computed(() => ['categories', 'transfer-targets', preview.data.value?.category]), enabled: computed(() => Boolean(deleteId.value && preview.data.value)), queryFn: () => transferTargets(supabase, preview.data.value.category), retry: false })
+const targets = useQuery({ queryKey: computed(() => ['categories', 'transfer-targets', preview.data.value?.category]), enabled: computed(() => Boolean(deleteId.value && preview.data.value)), queryFn: () => transferTargets(supabase, preview.data.value!.category), retry: false })
 const deleteMutation = useMutation({
-  mutationFn: input => deleteCategory(supabase, input), retry: false,
+  mutationFn: (input: DeleteCategory) => deleteCategory(supabase, input), retry: false,
   onSuccess: async () => { deleteId.value = ''; message.value = 'categories.messages.deleted'; await queryClient.invalidateQueries({ queryKey: ['categories'] }) },
 })
-function openDelete(row) {
+function openDelete(row: Category) {
   deleteMutation.reset(); deleteId.value = row.id
   queryClient.invalidateQueries({ queryKey: ['categories', 'delete-preview', row.id] })
 }

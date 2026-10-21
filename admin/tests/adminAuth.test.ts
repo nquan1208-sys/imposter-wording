@@ -1,20 +1,22 @@
+import { asClient } from './helpers.ts'
+import type { MockResult } from './helpers.ts'
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getAdminSession, signInAdmin, signOutAdmin } from "../src/utils/adminAuth.js";
-import { QueryClient, MutationObserver } from "@tanstack/vue-query";
+import { getAdminSession, signInAdmin, signOutAdmin } from "../src/utils/adminAuth.ts"
+import { QueryClient, MutationObserver } from "@tanstack/vue-query"
 
-function clientFor(session, adminRow, queryError = null) {
+function clientFor(session: { user: { id: string } } | null, adminRow: unknown, queryError: unknown = null) {
   return {
-    auth: { getSession: async () => ({ data: { session } }) },
-    from(table) {
+    auth: { getSession: async () => ({ data: { session } }), signInWithPassword: async (_input: { email: string; password: string }): Promise<MockResult> => ({}), signOut: async (): Promise<MockResult> => ({}) },
+    from(table: string) {
       assert.equal(table, "admin_users");
       return {
-        select(columns) {
+        select(columns: string) {
           assert.equal(columns, "user_id");
           return {
-            eq(column, userId) {
+            eq(column: string, userId: string) {
               assert.equal(column, "user_id");
-              assert.equal(userId, session.user.id);
+              assert.equal(userId, session?.user.id);
               return {
                 maybeSingle: async () => ({ data: adminRow, error: queryError }),
               };
@@ -28,18 +30,18 @@ function clientFor(session, adminRow, queryError = null) {
 
 test("returns null when no session exists", async () => {
   const client = clientFor(null, null);
-  assert.equal(await getAdminSession(client), null);
+  assert.equal(await getAdminSession(asClient(client)), null);
 });
 
 test("returns null when the user is not an admin", async () => {
   const session = { user: { id: "user-1" } };
-  assert.equal(await getAdminSession(clientFor(session, null)), null);
+  assert.equal(await getAdminSession(asClient(clientFor(session, null))), null);
 });
 
 test("fails closed when the admin check errors", async () => {
   const session = { user: { id: "user-1" } };
   assert.equal(
-    await getAdminSession(clientFor(session, null, new Error("query failed"))),
+    await getAdminSession(asClient(clientFor(session, null, new Error("query failed")))),
     null,
   );
 });
@@ -47,7 +49,7 @@ test("fails closed when the admin check errors", async () => {
 test("returns session for an authorized admin", async () => {
   const session = { user: { id: "admin-1" } };
   assert.equal(
-    await getAdminSession(clientFor(session, { user_id: "admin-1" })),
+    await getAdminSession(asClient(clientFor(session, { user_id: "admin-1" }))),
     session,
   );
 });
@@ -64,7 +66,7 @@ test("login mutation exposes pending/error and can retry successfully", async ()
   };
   const queryClient = new QueryClient();
   const mutation = new MutationObserver(queryClient, {
-    mutationFn: (input) => signInAdmin(client, input),
+    mutationFn: (input: { email: string; password: string }) => signInAdmin(asClient(client), input),
     retry: false,
     gcTime: 0,
   });
@@ -92,14 +94,14 @@ test("login rejects non-admin users and signs them out", async () => {
     signedOut = true;
     return { error: null };
   };
-  await assert.rejects(signInAdmin(client, {}), { message: 'auth.errors.adminRequired' });
+  await assert.rejects(signInAdmin(asClient(client), { email: '', password: '' }), { message: 'auth.errors.adminRequired' });
   assert.equal(signedOut, true);
 });
 
 test("logout propagates API failures and succeeds on retry", async () => {
   const error = new Error("Network failure");
-  const client = { auth: { signOut: async () => ({ error }) } };
-  await assert.rejects(signOutAdmin(client), error);
+  const client = { auth: { signOut: async (): Promise<MockResult> => ({ error }) } };
+  await assert.rejects(signOutAdmin(asClient(client)), error);
   client.auth.signOut = async () => ({ error: null });
-  await signOutAdmin(client);
+  await signOutAdmin(asClient(client));
 });

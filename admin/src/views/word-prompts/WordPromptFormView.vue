@@ -1,26 +1,32 @@
-<script setup>
+<script setup lang="ts">
+import type { WordRow, WordForm, DeletePrompt, PromptStatus } from '../../types/admin.ts'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useI18n } from 'vue-i18n'
-import { supabase } from '../../lib/supabase.js'
-import { getWordPrompt, wordCategories, saveWordPrompt, deleteWordPrompt } from '../../api/wordPrompts.js'
-import { difficulties, validateImage, wordPromptPayload, wordPromptError } from '../../utils/wordPrompts.js'
-import { useUnsavedChanges, confirmDiscard } from '../../utils/unsavedChanges.js'
+import { supabase } from '../../lib/supabase.ts'
+import { getWordPrompt, wordCategories, saveWordPrompt, deleteWordPrompt } from '../../api/wordPrompts.ts'
+import { difficulties, validateImage, wordPromptPayload, wordPromptError } from '../../utils/wordPrompts.ts'
+import { useUnsavedChanges, confirmDiscard } from '../../utils/unsavedChanges.ts'
 import WordImage from '../../components/word-prompts/WordImage.vue'
 import WordDeleteDialog from '../../components/word-prompts/WordDeleteDialog.vue'
 const { t } = useI18n({ useScope: 'global' })
 const route = useRoute(), router = useRouter(), cache = useQueryClient(), unsaved = useUnsavedChanges()
-const editing = Boolean(route.params.id), id = route.params.id || crypto.randomUUID()
-const form = reactive({ text: '', category_id: '', difficulty: 'medium', is_family_friendly: false, locale: 'vi', image_path: '' })
-const saved = ref(null), baseline = ref(JSON.stringify(form)), file = ref(null), localUrl = ref(''), imageInput = ref(null)
-const localError = ref(null), uploadState = ref(''), deleting = ref(false), reloading = ref(false)
+const editing = Boolean(route.params.id), id = typeof route.params.id === 'string' ? route.params.id : crypto.randomUUID()
+const form = reactive<WordForm>({ text: '', category_id: '', difficulty: 'medium', is_family_friendly: false, locale: 'vi', image_path: '' })
+const saved = ref<WordRow | null>(null), baseline = ref(JSON.stringify(form)), file = ref<File | null>(null), localUrl = ref(''), imageInput = ref<HTMLInputElement | null>(null)
+const localError = ref<unknown>(null), uploadState = ref(''), deleting = ref(false), reloading = ref(false)
 const saveConflict = ref(false), showCategoryHint = ref(false)
 const detail = useQuery({ queryKey: ['word-prompts', 'detail', id], enabled: editing, queryFn: () => getWordPrompt(supabase, id), retry: false, refetchOnWindowFocus: false })
 function clearFile() { if (localUrl.value) URL.revokeObjectURL(localUrl.value); localUrl.value = ''; file.value = null; if (imageInput.value) imageInput.value.value = '' }
-function load(row) {
+function load(row: WordRow) {
   clearFile()
-  for (const key of Object.keys(form)) form[key] = row[key] ?? ''
+  form.text = row.text
+  form.category_id = row.category_id
+  form.difficulty = row.difficulty
+  form.is_family_friendly = row.is_family_friendly
+  form.locale = row.locale
+  form.image_path = row.image_path ?? ''
   saved.value = row; baseline.value = JSON.stringify(form); unsaved.dirty = false
 }
 watch(detail.data, row => {
@@ -31,7 +37,7 @@ const categoryOptions = useQuery({ queryKey: computed(() => ['categories', 'word
 const categoryItems = computed(() => {
   const rows = [...(categoryOptions.data.value || [])]
   const current = saved.value?.game_categories
-  if (current && current.locale === form.locale && !rows.some(row => row.id === current.id)) rows.push(current)
+  if (current && current.locale === form.locale && !rows.some(row => row.id === current.id)) rows.push({ ...current, locale: form.locale })
   return rows.map(row => ({ value: row.id, label: row.name + (row.is_active ? '' : ` (${t('wordPrompts.inactive')})`) }))
 })
 const previewCategoryName = computed(() => {
@@ -41,9 +47,9 @@ const previewCategoryName = computed(() => {
     || ''
 })
 const difficultyItems = computed(() => difficulties.map(value => ({ value, label: t(`wordPrompts.difficulties.${value}`) })))
-function update(key, value) { if (unsaved.busy) return; form[key] = value; if (key === 'locale') form.category_id = ''; localError.value = null; if (!saveConflict.value) saving.reset() }
-async function chooseImage(event) {
-  const next = event.target.files?.[0]
+function update<K extends keyof WordForm>(key: K, value: WordForm[K]) { if (unsaved.busy) return; form[key] = value; if (key === 'locale') form.category_id = ''; localError.value = null; if (!saveConflict.value) saving.reset() }
+async function chooseImage(event: Event) {
+  const next = (event.target as HTMLInputElement).files?.[0]
   if (!next || unsaved.busy) return
   unsaved.busy = true
   clearFile()
@@ -51,7 +57,7 @@ async function chooseImage(event) {
   try {
     validateImage(next)
     preview = URL.createObjectURL(next)
-    await new Promise((resolve, reject) => { const image = new Image(); image.onload = resolve; image.onerror = () => reject(new Error('wordPrompts.errors.invalidImage')); image.src = preview })
+    await new Promise((resolve, reject) => { const image = new Image(); image.onload = resolve; image.onerror = () => reject(new Error('wordPrompts.errors.invalidImage')); image.src = preview! })
     if (disposed) { URL.revokeObjectURL(preview); return }
     file.value = next; localUrl.value = preview; localError.value = null; uploadState.value = ''
   } catch (error) { if (preview) URL.revokeObjectURL(preview); localError.value = error }
@@ -61,16 +67,16 @@ function removeImage() { if (!unsaved.busy) { clearFile(); form.image_path = '';
 async function invalidate() { await Promise.all([cache.invalidateQueries({ queryKey: ['word-prompts'] }), cache.invalidateQueries({ queryKey: ['categories'] })]) }
 function back() { return router.push({ name: 'word-prompts', query: route.query }) }
 const saving = useMutation({ retry: false,
-  mutationFn: status => saveWordPrompt(supabase, form, { id, updatedAt: saved.value?.updated_at, status, file: file.value, onUpload: state => { uploadState.value = state } }),
+  mutationFn: (status: PromptStatus) => saveWordPrompt(supabase, form, { id, updatedAt: saved.value?.updated_at, status, file: file.value, onUpload: state => { uploadState.value = state } }),
   onSuccess: async row => { load({ ...row, game_categories: saved.value?.game_categories }); await invalidate(); unsaved.busy = false; await back() },
   onError: error => { if (wordPromptError(error) === 'wordPrompts.errors.conflict') saveConflict.value = true },
   onSettled: () => { unsaved.busy = false },
 })
-const deletion = useMutation({ mutationFn: input => deleteWordPrompt(supabase, input), retry: false,
+const deletion = useMutation({ mutationFn: (input: DeletePrompt) => deleteWordPrompt(supabase, input), retry: false,
   onSuccess: async () => { deleting.value = false; clearFile(); baseline.value = JSON.stringify(form); unsaved.dirty = false; await invalidate(); unsaved.busy = false; await back() },
   onSettled: () => { unsaved.busy = false },
 })
-function submit(status) {
+function submit(status: PromptStatus) {
   if (unsaved.busy || reloading.value || saveConflict.value || saving.isPending.value || deletion.isPending.value) return
   localError.value = null
   try { wordPromptPayload(form, status) } catch (error) { localError.value = error; return }
@@ -78,7 +84,7 @@ function submit(status) {
   unsaved.busy = true; saving.mutate(status)
 }
 function openDelete() { if (!saved.value || unsaved.busy || reloading.value || saving.isPending.value || deletion.isPending.value) return; if (!conflict.value) deletion.reset(); deleting.value = true }
-function remove(input) {
+function remove(input: DeletePrompt) {
   if (unsaved.busy || deletion.isPending.value || conflict.value) return
   unsaved.busy = true; deletion.mutate(input)
 }
@@ -96,7 +102,7 @@ async function reload() {
 function canLeave() { return !unsaved.busy && (!unsaved.dirty || confirmDiscard(t('common.confirmations.discardChanges'))) }
 onBeforeRouteLeave(canLeave)
 onBeforeRouteUpdate((to, from) => to.path === from.path ? !unsaved.busy : canLeave())
-function beforeUnload(event) { if (unsaved.dirty || unsaved.busy) { event.preventDefault(); event.returnValue = '' } }
+function beforeUnload(event: BeforeUnloadEvent) { if (unsaved.dirty || unsaved.busy) { event.preventDefault(); event.returnValue = '' } }
 let disposed = false
 window.addEventListener('beforeunload', beforeUnload)
 onBeforeUnmount(() => { disposed = true; clearFile(); window.removeEventListener('beforeunload', beforeUnload); unsaved.dirty = false; unsaved.busy = false })
@@ -121,7 +127,7 @@ onBeforeUnmount(() => { disposed = true; clearFile(); window.removeEventListener
             <UFormField :label="t('wordPrompts.fields.categoryId')" required><USelectMenu :model-value="form.category_id" :items="categoryItems" value-key="value" :loading="categoryOptions.isFetching.value" :placeholder="t('wordPrompts.preview.selectCategory')" class="tw:w-full" @update:model-value="update('category_id', $event)" /></UFormField>
             <UFormField :label="t('wordPrompts.fields.locale')" required><UInput :model-value="form.locale" class="tw:w-full" @update:model-value="update('locale', $event)" /></UFormField>
             <UFormField :label="t('wordPrompts.fields.difficulty')"><USelect :model-value="form.difficulty" :items="difficultyItems" class="tw:w-full" @update:model-value="update('difficulty', $event)" /></UFormField>
-            <div class="word-family-field"><UCheckbox :model-value="form.is_family_friendly" :label="t('wordPrompts.fields.isFamilyFriendly')" @update:model-value="update('is_family_friendly', $event)" /></div>
+            <div class="word-family-field"><UCheckbox :model-value="form.is_family_friendly" :label="t('wordPrompts.fields.isFamilyFriendly')" @update:model-value="update('is_family_friendly', $event === true)" /></div>
           </div>
         </fieldset>
         <fieldset :disabled="unsaved.busy" class="category-form-fields word-form-section">

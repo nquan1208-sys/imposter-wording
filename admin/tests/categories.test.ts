@@ -1,15 +1,17 @@
+import { asClient } from './helpers.ts'
+import type { QueryStub, MockResult, Calls } from './helpers.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { categoryPayload, slugFromName, searchPattern, listFilters, categoryError } from '../src/utils/categories.js'
-import { listCategories, getCategory, saveCategory, setCategoryActive, previewCategoryDelete, transferTargets, deleteCategory } from '../src/api/categories.js'
+import { categoryPayload, slugFromName, searchPattern, listFilters, categoryError } from '../src/utils/categories.ts'
+import { listCategories, getCategory, saveCategory, setCategoryActive, previewCategoryDelete, transferTargets, deleteCategory } from '../src/api/categories.ts'
 import { QueryClient, MutationObserver } from '@tanstack/vue-query'
 
 const form = { name: '  Đồ ăn  ', slug: 'do-an', description: '  Món ngon ', game_type: 'word', sort_order: '2', is_active: true, locale: 'en', id: 'injected', created_by: 'injected' }
-function mockClient(result = { data: [], count: 0 }) {
-  const calls = []
-  const chain = { then(resolve, reject) { return Promise.resolve(typeof result === 'function' ? result(calls) : result).then(resolve, reject) } }
-  for (const method of ['select', 'eq', 'neq', 'or', 'order', 'range', 'single', 'update', 'insert']) chain[method] = (...args) => { calls.push([method, ...args]); return chain }
-  return { calls, from: table => { calls.push(['from', table]); return chain }, auth: { getUser: async () => ({ data: { user: { id: 'admin' } } }) } }
+function mockClient(result: MockResult | ((calls: Calls) => MockResult) = { data: [], count: 0 }) {
+  const calls: Calls = []
+  const chain: QueryStub = { then(resolve: (value: MockResult) => unknown, reject?: (reason: unknown) => unknown) { return Promise.resolve(typeof result === 'function' ? result(calls) : result).then(resolve, reject) } }
+  for (const method of ['select', 'eq', 'neq', 'or', 'order', 'range', 'single', 'update', 'insert']) chain[method] = (...args: unknown[]) => { calls.push([method, ...args]); return chain }
+  return { calls, from: (table: string) => { calls.push(['from', table]); return chain }, auth: { getUser: async () => ({ data: { user: { id: 'admin' } as { id: string } | null } }) } }
 }
 
 test('Vietnamese slug normalization', () => {
@@ -35,7 +37,7 @@ test('URL filters reject invalid page and sort values', () => {
 })
 test('backend search/filter/order/pagination are combined', async () => {
   const client = mockClient({ data: [{ id: '1' }], count: 24 })
-  const result = await listCategories(client, { search: '  food,drink ', gameType: 'word', active: 'false', sort: 'updated_at', page: 2 })
+  const result = await listCategories(asClient(client), { search: '  food,drink ', gameType: 'word', active: 'false', sort: 'updated_at', page: 2 })
   assert.equal(result.total, 24)
   assert.ok(client.calls.some(call => call[0] === 'or' && call[1] === 'name.ilike."%food,drink%",slug.ilike."%food,drink%"'))
   assert.ok(client.calls.some(call => call[0] === 'eq' && call[1] === 'is_active' && call[2] === false))
@@ -43,33 +45,33 @@ test('backend search/filter/order/pagination are combined', async () => {
 })
 test('save creation gets current user and edit cannot change identity', async () => {
   const client = mockClient({ data: { id: 'new' } })
-  await saveCategory(client, form)
-  assert.equal(client.calls.find(call => call[0] === 'insert')[1].created_by, 'admin')
+  await saveCategory(asClient(client), form)
+  assert.equal((client.calls.find(call => call[0] === 'insert')![1] as Record<string, unknown>).created_by, 'admin')
   const updateClient = mockClient({ data: { id: 'old' } })
-  await saveCategory(updateClient, form, 'old')
-  assert.equal('game_type' in updateClient.calls.find(call => call[0] === 'update')[1], false)
+  await saveCategory(asClient(updateClient), form, 'old')
+  assert.equal('game_type' in (updateClient.calls.find(call => call[0] === 'update')![1] as object), false)
   assert.deepEqual(updateClient.calls.at(-1), ['single'])
   client.auth.getUser = async () => ({ data: { user: null } })
-  await assert.rejects(saveCategory(client, form), { message: 'common.errors.sessionExpired' })
+  await assert.rejects(saveCategory(asClient(client), form), { message: 'common.errors.sessionExpired' })
 })
 test('API failures propagate, including zero-row update', async () => {
   const error = { code: 'PGRST116', message: 'no rows' }
-  for (const action of [client => getCategory(client, 'id'), client => setCategoryActive(client, 'id', false), client => saveCategory(client, form, 'id')]) await assert.rejects(action(mockClient({ data: null, error })), value => value === error)
+  for (const action of [(client: object) => getCategory(asClient(client), 'id'), (client: object) => setCategoryActive(asClient(client), 'id', false), (client: object) => saveCategory(asClient(client), form, 'id')]) await assert.rejects(action(mockClient({ data: null, error })), value => value === error)
   assert.equal(categoryError({ code: '23505' }), 'categories.errors.slugExists')
 })
 test('transfer target discovery reads all pages', async () => {
   const client = mockClient(calls => ({ data: calls.filter(call => call[0] === 'range').length === 1 ? Array.from({ length: 100 }, (_, id) => ({ id })) : [{ id: 'last' }] }))
-  assert.equal((await transferTargets(client, { id: 'source', game_type: 'word', locale: 'vi' })).length, 101)
+  assert.equal((await transferTargets(asClient(client), { id: 'source', game_type: 'word', locale: 'vi' })).length, 101)
   assert.ok(client.calls.some(call => call[0] === 'neq' && call[1] === 'id' && call[2] === 'source'))
 })
 test('delete RPC includes snapshot without typed confirmation, propagates errors', async () => {
-  const calls = []
-  const client = { rpc: async (name, args) => { calls.push([name, args]); return { data: null } } }
-  await previewCategoryDelete(client, 'source')
-  await deleteCategory(client, { id: 'source', mode: 'purge', version: 'snapshot' })
+  const calls: Calls = []
+  const client: { rpc: (...args: unknown[]) => Promise<MockResult> } = { rpc: async (name: unknown, args: unknown) => { calls.push([name, args]); return { data: null } } }
+  await previewCategoryDelete(asClient(client), 'source')
+  await deleteCategory(asClient(client), { id: 'source', mode: 'purge', version: 'snapshot' })
   assert.deepEqual(calls[1], ['delete_category', { p_id: 'source', p_mode: 'purge', p_target_id: null, p_expected_version: 'snapshot' }])
   client.rpc = async () => ({ error: new Error('changed') })
-  await assert.rejects(deleteCategory(client, { id: 'source', mode: 'empty' }), /changed/)
+  await assert.rejects(deleteCategory(asClient(client), { id: 'source', mode: 'empty' }), /changed/)
 })
 test('mutation exposes pending, failure, and successful retry', async () => {
   const queryClient = new QueryClient()

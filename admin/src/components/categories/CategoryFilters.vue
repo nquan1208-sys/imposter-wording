@@ -1,10 +1,11 @@
-<script setup>
+<script setup lang="ts">
+import type { listFilters } from '../../utils/categories.ts'
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
-import { gameTypeLabels } from '../../utils/categories.js'
+import { gameTypeLabels } from '../../utils/categories.ts'
 const { t } = useI18n({ useScope: 'global' })
-defineProps({ filters: Object, search: String })
-defineEmits(['search', 'filter'])
+defineProps<{ filters: ReturnType<typeof listFilters>; search: string }>()
+defineEmits<{ search: [value: string | number]; filter: [key: string, value: string] }>()
 const gameTypes = computed(() => [{ value: 'all', label: t('categories.filters.all') }, ...Object.entries(gameTypeLabels).map(([value, label]) => ({ value, label: t(label) }))])
 const statuses = computed(() => [{ value: 'all', label: t('categories.filters.all') }, { value: 'true', label: t('common.status.active') }, { value: 'false', label: t('common.status.inactive') }])
 const sorts = computed(() => [{ value: 'sort_order', label: t('categories.fields.sortOrder') }, { value: 'name', label: t('categories.filters.nameAscending') }, { value: 'updated_at', label: t('categories.filters.latestUpdated') }])

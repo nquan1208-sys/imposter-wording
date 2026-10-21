@@ -1,10 +1,11 @@
-<script setup>
+<script setup lang="ts">
+import type { CategoryRow } from '../../types/admin.ts'
 import { useI18n } from 'vue-i18n'
 const { t, locale } = useI18n({ useScope: 'global' })
 import { computed } from 'vue'
-import { gameTypeLabels } from '../../utils/categories.js'
-defineProps({ rows: Array, pending: Boolean, loading: Boolean })
-defineEmits(['edit', 'toggle', 'delete'])
+import { gameTypeLabels } from '../../utils/categories.ts'
+defineProps<{ rows: CategoryRow[]; pending?: boolean; loading?: boolean }>()
+defineEmits<{ edit: [row: CategoryRow]; toggle: [row: CategoryRow]; delete: [row: CategoryRow] }>()
 const dateFormat = computed(() => new Intl.DateTimeFormat(locale.value === 'en' ? 'en-US' : 'vi-VN', { dateStyle: 'short', timeStyle: 'short' }))
 const columns = computed(() => [
   { accessorKey: 'name', header: t('categories.fields.name'), meta: { class: { td: 'category-name-cell' } } },
