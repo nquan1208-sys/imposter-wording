@@ -1,4 +1,4 @@
-# Quy tắc style danh sách Admin
+# Quy tắc style Admin
 
 Danh sách Word Prompt là mẫu tham chiếu cho danh sách Danh mục. Khi thêm màn danh sách admin, dùng các quy tắc dưới đây và các class chung trong `admin/src/styles/admin-lists.css`.
 
@@ -39,4 +39,12 @@ Danh sách Word Prompt là mẫu tham chiếu cho danh sách Danh mục. Khi th�
 
 - Ở ≤600px, toolbar và phân trang xếp dọc; bảng vẫn cuộn ngang trong wrapper.
 - Kiểm tra desktop, tablet, mobile với tên dài, bảng rỗng, loading và hàng đủ nút thao tác. Trang không được có cuộn ngang do bảng gây ra.
-- Các quy tắc này áp dụng cho danh sách. Form tạo/sửa và dialog giữ style riêng cho đến khi có yêu cầu đồng bộ.
+- Các quy tắc danh sách không áp dụng trực tiếp cho form hoặc dialog. Form danh mục dùng quy tắc riêng bên dưới; các form và dialog khác giữ style hiện có.
+
+## Form tạo/sửa danh mục
+
+- Giữ `UCard` rộng 100%, tối đa 850px: nền `--color-white`, viền `--color-teal-border` 1px, bo `--radius-md`, không shadow hoặc ring mặc định. Padding nội dung và khoảng cách giữa các khối dùng `--space-4`.
+- Các trường ngắn nằm trong lưới 2 cột `minmax(0, 1fr)`, gap `--space-3`; ở ≤600px chuyển thành 1 cột. Mô tả chiếm toàn chiều rộng; input/select/textarea rộng 100% ô và không gây tràn ngang.
+- Label dùng `--color-charcoal`, chữ trợ giúp dùng `--color-charcoal-soft`. Giữ hiển thị lỗi validation và focus bàn phím của component.
+- Lưu dùng primary mặc định; Hủy dùng neutral/outline. Nhóm nút được wrap, gap `--space-1`.
+- Style đặt riêng trong `CategoryForm.vue` để không thay đổi các màn đang dùng chung class `category-form-*`. Giữ nguyên validation, trạng thái pending/disabled và hành vi tạo/sửa.

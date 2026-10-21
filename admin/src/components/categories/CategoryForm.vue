@@ -9,7 +9,7 @@ const schema = computed(() => categorySchema(props.editing))
 const gameTypes = computed(() => Object.entries(gameTypeLabels).map(([value, label]) => ({ value, label: t(label) })))
 </script>
 <template>
-  <UCard class="category-form-card">
+  <UCard class="category-form-card" :ui="{ root: 'tw:ring-0 tw:shadow-none', body: 'category-form-body' }">
   <UForm :schema="schema" :state="form" :disabled="pending" novalidate v-slot="{ errors }" class="category-form" @submit="$emit('submit')">
     <fieldset :disabled="pending" class="category-form-fields">
       <div class="category-form-grid">
@@ -27,3 +27,65 @@ const gameTypes = computed(() => Object.entries(gameTypeLabels).map(([value, lab
   </UForm>
   </UCard>
 </template>
+
+<style scoped>
+.category-form-card {
+  width: 100%;
+  min-width: 0;
+  max-width: 850px;
+  border: 1px solid var(--color-teal-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-charcoal);
+}
+
+.category-form-card :deep(.category-form-body) {
+  padding: var(--space-4);
+}
+
+.category-form,
+.category-form-fields {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-4);
+}
+
+.category-form-fields {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.category-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.category-form-grid > *,
+.category-form-fields > * {
+  min-width: 0;
+}
+
+.category-form :deep([data-slot="label"]) {
+  color: var(--color-charcoal);
+  overflow-wrap: anywhere;
+}
+
+.category-form :deep([data-slot="help"]) {
+  color: var(--color-charcoal-soft);
+  overflow-wrap: anywhere;
+}
+
+.category-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+@media (max-width: 600px) {
+  .category-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+</style>
