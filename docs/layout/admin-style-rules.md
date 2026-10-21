@@ -22,9 +22,10 @@ Danh sách Word Prompt là mẫu tham chiếu cho danh sách Danh mục. Khi th�
 - Table dùng `admin-table`: rộng 100%, gộp viền, padding ô `--space-3`, căn trái và căn giữa theo chiều dọc.
 - Header dùng nền `--color-teal-surface`, chữ 14px, weight 600. Nội dung dùng cỡ chữ body. Các hàng ngăn bằng viền teal, hàng cuối không có viền dưới.
 - Với `UTable`, đặt class wrapper trên component, truyền `base: 'admin-table …'` và `tbody: 'tw:divide-y-0'` qua `ui`. Giữ caption, thông báo rỗng và loading của component.
-- Chiều rộng tối thiểu phụ thuộc số cột: Danh mục 1100px, Word Prompt 1240px. Không ép bảng co đến mức mất nút hoặc cắt nội dung.
+- Chiều rộng tối thiểu phụ thuộc số cột: Danh mục 1100px, Word Prompt 1240px, Question Prompts 1400px. Không ép bảng co đến mức mất nút hoặc cắt nội dung.
 - Tên/nội dung chính và tên danh mục dài được xuống dòng, có `overflow-wrap: anywhere`; giới hạn ô text ở 320px. Thông tin ngắn như ngày, trạng thái và thao tác không xuống dòng.
 - Tên có thể sửa dùng `UButton` neutral/link, padding 0, căn trái. Slug là dòng chữ phụ bên dưới. Trạng thái Danh mục tiếp tục dùng badge.
+- Question Prompts rút gọn hai câu hỏi tối đa ba dòng; mở form để đọc toàn bộ.
 - Quy tắc riêng như ảnh Word Prompt 96×96px và độ rộng từng cột nằm trong CSS của màn.
 
 ## Nút và trạng thái

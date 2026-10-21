@@ -47,6 +47,8 @@ const routes = [
       },
       { path: "word-prompts/new", name: "word-prompt-new", component: () => import("../views/word-prompts/WordPromptFormView.vue"), meta: { titleKey: "wordPrompts.actions.create" } },
       { path: "word-prompts/:id/edit", name: "word-prompt-edit", component: () => import("../views/word-prompts/WordPromptFormView.vue"), meta: { titleKey: "wordPrompts.actions.edit" } },
+      { path: "question-prompts/new", name: "question-prompt-new", component: () => import("../views/question-prompts/QuestionPromptFormView.vue"), meta: { titleKey: "questionPrompts.actions.create" } },
+      { path: "question-prompts/:id/edit", name: "question-prompt-edit", component: () => import("../views/question-prompts/QuestionPromptFormView.vue"), meta: { titleKey: "questionPrompts.actions.edit" } },
       {
         path: "question-prompts",
         name: "question-prompts",

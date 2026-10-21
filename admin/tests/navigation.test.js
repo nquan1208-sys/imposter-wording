@@ -91,6 +91,39 @@ test('sidebar navigation renders only the current page and retains form leave gu
       if (name === 'word-prompts') { assert.match(text(content), /Tạo đề từ ngữ/); assert.doesNotMatch(text(content), /Thêm danh mục/) }
       if (name === 'dashboard' || name === 'question-prompts') assert.doesNotMatch(text(content), /Tạo đề từ ngữ|Thêm danh mục/)
     }
+    await router.push('/question-prompts'); await nextTick()
+    assert.match(text(root), /Đang tải đề/)
+    const questionFilters = { search: '', category: '', difficulty: '', family: '', locale: '', status: '', sort: 'updated_at', page: 1 }
+    const questionKey = ['question-prompts', 'list', questionFilters]
+    queryClient.setQueryData(questionKey, { rows: [], total: 0 }); await nextTick()
+    assert.match(text(root), /Không có đề phù hợp/)
+    queryClient.getQueryCache().find({ queryKey: questionKey }).setState({ status: 'error', error: new Error('offline') }); await nextTick()
+    assert.match(text(root), /Thử lại/)
+    queryClient.setQueryData(questionKey, { rows: [{ id: 'question-id', civilian_question: 'Favourite food?', imposter_question: 'Worst food?', game_categories: { name: 'Food' }, status: 'draft', difficulty: 'medium', is_family_friendly: false, updated_at: '2026-10-21T10:00:00Z' }], total: 1 }); await nextTick()
+    assert.match(text(root), /Favourite food/); assert.match(text(root), /Worst food/)
+    const search = nodes(root).find(element => element.props.modelValue === '' && element.props['onUpdate:modelValue'])
+    search.props['onUpdate:modelValue']('first'); await nextTick()
+    search.props['onUpdate:modelValue']('food'); await nextTick()
+    assert.equal(router.currentRoute.value.query.search, undefined)
+    await new Promise(resolve => setTimeout(resolve, 330)); await nextTick()
+    assert.equal(router.currentRoute.value.query.search, 'food')
+    await router.push('/question-prompts/new?search=food'); await nextTick()
+    assert.doesNotMatch(text(root), /Gợi ý danh mục|Hint|Ảnh/)
+    for (const [label, question] of [[vn.questionPrompts.fields.civilianQuestion, 'Favourite food?'], [vn.questionPrompts.fields.imposterQuestion, 'Worst food?']]) {
+      const field = nodes(root).find(element => element.props.label === label)
+      nodes(field).find(element => element.props['onUpdate:modelValue']).props['onUpdate:modelValue'](question)
+    }
+    await nextTick()
+    const previews = nodes(root).filter(element => String(element.props.class).includes('word-preview-screen'))
+    assert.equal(previews.length, 2)
+    assert.match(text(previews[0]), /Favourite food/); assert.doesNotMatch(text(previews[0]), /Worst food/)
+    assert.match(text(previews[1]), /Worst food/); assert.doesNotMatch(text(previews[1]), /Favourite food/)
+    await router.push('/categories'); await nextTick()
+    assert.equal(router.currentRoute.value.name, 'question-prompt-new')
+    globalThis.window.confirm = () => true
+    await router.push('/question-prompts?search=food'); await nextTick()
+    assert.equal(router.currentRoute.value.query.search, 'food')
+    globalThis.window.confirm = () => false
     await router.push('/word-prompts/new'); await nextTick()
     assert.doesNotMatch(text(root), /Từ imposter|Hint imposter/)
     const preview = nodes(root).find(element => String(element.props.class).includes('word-preview-imposter'))

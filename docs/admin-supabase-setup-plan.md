@@ -187,7 +187,7 @@ tra category của prompt phải khớp `game_type`.
 - `category_id`.
 - `civilian_question`.
 - `imposter_question`.
-- `imposter_hint`.
+- `imposter_hint` (schema lịch sử; đã bị bỏ bởi migration `20261021045906_question_prompt_management.sql`, không còn trong payload hiện tại).
 - `difficulty`.
 - `is_family_friendly`.
 - `status`.

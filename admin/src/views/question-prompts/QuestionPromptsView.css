@@ -1,0 +1,5 @@
+.question-prompts-page { min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.question-table { min-width: 1400px; }
+.question-table .word-column-civilian_question, .question-table .word-column-imposter_question { min-width: 240px; }
+.question-table .question-text-cell { max-width: 320px; }
+.question-table .question-truncate { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; white-space: normal; overflow-wrap: anywhere; text-align: left; }

@@ -23,7 +23,7 @@ begin
     (category_id,'word','Word tests',category_id::text,'vi'), (other_id,'question','Question tests',other_id::text,'vi');
   perform pg_temp.assert_true(not exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'word_prompts' and column_name in ('imposter_text','imposter_hint')), 'no imposter word or hint columns');
   perform pg_temp.assert_true(not exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'word_prompts' and column_name = 'civilian_text'), 'legacy word column renamed');
-  perform pg_temp.assert_true(exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'question_prompts' and column_name = 'imposter_hint'), 'question hint retained');
+  perform pg_temp.assert_true(not exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'question_prompts' and column_name = 'imposter_hint'), 'question hint removed');
   perform pg_temp.assert_true(not has_table_privilege('authenticated','public.word_prompts','delete'), 'no direct delete');
   perform pg_temp.assert_true(to_regprocedure('public.delete_word_prompt(uuid,timestamptz,text)') is null, 'old signature removed');
   perform pg_temp.assert_true(has_function_privilege('authenticated','public.delete_word_prompt(uuid,timestamptz)','execute'), 'authenticated can call guarded RPC');

@@ -44,4 +44,14 @@ Hoàn thiện danh sách, tạo/sửa, preview và quản lý trạng thái câu
 
 - Xóa cột sẽ xóa dữ liệu hint cũ theo lựa chọn đã chốt.
 - Phạm vi là admin và backend liên quan; không sửa app hoặc thêm logic hint vào admin.
-- Đây là kế hoạch triển khai; chưa thực hiện thay đổi code, migration hoặc chạy kiểm thử tính năng.
+- Đã triển khai API/validation, danh sách, form, preview, quản lý trạng thái và RPC xóa; không thay đổi app.
+
+## Triển khai và xác minh hiện tại
+
+- Migration `20261021045906_question_prompt_management.sql` đã áp dụng local bằng `supabase migration up --local`, không reset dữ liệu. Bỏ `imposter_hint`, trim và kiểm tra hai câu hỏi ở mọi trạng thái, kiểm tra loại/locale/trạng thái danh mục, cập nhật `updated_at` từ server và thêm RPC xóa có kiểm tra phiên bản.
+- Triển khai migration này trước frontend. Chưa push remote.
+- `cd admin && yarn test`: 40 kiểm thử đạt. `yarn build:local`: build thành công.
+- Chạy ba script SQL bằng `psql` với `ON_ERROR_STOP=1`: `supabase/tests/question_prompt_management.sql`, `category_management.sql`, `word_prompt_management.sql`. Mỗi script rollback toàn bộ fixture. Dùng psql vì `supabase db query --file` hiện không chạy được nhiều câu lệnh trong một prepared statement.
+- Kiểm thử `python3 supabase/tests/category_concurrency.py` đạt; fixture đã được dọn.
+- `supabase db advisors --local --type security --level warn`: không có vấn đề.
+- Đã mở danh sách local và xác minh empty state trong trình duyệt. Kiểm thử render bao phủ loading/rỗng/lỗi, hai câu hỏi trong bảng, debounce, hai preview và guard rời form. Kiểm tra trực quan đầy đủ desktop/mobile còn cần thực hiện: công cụ điều khiển Chrome báo `cgWindowNotFound` khi lấy screenshot. Fixture kiểm tra giao diện đã được dọn.
