@@ -22,13 +22,14 @@ begin
   insert into public.game_categories(id,game_type,name,slug,locale) values
     (category_id,'word','Word tests',category_id::text,'vi'), (other_id,'question','Question tests',other_id::text,'vi');
   perform pg_temp.assert_true(not exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'word_prompts' and column_name in ('imposter_text','imposter_hint')), 'no imposter word or hint columns');
+  perform pg_temp.assert_true(not exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'word_prompts' and column_name = 'civilian_text'), 'legacy word column renamed');
   perform pg_temp.assert_true(exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'question_prompts' and column_name = 'imposter_hint'), 'question hint retained');
   perform pg_temp.assert_true(not has_table_privilege('authenticated','public.word_prompts','delete'), 'no direct delete');
   perform pg_temp.assert_true(not has_function_privilege('anon','public.delete_word_prompt(uuid,timestamptz,text)','execute'), 'anon cannot execute');
   prompt_id := gen_random_uuid();
-  insert into public.word_prompts(id,category_id,civilian_text) values(prompt_id,category_id,'  Saved word  ');
+  insert into public.word_prompts(id,category_id,text) values(prompt_id,category_id,'  Saved word  ');
   select updated_at into version from public.word_prompts where id = prompt_id;
-  perform pg_temp.assert_true((select civilian_text = 'Saved word' from public.word_prompts where id = prompt_id), 'trim text');
+  perform pg_temp.assert_true((select text = 'Saved word' from public.word_prompts where id = prompt_id), 'trim text');
   set local role anon;
   perform pg_temp.expect_error(format('select public.delete_word_prompt(%L,%L,%L)',prompt_id,version,'XÓA'), '42501');
   reset role;
@@ -42,7 +43,7 @@ begin
   perform pg_temp.expect_error(format('select public.delete_word_prompt(%L,%L,%L)',prompt_id,version,' XÓA'), '22023');
   perform pg_temp.expect_error(format('select public.delete_word_prompt(%L,%L,null)',prompt_id,version), '22023');
   perform pg_temp.expect_error(format('select public.delete_word_prompt(%L,null,%L)',prompt_id,'XÓA'), '40001');
-  update public.word_prompts set civilian_text = 'Other tab edit' where id = prompt_id;
+  update public.word_prompts set text = 'Other tab edit' where id = prompt_id;
   perform pg_temp.expect_error(format('select public.delete_word_prompt(%L,%L,%L)',prompt_id,version,'XÓA'), '40001');
   perform pg_temp.assert_true(exists(select 1 from public.word_prompts where id = prompt_id), 'failed deletion retains row');
   select updated_at into version from public.word_prompts where id = prompt_id;
@@ -52,7 +53,7 @@ begin
   foreach state in array array['draft','published','archived']::public.content_status[] loop
     prompt_id := gen_random_uuid(); image := prompt_id::text || '/' || gen_random_uuid()::text || '.png';
     insert into storage.objects(bucket_id,name) values('word-prompt-images',image);
-    insert into public.word_prompts(id,category_id,civilian_text,status,image_path) values(prompt_id,category_id,'Image word',state,image);
+    insert into public.word_prompts(id,category_id,text,status,image_path) values(prompt_id,category_id,'Image word',state,image);
     select updated_at into version from public.word_prompts where id = prompt_id;
     set local role anon;
     perform pg_temp.assert_true((select count(*) from storage.objects where bucket_id = 'word-prompt-images' and name = image) = case when state = 'published' then 1 else 0 end, 'anon published-only image access');
@@ -76,7 +77,7 @@ begin
     reset role;
   end loop;
   prompt_id := gen_random_uuid();
-  insert into public.word_prompts(id,category_id,civilian_text) values(prompt_id,category_id,'Disabled admin');
+  insert into public.word_prompts(id,category_id,text) values(prompt_id,category_id,'Disabled admin');
   select updated_at into version from public.word_prompts where id = prompt_id;
   update public.admin_users set is_active = false where user_id = admin_id;
   perform set_config('request.jwt.claim.sub', admin_id::text, true);

@@ -29,7 +29,7 @@ try {
   data(await admin.from('game_categories').insert({ id: category, game_type: 'word', name: 'Storage deletion test', slug: category }))
   const path = `${prompt}/${crypto.randomUUID()}.png`; paths.push(path)
   data(await admin.storage.from(bucket).upload(path, png, { contentType: 'image/png', upsert: false }))
-  const form = { category_id: category, civilian_text: 'Storage test', imposter_text: 'Ignored legacy word', imposter_hint: 'Ignored legacy hint', image_path: path, difficulty: 'medium', is_family_friendly: false, locale: 'vi' }
+  const form = { category_id: category, text: 'Storage test', imposter_text: 'Ignored legacy word', imposter_hint: 'Ignored legacy hint', image_path: path, difficulty: 'medium', is_family_friendly: false, locale: 'vi' }
   let row = await saveWordPrompt(admin, form, { id: prompt, status: 'draft' })
   assert.equal('imposter_text' in row, false)
   assert.equal('imposter_hint' in row, false)
@@ -38,7 +38,7 @@ try {
     assert.ok((await target.storage.from(bucket).createSignedUrl(path, 60)).error, 'draft signed URL denied')
   }
   const text = 'Edited a,b %_ " word'
-  row = await saveWordPrompt(admin, { ...form, civilian_text: text }, { id: prompt, updatedAt: row.updated_at, status: 'published' })
+  row = await saveWordPrompt(admin, { ...form, text: text }, { id: prompt, updatedAt: row.updated_at, status: 'published' })
   const result = await listWordPrompts(admin, { search: text, category, sort: 'updated_at', page: 1 })
   assert.deepEqual(result.rows.map(row => row.id), [prompt], 'literal search works after removing imposter column')
   row = await saveWordPrompt(admin, row, { id: prompt, updatedAt: row.updated_at, status: 'archived' })

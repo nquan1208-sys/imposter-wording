@@ -37,7 +37,7 @@ begin
     (foreign_id,'word','Foreign',foreign_id::text,'en',true),
     (question_id,'question','Questions',question_id::text,'vi',true),
     (question_target,'question','Question target',question_target::text,'vi',true);
-  insert into public.word_prompts(category_id,civilian_text,status) values
+  insert into public.word_prompts(category_id,text,status) values
     (source_id,'a','draft'), (source_id,'b','published'), (source_id,'c','archived');
   insert into public.question_prompts(category_id,civilian_question,imposter_question,status) values
     (question_id,'q','other','published');
@@ -77,11 +77,11 @@ begin
   perform pg_temp.assert_true((select count(distinct status) = 3 from public.word_prompts where category_id = target_id), 'states preserved');
   version := public.preview_category_delete(target_id)->>'version';
   perform pg_temp.expect_error(format('select public.delete_category(%L,%L,null,%L,%L)',target_id,'purge','wrong',version), '22023');
-  insert into public.word_prompts(category_id,civilian_text) values(target_id,'new after preview');
+  insert into public.word_prompts(category_id,text) values(target_id,'new after preview');
   perform pg_temp.expect_error(format('select public.delete_category(%L,%L,null,%L,%L)',target_id,'purge','Target',version), '40001');
   perform pg_temp.assert_true((select count(*) = 4 from public.word_prompts where category_id = target_id), 'stale confirmation rolls back');
   version := public.preview_category_delete(target_id)->>'version';
-  update public.word_prompts set civilian_text = 'edited without timestamp' where category_id = target_id;
+  update public.word_prompts set text = 'edited without timestamp' where category_id = target_id;
   perform pg_temp.expect_error(format('select public.delete_category(%L,%L,null,%L,%L)',target_id,'purge','Target',version), '40001');
   version := public.preview_category_delete(target_id)->>'version';
   perform public.delete_category(target_id,'purge',null,'Target',version);

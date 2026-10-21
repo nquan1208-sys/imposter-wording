@@ -5,7 +5,7 @@ export const statuses = ['draft', 'published', 'archived']
 export const difficulties = ['easy', 'medium', 'hard']
 const optionalText = z.string().nullish().transform(value => value?.trim() || null)
 export const wordPromptSchema = z.object({
-  civilian_text: z.string().trim().min(1, 'wordPrompts.errors.civilianRequired'),
+  text: z.string().trim().min(1, 'wordPrompts.errors.textRequired'),
   image_path: optionalText,
   category_id: z.uuid({ error: 'wordPrompts.errors.categoryRequired' }),
   difficulty: z.enum(difficulties), is_family_friendly: z.boolean(),
@@ -26,7 +26,7 @@ export function wordPromptFilters(query) {
     family: ['true', 'false'].includes(query.family) ? query.family : '',
     locale: typeof query.locale === 'string' ? query.locale : '',
     status: statuses.includes(query.status) ? query.status : '',
-    sort: query.sort === 'civilian_text' ? query.sort : 'updated_at',
+    sort: ['text', 'civilian_text'].includes(query.sort) ? 'text' : 'updated_at',
     page: Number.isSafeInteger(page) && page > 0 ? page : 1,
   }
 }

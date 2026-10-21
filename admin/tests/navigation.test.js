@@ -56,7 +56,7 @@ test('sidebar navigation renders only the current page and retains form leave gu
     await router.push('/dashboard')
     app = renderer.createApp({ render: () => h(RouterView) }).use(router).use(VueQueryPlugin, { queryClient }).use(createI18n({ legacy: false, locale: 'vi', messages: { vi: vn } }))
     const ui = { inheritAttrs: false, setup: (_, { attrs, slots }) => () => h('div', attrs, [attrs.label, slots.default?.({ errors: [] }), slots.body?.({}), slots.actions?.({})]) }
-    for (const name of ['UButton', 'UAvatar', 'UAlert', 'UBreadcrumb', 'UCard', 'USkeleton', 'UInput', 'USelectMenu', 'UFormField', 'UCheckbox', 'UForm', 'UTextarea', 'UPagination']) app.component(name, ui)
+    for (const name of ['UButton', 'UAvatar', 'UAlert', 'UBreadcrumb', 'UCard', 'USkeleton', 'UInput', 'USelectMenu', 'UFormField', 'UCheckbox', 'UForm', 'UTextarea', 'UPagination', 'UBadge', 'UIcon', 'USwitch']) app.component(name, ui)
     app.component('USelect', { props: ['items', 'modelValue'], setup(props, context) {
       // Reka SelectItem reserves the empty string for clearing, not an option.
       watchEffect(() => assert.ok(props.items.every(item => item.value !== ''), 'select options must have nonempty values'))
@@ -93,10 +93,13 @@ test('sidebar navigation renders only the current page and retains form leave gu
     }
     await router.push('/word-prompts/new'); await nextTick()
     assert.doesNotMatch(text(root), /Từ imposter|Hint imposter/)
-    const preview = nodes(root).find(element => element.props.class === 'word-preview').children.filter(element => element.tag === 'div').at(-1)
-    assert.match(text(preview), /Bật hiển thị danh mục/)
-    assert.match(text(preview), /Tắt hiển thị danh mục/)
-    assert.match(text(preview), /Bạn là kẻ mạo danh/)
+    const preview = nodes(root).find(element => String(element.props.class).includes('word-preview-imposter'))
+    assert.match(text(preview), /Gợi ý danh mục/)
+    assert.match(text(preview), /Bạn là imposter/)
+    const hint = nodes(preview).find(element => element.props.label === vn.wordPrompts.preview.categoryHint)
+    hint.props['onUpdate:modelValue'](true); await nextTick()
+    assert.match(text(preview), /Chọn danh mục để xem trước/)
+    assert.doesNotMatch(text(preview), /Bạn là imposter/)
     const category = '00000000-0000-4000-8000-000000000002'
     queryClient.setQueryData(['categories', 'word-options', 'vi'], [{ id: category, name: 'Food category', locale: 'vi', is_active: true }])
     await nextTick()
@@ -109,8 +112,11 @@ test('sidebar navigation renders only the current page and retains form leave gu
     picker.props['onUpdate:modelValue'](otherCategory); await nextTick()
     assert.match(text(preview), /Movie category/)
     assert.doesNotMatch(text(preview), /Food category/)
+    hint.props['onUpdate:modelValue'](false); await nextTick()
+    assert.match(text(preview), /Bạn là imposter/)
+    assert.doesNotMatch(text(preview), /Movie category/)
     // Inline templates do not expose setup bindings; exercise the rendered input handler.
-    const civilian = nodes(root).find(element => element.props.label === vn.wordPrompts.fields.civilianText)
+    const civilian = nodes(root).find(element => element.props.label === vn.wordPrompts.fields.text)
     const input = nodes(civilian).find(element => element.props['onUpdate:modelValue'])
     input.props['onUpdate:modelValue']('Unsaved apple'); await nextTick()
     assert.doesNotMatch(text(preview), /Unsaved apple/)

@@ -11,7 +11,7 @@ Khi bắt đầu triển khai, workspace đã có một phần migration/API ả
 Hoàn thành luồng **danh sách → tạo nháp → sửa → gắn danh mục → quản lý ảnh → preview → publish/archive → xóa vĩnh viễn** trước khi triển khai nội dung câu hỏi.
 
 - Nháp bắt buộc có từ civilian và danh mục; ảnh tùy chọn.
-- Civilian preview thấy từ và ảnh; imposter thấy vai trò và tên danh mục khi bật hiển thị danh mục, hoặc chỉ vai trò khi tắt.
+- Preview Dân thường thấy từ và ảnh; Imposter chỉ thấy tên danh mục khi bật gợi ý, hoặc chỉ “Bạn là imposter” khi tắt. Công tắc trên admin chỉ mô phỏng, không lưu vào đề.
 - Sửa nội dung published cập nhật trực tiếp sau xác nhận.
 - Dùng bucket **private**, cấu hình giống nhau ở Local và Dev.
 - Tận dụng Nuxt UI, Vue Query, Zod, i18n và cảnh báo thay đổi chưa lưu hiện có; không thêm dependency.
@@ -37,12 +37,12 @@ Hoàn thành luồng **danh sách → tạo nháp → sửa → gắn danh mục
 ### Form tạo/sửa
 
 - Thêm routes `/word-prompts/new` và `/word-prompts/:id/edit`.
-- Form sử dụng các trường hiện có: `civilian_text`, `category_id`, `difficulty`, `is_family_friendly`, `locale`, `image_path`.
+- Form sử dụng các trường hiện có: `text`, `category_id`, `difficulty`, `is_family_friendly`, `locale`, `image_path`.
 - Tạo mới mặc định `locale=vi`, độ khó `medium`, Family Mode tắt.
 - Chọn danh mục `word` đang hoạt động, cùng locale.
 - Đề cũ thuộc danh mục đã tắt vẫn hiển thị danh mục hiện tại để sửa/lưu; muốn publish phải chọn danh mục hoạt động.
 - Locale mặc định `vi`; khi thay locale phải chọn lại danh mục tương ứng. Không tự đổi locale của danh mục.
-- Preview cập nhật theo dữ liệu chưa lưu, tách civilian và imposter; imposter mô phỏng cả bật/tắt hiển thị danh mục, lấy tên từ danh mục đang chọn; không lưu cấu hình vào đề.
+- Preview cập nhật theo dữ liệu chưa lưu, gồm hai card Dân thường và Imposter. Công tắc Gợi ý danh mục mặc định tắt; bật chỉ hiện tên danh mục đang chọn, tắt chỉ hiện “Bạn là imposter”; không lưu cấu hình vào đề.
 
 ### Hành động theo trạng thái
 
@@ -211,7 +211,7 @@ Tài liệu môi trường hiện có: [admin-supabase-environment-guide.md](adm
 ## Tinh gọn Wording theo luật chơi
 
 - Migration `simplify_word_prompts` bỏ `imposter_text` và `imposter_hint` khỏi `word_prompts`, thay hàm trigger trong cùng transaction; không sửa migration cũ.
-- Giữ `civilian_text`, `category_id` và các trường ảnh/trạng thái/lọc hiện có. Giữ nguyên schema trò câu hỏi.
+- Giữ `text`, `category_id` và các trường ảnh/trạng thái/lọc hiện có. Giữ nguyên schema trò câu hỏi.
 - App Flutter hiện chưa có gameplay Wording; thiết lập hiển thị danh mục sẽ thuộc ván lưu local, tên danh mục lấy qua `category_id` của từ được chọn.
 - Triển khai môi trường dùng chung: xuất sao lưu các giá trị khác rỗng trong hai cột; cập nhật admin trước rồi áp dụng migration. Admin cũ không tương thích sau khi xóa cột.
 
@@ -225,3 +225,58 @@ Tài liệu môi trường hiện có: [admin-supabase-environment-guide.md](adm
 - Kiểm tra migration với fixture có từ/hint cũ trong transaction rollback: dữ liệu còn lại giữ nguyên và trigger vẫn trim/cập nhật được.
 - Replay toàn bộ migration từ schema ứng dụng rỗng trên database Local tạm, giữ nền tảng Auth/Storage Supabase: hai bộ SQL pass; database tạm được dọn.
 - Chưa kiểm tra giao diện thủ công vì công cụ không kết nối được trình duyệt; chưa áp dụng Dev cloud.
+
+
+## Cập nhật form và trường `text` (2026-10-21)
+
+- Đổi `word_prompts.civilian_text` thành `word_prompts.text` bằng migration `20261021032252_rename_word_prompt_text.sql`; đổi tên tại chỗ, không tạo lại bảng hoặc reset dữ liệu. Migration cũ giữ nguyên.
+- Admin dùng `text` cho form, danh sách, tìm kiếm, sắp xếp và dialog xóa; nhãn là “Từ bí mật”. URL cũ `sort=civilian_text` vẫn được đọc thành `sort=text`.
+- Form sạch nhận bản mới từ query; form đang sửa/đang thao tác giữ nguyên dữ liệu và file. Xung đột lưu được giữ đến khi tải lại thành công, không mất nút tải lại khi sửa trường; chặn lưu/chuyển trạng thái khi còn xung đột.
+- Form tách Nội dung, Phân loại, Ảnh và Xem trước; hai card có nền teal/vàng nhẹ, icon vai trò, nội dung tự xuống dòng, ảnh giữ tỷ lệ và xếp dọc ở màn hẹp. Xóa vĩnh viễn tách khỏi nhóm lưu.
+- 32 test admin pass, gồm test cache sạch/dirty/busy, giữ xung đột sau nhập tiếp, hủy/tải lại lỗi/thành công, công tắc preview không tạo thay đổi chưa lưu và URL sort cũ.
+- Build Local và Development pass. SQL `word_prompt_management.sql`, `category_management.sql`, kiểm tra migration giữ dữ liệu bằng fixture rollback, và tích hợp Auth/Data/Storage Local đều pass. Security advisor Local không phát hiện vấn đề.
+- Migration đã áp dụng Local; chưa áp dụng Dev cloud. Khi triển khai môi trường dùng chung, cập nhật database và admin trong cùng đợt vì admin cũ dùng tên cột cũ; không cần xuất/nhập lại dữ liệu.
+- Đã kiểm tra trực quan Chrome desktop với đề có ảnh: hai card cân đối, ảnh giữ tỷ lệ; bật gợi ý chỉ hiện danh mục, tắt chỉ hiện vai trò. Đã làm mới Vite để theme Nuxt UI nhận công tắc mới. Chưa kiểm tra trực quan tablet/mobile.
+
+### Cột `text` hiển thị ở cuối Supabase Studio
+
+Database vẫn giữ thứ tự `id`, `category_id`, `text`, `image_path`, … (`text` ở vị trí 3). Studio lưu thứ tự cột riêng trong trình duyệt; sau đổi tên, cột mới có thể bị đưa về cuối. Không cần migration khác để sắp xếp bảng.
+
+Có thể sửa bằng JavaScript bên dưới trong DevTools Console của **đúng tab bảng word_prompts trên Studio Local**. Đoạn này chỉ đặt lại thứ tự hiển thị cột của bảng đang mở; giữ độ rộng cột, bộ lọc và cấu hình bảng khác. Không chạy trong SQL Editor.
+
+```js
+(() => {
+  if (location.origin !== 'http://127.0.0.1:54323') {
+    throw new Error('Chỉ chạy trên Supabase Studio Local.');
+  }
+  const match = location.pathname.match(/^\/project\/([^/]+)\/editor\/(\d+)$/);
+  if (!match || !document.title.includes('word_prompts')) {
+    throw new Error('Mở bảng word_prompts trước khi chạy.');
+  }
+  const key = `supabase_grid_${match[1]}`;
+  let changed = false;
+  for (const storage of [localStorage, sessionStorage]) {
+    const raw = storage.getItem(key);
+    if (!raw) continue;
+    const state = JSON.parse(raw);
+    const table = state[match[2]];
+    if (!Array.isArray(table?.gridColumns)) continue;
+    const textColumn = table.gridColumns.find(c => c.key === 'text')
+      || table.gridColumns.find(c => c.key === 'civilian_text')
+      || { key: 'text', name: 'text', width: 250 };
+    const columns = table.gridColumns.filter(c => !['text', 'civilian_text'].includes(c.key));
+    const categoryIndex = columns.findIndex(c => c.key === 'category_id');
+    if (categoryIndex < 0) throw new Error('Không tìm thấy cột category_id trong cấu hình.');
+    columns.splice(categoryIndex + 1, 0, { ...textColumn, key: 'text', name: 'text' });
+    table.gridColumns = columns.map((column, idx) => ({ ...column, idx }));
+    storage.setItem(key, JSON.stringify(state));
+    changed = true;
+  }
+  if (changed) location.reload();
+  else console.info('Chưa có cấu hình thứ tự cột được lưu cho bảng này.');
+})();
+```
+
+Cơ chế lưu cấu hình: [mã nguồn Supabase Studio](https://github.com/supabase/supabase/blob/master/apps/studio/components/grid/SupabaseGrid.utils.ts).
+
+Đoạn JavaScript chỉnh layout đã được kiểm tra với storage giả lập: giữ độ rộng, bộ lọc và cấu hình bảng khác, hỗ trợ cả tên cột cũ/mới và từ chối origin khác. Chưa áp dụng trên storage thật của tab Studio.

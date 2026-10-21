@@ -34,7 +34,7 @@ try:
             time.sleep(0.05)
         else:
             raise AssertionError("Delete transaction did not acquire its lock")
-        inserting = executor.submit(sql, f"insert into public.word_prompts(category_id,civilian_text) values('{category_id}','Concurrent insert');")
+        inserting = executor.submit(sql, f"insert into public.word_prompts(category_id,text) values('{category_id}','Concurrent insert');")
         delete_result, insert_result = deleting.result(), inserting.result()
         assert delete_result.returncode == 0, delete_result.stderr
         assert insert_result.returncode != 0 and 'foreign key constraint' in insert_result.stderr, insert_result.stderr

@@ -5,14 +5,14 @@ export async function listWordPrompts(client, filters) {
   let query = client.from('word_prompts').select('*, game_categories(id,name,is_active)', { count: 'exact' })
   if (filters.search.trim()) {
     const pattern = searchPattern(filters.search.trim())
-    query = query.or(`civilian_text.ilike.${pattern}`)
+    query = query.or(`text.ilike.${pattern}`)
   }
   for (const [filter, field] of Object.entries({ category: 'category_id', difficulty: 'difficulty', locale: 'locale', status: 'status' })) {
     if (filters[filter]) query = query.eq(field, filters[filter])
   }
   if (filters.family) query = query.eq('is_family_friendly', filters.family === 'true')
   const start = (filters.page - 1) * pageSize
-  const result = await query.order(filters.sort, { ascending: filters.sort === 'civilian_text' }).order('id').range(start, start + pageSize - 1)
+  const result = await query.order(filters.sort, { ascending: filters.sort === 'text' }).order('id').range(start, start + pageSize - 1)
   return { rows: dataOrThrow(result), total: result.count || 0 }
 }
 export async function getWordPrompt(client, id) {

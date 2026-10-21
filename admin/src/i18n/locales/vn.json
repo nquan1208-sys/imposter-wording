@@ -172,14 +172,14 @@
       "retryImage": "Tải lại ảnh"
     },
     "fields": {
-      "civilianText": "Từ civilian",
       "categoryId": "Danh mục",
       "difficulty": "Độ khó",
       "isFamilyFriendly": "Family Mode",
       "locale": "Ngôn ngữ",
       "imagePath": "Ảnh",
       "status": "Trạng thái",
-      "updatedAt": "Cập nhật"
+      "updatedAt": "Cập nhật",
+      "text": "Từ bí mật"
     },
     "statuses": {
       "draft": "Nháp",
@@ -192,14 +192,14 @@
       "hard": "Khó"
     },
     "errors": {
-      "civilianRequired": "Nhập từ civilian.",
       "categoryRequired": "Chọn danh mục phù hợp.",
       "localeRequired": "Nhập ngôn ngữ.",
       "invalidData": "Dữ liệu không hợp lệ hoặc danh mục không phù hợp để publish.",
       "invalidImage": "Ảnh phải đọc được, thuộc JPEG, PNG hoặc WebP và không quá 5 MiB.",
       "conflict": "Đề đã thay đổi ở nơi khác. Hãy tải lại trước khi xác nhận.",
       "notFound": "Đề không còn tồn tại.",
-      "confirmation": "Nhập chính xác XÓA để xác nhận."
+      "confirmation": "Nhập chính xác XÓA để xác nhận.",
+      "textRequired": "Nhập từ bí mật."
     },
     "deleteDialog": {
       "warning": "Không thể khôi phục đề sau khi xóa. Thay đổi chưa lưu sẽ bị bỏ. Toàn bộ file ảnh vẫn được giữ.",
@@ -213,12 +213,15 @@
       "saved": "Đã lưu đề."
     },
     "preview": {
-      "civilian": "Preview civilian",
-      "imposter": "Preview imposter",
-      "role": "Bạn là kẻ mạo danh.",
-      "categoryVisible": "Bật hiển thị danh mục",
-      "categoryHidden": "Tắt hiển thị danh mục",
-      "selectCategory": "Chọn danh mục để xem trước."
+      "title": "Xem trước",
+      "description": "Nội dung hiển thị cho từng vai trò trong ván chơi.",
+      "civilian": "Dân thường",
+      "imposter": "Imposter",
+      "role": "Bạn là imposter",
+      "categoryHint": "Gợi ý danh mục",
+      "selectCategory": "Chọn danh mục để xem trước",
+      "enterText": "Nhập từ bí mật để xem trước",
+      "simulationOnly": "Chỉ mô phỏng. Gợi ý được bật hoặc tắt khi thiết lập ván chơi."
     },
     "upload": {
       "uploading": "Đang upload ảnh…",
@@ -229,19 +232,23 @@
     "yes": "Có",
     "no": "Không",
     "inactive": "Đã tắt",
-    "search": "Tìm hai trường từ",
+    "search": "Tìm từ bí mật",
     "sort": "Sắp xếp",
     "actionsLabel": "Hành động",
     "loading": "Đang tải đề…",
     "loadingImage": "Đang tải ảnh…",
     "empty": "Không có đề phù hợp.",
     "imageHelp": "JPEG, PNG hoặc WebP; tối đa 5 MiB. Ảnh chỉ upload khi lưu.",
-    "form": {
-      "chooseImage": "Chọn ảnh minh họa"
-    },
     "pagination": {
       "summary": "{count} đề · Trang {page} / {pages}",
       "label": "Phân trang đề từ ngữ"
+    },
+    "form": {
+      "description": "Nhập từ bí mật, chọn danh mục và kiểm tra nội dung người chơi sẽ thấy.",
+      "content": "Nội dung",
+      "classification": "Phân loại",
+      "textPlaceholder": "Ví dụ: Bánh mì",
+      "chooseImage": "Chọn ảnh minh họa"
     }
   },
   "questionPrompts": {

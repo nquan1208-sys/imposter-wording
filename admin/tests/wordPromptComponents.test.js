@@ -28,6 +28,91 @@ const renderer = createRenderer({
 })
 const stub = { setup: (_, { slots }) => () => h('div', Object.values(slots).flatMap(slot => slot({}))) }
 
+test('word editor refreshes clean cache, protects edits, and keeps save conflicts until explicit reload', async () => {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, mode: 'localdev' })
+  const originalWindow = globalThis.window
+  const queryClient = new QueryClient({ defaultOptions: { queries: { enabled: false, gcTime: Infinity } } })
+  const id = '00000000-0000-4000-8000-000000000001'
+  const row = { id, text: 'Cached word', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi', image_path: '', status: 'draft', updated_at: '2026-10-13T10:00:00Z' }
+  const fresh = { ...row, text: 'Server word', updated_at: '2026-10-13T11:00:00Z' }
+  let app, supabase, originalFrom, originalGetUser
+  try {
+    globalThis.window = { addEventListener() {}, removeEventListener() {}, confirm: () => false }
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/word-prompts/:id/edit', component: stub }] })
+    await router.push(`/word-prompts/${id}/edit`)
+    const { provideUnsavedChanges } = await server.ssrLoadModule('/src/utils/unsavedChanges.js')
+    ;({ supabase } = await server.ssrLoadModule('/src/lib/supabase.js'))
+    originalFrom = supabase.from; originalGetUser = supabase.auth.getUser
+    supabase.auth.getUser = async () => ({ data: { user: { id } } })
+    let writes = 0, latest = fresh, readError = null, resolveWrite
+    supabase.from = () => {
+      const query = {}, state = { write: false }
+      for (const name of ['select', 'eq', 'single', 'order', 'range', 'maybeSingle']) query[name] = () => query
+      query.update = () => { state.write = true; writes++; return query }
+      query.then = resolve => state.write
+        ? new Promise(done => { resolveWrite = () => done({ data: null }) }).then(resolve)
+        : Promise.resolve({ data: latest, error: readError }).then(resolve)
+      return query
+    }
+    queryClient.setQueryData(['word-prompts', 'detail', id], row)
+    const component = (await server.ssrLoadModule('/src/views/word-prompts/WordPromptFormView.vue')).default
+    app = renderer.createApp({ setup() { provideUnsavedChanges(); return () => h({ ...component, render: () => h('div') }) } })
+      .use(router).use(VueQueryPlugin, { queryClient }).use(createI18n({ legacy: false, locale: 'vi', messages: { vi: vn } }))
+    app.provide(ssrContextKey, {}); app.provide(matchedRouteKey, computed(() => router.currentRoute.value.matched[0]))
+    const editor = app.mount(node()).$.subTree.component.setupState
+    assert.equal(editor.form.text, row.text)
+    queryClient.setQueryData(['word-prompts', 'detail', id], fresh)
+    await nextTick()
+    assert.equal(editor.form.text, fresh.text)
+    assert.equal(editor.saved.updated_at, fresh.updated_at)
+    assert.equal(editor.unsaved.dirty, false)
+    editor.showCategoryHint = true; await nextTick()
+    assert.equal(editor.unsaved.dirty, false, 'preview settings are not content edits')
+    editor.update('text', 'My unsaved word')
+    editor.file = { type: 'image/png', size: 1 }
+    queryClient.setQueryData(['word-prompts', 'detail', id], { ...fresh, text: 'Another server edit' })
+    await nextTick()
+    assert.equal(editor.form.text, 'My unsaved word')
+    assert.ok(editor.file)
+    assert.equal(editor.saved.updated_at, fresh.updated_at)
+    editor.file = null
+    editor.submit('draft')
+    await new Promise(resolve => setTimeout(resolve, 0))
+    resolveWrite()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    assert.equal(editor.saveConflict, true)
+    editor.update('text', 'Edit after conflict')
+    assert.equal(editor.saveConflict, true)
+    editor.submit('draft'); editor.submit('published'); editor.submit('archived')
+    await nextTick()
+    assert.equal(writes, 1, 'conflicted saves do not write or upload again')
+    await editor.reload()
+    assert.equal(editor.form.text, 'Edit after conflict', 'cancel keeps edits and conflict')
+    assert.equal(editor.saveConflict, true)
+    globalThis.window.confirm = () => true
+    readError = new Error('offline')
+    await editor.reload()
+    assert.equal(editor.saveConflict, true)
+    assert.equal(editor.form.text, 'Edit after conflict')
+    readError = null
+    latest = { ...fresh, text: 'Explicit reload', updated_at: '2026-10-13T12:00:00Z' }
+    await editor.reload()
+    assert.equal(editor.form.text, latest.text)
+    assert.equal(editor.saved.updated_at, latest.updated_at)
+    assert.equal(editor.saveConflict, false)
+    assert.equal(editor.unsaved.dirty, false)
+    // A background response must not replace a form while an action is busy.
+    editor.unsaved.busy = true
+    queryClient.setQueryData(['word-prompts', 'detail', id], fresh)
+    await nextTick()
+    assert.equal(editor.form.text, latest.text)
+  } finally {
+    app?.unmount(); queryClient.clear(); globalThis.window = originalWindow
+    if (supabase) { supabase.from = originalFrom; supabase.auth.getUser = originalGetUser }
+    await server.close()
+  }
+})
+
 test('saved-word deletion preserves input on failure, blocks repeats/leave/logout, and reloads explicitly', async () => {
   const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, mode: 'localdev' })
   const apps = [], originalWindow = globalThis.window
@@ -35,7 +120,7 @@ test('saved-word deletion preserves input on failure, blocks repeats/leave/logou
   const invalidations = [], invalidateQueries = queryClient.invalidateQueries.bind(queryClient)
   queryClient.invalidateQueries = options => { invalidations.push(options.queryKey); return invalidateQueries(options) }
   const id = '00000000-0000-4000-8000-000000000001'
-  const row = { id, civilian_text: 'Saved apple', image_path: '', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi', status: 'published', updated_at: '2026-10-13T10:00:00Z', game_categories: { id, name: 'Saved category', locale: 'vi', is_active: false } }
+  const row = { id, text: 'Saved apple', image_path: '', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi', status: 'published', updated_at: '2026-10-13T10:00:00Z', game_categories: { id, name: 'Saved category', locale: 'vi', is_active: false } }
   let supabase, originalRpc, originalFrom, originalGetUser, originalSignOut
   try {
     globalThis.window = { addEventListener() {}, removeEventListener() {}, confirm: () => false }
@@ -67,21 +152,21 @@ test('saved-word deletion preserves input on failure, blocks repeats/leave/logou
       return { state: instance.setupState, instance }
     }
     const { state: editor } = await mount('/src/views/word-prompts/WordPromptFormView.vue')
-    assert.equal(editor.saved.civilian_text, 'Saved apple')
+    assert.equal(editor.saved.text, 'Saved apple')
     assert.equal(editor.previewCategoryName, 'Saved category')
     assert.equal('imposter_text' in editor.form, false)
     assert.equal('imposter_hint' in editor.form, false)
-    editor.update('civilian_text', '')
+    editor.update('text', '')
     editor.update('category_id', '')
     assert.equal(editor.previewCategoryName, '')
     editor.file = { type: 'image/png', size: 1 }
     editor.openDelete()
     assert.equal(editor.deleting, true)
-    assert.equal(editor.saved.civilian_text, 'Saved apple')
+    assert.equal(editor.saved.text, 'Saved apple')
     assert.equal(editor.canLeave(), false)
     // Cancel does not save anything and keeps the invalid form/file.
     editor.deleting = false
-    assert.equal(editor.form.civilian_text, '')
+    assert.equal(editor.form.text, '')
     assert.ok(editor.file)
     editor.openDelete()
     let resolveRpc, calls = 0
@@ -103,7 +188,7 @@ test('saved-word deletion preserves input on failure, blocks repeats/leave/logou
     resolveRpc({ error: new Error('offline') })
     await new Promise(resolve => setTimeout(resolve, 0))
     assert.equal(editor.unsaved.busy, false)
-    assert.equal(editor.form.civilian_text, '')
+    assert.equal(editor.form.text, '')
     assert.ok(editor.file)
     assert.equal(editor.deleting, true)
     assert.equal(calls, 1)
@@ -114,12 +199,12 @@ test('saved-word deletion preserves input on failure, blocks repeats/leave/logou
     editor.remove(input)
     assert.equal(calls, 2)
     await editor.reload()
-    assert.equal(editor.form.civilian_text, '')
+    assert.equal(editor.form.text, '')
     assert.equal(editor.conflict, true)
     globalThis.window.confirm = () => true
-    latest = { ...row, civilian_text: 'Other tab apple', updated_at: '2026-10-13T11:00:00Z' }
+    latest = { ...row, text: 'Other tab apple', updated_at: '2026-10-13T11:00:00Z' }
     await editor.reload()
-    assert.equal(editor.form.civilian_text, 'Other tab apple')
+    assert.equal(editor.form.text, 'Other tab apple')
     assert.equal(editor.file, null)
     assert.equal(editor.conflict, false)
     assert.equal(editor.deleting, false)
