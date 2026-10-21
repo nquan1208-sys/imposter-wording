@@ -1,0 +1,11 @@
+.admin-filter-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
+.admin-table-scroll { min-width: 0; overflow-x: auto; border: 1px solid var(--color-teal-border); border-radius: var(--radius-md); background: var(--color-white); }
+.admin-table { width: 100%; border-collapse: collapse; color: var(--color-charcoal); }
+.admin-table th, .admin-table td { padding: var(--space-3); text-align: left; vertical-align: middle; white-space: nowrap; border-bottom: 1px solid var(--color-teal-border); }
+.admin-table th { background: var(--color-teal-surface); color: var(--color-charcoal); font-size: .875rem; font-weight: 600; }
+.admin-table td { color: var(--color-charcoal); font-size: var(--text-body-size); }
+.admin-table tbody tr:last-child td { border-bottom: 0; }
+.admin-table .category-actions { flex-wrap: nowrap; gap: var(--space-1); }
+.admin-table .category-actions > * { flex-shrink: 0; }
+@media (max-width: 1000px) { .admin-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .admin-filter-grid { grid-template-columns: minmax(0, 1fr); } }

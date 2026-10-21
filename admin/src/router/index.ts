@@ -1,7 +1,7 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router"
 import AdminShell from "../components/admin/AdminShell.vue";
-import { supabase } from "../lib/supabase.js";
-import { getAdminSession } from "../utils/adminAuth.js";
+import { supabase } from "../lib/supabase.ts"
+import { getAdminSession } from "../utils/adminAuth.ts"
 
 const routes = [
   {
@@ -47,6 +47,8 @@ const routes = [
       },
       { path: "word-prompts/new", name: "word-prompt-new", component: () => import("../views/word-prompts/WordPromptFormView.vue"), meta: { titleKey: "wordPrompts.actions.create" } },
       { path: "word-prompts/:id/edit", name: "word-prompt-edit", component: () => import("../views/word-prompts/WordPromptFormView.vue"), meta: { titleKey: "wordPrompts.actions.edit" } },
+      { path: "question-prompts/new", name: "question-prompt-new", component: () => import("../views/question-prompts/QuestionPromptFormView.vue"), meta: { titleKey: "questionPrompts.actions.create" } },
+      { path: "question-prompts/:id/edit", name: "question-prompt-edit", component: () => import("../views/question-prompts/QuestionPromptFormView.vue"), meta: { titleKey: "questionPrompts.actions.edit" } },
       {
         path: "question-prompts",
         name: "question-prompts",

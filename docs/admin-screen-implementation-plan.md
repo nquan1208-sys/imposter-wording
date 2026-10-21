@@ -4,9 +4,9 @@
 
 ## Thứ tự triển khai sau đăng nhập/đăng xuất
 
-**Màn hình nên làm tiếp theo: Danh mục.** Nội dung từ ngữ và câu hỏi đều cần danh mục để tạo/sửa và lọc dữ liệu.
+**Màn hình nên làm tiếp theo: Tổng quan.** Danh mục, Word Prompts và Question Prompts đã có luồng quản lý nội dung.
 
-Hiện đã có tích hợp Supabase, đăng nhập/đăng xuất, admin shell và route cho bốn màn hình. Các màn `Tổng quan`, `Danh mục`, `Nội dung từ ngữ`, `Nội dung câu hỏi` vẫn đang dùng placeholder. Tái sử dụng shell và route hiện có khi triển khai.
+Hiện đã có tích hợp Supabase, đăng nhập/đăng xuất, admin shell và route cho bốn màn hình. Màn `Tổng quan` vẫn đang dùng placeholder; các màn danh mục, từ ngữ và câu hỏi đã có danh sách và form quản lý. Tái sử dụng shell và route hiện có khi triển khai.
 
 | Thứ tự | Màn hình / phạm vi | Kết quả cần đạt | Lý do ưu tiên |
 | --- | --- | --- | --- |
@@ -17,7 +17,7 @@ Hiện đã có tích hợp Supabase, đăng nhập/đăng xuất, admin shell v
 
 Thứ tự triển khai khác với thứ tự menu: `Tổng quan` vẫn là màn đầu sau đăng nhập, nhưng hoàn thiện sau các màn quản lý content.
 
-### Phạm vi bước tiếp theo: Danh mục
+### Phạm vi đã triển khai: Danh mục
 
 1. Danh sách `/categories`: tìm kiếm backend theo tên/slug (debounce 300 ms), lọc loại game/trạng thái, phân trang 20 dòng và sắp xếp. Giữ bộ lọc trong URL.
 2. Form `/categories/new` và `/categories/:id/edit`: tạo tiếng Việt; khi sửa giữ nguyên ngôn ngữ và khóa loại trò chơi.
@@ -42,3 +42,6 @@ Thứ tự triển khai khác với thứ tự menu: `Tổng quan` vẫn là mà
 - Hoàn thành các thao tác chính với dữ liệu backend trước khi chuyển sang màn tiếp theo.
 - Kiểm tra quyền truy cập dữ liệu: phiên hết hạn hoặc tài khoản không có quyền admin không được đọc/ghi dữ liệu quản trị trái phép.
 
+### Question Prompts đã triển khai
+
+Danh sách có tìm kiếm hai câu hỏi (debounce 300 ms), bộ lọc URL và phân trang 20 dòng. Form tạo/sửa có hai textarea, preview từng vai trò, lưu nháp/publish/archive/xóa, kiểm tra phiên bản và guard thay đổi chưa lưu. Không lưu hint. Xem [kế hoạch Question Prompts](admin-question-prompts-implementation-plan.md) cho migration, kiểm thử và giới hạn xác minh giao diện.

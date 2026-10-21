@@ -1,7 +1,9 @@
+import { asClient } from './helpers.ts'
+import type { QueryStub, MockResult, Calls } from './helpers.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { deleteWordPrompt, saveWordPrompt, listWordPrompts } from '../src/api/wordPrompts.js'
-import { wordPromptPayload, wordPromptFilters, wordPromptError, validateImage } from '../src/utils/wordPrompts.js'
+import { deleteWordPrompt, saveWordPrompt, listWordPrompts } from '../src/api/wordPrompts.ts'
+import { wordPromptPayload, wordPromptFilters, wordPromptError, validateImage } from '../src/utils/wordPrompts.ts'
 const id = '00000000-0000-4000-8000-000000000001'
 const form = { text: '  Apple  ', image_path: '', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi' }
 test('word payload trims optional fields and validates all states', () => {
@@ -16,23 +18,23 @@ test('word payload trims optional fields and validates all states', () => {
   assert.throws(() => validateImage({ type: 'image/png', size: 0 }))
 })
 test('delete passes saved snapshot only, without auth, validation, save or upload', async () => {
-  const calls = [], client = { rpc: async (...args) => { calls.push(args); return { data: null } } }
-  await deleteWordPrompt(client, { id, updatedAt: 'version', form: { text: '' }, file: {} })
+  const calls: Calls = [], client: { rpc: (...args: unknown[]) => Promise<MockResult> } = { rpc: async (...args: unknown[]) => { calls.push(args); return { data: null } } }
+  await deleteWordPrompt(asClient(client), Object.assign({ id, updatedAt: 'version' }, { form: { text: '' }, file: {} }))
   assert.deepEqual(calls, [['delete_word_prompt', { p_id: id, p_expected_updated_at: 'version' }]])
   for (const error of [new Error('offline'), { code: '40001' }, { code: 'P0002' }]) {
     client.rpc = async () => ({ error })
-    await assert.rejects(deleteWordPrompt(client, { id }), value => value === error)
+    await assert.rejects(deleteWordPrompt(asClient(client), { id, updatedAt: 'version' }), value => value === error)
   }
   assert.equal(wordPromptError({ code: '40001' }), 'wordPrompts.errors.conflict')
   assert.equal(wordPromptError({ code: 'P0002' }), 'wordPrompts.errors.notFound')
   assert.equal(wordPromptError({ code: '22023' }), 'wordPrompts.errors.invalidData')
 })
 test('list combines URL filters and stable pagination', async () => {
-  const calls = [], query = {}
-  for (const method of ['select', 'eq', 'or', 'order', 'range']) query[method] = (...args) => { calls.push([method, ...args]); return query }
+  const calls: Calls = [], query = {} as QueryStub
+  for (const method of ['select', 'eq', 'or', 'order', 'range']) query[method] = (...args: unknown[]) => { calls.push([method, ...args]); return query }
   query.then = resolve => resolve({ data: [], count: 21 })
   const filters = wordPromptFilters({ search: 'a,b', category: id, status: 'archived', family: 'false', difficulty: 'hard', page: '2' })
-  const result = await listWordPrompts({ from: () => query }, filters)
+  const result = await listWordPrompts(asClient({ from: () => query }), filters)
   assert.equal(result.total, 21)
   assert.deepEqual(calls.at(-1), ['range', 20, 39])
   assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'is_family_friendly' && call[2] === false))
@@ -42,11 +44,11 @@ test('list combines URL filters and stable pagination', async () => {
   assert.equal(wordPromptFilters({ sort: 'unexpected' }).sort, 'updated_at')
 })
 test('save conflicts keep the original error even if image cleanup fails', async () => {
-  const calls = [], query = {}
-  for (const method of ['update', 'eq', 'select', 'maybeSingle']) query[method] = (...args) => { calls.push([method, ...args]); return query }
+  const calls: Calls = [], query = {} as QueryStub
+  for (const method of ['update', 'eq', 'select', 'maybeSingle']) query[method] = (...args: unknown[]) => { calls.push([method, ...args]); return query }
   query.then = resolve => resolve({ data: null })
-  const client = { auth: { getUser: async () => ({ data: { user: { id } } }) }, from: () => query,
+  const client = { auth: { getUser: async () => ({ data: { user: { id } as { id: string } | null } }) }, from: () => query,
     storage: { from: () => ({ upload: async () => ({ data: {} }), remove: async () => { throw new Error('cleanup offline') } }) } }
-  await assert.rejects(saveWordPrompt(client, form, { id, status: 'draft', updatedAt: 'snapshot', file: { type: 'image/png', size: 1 } }), /wordPrompts.errors.conflict/)
+  await assert.rejects(saveWordPrompt(asClient(client), form, { id, status: 'draft', updatedAt: 'snapshot', file: new File(['x'], 'image.png', { type: 'image/png' }) }), /wordPrompts.errors.conflict/)
   assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'updated_at' && call[2] === 'snapshot'))
 })

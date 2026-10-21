@@ -1,11 +1,12 @@
-<script setup>
+<script setup lang="ts">
+import type { FormSubmitEvent } from '@nuxt/ui'
 import { useI18n } from 'vue-i18n'
 import { computed, reactive } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { useRoute, useRouter } from 'vue-router'
-import { supabase } from '../../lib/supabase.js'
-import { signInAdmin, adminAuthError } from '../../utils/adminAuth.js'
-import { loginSchema } from '../../utils/loginSchema.js'
+import { supabase } from '../../lib/supabase.ts'
+import { signInAdmin, adminAuthError } from '../../utils/adminAuth.ts'
+import { loginSchema } from '../../utils/loginSchema.ts'
 const { t } = useI18n({ useScope: 'global' })
 
 const router = useRouter()
@@ -15,7 +16,7 @@ const queryClient = useQueryClient()
 const { mutate, isPending: isSubmitting, error } = useMutation({
   retry: false,
   gcTime: 0,
-  mutationFn: async (credentials) => {
+  mutationFn: async (credentials: { email: string; password: string }) => {
     await signInAdmin(supabase, credentials)
     queryClient.removeQueries()
 
@@ -32,7 +33,7 @@ const errorMessage = computed(() =>
   error.value ? t(adminAuthError(error.value)) : '',
 )
 
-function submitLogin(event) {
+function submitLogin(event: FormSubmitEvent<{ email: string; password: string }>) {
   if (isSubmitting.value) return
   mutate(event.data)
 }
@@ -53,8 +54,8 @@ function submitLogin(event) {
       </div>
 
       <UForm :schema="loginSchema" :state="credentials" :disabled="isSubmitting" novalidate v-slot="{ errors }" class="login-form" @submit="submitLogin">
-        <UFormField :label="t('auth.login.email')" name="email" required><UInput v-model="credentials.email" type="email" autocomplete="email" placeholder="admin@example.com" required class="tw:w-full" /><template v-if="errors.some(issue => issue.name === 'email')" #error="{ error }">{{ t(error) }}</template></UFormField>
-        <UFormField :label="t('auth.login.password')" name="password" required><UInput v-model="credentials.password" type="password" autocomplete="current-password" :placeholder="t('auth.login.passwordPlaceholder')" required class="tw:w-full" /><template v-if="errors.some(issue => issue.name === 'password')" #error="{ error }">{{ t(error) }}</template></UFormField>
+        <UFormField :label="t('auth.login.email')" name="email" required><UInput v-model="credentials.email" type="email" autocomplete="email" placeholder="admin@example.com" required class="tw:w-full" /><template v-if="errors.some(issue => issue.name === 'email')" #error="{ error }">{{ typeof error === 'string' ? t(error) : '' }}</template></UFormField>
+        <UFormField :label="t('auth.login.password')" name="password" required><UInput v-model="credentials.password" type="password" autocomplete="current-password" :placeholder="t('auth.login.passwordPlaceholder')" required class="tw:w-full" /><template v-if="errors.some(issue => issue.name === 'password')" #error="{ error }">{{ typeof error === 'string' ? t(error) : '' }}</template></UFormField>
         <UAlert v-if="errorMessage" color="error" :description="errorMessage" role="alert" />
         <UButton type="submit" :loading="isSubmitting" :disabled="isSubmitting" block :label="t('auth.login.submit')" />
       </UForm>

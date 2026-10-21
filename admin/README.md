@@ -8,10 +8,10 @@ Use Nuxt UI 4 components for forms, inputs, selects, tables, pagination,
 dialogs, buttons, alerts, cards, skeletons, avatars and breadcrumbs.
 Vue Router still owns navigation and route guards; Nuxt is not required.
 
-Nuxt UI is configured in `vite.config.js` and registered in `src/main.js`.
+Nuxt UI is configured in `vite.config.ts` and registered in `src/main.ts`.
 `UApp` follows the global Vue I18n locale. Tailwind uses the `tw:` prefix to
 coexist with the existing CSS tokens. Brand yellow comes from
-`src/styles/theme.css`; global component overrides live in `vite.config.js`.
+`src/styles/theme.css`; global component overrides live in `vite.config.ts`.
 Keep page CSS for layout, and avoid styling native inputs/buttons inside
 Nuxt UI components.
 
@@ -72,7 +72,7 @@ yarn build:development
 
 ## Translations
 
-Vue I18n 11 is registered in `src/main.js`; `src/i18n/index.js` uses `vi`
+Vue I18n 11 is registered in `src/main.ts`; `src/i18n/index.ts` uses `vi`
 as the default and fallback locale. `locales/vn.json` contains Vietnamese
 messages under runtime locale `vi`. `locales/en.json` is intentionally `{}`:
 English falls back to Vietnamese for app text while Nuxt UI uses its English
@@ -104,3 +104,23 @@ Storage files are retained.
 The migration removing confirmation changes the RPC signatures. Deploy it and
 the matching admin build together, pause delete operations during rollout, and
 reload open admin tabs afterward. Old RPC signatures are not retained.
+
+## TypeScript
+
+All admin source, Vue scripts, Vite configuration, tests and preview fixtures use
+TypeScript with `strict: true`. TypeScript is pinned to 5.9.3 because the installed
+`vue-tsc` cannot run against TypeScript 7.
+
+```sh
+yarn typecheck       # Vue templates/source, then Node configuration/tests
+yarn test            # Node test runner with the tsx loader
+yarn test:storage    # Integration test against running local Supabase only
+yarn types:database  # Regenerate committed public schema types from local Supabase
+```
+
+Every `build:*` command runs typecheck first. The preparation script generates
+Nuxt UI component/auto-import declarations before checking, including on a fresh
+checkout. These declarations remain ignored; `src/types/database.ts` is committed.
+Start local Supabase with the repository migrations applied before regenerating
+database types. The small RPC nullability override lives in `src/types/admin.ts`.
+The storage test creates isolated fixtures and cleans them up in `finally`.

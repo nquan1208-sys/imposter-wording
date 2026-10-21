@@ -1,14 +1,16 @@
+import { testWindow } from './helpers.ts'
+
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile, readdir } from 'node:fs/promises'
 import { createI18n } from 'vue-i18n'
-import { categoryError, categoryPayload, gameTypeLabels } from '../src/utils/categories.js'
-import { adminAuthError } from '../src/utils/adminAuth.js'
-import { confirmDiscard } from '../src/utils/unsavedChanges.js'
+import { categoryError, categoryPayload, gameTypeLabels } from '../src/utils/categories.ts'
+import { adminAuthError } from '../src/utils/adminAuth.ts'
+import { confirmDiscard } from '../src/utils/unsavedChanges.ts'
 
-const vn = JSON.parse(await readFile(new URL('../src/i18n/locales/vn.json', import.meta.url)))
-const en = JSON.parse(await readFile(new URL('../src/i18n/locales/en.json', import.meta.url)))
-function flatten(messages, prefix = '') {
+import vn from '../src/i18n/locales/vn.json'
+import en from '../src/i18n/locales/en.json'
+function flatten(messages: object, prefix = ''): Record<string, string> {
   return Object.fromEntries(Object.entries(messages).flatMap(([key, value]) => {
     assert.match(key, /^[a-z][a-zA-Z0-9]*$/)
     const path = prefix ? `${prefix}.${key}` : key
@@ -22,7 +24,7 @@ function flatten(messages, prefix = '') {
 }
 const viKeys = flatten(vn)
 const enKeys = flatten(en)
-const placeholders = text => [...text.matchAll(/\{([a-z][a-zA-Z0-9]*)\}/g)].map(match => match[1]).sort()
+const placeholders = (text: string) => [...text.matchAll(/\{([a-z][a-zA-Z0-9]*)\}/g)].map(match => match[1]).sort()
 
 test('dictionary keys, nonempty values, English subset and placeholders', () => {
   for (const [key, value] of Object.entries(enKeys)) {
@@ -41,12 +43,12 @@ test('English falls back to Vietnamese and every message compiles', () => {
   assert.equal(categoryPayload({ name: 'Food', slug: 'food', game_type: 'word', sort_order: 0, is_active: true, locale: i18n.global.locale.value }).locale, 'vi')
 })
 
-async function sources(directory) {
+async function sources(directory: URL): Promise<[URL, string][]> {
   const entries = await readdir(directory, { withFileTypes: true })
-  const groups = await Promise.all(entries.map(async entry => {
+  const groups = await Promise.all(entries.map(async (entry): Promise<[URL, string][]> => {
     const path = new URL(entry.name + (entry.isDirectory() ? '/' : ''), directory)
     if (entry.isDirectory()) return sources(path)
-    return /\.(js|vue)$/.test(entry.name) ? [[path, await readFile(path, 'utf8')]] : []
+    return /\.(ts|vue)$/.test(entry.name) ? [[path, await readFile(path, 'utf8')]] : []
   }))
   return groups.flat()
 }
@@ -79,7 +81,7 @@ test('errors use stable keys and leave backend messages untouched', () => {
 test('discard confirmation forwards the translated message and cancellation', () => {
   const original = globalThis.window
   try {
-    globalThis.window = { confirm: message => { assert.equal(message, vn.common.confirmations.discardChanges); return false } }
+    globalThis.window = testWindow({ confirm: message => { assert.equal(message, vn.common.confirmations.discardChanges); return false } })
     assert.equal(confirmDiscard(vn.common.confirmations.discardChanges), false)
     globalThis.window.confirm = () => true
     assert.equal(confirmDiscard('Discard changes?'), true)

@@ -2,6 +2,8 @@
 
 > Tài liệu mô tả bố cục, nội dung và thành phần giao diện của Admin Vue.
 
+Style danh sách dùng chung được quy định tại [Quy tắc style danh sách Admin](admin-style-rules.md), lấy Word Prompt làm mẫu tham chiếu.
+
 ## Mục đích
 
 Admin dùng để quản lý danh mục và nội dung từ backend. Người chơi không đăng nhập; tên người chơi, câu trả lời, lượt vote và trạng thái ván được lưu local trên thiết bị theo phạm vi R1.
@@ -157,7 +159,7 @@ Form chia thành hai cột:
 
 - Câu hỏi civilian.
 - Câu hỏi imposter.
-- Hint cho imposter.
+- Không lưu hint; app tự xử lý hiển thị danh mục.
 - Danh mục câu hỏi.
 - Độ khó.
 - Checkbox `Phù hợp chế độ gia đình`.
@@ -167,8 +169,8 @@ Form chia thành hai cột:
 Validation:
 
 - Hai câu hỏi không được rỗng.
-- Hai câu hỏi không được giống nhau.
-- Câu hỏi phải thuộc đúng category loại `question`.
+- Hai câu hỏi phải khác nhau sau khi trim, không phân biệt hoa/thường; áp dụng cho mọi trạng thái.
+- Câu hỏi phải thuộc category loại `question`, cùng locale; publish yêu cầu category đang hoạt động.
 - Không được publish content chưa đủ dữ liệu.
 
 ## Quy tắc UI và trạng thái
@@ -179,7 +181,7 @@ Validation:
 - Nút `Publish` cần nổi bật hơn `Lưu nháp`.
 - Archive hoặc deactivate phải có hộp thoại xác nhận.
 - Các bảng hỗ trợ phân trang, tìm kiếm và sắp xếp.
-- Text dài trong bảng được truncate; click vào dòng để xem đầy đủ.
+- Tên/nội dung chính và tên danh mục dài trong bảng được xuống dòng; click vào tên để mở màn sửa. Ngày, trạng thái và nhóm thao tác giữ trên một hàng.
 - Upload ảnh hiển thị tiến trình, preview và lỗi định dạng/kích thước.
 - Family Mode là một thuộc tính độc lập với độ khó; app chỉ lấy content có `is_family_friendly = true` khi chế độ gia đình được bật.
 - Nút `Đăng xuất` nằm cố định ở cuối sidebar, tách biệt với các mục content.

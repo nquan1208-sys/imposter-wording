@@ -259,7 +259,86 @@
   },
   "questionPrompts": {
     "title": "Nội dung câu hỏi",
-    "description": "Quản lý các câu hỏi dành cho civilian và imposter."
+    "description": "Quản lý cặp câu hỏi cho dân thường và kẻ mạo danh.",
+    "actions": {
+      "create": "Tạo đề câu hỏi",
+      "edit": "Sửa đề",
+      "save": "Lưu",
+      "publish": "Publish",
+      "draft": "Đưa về nháp",
+      "archive": "Archive",
+      "delete": "Xóa vĩnh viễn",
+      "reload": "Tải lại đề"
+    },
+    "fields": {
+      "categoryId": "Danh mục",
+      "difficulty": "Độ khó",
+      "isFamilyFriendly": "Family Mode",
+      "locale": "Ngôn ngữ",
+      "status": "Trạng thái",
+      "updatedAt": "Cập nhật",
+      "civilianQuestion": "Câu hỏi dân thường",
+      "imposterQuestion": "Câu hỏi kẻ mạo danh"
+    },
+    "statuses": {
+      "draft": "Nháp",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "difficulties": {
+      "easy": "Dễ",
+      "medium": "Trung bình",
+      "hard": "Khó"
+    },
+    "errors": {
+      "categoryRequired": "Chọn danh mục phù hợp.",
+      "localeRequired": "Nhập ngôn ngữ.",
+      "invalidData": "Dữ liệu không hợp lệ hoặc danh mục không phù hợp để publish.",
+      "conflict": "Đề đã thay đổi ở nơi khác. Hãy tải lại trước khi xác nhận.",
+      "notFound": "Đề không còn tồn tại.",
+      "civilianRequired": "Vui lòng nhập câu hỏi dân thường.",
+      "imposterRequired": "Vui lòng nhập câu hỏi kẻ mạo danh.",
+      "sameQuestions": "Hai câu hỏi phải khác nhau."
+    },
+    "deleteDialog": {
+      "warning": "Nội dung này sẽ bị xóa vĩnh viễn. Thay đổi chưa lưu sẽ bị bỏ.",
+      "description": "Kiểm tra nội dung bạn sắp xóa vĩnh viễn.",
+      "irreversible": "Không thể hoàn tác",
+      "confirm": "Xóa vĩnh viễn"
+    },
+    "confirmations": {
+      "save": "Đề đang published. Lưu nội dung và thay đổi trạng thái ngay cho người chơi?"
+    },
+    "messages": {
+      "deleted": "Đã xóa vĩnh viễn đề.",
+      "saved": "Đã lưu đề."
+    },
+    "preview": {
+      "title": "Xem trước",
+      "description": "Xem câu hỏi hiển thị cho từng vai trò.",
+      "civilian": "Dân thường",
+      "imposter": "Imposter",
+      "selectCategory": "Chọn danh mục để xem trước",
+      "enterQuestion": "Nhập câu hỏi để xem trước"
+    },
+    "all": "Tất cả",
+    "yes": "Có",
+    "no": "Không",
+    "inactive": "Đã tắt",
+    "search": "Tìm trong hai câu hỏi",
+    "sort": "Sắp xếp",
+    "actionsLabel": "Hành động",
+    "loading": "Đang tải đề…",
+    "empty": "Không có đề phù hợp.",
+    "pagination": {
+      "summary": "{count} đề · Trang {page} / {pages}",
+      "label": "Phân trang đề câu hỏi"
+    },
+    "form": {
+      "description": "Nhập hai câu hỏi và phân loại nội dung.",
+      "content": "Nội dung",
+      "classification": "Phân loại"
+    }
   },
   "placeholder": {
     "eyebrow": "Đang phát triển",

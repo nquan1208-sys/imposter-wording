@@ -1,13 +1,13 @@
-<script setup>
+<script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { computed, ref } from "vue";
-import { useMutation, useQueryClient } from "@tanstack/vue-query";
-import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
+import { computed, ref } from "vue"
+import { useMutation, useQueryClient } from "@tanstack/vue-query"
+import { RouterLink, RouterView, useRoute, useRouter } from "vue-router"
 import AppIcon from "./AppIcon.vue";
-import { supabase } from "../../lib/supabase.js";
-import { signOutAdmin } from "../../utils/adminAuth.js";
+import { supabase } from "../../lib/supabase.ts"
+import { signOutAdmin } from "../../utils/adminAuth.ts"
 
-import { provideUnsavedChanges, confirmDiscard } from "../../utils/unsavedChanges.js";
+import { provideUnsavedChanges, confirmDiscard } from "../../utils/unsavedChanges.ts"
 const { t } = useI18n({ useScope: 'global' })
 
 const unsaved = provideUnsavedChanges();
