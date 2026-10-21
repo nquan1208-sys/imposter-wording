@@ -222,12 +222,16 @@ test('saved-word deletion preserves input on failure, blocks repeats/leave/logou
 
     const emitted = []
     const { state: dialog } = await mount('/src/components/word-prompts/WordDeleteDialog.vue', { prompt: row, pending: false, onDelete: input => emitted.push(input) })
-    for (const value of ['', 'xóa', 'XÓA ', 'XOA']) { dialog.confirmation = value; dialog.submit(); assert.equal(dialog.canDelete, false) }
-    assert.equal(emitted.length, 0)
-    dialog.confirmation = 'XÓA'; assert.equal(dialog.canDelete, true); dialog.submit()
+    assert.equal(dialog.canDelete, true)
+    dialog.submit()
     assert.deepEqual(emitted, [input])
     const { state: pending } = await mount('/src/components/word-prompts/WordDeleteDialog.vue', { prompt: row, pending: true })
-    pending.confirmation = 'XÓA'; assert.equal(pending.canDelete, false)
+    assert.equal(pending.canDelete, false)
+    pending.submit()
+    const { state: conflicted } = await mount('/src/components/word-prompts/WordDeleteDialog.vue', { prompt: row, pending: false, conflict: true, onDelete: input => emitted.push(input) })
+    assert.equal(conflicted.canDelete, false)
+    conflicted.submit()
+    assert.equal(emitted.length, 1)
 
     const { state: list } = await mount('/src/views/word-prompts/WordPromptsView.vue')
     queryClient.setQueryData(['word-prompts', 'list', list.filters], { rows: [], total: 20 })

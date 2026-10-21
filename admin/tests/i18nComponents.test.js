@@ -103,18 +103,17 @@ test('mounted components react to locale changes and preserve delete/leave guard
     assert.equal(editor.canLeave(), false)
     editor.unsaved.busy = false
 
-    const dialog = await mount('/src/components/categories/CategoryDeleteDialog.vue', { preview: { category: { id: 'source', name: 'Food' }, counts: { draft: 1 }, version: 'snapshot' }, targets: [] })
+    const deletions = []
+    const dialog = await mount('/src/components/categories/CategoryDeleteDialog.vue', { onDelete: input => deletions.push(input), preview: { category: { id: 'source', name: 'Food' }, counts: { draft: 1 }, version: 'snapshot' }, targets: [] })
     assert.equal(dialog.canDelete, false)
     dialog.targetId = 'target'
     assert.equal(dialog.canDelete, true)
     dialog.mode = 'purge'
-    assert.equal(dialog.canDelete, false)
-    dialog.confirmation = 'food'
-    assert.equal(dialog.canDelete, false)
-    dialog.confirmation = 'Food'
     assert.equal(dialog.canDelete, true)
+    dialog.submit()
+    assert.deepEqual(deletions, [{ id: 'source', mode: 'purge', targetId: 'target', confirmation: 'Food', version: 'snapshot' }])
     dialog.refresh()
-    assert.equal(dialog.canDelete, false)
+    assert.equal(dialog.canDelete, true)
   } finally {
     for (const app of apps.reverse()) app.unmount()
     queryClient.clear()

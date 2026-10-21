@@ -137,23 +137,28 @@
     },
     "deleteDialog": {
       "title": "Xóa danh mục",
-      "description": "Kiểm tra nội dung liên kết trước khi xóa vĩnh viễn.",
+      "description": "Chọn cách xử lý nội dung trước khi xóa danh mục.",
       "loading": "Đang tải thống kê mới nhất…",
       "category": "Danh mục: {name}",
-      "counts": "Nháp: {draft} · Published: {published} · Archived: {archived}",
       "empty": "Danh mục đang rỗng. Xóa vĩnh viễn danh mục này?",
-      "linkedContent": "Cách xử lý {count} content đang liên kết",
-      "transfer": "Chuyển content rồi xóa",
-      "purge": "Xóa danh mục và toàn bộ content",
-      "target": "Danh mục nhận",
+      "linkedContent": "Xử lý {count} nội dung trong danh mục",
+      "transfer": "Chuyển nội dung rồi xóa danh mục",
+      "purge": "Xóa danh mục cùng toàn bộ nội dung",
+      "target": "Chuyển nội dung đến danh mục",
       "targetPlaceholder": "Chọn danh mục",
       "targetsLoading": "Đang tải danh mục nhận…",
-      "noTargets": "Không có danh mục nhận đang hoạt động, cùng loại và ngôn ngữ.",
+      "noTargets": "Không có danh mục nhận đang hoạt động, cùng loại trò chơi và ngôn ngữ.",
       "irreversible": "Không thể hoàn tác",
-      "warning": "Toàn bộ content, kể cả published, sẽ bị xóa vĩnh viễn. File ảnh Storage được giữ lại.",
-      "confirmName": "Nhập đúng tên danh mục để xác nhận",
-      "confirm": "Xác nhận xóa",
-      "refresh": "Tải lại thống kê"
+      "warning": "Toàn bộ nội dung, kể cả nội dung đã xuất bản, sẽ bị xóa vĩnh viễn. File ảnh vẫn được giữ lại.",
+      "confirm": "Xóa danh mục",
+      "refresh": "Tải lại thống kê",
+      "transferDescription": "Giữ lại toàn bộ nội dung và chuyển sang danh mục bạn chọn. Chỉ danh mục này bị xóa.",
+      "purgeDescription": "Xóa vĩnh viễn cả danh mục lẫn nội dung bên trong, ở mọi trạng thái.",
+      "draft": "Nháp",
+      "published": "Đã xuất bản",
+      "archived": "Đã lưu trữ",
+      "confirmTransfer": "Chuyển nội dung và xóa",
+      "confirmPurge": "Xóa tất cả vĩnh viễn"
     }
   },
   "wordPrompts": {
@@ -202,8 +207,10 @@
       "textRequired": "Nhập từ bí mật."
     },
     "deleteDialog": {
-      "warning": "Không thể khôi phục đề sau khi xóa. Thay đổi chưa lưu sẽ bị bỏ. Toàn bộ file ảnh vẫn được giữ.",
-      "confirmation": "Nhập chính xác XÓA"
+      "warning": "Nội dung này sẽ bị xóa vĩnh viễn. Thay đổi chưa lưu sẽ bị bỏ. File ảnh vẫn được giữ lại.",
+      "description": "Kiểm tra nội dung bạn sắp xóa vĩnh viễn.",
+      "irreversible": "Không thể hoàn tác",
+      "confirm": "Xóa vĩnh viễn"
     },
     "confirmations": {
       "save": "Đề đang published. Lưu nội dung và thay đổi trạng thái ngay cho người chơi?"
