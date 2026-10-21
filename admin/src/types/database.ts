@@ -183,6 +183,10 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
+            "admin_dashboard_summary": {
+                Args: Record<PropertyKey, never>;
+                Returns: Json;
+            };
             "delete_category": {
                 Args: {
                     "p_expected_version"?: string;

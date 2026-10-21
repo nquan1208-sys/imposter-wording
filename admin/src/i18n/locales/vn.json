@@ -71,7 +71,46 @@
   },
   "dashboard": {
     "title": "Tổng quan",
-    "description": "Theo dõi nhanh tình trạng nội dung và các việc cần xử lý."
+    "description": "Theo dõi nhanh tình trạng nội dung và các việc cần xử lý.",
+    "loading": "Đang tải tổng quan…",
+    "loadError": "Không thể tải tổng quan. Vui lòng thử lại.",
+    "retry": "Thử lại",
+    "editItem": "Sửa nội dung: {title}",
+    "statuses": {
+      "draft": "Nháp",
+      "published": "Đã xuất bản",
+      "archived": "Đã lưu trữ"
+    },
+    "stats": {
+      "title": "Thống kê nội dung",
+      "publishedWordPrompts": "Đề từ ngữ đã xuất bản",
+      "publishedQuestionPrompts": "Đề câu hỏi đã xuất bản",
+      "activeCategories": "Danh mục đang hoạt động",
+      "drafts": "Nội dung bản nháp"
+    },
+    "recent": {
+      "title": "Nội dung cập nhật gần đây",
+      "allWords": "Xem tất cả từ ngữ",
+      "allQuestions": "Xem tất cả câu hỏi",
+      "allWordsShort": "Tất cả từ ngữ",
+      "allQuestionsShort": "Tất cả câu hỏi",
+      "empty": "Chưa có nội dung cập nhật."
+    },
+    "drafts": {
+      "title": "Nội dung bản nháp cần xử lý",
+      "allWords": "Xem bản nháp từ ngữ",
+      "allQuestions": "Xem bản nháp câu hỏi",
+      "empty": "Không có bản nháp cần xử lý."
+    },
+    "warnings": {
+      "title": "Cảnh báo chất lượng dữ liệu",
+      "empty": "Không có cảnh báo dữ liệu.",
+      "emptyCategories": "Danh mục không có nội dung: {count}",
+      "duplicateQuestions": "Cặp câu hỏi civilian và imposter bị trùng: {count}",
+      "nonFamilyEasyPrompts": "Nội dung mức dễ chưa được đánh dấu phù hợp với Family Mode: {count}",
+      "wordPrompts": "Từ ngữ",
+      "questionPrompts": "Câu hỏi"
+    }
   },
   "categories": {
     "title": "Danh mục",
