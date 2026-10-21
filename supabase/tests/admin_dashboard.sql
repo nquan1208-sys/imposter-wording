@@ -85,7 +85,7 @@ begin
     select jsonb_build_object('id', q.id, 'game_type', 'question', 'title', q.civilian_question, 'category_name', c.name, 'status', q.status, 'updated_at', q.updated_at)
       from public.question_prompts q join public.game_categories c on c.id = q.category_id where q.category_id = any(fixture_categories)
   )
-  select coalesce(jsonb_agg(item), '[]'::jsonb) into expected_recent
+  select coalesce(jsonb_agg(item order by (item->>'updated_at')::timestamptz desc, item->>'game_type', item->>'id'), '[]'::jsonb) into expected_recent
   from (select item from candidates order by (item->>'updated_at')::timestamptz desc, item->>'game_type', item->>'id' limit 5) ordered;
 
   with candidates(item) as (
@@ -97,7 +97,7 @@ begin
     select jsonb_build_object('id', q.id, 'game_type', 'question', 'title', q.civilian_question, 'category_name', c.name, 'status', q.status, 'updated_at', q.updated_at)
       from public.question_prompts q join public.game_categories c on c.id = q.category_id where q.category_id = any(fixture_categories) and q.status = 'draft'
   )
-  select coalesce(jsonb_agg(item), '[]'::jsonb) into expected_drafts
+  select coalesce(jsonb_agg(item order by (item->>'updated_at')::timestamptz desc, item->>'game_type', item->>'id'), '[]'::jsonb) into expected_drafts
   from (select item from candidates order by (item->>'updated_at')::timestamptz desc, item->>'game_type', item->>'id' limit 5) ordered;
 
   perform pg_temp.assert_true(summary->'recent' = expected_recent and jsonb_array_length(summary->'recent') = 5, 'recent merges all statuses, orders deterministically, then limits to five');
