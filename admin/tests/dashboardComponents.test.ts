@@ -107,7 +107,7 @@ test('dashboard renders statistics, prompt links and warning destinations', asyn
     harness.queryClient.setQueryData(['dashboard', 'summary'], summary)
     const html = (await renderToString(harness.ssrApp())).replaceAll('&amp;', '&')
     for (const value of ['11', '22', '33', '44', 'Recent word', 'Recent question', 'Draft word', 'Draft question', 'Food', 'Travel']) assert.ok(html.includes(value), `missing ${value}`)
-    for (const warning of ['Danh mục không có nội dung: 1', 'Cặp câu hỏi civilian và imposter bị trùng: 2', 'Nội dung dễ chưa phù hợp Family Mode: 3']) assert.ok(html.includes(warning), `missing ${warning}`)
+    for (const warning of ['Danh mục không có nội dung: 1', 'Cặp câu hỏi civilian và imposter bị trùng: 2', 'Nội dung mức dễ chưa được đánh dấu phù hợp với Family Mode: 3']) assert.ok(html.includes(warning), `missing ${warning}`)
     for (const href of [
       '/word-prompts/word-recent/edit', '/question-prompts/question-recent/edit',
       '/word-prompts/word-draft/edit', '/question-prompts/question-draft/edit',

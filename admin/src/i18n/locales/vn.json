@@ -101,7 +101,7 @@
       "empty": "Không có cảnh báo dữ liệu.",
       "emptyCategories": "Danh mục không có nội dung: {count}",
       "duplicateQuestions": "Cặp câu hỏi civilian và imposter bị trùng: {count}",
-      "nonFamilyEasyPrompts": "Nội dung dễ chưa phù hợp Family Mode: {count}",
+      "nonFamilyEasyPrompts": "Nội dung mức dễ chưa được đánh dấu phù hợp với Family Mode: {count}",
       "wordPrompts": "Từ ngữ",
       "questionPrompts": "Câu hỏi"
     }
