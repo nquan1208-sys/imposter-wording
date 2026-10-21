@@ -17,15 +17,15 @@ test('word payload trims optional fields and validates all states', () => {
 })
 test('delete passes saved snapshot only, without auth, validation, save or upload', async () => {
   const calls = [], client = { rpc: async (...args) => { calls.push(args); return { data: null } } }
-  await deleteWordPrompt(client, { id, updatedAt: 'version', confirmation: 'XÓA', form: { text: '' }, file: {} })
-  assert.deepEqual(calls, [['delete_word_prompt', { p_id: id, p_expected_updated_at: 'version', p_confirmation: 'XÓA' }]])
+  await deleteWordPrompt(client, { id, updatedAt: 'version', form: { text: '' }, file: {} })
+  assert.deepEqual(calls, [['delete_word_prompt', { p_id: id, p_expected_updated_at: 'version' }]])
   for (const error of [new Error('offline'), { code: '40001' }, { code: 'P0002' }]) {
     client.rpc = async () => ({ error })
     await assert.rejects(deleteWordPrompt(client, { id }), value => value === error)
   }
   assert.equal(wordPromptError({ code: '40001' }), 'wordPrompts.errors.conflict')
   assert.equal(wordPromptError({ code: 'P0002' }), 'wordPrompts.errors.notFound')
-  assert.equal(wordPromptError({ code: '22023' }), 'wordPrompts.errors.confirmation')
+  assert.equal(wordPromptError({ code: '22023' }), 'wordPrompts.errors.invalidData')
 })
 test('list combines URL filters and stable pagination', async () => {
   const calls = [], query = {}

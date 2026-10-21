@@ -8,7 +8,7 @@ CONTAINER = "supabase_db_imposter-wording"
 
 def sql(statement):
     return subprocess.run(
-        ["docker", "exec", "-i", CONTAINER, "psql", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-At"],
+        ["docker", "exec", "-i", CONTAINER, "psql", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-v", "VERBOSITY=verbose", "-At"],
         input=statement, text=True, capture_output=True, timeout=20,
     )
 
@@ -37,7 +37,8 @@ try:
         inserting = executor.submit(sql, f"insert into public.word_prompts(category_id,text) values('{category_id}','Concurrent insert');")
         delete_result, insert_result = deleting.result(), inserting.result()
         assert delete_result.returncode == 0, delete_result.stderr
-        assert insert_result.returncode != 0 and 'foreign key constraint' in insert_result.stderr, insert_result.stderr
+        rejected = '23503' in insert_result.stderr or ('23514' in insert_result.stderr and 'Category must match word type and locale' in insert_result.stderr)
+        assert insert_result.returncode != 0 and rejected, insert_result.stderr
     assert checked(f"select count(*) from public.word_prompts where category_id = '{category_id}';").strip() == '0'
     print('PASS: category delete blocks concurrent insertion; no orphan content')
 finally:

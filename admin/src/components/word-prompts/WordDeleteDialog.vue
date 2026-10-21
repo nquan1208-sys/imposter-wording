@@ -6,7 +6,7 @@ const emit = defineEmits(['close', 'delete', 'reload'])
 const { t } = useI18n({ useScope: 'global' })
 const canDelete = computed(() => !props.pending && !props.conflict)
 function submit() {
-  if (canDelete.value) emit('delete', { id: props.prompt.id, updatedAt: props.prompt.updated_at, confirmation: 'XÓA' })
+  if (canDelete.value) emit('delete', { id: props.prompt.id, updatedAt: props.prompt.updated_at })
 }
 </script>
 <template>

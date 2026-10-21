@@ -176,7 +176,7 @@ test('saved-word deletion preserves input on failure, blocks repeats/leave/logou
       assert.equal(input.p_expected_updated_at, row.updated_at)
       return new Promise(resolve => { resolveRpc = resolve })
     }
-    const input = { id, updatedAt: row.updated_at, confirmation: 'XÓA' }
+    const input = { id, updatedAt: row.updated_at }
     editor.remove(input); editor.remove(input)
     assert.equal(editor.unsaved.busy, true)
     await new Promise(resolve => setTimeout(resolve, 0))

@@ -18,9 +18,9 @@ export async function listWordPrompts(client, filters) {
 export async function getWordPrompt(client, id) {
   return dataOrThrow(await client.from('word_prompts').select('*, game_categories(id,name,is_active,locale)').eq('id', id).single())
 }
-export async function deleteWordPrompt(client, { id, updatedAt, confirmation }) {
+export async function deleteWordPrompt(client, { id, updatedAt }) {
   return dataOrThrow(await client.rpc('delete_word_prompt', {
-    p_id: id, p_expected_updated_at: updatedAt, p_confirmation: confirmation,
+    p_id: id, p_expected_updated_at: updatedAt,
   }))
 }
 export async function wordCategories(client, locale) {

@@ -58,7 +58,7 @@ Mỗi hành động lưu dữ liệu form cùng trạng thái trong một lần 
 ### Xóa vĩnh viễn
 
 - Nút **Xóa vĩnh viễn** đặt tại từng dòng danh sách và form sửa, cạnh Archive khi hành động đó có sẵn.
-- Dialog dùng từ civilian, danh mục và trạng thái của bản ghi đã lưu, yêu cầu nhập chính xác `XÓA` (không trim hoặc đổi chữ hoa/thường).
+- Dialog dùng từ civilian, danh mục và trạng thái của bản ghi đã lưu, hiển thị cảnh báo và nút xác nhận xóa; không yêu cầu nhập lại từ xác nhận.
 - Cảnh báo đề không thể khôi phục, thay đổi chưa lưu sẽ bị bỏ, toàn bộ file ảnh vẫn được giữ.
 - Xóa độc lập với lưu: không validation form, không lưu dữ liệu đang sửa và không upload file đang chọn.
 - Trong lúc xóa: chặn bấm lặp, đóng dialog, điều hướng nội bộ và đăng xuất; cảnh báo trình duyệt khi reload/đóng tab. Trình duyệt vẫn có thể cho người dùng cưỡng chế rời trang.
@@ -69,9 +69,9 @@ Mỗi hành động lưu dữ liệu form cùng trạng thái trong một lần 
 ### API và database
 
 - Bổ sung API danh sách, chi tiết, lưu đề theo trạng thái đích, upload ảnh và tạo URL preview; theo cách truyền Supabase client đang dùng ở API danh mục.
-- `deleteWordPrompt(client, { id, updatedAt, confirmation })` chỉ gọi RPC `delete_word_prompt(p_id uuid, p_expected_updated_at timestamptz, p_confirmation text)`.
+- `deleteWordPrompt(client, { id, updatedAt })` chỉ gọi RPC `delete_word_prompt(p_id uuid, p_expected_updated_at timestamptz)`.
 - RPC xóa dùng `SECURITY DEFINER`, `search_path = ''`; thu hồi thực thi của `PUBLIC`/`anon`, chỉ cấp `authenticated`. Giữ quyền `DELETE` trực tiếp bị thu hồi.
-- RPC khóa grant admin đang hoạt động bằng `FOR SHARE`, khóa đề bằng `FOR UPDATE`, kiểm tra `XÓA` và `updated_at`, rồi xóa trong cùng transaction. Không có bản ghi: `P0002` (“Đề không còn tồn tại”); phiên bản khác: `40001`, yêu cầu tải lại. Không sửa danh mục/câu hỏi hoặc thay đổi RPC chuyển/purge danh mục.
+- RPC khóa grant admin đang hoạt động bằng `FOR SHARE`, khóa đề bằng `FOR UPDATE`, kiểm tra `updated_at`, rồi xóa trong cùng transaction. Không có bản ghi: `P0002` (“Đề không còn tồn tại”); phiên bản khác: `40001`, yêu cầu tải lại. Không sửa danh mục/câu hỏi hoặc thay đổi RPC chuyển/purge danh mục.
 - Bổ sung migration chuẩn hóa text, chuyển trường tùy chọn rỗng thành `null`, cập nhật `updated_at`, kiểm tra danh mục đúng loại/locale và điều kiện publish.
 - Kiểm tra civilian text sau trim không rỗng ở mọi trạng thái; ảnh vẫn tùy chọn khi publish.
 - Kiểm tra ảnh được tham chiếu thuộc bucket/path của đề và tồn tại trước khi ghi `image_path`.
@@ -177,7 +177,7 @@ Tài liệu môi trường hiện có: [admin-supabase-environment-guide.md](adm
 - Test thủ công cả luồng: tạo nháp có ảnh → tải lại → sửa/thay ảnh → preview → publish → archive → publish lại.
 - Test thêm: bỏ ảnh rồi hủy form, mất mạng khi upload/lưu, hai tab cùng sửa, không còn danh mục hợp lệ và signed URL hết hạn.
 - Test SQL xóa cả `draft`, `published`, `archived`; từ chối anon, user thường, admin vô hiệu hóa, xác nhận sai/null, phiên bản cũ/null và đề không tồn tại; quyền DELETE trực tiếp vẫn bị thu hồi.
-- Test API/UI xóa: hủy dialog, nhập đúng `XÓA`, chặn lặp/rời trang/đăng xuất, lỗi mạng giữ form/file, xóa khi form không hợp lệ, xung đột sửa/xóa từ tab khác, tải lại có xác nhận bỏ thay đổi, giữ URL và điều chỉnh phân trang. Invalidate cả thống kê danh mục.
+- Test API/UI xóa: hủy dialog, bấm nút xác nhận xóa, chặn lặp/rời trang/đăng xuất, lỗi mạng giữ form/file, xóa khi form không hợp lệ, xung đột sửa/xóa từ tab khác, tải lại có xác nhận bỏ thay đổi, giữ URL và điều chỉnh phân trang. Invalidate cả thống kê danh mục.
 - Test Storage: file tồn tại sau xóa; anon/user thường không đọc hoặc xin URL mới được; signed URL cấp trước xóa vẫn dùng được đến hết hạn.
 - Chạy test admin, build Local/Development và kiểm tra bố cục desktop/tablet, nhãn accessibility, i18n.
 

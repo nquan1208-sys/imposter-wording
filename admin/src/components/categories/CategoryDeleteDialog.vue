@@ -14,7 +14,7 @@ const deleteLabel = computed(() => t(total.value === 0 ? 'categories.deleteDialo
 const targetItems = computed(() => (props.targets || []).map(target => ({ value: target.id, label: `${target.name} (${target.slug})` })))
 function submit() {
   if (!canDelete.value) return
-  emit('delete', { id: props.preview.category.id, mode: total.value === 0 ? 'empty' : mode.value, targetId: targetId.value, confirmation: props.preview.category.name, version: props.preview.version })
+  emit('delete', { id: props.preview.category.id, mode: total.value === 0 ? 'empty' : mode.value, targetId: targetId.value, version: props.preview.version })
 }
 function refresh() { emit('refresh') }
 </script>

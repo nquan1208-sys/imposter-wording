@@ -49,7 +49,7 @@ try {
     data(await target.storage.from(bucket).createSignedUrl(path, 60))
   }
   const signed = data(await anon.storage.from(bucket).createSignedUrl(path, 60)).signedUrl
-  await deleteWordPrompt(admin, { id: prompt, updatedAt: row.updated_at, confirmation: 'XÓA' })
+  await deleteWordPrompt(admin, { id: prompt, updatedAt: row.updated_at })
   assert.equal(data(await admin.from('word_prompts').select('id').eq('id', prompt)).length, 0)
   assert.equal((await data(await admin.storage.from(bucket).download(path))).size, png.length, 'file bytes retained')
   for (const target of [anon, user]) {

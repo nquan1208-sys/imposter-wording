@@ -111,7 +111,7 @@ test('mounted components react to locale changes and preserve delete/leave guard
     dialog.mode = 'purge'
     assert.equal(dialog.canDelete, true)
     dialog.submit()
-    assert.deepEqual(deletions, [{ id: 'source', mode: 'purge', targetId: 'target', confirmation: 'Food', version: 'snapshot' }])
+    assert.deepEqual(deletions, [{ id: 'source', mode: 'purge', targetId: 'target', version: 'snapshot' }])
     dialog.refresh()
     assert.equal(dialog.canDelete, true)
   } finally {

@@ -203,7 +203,6 @@
       "invalidImage": "Ảnh phải đọc được, thuộc JPEG, PNG hoặc WebP và không quá 5 MiB.",
       "conflict": "Đề đã thay đổi ở nơi khác. Hãy tải lại trước khi xác nhận.",
       "notFound": "Đề không còn tồn tại.",
-      "confirmation": "Nhập chính xác XÓA để xác nhận.",
       "textRequired": "Nhập từ bí mật."
     },
     "deleteDialog": {
