@@ -111,7 +111,14 @@ onBeforeUnmount(() => { disposed = true; clearFile(); window.removeEventListener
             <UFormField :label="t('wordPrompts.fields.categoryId')" required><USelectMenu :model-value="form.category_id" :items="categoryItems" value-key="value" :loading="categoryOptions.isFetching.value" class="tw:w-full" @update:model-value="update('category_id', $event)" /></UFormField>
             <UFormField :label="t('wordPrompts.fields.difficulty')"><USelect :model-value="form.difficulty" :items="difficultyItems" class="tw:w-full" @update:model-value="update('difficulty', $event)" /></UFormField>
             <UCheckbox :model-value="form.is_family_friendly" :label="t('wordPrompts.fields.isFamilyFriendly')" @update:model-value="update('is_family_friendly', $event)" />
-            <UFormField :label="t('wordPrompts.fields.imagePath')" :help="t('wordPrompts.imageHelp')"><input ref="imageInput" type="file" :aria-label="t('wordPrompts.fields.imagePath')" accept="image/jpeg,image/png,image/webp" @change="chooseImage" /><UButton type="button" color="neutral" variant="outline" :label="t('wordPrompts.actions.removeImage')" :disabled="!file && !form.image_path" @click="removeImage" /></UFormField>
+            <UFormField :label="t('wordPrompts.form.chooseImage')" :help="t('wordPrompts.imageHelp')">
+            <div class="word-image-controls">
+              <input ref="imageInput" type="file" hidden :aria-label="t('wordPrompts.form.chooseImage')" accept="image/jpeg,image/png,image/webp" @change="chooseImage" />
+              <UButton type="button" size="lg" icon="i-lucide-image-plus" :label="t('wordPrompts.form.chooseImage')" :disabled="unsaved.busy" @click="imageInput?.click()" />
+              <span v-if="file" class="word-image-filename" role="status">{{ file.name }}</span>
+              <UButton type="button" color="neutral" variant="outline" icon="i-lucide-trash-2" :label="t('wordPrompts.actions.removeImage')" :disabled="unsaved.busy || (!file && !form.image_path)" @click="removeImage" />
+            </div>
+            </UFormField>
           </div>
         </fieldset>
         <p v-if="uploadState" role="status">{{ t(`wordPrompts.upload.${uploadState}`) }}</p>

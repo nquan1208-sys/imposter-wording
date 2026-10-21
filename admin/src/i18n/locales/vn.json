@@ -236,6 +236,9 @@
     "loadingImage": "Đang tải ảnh…",
     "empty": "Không có đề phù hợp.",
     "imageHelp": "JPEG, PNG hoặc WebP; tối đa 5 MiB. Ảnh chỉ upload khi lưu.",
+    "form": {
+      "chooseImage": "Chọn ảnh minh họa"
+    },
     "pagination": {
       "summary": "{count} đề · Trang {page} / {pages}",
       "label": "Phân trang đề từ ngữ"
