@@ -639,4 +639,5 @@ Màn hình bắt đầu
 
 ## Tài liệu liên quan
 
+- [Kế hoạch triển khai ứng dụng theo phase/PR](../app-implementation-plan.md)
 - [Bố cục màn hình Admin](admin-screen-layout.md)
