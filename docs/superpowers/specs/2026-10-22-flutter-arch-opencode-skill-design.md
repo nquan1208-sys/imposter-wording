@@ -18,7 +18,7 @@ Do not modify the Codex source, create OpenCode configuration, or add sync tooli
 
 ## Verification
 
-Check that the OpenCode skill is at the documented discovery path, has the `flutter-arch` path-derived ID, includes a discoverable description and opt-in metadata, and retains the source skill's project rules. Use the official [OpenCode V2 Skills documentation](https://opencode.ai/v2/docs/skills/) as the format reference.
+Check that the OpenCode skill is at the documented discovery path, has the `flutter-arch` path-derived ID, includes a description and explicit-load opt-in metadata, and retains the source skill's project rules. Use the official [OpenCode V2 Skills documentation](https://opencode.ai/v2/docs/skills/) as the format reference.
 
 ## Out of scope
 
