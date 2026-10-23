@@ -60,8 +60,8 @@ Nếu một quyết định chưa được chốt, giữ chức năng liên quan
 - Không chọn category nghĩa là tất cả content hợp lệ; chọn nhiều category là hợp của chúng. Mỗi prompt có cơ hội được chọn như nhau trong tập hợp đó; không random category trước khiến category ít đề được ưu tiên.
 - Picker chỉ hiện category có content hợp lệ và hiển thị số lượng từ cùng tập dữ liệu dùng để bắt đầu ván.
 - Đổi loại/mode phải loại lựa chọn category không còn hợp lệ và thông báo; nếu không còn category nào thì về `Tất cả danh mục`. Không có content hợp lệ thì chặn bắt đầu, chỉ rõ cách sửa.
-- Phase 2 dùng snapshot JSON đóng gói theo schema hiện tại. Bản build cho người dùng chỉ chứa content đã duyệt/published; fixture chứa draft/archived chỉ nằm trong test.
-- Phase 7 thêm đọc backend và cache. Chưa cần manifest, delta sync, RPC random, Realtime hoặc một hệ thống content release mới.
+- Content lấy qua API Supabase ngay từ phase 2; không seed database, không đóng gói content/ảnh vào bản build. Repository lưu cache lần tải thành công gần nhất để chơi khi mất mạng; lần mở đầu không có mạng thì báo lỗi và cho thử lại. Fixture JSON chứa draft/archived chỉ nằm trong test.
+- Phase 7 hoàn thiện đồng bộ: đủ phân trang, refresh từ setup, ảnh Storage và các lỗi cache. Chưa cần manifest, delta sync, RPC random, Realtime hoặc một hệ thống content release mới.
 
 ### Thiết lập và session
 
@@ -85,19 +85,19 @@ Nếu một quyết định chưa được chốt, giữ chức năng liên quan
 | Phase / PR | Kết quả có thể demo sau merge | Phụ thuộc |
 | --- | --- | --- |
 | 1. Khung ứng dụng và hướng dẫn | Mở app tiếng Việt, xem Cách chơi, điều hướng/quay lại đúng | — |
-| 2. Thiết lập word và danh mục offline | Chọn số người, mode, nhiều danh mục từ snapshot; thấy đúng số đề | 1 |
+| 2. Thiết lập word và danh mục từ backend | Chọn số người, mode, nhiều danh mục từ content API/cache; thấy đúng số đề | 1 |
 | 3. Một ván word hoàn chỉnh | Thiết lập → chuyển máy xem từ/vai → thảo luận → công bố → chơi lại | 2 |
 | 4. Người chơi và luật nâng cao | Đổi tên/thứ tự người chơi; fixed/random imposters, không đi trước, biết nhau | 3 |
 | 5. Một ván question hoàn chỉnh | Nhập câu trả lời riêng → câu hỏi chung → thảo luận → công bố → chơi lại | 4 |
 | 6. Danh sách người chơi đã lưu | Lưu/nạp/đổi tên/xóa bộ người chơi và thiết lập liên quan | 4 |
-| 7. Nội dung thật và cache | Lấy content published từ backend; lỗi mạng vẫn dùng bản hợp lệ trước đó | 5 |
+| 7. Hoàn thiện đồng bộ content và ảnh | Đủ phân trang, refresh từ setup, ảnh word từ Storage; lỗi mạng vẫn dùng cache hợp lệ trước đó | 5 |
 | 8. Tùy chỉnh word bằng văn bản | Tạo danh mục/từ, nhập nhiều, dùng ngay trong ván word | 4 |
 | 9. Tùy chỉnh question bằng văn bản | Tạo cặp câu hỏi tùy chỉnh và chơi trọn ván question | 5, 8 |
 | 10. Ảnh cho nội dung tùy chỉnh | Chọn/chụp/thay/xóa ảnh, hiện đúng cho người có quyền xem | 9 |
 | 11. Cài đặt và hỗ trợ | Đổi ngôn ngữ, lưu lựa chọn, xem phiên bản/ID, đánh giá và phản hồi | 5 |
 | 12. Hoàn thiện bản phát hành | Hai game và mọi tính năng đã chọn chạy trên Android/iOS release | 1–11 |
 
-Thứ tự mặc định là 1 → 12. Sau phase 4, phase 6 và 8 có thể làm trước phase 5 nếu ưu tiên sản phẩm thay đổi. Phase 7 không phải điều kiện để chơi: phase 2 đã cung cấp nội dung đóng gói. Các nhánh đều đi qua cùng giao diện repository/session, không duy trì hai bộ game logic.
+Thứ tự mặc định là 1 → 12. Sau phase 4, phase 6 và 8 có thể làm trước phase 5 nếu ưu tiên sản phẩm thay đổi. Phase 7 không phải điều kiện để chơi: phase 2 đã đọc content từ backend và cache. Các nhánh đều đi qua cùng giao diện repository/session, không duy trì hai bộ game logic.
 
 Đối chiếu phạm vi layout:
 
@@ -125,16 +125,18 @@ Thứ tự mặc định là 1 → 12. Sau phase 4, phase 6 và 8 có thể làm
 - **Nghiệm thu:** cold start mở đúng trang; Cách chơi cuộn được; back hệ thống và back UI hoạt động. `Bắt đầu` có trạng thái chưa khả dụng rõ trong PR nền, chưa mở một trang setup giả.
 - **Kiểm tra:** widget test entry → hướng dẫn → back; màn nhỏ và text scale lớn không che nút. PR cập nhật các test cũ đang phụ thuộc `Home Screen`/bottom bar.
 
-### Phase 2 — Thiết lập word và danh mục offline
+### Phase 2 — Thiết lập word và danh mục từ backend
 
-**PR đề xuất:** `feat(app): add word setup and local content selection`
+**PR đề xuất:** `feat(app): add word setup with remote content`
 
 - Phạm vi: phần word của màn 3–4; chọn 3–100 người với tên mặc định, 1 kẻ mạo danh cố định, Cổ điển/Gia đình, tất cả hoặc nhiều danh mục.
-- Thêm model đúng schema hiện tại, repository đọc snapshot JSON đóng gói và kiểm tra dữ liệu lúc nạp. Snapshot có word và cặp question để phase 5 tái sử dụng, nhưng chưa hiện lựa chọn question.
+- Cấu hình URL/publishable key theo môi trường; dùng quyền đọc anon hiện có, không đăng nhập admin hoặc nhúng service-role key. Thêm model đúng schema hiện tại; repository gọi API lấy category active và word/question published, chỉ select trường game cần, validate liên kết rồi thay cache local nguyên tử. Dữ liệu có cặp question để phase 5 tái sử dụng, nhưng chưa hiện lựa chọn question.
+- Tải content nền ngay khi mở app (từ landing/Cách chơi), không chờ vào setup, để cache có sẵn trước khi nhóm chơi ở nơi mạng yếu. Một lần tải tại một thời điểm; setup dùng lại kết quả đang tải thay vì gọi lặp.
+- Mất mạng/lỗi API dùng cache gần nhất; chưa có cache thì hiện lỗi và nút thử lại, không có content dự phòng trong build. Setup có trạng thái loading/lỗi/rỗng.
 - Bật `Bắt đầu` ở landing để vào setup; picker dùng bản chọn tạm, `Xác nhận` mới áp dụng, back hủy chỉnh sửa. Lưu thiết lập cơ bản local và xử lý lỗi đọc/ghi.
-- Điểm chạm: feature setup/categories, data/content, local settings, DI, router, ARB, `pubspec.yaml`/lockfile/assets khi cần.
-- **Nghiệm thu:** số lượng category và content khớp bộ lọc; đổi mode không giữ ID không hợp lệ; nhớ thiết lập sau mở lại. Nút bắt đầu ván ghi rõ chưa khả dụng cho tới phase 3; mọi thao tác cấu hình khác dùng được.
-- **Kiểm tra:** unit test ma trận loại/mode/locale/status/category active, nhiều category và tập rỗng; JSON lỗi/không tương thích báo lỗi; widget test xác nhận/hủy picker và khôi phục thiết lập.
+- Điểm chạm: feature setup/categories, data/content, DI/config, local cache/settings, router, ARB, Android internet permission, `pubspec.yaml`/lockfile khi cần.
+- **Nghiệm thu:** số lượng category và content khớp bộ lọc trên backend Dev/local; đổi mode không giữ ID không hợp lệ; nhớ thiết lập sau mở lại; mất mạng sau lần tải đầu vẫn cấu hình được. Nút bắt đầu ván ghi rõ chưa khả dụng cho tới phase 3; mọi thao tác cấu hình khác dùng được.
+- **Kiểm tra:** unit test ma trận loại/mode/locale/status/category active, nhiều category và tập rỗng; payload lỗi/không tương thích báo lỗi và không ghi đè cache; dùng simulation cho HTTP khi kiểm tra lỗi mạng/không có cache; read-only check trên backend local/dev xác minh quyền anon và bộ lọc. Widget test xác nhận/hủy picker, thử lại và khôi phục thiết lập.
 
 ### Phase 3 — Ván word hoàn chỉnh đầu tiên
 
@@ -145,7 +147,7 @@ Thứ tự mặc định là 1 → 12. Sau phase 4, phase 6 và 8 có thể làm
 - Khi tất cả hoàn tất mới sang hướng dẫn thảo luận; hiện người bắt đầu. `Thông báo kết quả` mở sheet chọn đúng một người nhóm đã bầu, xác nhận rồi mới công bố vai thật/từ và bên thắng. Không thu từng phiếu; sheet là phần bổ sung cần chốt vào layout theo mục 3.
 - `Chơi lại` giữ setup và thay session. Back trong ván chỉ trở về danh sách khi an toàn hoặc hỏi kết thúc ván; không pop về một reveal đã hoàn tất. App ra nền che bí mật khi trở lại.
 - Điểm chạm: feature word_game, session dùng chung, content repository, routes, ARB; không thêm bảng lưu ván backend.
-- **Nghiệm thu:** 3 người trở lên chơi được từ đầu đến cuối ở chế độ máy bay; không mở lại thẻ đã xong; rebuild không đổi vai/từ; chạm nhanh không xác nhận hai người hoặc tạo hai ván.
+- **Nghiệm thu:** 3 người trở lên chơi được từ đầu đến cuối, kể cả ở chế độ máy bay sau khi đã tải content thành công ít nhất một lần; không mở lại thẻ đã xong; rebuild không đổi vai/từ; chạm nhanh không xác nhận hai người hoặc tạo hai ván.
 - **Kiểm tra:** unit test gán đúng một vai, chặn chuyển stage sớm và xác định thắng khi bầu đúng/sai bằng random có seed/fake; widget/integration test trọn ván, hủy sheet bầu chọn, back, pause/resume, giữ setup khi chơi lại. Không kiểm tra phân phối random bằng test xác suất dễ chập chờn.
 
 ### Phase 4 — Tên người chơi và các luật cấu hình
@@ -184,18 +186,18 @@ Thứ tự mặc định là 1 → 12. Sau phase 4, phase 6 và 8 có thể làm
 - **Nghiệm thu:** lưu/nạp/đổi tên/xóa hoạt động qua lần mở lại app; chi tiết khớp setup và không mất các danh sách khác.
 - **Kiểm tra:** unit test serialize/validate, auto-save và lỗi lưu; widget test các sheet/modal, hủy/xóa danh sách hiện tại, khôi phục dữ liệu hỏng mà không ghi đè bản cũ.
 
-### Phase 7 — Nội dung backend và cache local
+### Phase 7 — Hoàn thiện đồng bộ content và ảnh
 
-**PR đề xuất:** `feat(app): load published content with offline fallback`
+**PR đề xuất:** `feat(app): harden content sync and word images`
 
-- Phạm vi: thay nguồn content sau repository; không thay UI hoặc luật của hai game.
-- Cấu hình URL/publishable key theo môi trường; dùng quyền đọc công khai hiện có, không đăng nhập admin hoặc nhúng service-role key. Chỉ lấy trường cần cho game, không lấy thông tin người tạo/quản trị.
+- Phạm vi: hoàn thiện repository API/cache có từ phase 2; không thay UI hoặc luật của hai game. Chỉ lấy trường cần cho game, không lấy thông tin người tạo/quản trị.
 - Đọc category active và content published đúng locale; lấy đủ các trang theo thứ tự ổn định trước khi tính số lượng/random, không coi giới hạn trang API là toàn bộ dữ liệu.
-- Khi nạp thành công, validate liên kết category/prompt rồi thay snapshot cache nguyên tử. Lỗi mạng, timeout, lỗi trang giữa hoặc payload lỗi không được ghi đè cache tốt; fallback cache gần nhất, sau đó bundled content. Một snapshot hợp lệ nhưng rỗng được xử lý là rỗng, không đánh đồng với lỗi mạng.
-- Cập nhật khi mở app/refresh từ setup; đang chơi giữ nguyên session và prompt. Content bị archive/category bị tắt biến mất khỏi snapshot mới cho các ván sau. Nội dung offline có thể cũ cho tới lần đồng bộ thành công; không hứa thu hồi ngay trên máy mất mạng.
-- Ảnh word từ nguồn Storage hiện có, có placeholder khi offline/404. Không bắt tải đủ ảnh mới cho bắt đầu ván.
-- Điểm chạm: data/content, DI/config, local cache, setup loading/error/retry; Android internet permission và cấu hình mạng dev cần thiết. Không tự sửa RLS nếu quyền đọc hiện có đã đủ.
-- **Nghiệm thu:** hai game dùng content thật; không lọt draft/archived/sai mode/category inactive; mất mạng vẫn chơi bằng nguồn fallback; không gán vai hoặc đổi prompt lại khi dữ liệu cập nhật.
+- Lỗi mạng, timeout, lỗi trang giữa hoặc payload lỗi không được ghi đè cache tốt; fallback cache gần nhất, chưa có cache thì báo lỗi và thử lại. Không có content đóng gói trong build. Một kết quả hợp lệ nhưng rỗng được xử lý là rỗng, không đánh đồng với lỗi mạng.
+- Cập nhật khi mở app/refresh từ setup; đang chơi giữ nguyên session và prompt. Content bị archive/xóa/category bị tắt biến mất khỏi cache mới cho các ván sau. Nội dung offline có thể cũ cho tới lần đồng bộ thành công; không hứa thu hồi ngay trên máy mất mạng.
+- Ảnh word: bucket private và signed URL đổi mỗi lần xin, nên không dựa vào cache ảnh theo URL. Sau khi đồng bộ content, app xin signed URL và tải file ảnh của đề published về vùng lưu của app, đặt tên theo `image_path` (path đổi khi thay ảnh nên không cần kiểm tra phiên bản). Ảnh đã có file thì không tải lại; ảnh không còn trong cache mới thì xóa file.
+- Tải ảnh chạy nền, lỗi từng ảnh không làm hỏng đồng bộ content. Thiếu file khi chơi thì hiện placeholder; không bắt tải đủ ảnh mới cho bắt đầu ván.
+- Điểm chạm: data/content, local cache, setup refresh/error/retry, hiển thị ảnh word. Không tự sửa RLS nếu quyền đọc hiện có đã đủ.
+- **Nghiệm thu:** hai game dùng content thật; không lọt draft/archived/sai mode/category inactive; mất mạng vẫn chơi bằng cache; không gán vai hoặc đổi prompt lại khi dữ liệu cập nhật.
 - **Kiểm tra:** test repository với nhiều trang, lỗi một phần, cache hỏng/rỗng, xóa/archive và ảnh lỗi. Dùng simulation cho HTTP khi kiểm tra lỗi; chạy thêm read-only check trên backend local/dev để xác minh quyền anonymous và bộ lọc. Không dùng production để tạo/xóa fixture.
 
 ### Phase 8 — Tùy chỉnh word bằng văn bản
@@ -204,7 +206,7 @@ Thứ tự mặc định là 1 → 12. Sau phase 4, phase 6 và 8 có thể làm
 
 - Phạm vi: màn 5 phần văn bản cho word; bật thẻ `Tạo tùy chỉnh` khi đang chọn word.
 - Tên category, thêm/xóa từ, nhập nhiều dòng; trim, bỏ dòng trống, chống trùng theo giá trị trim/không phân biệt hoa thường, giữ nguyên nội dung hiển thị. Chặn tên trùng thay vì ghi đè và chặn lưu nếu không còn từ hợp lệ.
-- Form có draft, rời khi thay đổi phải xác nhận; lưu thành công mới đưa vào picker và chọn category mới. Luật chọn một/nhiều category và random áp dụng cả nguồn đóng gói/remote lẫn nguồn tùy chỉnh mà không trộn trùng ID.
+- Form có draft, rời khi thay đổi phải xác nhận; lưu thành công mới đưa vào picker và chọn category mới. Luật chọn một/nhiều category và random áp dụng cả nguồn remote/cache lẫn nguồn tùy chỉnh mà không trộn trùng ID.
 - Áp dụng vòng đời và kiểm tra Gia đình sau khi chốt mục 3; không đưa nội dung tự nhập lên backend. Chưa hiện thao tác ảnh.
 - Điểm chạm: feature custom_content, picker, repository/local session content, ARB, word reveal/replay.
 - **Nghiệm thu:** tạo category và chơi ngay một ván word, replay giữ đúng nội dung theo vòng đời đã chốt; hủy form không thêm category nửa chừng.
@@ -253,7 +255,7 @@ Thứ tự mặc định là 1 → 12. Sau phase 4, phase 6 và 8 có thể làm
 - Đối chiếu toàn bộ màn/trạng thái đã chốt với layout; rà soát từ ngữ thống nhất, SafeArea, cuộn, bàn phím, focus, screen reader, text scale và nút cuối màn. Các phase trước vẫn phải có accessibility cơ bản, không dồn toàn bộ tới đây.
 - Thay nhãn `untitled`/nhận diện demo bằng tên và assets được duyệt; cấu hình application/bundle ID, version/build và môi trường release. Nếu đổi package ID thì cập nhật Kotlin package/MainActivity, Gradle và iOS settings liên quan cùng PR.
 - Build Android/iOS release, kiểm tra network permission/TLS với backend mục tiêu, plugin ảnh/link hoạt động trong release và không vô tình để cấu hình HTTP dev trong bản phát hành.
-- Kiểm tra không có khóa đặc quyền trong source/bundle, không log vai/đáp án; chỉ đóng gói snapshot nội dung được phép phát hành. Giữ dữ liệu local khi nâng version, đặc biệt preset và thiết lập.
+- Kiểm tra không có khóa đặc quyền trong source/bundle, không log vai/đáp án; build không chứa content và trỏ đúng backend release. Giữ dữ liệu local khi nâng version, đặc biệt preset và thiết lập.
 - Điểm chạm: lỗi tích hợp thực tế, native config/assets, test/integration_test và hướng dẫn build/UAT. Không dùng PR cuối để chứa tính năng còn thiếu của phase trước.
 - **Nghiệm thu:** VI/EN theo phạm vi đã chốt; hai game, cả hai mode, preset, tùy chỉnh, ảnh, replay, offline/cập nhật content đều qua checklist trên Android/iOS. Không còn route/nút demo trong luồng sản phẩm.
 - **Kiểm tra:** `flutter analyze`, `flutter test`, integration smoke và cài release build trên thiết bị. Nếu thiếu signing/tài khoản, ghi rõ bước chưa xác minh; build unsigned không thay thế kiểm tra cài/phân phối. Upload store/phát hành là bước vận hành sau PR, không được coi là đã làm.
@@ -270,9 +272,9 @@ Thứ tự mặc định là 1 → 12. Sau phase 4, phase 6 và 8 có thể làm
 
 ## 8. Mốc bàn giao và phần không tự mở rộng
 
-- **Sau phase 3:** bản thử nội bộ game word, nội dung đóng gói, một imposter.
+- **Sau phase 3:** bản thử nội bộ game word, nội dung từ backend Dev, một imposter.
 - **Sau phase 5:** cả hai game chơi trọn ván, cấu hình và người chơi cơ bản đầy đủ.
-- **Sau phase 7:** nội dung được quản lý từ admin đi tới app, có fallback offline.
+- **Sau phase 7:** đồng bộ content đầy đủ phân trang, ảnh word và cache offline ổn định.
 - **Sau phase 10:** hoàn tất nhóm tùy chỉnh văn bản/ảnh đã chốt.
 - **Sau phase 12:** ứng viên phát hành, kèm bằng chứng kiểm tra và các giới hạn còn lại.
 

@@ -15,6 +15,7 @@ Hoàn thành luồng **danh sách → tạo nháp → sửa → gắn danh mục
 - Sửa nội dung published cập nhật trực tiếp sau xác nhận.
 - Dùng bucket **private**, cấu hình giống nhau ở Local và Dev.
 - Tận dụng Nuxt UI, Vue Query, Zod, i18n và cảnh báo thay đổi chưa lưu hiện có; không thêm dependency.
+- Admin là nguồn content duy nhất. App Flutter gọi API lúc chạy để lấy danh mục/đề published; không seed database và không đóng gói content hay ảnh vào bản build app.
 
 ### Hiện trạng
 
@@ -120,6 +121,17 @@ Admin dùng signed URL 5 phút cho thumbnail/preview, làm mới khi hết hạn
 
 Sau xóa đề, không còn bản ghi published tham chiếu ảnh nên anon/user thường không tải trực tiếp hoặc xin signed URL mới. Signed URL đã cấp vẫn dùng được đến khi hết hạn; ảnh đã tải về không thể thu hồi. Object URL local được thu hồi khi thay file, tải lại form hoặc rời form.
 
+## Hợp đồng dữ liệu cho app
+
+App không có dữ liệu dự phòng trong bản build; mọi content đến từ API Supabase.
+
+- App dùng role `anon` với publishable key; không đăng nhập admin, không nhúng `service_role`. Quyền đọc dựa trên RLS hiện có: `game_categories` đang hoạt động và `word_prompts` có `status = 'published'`. Không cần migration mới cho app.
+- Chỉ select trường game cần: `id`, `category_id`, `text`, `image_path`, `difficulty`, `is_family_friendly`, `locale` và tên/locale/loại của danh mục.
+- Ảnh: app xin signed URL hoặc tải qua policy đọc ảnh published, rồi lưu file trên máy theo `image_path` để dùng offline. Ảnh của đề draft/archived/đã xóa không lấy được mới; file đã tải trên máy chỉ bị xóa ở lần đồng bộ kế tiếp. Vì app dựa vào `image_path` làm khóa, thay ảnh phải luôn tạo path mới (giữ đúng quy tắc ở mục 3).
+- Publish, archive, sửa hoặc xóa trên admin có hiệu lực từ lần app tải content kế tiếp; ván đang chơi giữ nguyên đề đã chọn.
+- App lưu cache lần tải thành công gần nhất. Mất mạng thì dùng cache, có thể cũ tới lần đồng bộ thành công; lần mở đầu tiên không có mạng thì báo lỗi và cho thử lại.
+- Schema `word_prompts`/`game_categories` trở thành hợp đồng với app đã phát hành: ưu tiên chỉ thêm cột. Đổi tên/xóa cột (như đổi sang `text`, bỏ `imposter_*`) phải phối hợp với phiên bản app trước khi áp dụng lên môi trường app đang dùng.
+
 ## 4. Hướng dẫn setup Local + Dev
 
 ### Local
@@ -137,7 +149,7 @@ file_size_limit = "5MiB"
 allowed_mime_types = ["image/jpeg", "image/png", "image/webp"]
 ```
 
-Không cần `objects_path` vì không seed ảnh mẫu trong bước này. Không chạy reset database chỉ để thêm bucket vào môi trường đang có dữ liệu.
+Không cần `objects_path` vì không seed ảnh mẫu. Không seed content ở mọi môi trường; đề và ảnh chỉ được tạo qua admin. Không chạy reset database chỉ để thêm bucket vào môi trường đang có dữ liệu.
 
 ### Dev cloud
 
@@ -146,6 +158,7 @@ Không cần `objects_path` vì không seed ảnh mẫu trong bước này. Khô
 3. Áp dụng migration policy đã kiểm tra ở local. Không tạo thêm policy “mọi authenticated user được upload”.
 4. Chạy admin bằng môi trường Development, đăng nhập admin và thử upload từ form.
 5. Kiểm tra ảnh nháp không đọc được bằng client anon; publish thì đọc được; archive thì không cấp được URL mới.
+6. Dev không có seed nên content rỗng tới khi admin nhập. UAT gồm tạo và publish đề qua admin, rồi xác nhận app (role anon) đọc được đề và ảnh đó.
 
 ### Đưa cấu hình vào repository
 
@@ -207,12 +220,13 @@ Tài liệu môi trường hiện có: [admin-supabase-environment-guide.md](adm
 - Xóa đề không thể hoàn tác; không bổ sung khôi phục, xóa hàng loạt hoặc job dọn ảnh.
 - Signed URL đã cấp có thể dùng đến khi hết hạn sau archive/xóa; ảnh đã tải về không thể thu hồi.
 - File ảnh không còn liên kết vẫn chiếm Storage, gồm ảnh cũ, ảnh của đề xóa vĩnh viễn/content bị purge và upload không dọn được sau lỗi.
+- App không đóng gói content: lần mở đầu không có mạng thì không chơi được; máy offline dùng cache có thể cũ và chưa nhận archive/xóa mới.
 
 ## Tinh gọn Wording theo luật chơi
 
 - Migration `simplify_word_prompts` bỏ `imposter_text` và `imposter_hint` khỏi `word_prompts`, thay hàm trigger trong cùng transaction; không sửa migration cũ.
 - Giữ `text`, `category_id` và các trường ảnh/trạng thái/lọc hiện có. Giữ nguyên schema trò câu hỏi.
-- App Flutter hiện chưa có gameplay Wording; thiết lập hiển thị danh mục sẽ thuộc ván lưu local, tên danh mục lấy qua `category_id` của từ được chọn.
+- App Flutter hiện chưa có gameplay Wording; thiết lập hiển thị danh mục sẽ thuộc ván lưu local, tên danh mục lấy từ danh mục có cùng `category_id` trong dữ liệu API/cache app đã tải.
 - Triển khai môi trường dùng chung: xuất sao lưu các giá trị khác rỗng trong hai cột; cập nhật admin trước rồi áp dụng migration. Admin cũ không tương thích sau khi xóa cột.
 
 ### Kết quả kiểm chứng tinh gọn Wording (2026-10-13)
