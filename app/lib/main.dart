@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:untitled/config/app_config.dart';
 import 'package:untitled/base/dependency/app_service.dart';
 import 'package:untitled/base/dependency/router/utils/route_name.dart';
 
 import 'package:untitled/base/dependency/router/utils/route_page.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  AppConfig.current = await AppConfig.load();
   runApp(const ProviderScope(child: MyApp()));
 }
 
