@@ -60,3 +60,8 @@ ios/build/
 
 # AI
 .ai
+
+# Client environment values are configured per machine.
+env/.env.local
+env/.env.dev
+env/.env.prod

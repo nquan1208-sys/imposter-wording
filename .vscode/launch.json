@@ -2,11 +2,31 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter App",
+      "name": "Flutter Local",
       "request": "launch",
       "type": "dart",
       "program": "${workspaceFolder}/app/lib/main.dart",
-      "cwd": "${workspaceFolder}/app"
+      "cwd": "${workspaceFolder}/app",
+      "flutterMode": "debug",
+      "toolArgs": ["--dart-define=APP_ENV=local"]
+    },
+    {
+      "name": "Flutter Dev",
+      "request": "launch",
+      "type": "dart",
+      "program": "${workspaceFolder}/app/lib/main.dart",
+      "cwd": "${workspaceFolder}/app",
+      "flutterMode": "debug",
+      "toolArgs": ["--dart-define=APP_ENV=dev"]
+    },
+    {
+      "name": "Flutter Prod",
+      "request": "launch",
+      "type": "dart",
+      "program": "${workspaceFolder}/app/lib/main.dart",
+      "cwd": "${workspaceFolder}/app",
+      "flutterMode": "debug",
+      "toolArgs": ["--dart-define=APP_ENV=prod"]
     }
   ]
 }

@@ -1,0 +1,19 @@
+{
+  "appTitle": "Kẻ mạo danh",
+  "tagline": "Trò chơi từ ngữ",
+  "appDescription": "Trò chơi tiệc tùng với từ bí mật và những gợi ý khéo léo. Tìm ra kẻ mạo danh trước khi họ hòa nhập!",
+  "start": "Bắt đầu",
+  "startUnavailable": "Sắp ra mắt",
+  "howToPlay": "Cách chơi",
+  "stepSetupTitle": "Thiết lập trò chơi",
+  "stepSetupBody": "Chọn danh sách người chơi và danh mục từ. Một người chơi sẽ được bí mật chọn làm kẻ mạo danh.",
+  "stepRevealTitle": "Tiết lộ từ",
+  "stepRevealBody": "Mỗi người lần lượt xem thông tin của mình. Người chơi bình thường thấy từ bí mật; kẻ mạo danh chỉ thấy vai trò, và tên danh mục nếu bật hiển thị danh mục.",
+  "stepHintTitle": "Đưa ra gợi ý",
+  "stepHintBody": "Người chơi lần lượt nói một từ liên quan đến từ bí mật. Gợi ý không nên quá rõ ràng để tránh lộ từ.",
+  "stepFindTitle": "Tìm kẻ mạo danh",
+  "stepFindBody": "Cả nhóm thảo luận rồi bỏ phiếu cho người có vẻ không biết từ bí mật. Nếu nhóm bỏ phiếu sai, kẻ mạo danh thắng.",
+  "proTipTitle": "Mẹo chuyên nghiệp",
+  "proTipBody": "Kẻ mạo danh nên lắng nghe cẩn thận, hòa nhập và đưa ra gợi ý phù hợp với danh mục.",
+  "notFound": "Không tìm thấy trang"
+}

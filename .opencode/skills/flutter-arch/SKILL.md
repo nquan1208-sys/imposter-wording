@@ -1,6 +1,6 @@
 ---
 name: Flutter Architecture
-description: "Use when the user explicitly invokes @flutter-arch to build or review a feature in this repo's app/lib/features architecture, following the counter feature as the canonical example."
+description: "Use when the user explicitly invokes @flutter-arch to build or review a feature in this repo's app/lib/features architecture, following the store/screen pattern documented in this skill."
 metadata:
   opencode/autoinvoke: false
 ---
@@ -9,13 +9,7 @@ metadata:
 
 This skill is opt-in. Do not apply it to Flutter work unless the user explicitly invokes `@flutter-arch`.
 
-Use `app/` as the Flutter package root. The canonical feature is:
-
-```text
-app/lib/features/counter/
-  counter_screen.dart
-  counter_store.dart
-```
+Use `app/` as the Flutter package root. Existing static features are `app/lib/features/landing/` and `app/lib/features/how_to_play/` (screen only). A stateful feature follows the store and screen snippets below.
 
 ## Standard feature shape
 
@@ -127,21 +121,20 @@ Register a stateful feature in the existing router layers:
 4. Add the route case to the relevant `RoutePage.onGenerate...Route` method.
 5. Navigate through `ref.watch(AppService.router)` / `RouterService` with `RouteInput`; do not push raw route strings from feature code.
 
-Follow `counterPageRoute` and `RouteInput.counter()` exactly for the smallest working example. A screen without state may omit the store/provider setup, as the existing `HomeScreen` does.
-
-For a new bottom tab, also update `NavigatorBottomTabEnum`, `RootScreen.buildRouteFactory`, and `AppBottomNavigationBar`.
+Follow `howToPlayPageRoute` and `RouteInput.howToPlay()` for the smallest working example. A screen without state omits the store/provider setup, as `HowToPlayScreen` does. There is no bottom-tab shell; all routes go through `RoutePage.onGenerateRoute`.
 
 ## App services and localization
 
 - Use `AppService` for app-level dependencies and `ref.watch`/`ref.read` rather than constructing services manually.
-- Read localized strings with `ref.watch(AppService.localization)` and use the generated localization API.
+- Read localized strings with `AppLocalizations.of(context)` so widgets rebuild when `AppStore.setLocale` changes the locale. Add every key to both `app_en.arb` and `app_vi.arb`, then run `flutter gen-l10n`.
+- Take colors and text styles from `Theme.of(context)` / `AppColors` (`app/lib/theme/`); do not hardcode hex values.
 - Do not edit generated localization or other generated files.
 
 ## Verification
 
 Before handing off a feature:
 
-- Compare its screen/store/provider/route wiring with `app/lib/features/counter` and the existing router files.
+- Compare its screen/store/provider/route wiring with the snippets in this skill and the existing router files.
 - Search for an existing shared widget, service, constant, or provider before adding a new one.
 - Run formatting and the narrowest relevant Flutter tests/analyzer from `app/`.
 - Confirm store resources are managed and disposal calls both `cancelAll()` and `super.dispose()`.
