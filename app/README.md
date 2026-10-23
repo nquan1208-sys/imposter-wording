@@ -1,6 +1,6 @@
 # EscapeCall Mobile
 
-Flutter mobile app with RxDart state management and Riverpod DI.
+Flutter mobile app with Signals state management, Riverpod DI, a Bumble-inspired theme (`lib/theme`) and VI/EN localization (default VI).
 
 ## Docs
 

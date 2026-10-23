@@ -4,10 +4,7 @@ class RouteInput {
   String routeName;
   Object? arguments;
 
-  RouteInput({
-    required this.routeName,
-    this.arguments,
-  });
+  RouteInput({required this.routeName, this.arguments});
 
-  RouteInput.counter() : routeName = RouteName.counter;
+  RouteInput.howToPlay() : routeName = RouteName.howToPlay;
 }

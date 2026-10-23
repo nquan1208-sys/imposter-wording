@@ -1,3 +1,19 @@
 {
-  "helloWorld": "Hello World!"
+  "appTitle": "Imposter",
+  "tagline": "Word game",
+  "appDescription": "A party game of secret words and clever hints. Find the imposter before they blend in!",
+  "start": "Start",
+  "startUnavailable": "Coming soon",
+  "howToPlay": "How to play",
+  "stepSetupTitle": "Set up the game",
+  "stepSetupBody": "Choose the players and word categories. One player is secretly picked as the imposter.",
+  "stepRevealTitle": "Reveal the word",
+  "stepRevealBody": "Each player takes a turn to view their card. Regular players see the secret word; the imposter only sees their role, plus the category if that option is on.",
+  "stepHintTitle": "Give hints",
+  "stepHintBody": "Players take turns saying a word related to the secret word. Keep hints subtle so the word stays hidden.",
+  "stepFindTitle": "Find the imposter",
+  "stepFindBody": "Discuss as a group, then vote for whoever seems not to know the word. If the group votes wrong, the imposter wins.",
+  "proTipTitle": "Pro tip",
+  "proTipBody": "Imposter: listen carefully, blend in, and give hints that fit the category.",
+  "notFound": "Page not found"
 }
