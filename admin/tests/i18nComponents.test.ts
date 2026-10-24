@@ -62,9 +62,9 @@ test('mounted components react to locale changes and preserve delete/leave guard
     }
     const shell = await mount('/src/components/admin/AdminShell.vue')
     supabase.auth.getUser = getUser
-    const filters = await mount('/src/components/categories/CategoryFilters.vue', { filters: { gameType: '', active: '', sort: 'sort_order' }, search: '' })
-    const form = await mount('/src/components/categories/CategoryForm.vue', { form: { name: 'Food', game_type: 'word', locale: 'vi' } })
-    const table = await mount('/src/components/categories/CategoryTable.vue', { rows: [] })
+    const filters = await mount('/src/components/categories/CategoryFilters.vue', { languages: [], filters: { gameType: '', active: '', sort: 'sort_order' }, search: '' })
+    const form = await mount('/src/components/categories/CategoryForm.vue', { languages: [], translations: [], form: { name: 'Food', game_type: 'word', locale: 'vi' } })
+    const table = await mount('/src/components/categories/CategoryTable.vue', { rows: [], languages: [] })
     const list = await mount('/src/views/categories/CategoriesView.vue')
     const login = await mount('/src/views/login/LoginView.vue')
     const editor = await mount('/src/views/categories/CategoryFormView.vue')
@@ -105,8 +105,33 @@ test('mounted components react to locale changes and preserve delete/leave guard
     assert.equal(editor.canLeave(), false)
     editor.unsaved.busy = false
 
+    const originalRpc = supabase.rpc
+    try {
+      const calls: string[] = []
+      supabase.rpc = async name => { calls.push(name); return { data: null } }
+      const wordList = await mount('/src/views/word-prompts/WordPromptsView.vue')
+      const questionList = await mount('/src/views/question-prompts/QuestionPromptsView.vue')
+      const id = '00000000-0000-4000-8000-000000000001'
+      const row = { id, category_id: id, updated_at: 'version', locale: 'en', status: 'published', difficulty: 'medium', is_family_friendly: false, text: 'Word', civilian_question: 'Best?', imposter_question: 'Worst?', is_active: true }
+      const prefixes = ['dashboard', 'categories', 'word-prompts', 'question-prompts']
+      for (const operation of [
+        () => list.statusMutation.mutateAsync(row),
+        () => list.deleteMutation.mutateAsync({ id, mode: 'transfer', targetId: id, version: 'snapshot' }),
+        () => list.deleteMutation.mutateAsync({ id, mode: 'purge', version: 'snapshot' }),
+        () => wordList.archiveMutation.mutateAsync(row),
+        () => wordList.deletion.mutateAsync({ id, updatedAt: 'version' }),
+        () => questionList.archiveMutation.mutateAsync(row),
+        () => questionList.deletion.mutateAsync({ id, updatedAt: 'version' }),
+      ]) {
+        for (const prefix of prefixes) for (const locale of ['vi', 'en', 'fr']) queryClient.setQueryData([prefix, 'invalidation-test', locale], {})
+        await operation()
+        for (const prefix of prefixes) for (const locale of ['vi', 'en', 'fr']) assert.equal(queryClient.getQueryState([prefix, 'invalidation-test', locale])!.isInvalidated, true, `${prefix}/${locale} invalidated`)
+      }
+      assert.deepEqual(calls, ['set_category_active', 'delete_category', 'delete_category', 'save_word_prompt', 'delete_word_prompt', 'save_question_prompt', 'delete_question_prompt'])
+    } finally { supabase.rpc = originalRpc }
+
     const deletions: unknown[] = []
-    const dialog = await mount('/src/components/categories/CategoryDeleteDialog.vue', { onDelete: (input: unknown) => deletions.push(input), preview: { category: { id: 'source', name: 'Food' }, counts: { draft: 1 }, version: 'snapshot' }, targets: [] })
+    const dialog = await mount('/src/components/categories/CategoryDeleteDialog.vue', { onDelete: (input: unknown) => deletions.push(input), locale: 'vi', preview: { category: { id: 'source', slug: 'food' }, category_translations: [{ locale: 'vi', name: 'Food' }], counts: { originals: { total: 1, word: 1, question: 0 }, translations: { draft: 1, published: 0, archived: 0 } }, version: 'snapshot' }, targets: [{ id: 'target', slug: 'target', name: 'Target' }] })
     assert.equal(dialog.canDelete, false)
     dialog.targetId = 'target'
     assert.equal(dialog.canDelete, true)

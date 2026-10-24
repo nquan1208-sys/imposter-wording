@@ -27,16 +27,32 @@ export type Database = {
                 Relationships: [
                 ];
             };
+            "content_languages": {
+                Row: {
+                    "code": string;
+                    "display_name": string;
+                    "sort_order": number;
+                };
+                Insert: {
+                    "code": string;
+                    "display_name": string;
+                    "sort_order"?: number;
+                };
+                Update: {
+                    "code"?: string;
+                    "display_name"?: string;
+                    "sort_order"?: number;
+                };
+                Relationships: [
+                ];
+            };
             "game_categories": {
                 Row: {
                     "created_at": string;
                     "created_by": string | null;
-                    "description": string | null;
                     "game_type": Database["public"]['Enums']["game_type"];
                     "id": string;
                     "is_active": boolean;
-                    "locale": string;
-                    "name": string;
                     "slug": string;
                     "sort_order": number;
                     "updated_at": string;
@@ -44,12 +60,9 @@ export type Database = {
                 Insert: {
                     "created_at"?: string;
                     "created_by"?: string | null;
-                    "description"?: string | null;
                     "game_type": Database["public"]['Enums']["game_type"];
                     "id"?: string;
                     "is_active"?: boolean;
-                    "locale"?: string;
-                    "name": string;
                     "slug": string;
                     "sort_order"?: number;
                     "updated_at"?: string;
@@ -57,12 +70,9 @@ export type Database = {
                 Update: {
                     "created_at"?: string;
                     "created_by"?: string | null;
-                    "description"?: string | null;
                     "game_type"?: Database["public"]['Enums']["game_type"];
                     "id"?: string;
                     "is_active"?: boolean;
-                    "locale"?: string;
-                    "name"?: string;
                     "slug"?: string;
                     "sort_order"?: number;
                     "updated_at"?: string;
@@ -70,44 +80,144 @@ export type Database = {
                 Relationships: [
                 ];
             };
-            "question_prompts": {
+            "game_category_translations": {
                 Row: {
                     "category_id": string;
-                    "civilian_question": string;
                     "created_at": string;
                     "created_by": string | null;
-                    "difficulty": Database["public"]['Enums']["difficulty_level"];
-                    "id": string;
-                    "imposter_question": string;
-                    "is_family_friendly": boolean;
+                    "description": string | null;
                     "locale": string;
+                    "name": string;
                     "status": Database["public"]['Enums']["content_status"];
                     "updated_at": string;
                 };
                 Insert: {
                     "category_id": string;
-                    "civilian_question": string;
                     "created_at"?: string;
                     "created_by"?: string | null;
-                    "difficulty"?: Database["public"]['Enums']["difficulty_level"];
-                    "id"?: string;
-                    "imposter_question": string;
-                    "is_family_friendly"?: boolean;
-                    "locale"?: string;
+                    "description"?: string | null;
+                    "locale": string;
+                    "name": string;
                     "status"?: Database["public"]['Enums']["content_status"];
                     "updated_at"?: string;
                 };
                 Update: {
                     "category_id"?: string;
+                    "created_at"?: string;
+                    "created_by"?: string | null;
+                    "description"?: string | null;
+                    "locale"?: string;
+                    "name"?: string;
+                    "status"?: Database["public"]['Enums']["content_status"];
+                    "updated_at"?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "game_category_translations_category_id_fkey";
+                        columns: [
+                            "category_id"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "game_categories";
+                        referencedColumns: [
+                            "id"
+                        ];
+                    },
+                    {
+                        foreignKeyName: "game_category_translations_locale_fkey";
+                        columns: [
+                            "locale"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "content_languages";
+                        referencedColumns: [
+                            "code"
+                        ];
+                    }
+                ];
+            };
+            "question_prompt_translations": {
+                Row: {
+                    "civilian_question": string;
+                    "created_at": string;
+                    "created_by": string | null;
+                    "imposter_question": string;
+                    "locale": string;
+                    "prompt_id": string;
+                    "status": Database["public"]['Enums']["content_status"];
+                    "updated_at": string;
+                };
+                Insert: {
+                    "civilian_question": string;
+                    "created_at"?: string;
+                    "created_by"?: string | null;
+                    "imposter_question": string;
+                    "locale": string;
+                    "prompt_id": string;
+                    "status"?: Database["public"]['Enums']["content_status"];
+                    "updated_at"?: string;
+                };
+                Update: {
                     "civilian_question"?: string;
+                    "created_at"?: string;
+                    "created_by"?: string | null;
+                    "imposter_question"?: string;
+                    "locale"?: string;
+                    "prompt_id"?: string;
+                    "status"?: Database["public"]['Enums']["content_status"];
+                    "updated_at"?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "question_prompt_translations_locale_fkey";
+                        columns: [
+                            "locale"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "content_languages";
+                        referencedColumns: [
+                            "code"
+                        ];
+                    },
+                    {
+                        foreignKeyName: "question_prompt_translations_prompt_id_fkey";
+                        columns: [
+                            "prompt_id"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "question_prompts";
+                        referencedColumns: [
+                            "id"
+                        ];
+                    }
+                ];
+            };
+            "question_prompts": {
+                Row: {
+                    "category_id": string;
+                    "created_at": string;
+                    "created_by": string | null;
+                    "difficulty": Database["public"]['Enums']["difficulty_level"];
+                    "id": string;
+                    "is_family_friendly": boolean;
+                    "updated_at": string;
+                };
+                Insert: {
+                    "category_id": string;
                     "created_at"?: string;
                     "created_by"?: string | null;
                     "difficulty"?: Database["public"]['Enums']["difficulty_level"];
                     "id"?: string;
-                    "imposter_question"?: string;
                     "is_family_friendly"?: boolean;
-                    "locale"?: string;
-                    "status"?: Database["public"]['Enums']["content_status"];
+                    "updated_at"?: string;
+                };
+                Update: {
+                    "category_id"?: string;
+                    "created_at"?: string;
+                    "created_by"?: string | null;
+                    "difficulty"?: Database["public"]['Enums']["difficulty_level"];
+                    "id"?: string;
+                    "is_family_friendly"?: boolean;
                     "updated_at"?: string;
                 };
                 Relationships: [
@@ -124,6 +234,59 @@ export type Database = {
                     }
                 ];
             };
+            "word_prompt_translations": {
+                Row: {
+                    "created_at": string;
+                    "created_by": string | null;
+                    "locale": string;
+                    "prompt_id": string;
+                    "status": Database["public"]['Enums']["content_status"];
+                    "text": string;
+                    "updated_at": string;
+                };
+                Insert: {
+                    "created_at"?: string;
+                    "created_by"?: string | null;
+                    "locale": string;
+                    "prompt_id": string;
+                    "status"?: Database["public"]['Enums']["content_status"];
+                    "text": string;
+                    "updated_at"?: string;
+                };
+                Update: {
+                    "created_at"?: string;
+                    "created_by"?: string | null;
+                    "locale"?: string;
+                    "prompt_id"?: string;
+                    "status"?: Database["public"]['Enums']["content_status"];
+                    "text"?: string;
+                    "updated_at"?: string;
+                };
+                Relationships: [
+                    {
+                        foreignKeyName: "word_prompt_translations_locale_fkey";
+                        columns: [
+                            "locale"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "content_languages";
+                        referencedColumns: [
+                            "code"
+                        ];
+                    },
+                    {
+                        foreignKeyName: "word_prompt_translations_prompt_id_fkey";
+                        columns: [
+                            "prompt_id"
+                        ];
+                        isOneToOne: false;
+                        referencedRelation: "word_prompts";
+                        referencedColumns: [
+                            "id"
+                        ];
+                    }
+                ];
+            };
             "word_prompts": {
                 Row: {
                     "category_id": string;
@@ -133,9 +296,6 @@ export type Database = {
                     "id": string;
                     "image_path": string | null;
                     "is_family_friendly": boolean;
-                    "locale": string;
-                    "status": Database["public"]['Enums']["content_status"];
-                    "text": string;
                     "updated_at": string;
                 };
                 Insert: {
@@ -146,9 +306,6 @@ export type Database = {
                     "id"?: string;
                     "image_path"?: string | null;
                     "is_family_friendly"?: boolean;
-                    "locale"?: string;
-                    "status"?: Database["public"]['Enums']["content_status"];
-                    "text": string;
                     "updated_at"?: string;
                 };
                 Update: {
@@ -159,9 +316,6 @@ export type Database = {
                     "id"?: string;
                     "image_path"?: string | null;
                     "is_family_friendly"?: boolean;
-                    "locale"?: string;
-                    "status"?: Database["public"]['Enums']["content_status"];
-                    "text"?: string;
                     "updated_at"?: string;
                 };
                 Relationships: [
@@ -183,8 +337,58 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
+            "admin_category_transfer_targets": {
+                Args: {
+                    "p_locale": string;
+                    "p_source_id": string;
+                };
+                Returns: {
+                    "id": string;
+                    "name": string;
+                    "slug": string;
+                }[];
+            };
             "admin_dashboard_summary": {
-                Args: Record<PropertyKey, never>;
+                Args: {
+                    "p_locale"?: string;
+                };
+                Returns: Json;
+            };
+            "admin_list_categories": {
+                Args: {
+                    "p_game_type": Database["public"]['Enums']["game_type"];
+                    "p_is_active": boolean;
+                    "p_locale": string;
+                    "p_page": number;
+                    "p_search": string;
+                    "p_sort": string;
+                };
+                Returns: Json;
+            };
+            "admin_list_question_prompts": {
+                Args: {
+                    "p_category_id": string;
+                    "p_difficulty": Database["public"]['Enums']["difficulty_level"];
+                    "p_is_family_friendly": boolean;
+                    "p_locale": string;
+                    "p_page": number;
+                    "p_search": string;
+                    "p_sort": string;
+                    "p_status": Database["public"]['Enums']["content_status"];
+                };
+                Returns: Json;
+            };
+            "admin_list_word_prompts": {
+                Args: {
+                    "p_category_id": string;
+                    "p_difficulty": Database["public"]['Enums']["difficulty_level"];
+                    "p_is_family_friendly": boolean;
+                    "p_locale": string;
+                    "p_page": number;
+                    "p_search": string;
+                    "p_sort": string;
+                    "p_status": Database["public"]['Enums']["content_status"];
+                };
                 Returns: Json;
             };
             "delete_category": {
@@ -215,6 +419,72 @@ export type Database = {
                     "p_id": string;
                 };
                 Returns: Json;
+            };
+            "save_category": {
+                Args: {
+                    "p_description": string;
+                    "p_expected_updated_at": string;
+                    "p_game_type": Database["public"]['Enums']["game_type"];
+                    "p_id": string;
+                    "p_is_active": boolean;
+                    "p_locale": string;
+                    "p_name": string;
+                    "p_slug": string;
+                    "p_sort_order": number;
+                    "p_status": Database["public"]['Enums']["content_status"];
+                };
+                Returns: Json;
+            };
+            "save_question_prompt": {
+                Args: {
+                    "p_category_id": string;
+                    "p_civilian_question": string;
+                    "p_difficulty": Database["public"]['Enums']["difficulty_level"];
+                    "p_expected_updated_at": string;
+                    "p_id": string;
+                    "p_imposter_question": string;
+                    "p_is_family_friendly": boolean;
+                    "p_locale": string;
+                    "p_status": Database["public"]['Enums']["content_status"];
+                };
+                Returns: Json;
+            };
+            "save_word_prompt": {
+                Args: {
+                    "p_category_id": string;
+                    "p_difficulty": Database["public"]['Enums']["difficulty_level"];
+                    "p_expected_updated_at": string;
+                    "p_id": string;
+                    "p_image_path": string;
+                    "p_is_family_friendly": boolean;
+                    "p_locale": string;
+                    "p_status": Database["public"]['Enums']["content_status"];
+                    "p_text": string;
+                };
+                Returns: Json;
+            };
+            "set_category_active": {
+                Args: {
+                    "p_expected_updated_at": string;
+                    "p_id": string;
+                    "p_is_active": boolean;
+                };
+                Returns: {
+                    "created_at": string;
+                    "created_by": string | null;
+                    "game_type": Database["public"]['Enums']["game_type"];
+                    "id": string;
+                    "is_active": boolean;
+                    "slug": string;
+                    "sort_order": number;
+                    "updated_at": string;
+                };
+                SetofOptions: {
+                    from: "*";
+                    to: "game_categories";
+                    isOneToOne: true;
+                    isSetofReturn: false;
+                };
             };
         };
         Enums: {

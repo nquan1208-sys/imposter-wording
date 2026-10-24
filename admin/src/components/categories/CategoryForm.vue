@@ -1,30 +1,46 @@
 <script setup lang="ts">
-import type { CategoryForm } from '../../types/admin.ts'
+import type { CategoryForm, CategoryTranslation, ContentLanguage, PromptStatus } from '../../types/admin.ts'
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 import { categorySchema, gameTypeLabels } from '../../utils/categories.ts'
 const { t } = useI18n({ useScope: 'global' })
-const props = defineProps<{ form: CategoryForm; editing?: boolean; pending?: boolean; error?: string }>()
-defineEmits<{ update: [key: keyof CategoryForm, value: string | number | boolean]; submit: []; cancel: [] }>()
-const schema = computed(() => categorySchema(props.editing))
+const props = defineProps<{ form: CategoryForm; languages: ContentLanguage[]; translations: CategoryTranslation[]; editing?: boolean; pending?: boolean; conflict?: boolean; error?: string }>()
+defineEmits<{ update: [key: keyof CategoryForm, value: string | number | boolean]; locale: [value: string]; submit: [status?: PromptStatus]; cancel: [] }>()
+const schema = categorySchema()
 const gameTypes = computed(() => Object.entries(gameTypeLabels).map(([value, label]) => ({ value, label: t(label) })))
+const tabs = computed(() => props.languages.map(language => ({ label: language.display_name, value: language.code, disabled: props.pending })))
+const statuses = computed(() => (['draft', 'published', 'archived'] as const).map(value => ({ value, label: t(`categories.deleteDialog.${value}`) })))
 </script>
 <template>
   <UCard class="category-form-card" :ui="{ root: 'tw:ring-0 tw:shadow-none', body: 'category-form-body' }">
   <UForm :schema="schema" :state="form" :disabled="pending" novalidate v-slot="{ errors }" class="category-form" @submit="$emit('submit')">
     <fieldset :disabled="pending" class="category-form-fields">
+      <legend>{{ t('categories.form.shared') }}</legend>
+      <p>{{ t('categories.help.shared') }}</p>
       <div class="category-form-grid">
-        <UFormField :label="t('categories.fields.name')" name="name" required><UInput :model-value="form.name" required class="tw:w-full" @update:model-value="$emit('update', 'name', $event)" /><template v-if="errors.some(issue => issue.name === 'name')" #error="{ error }">{{ typeof error === 'string' ? t(error) : '' }}</template></UFormField>
         <UFormField :label="t('categories.fields.slug')" name="slug" required :help="t('categories.help.slug')"><UInput :model-value="form.slug" required class="tw:w-full" @update:model-value="$emit('update', 'slug', $event)" /><template v-if="errors.some(issue => issue.name === 'slug')" #error="{ error }">{{ typeof error === 'string' ? t(error) : '' }}</template></UFormField>
-        <UFormField :label="t('common.fields.gameType')" name="game_type" :help="editing ? t('categories.help.immutableGameType') : undefined"><USelect :model-value="form.game_type" :items="gameTypes" :disabled="editing || pending" class="tw:w-full" @update:model-value="$emit('update', 'game_type', $event)" /><template v-if="errors.some(issue => issue.name === 'game_type')" #error="{ error }">{{ typeof error === 'string' ? t(error) : '' }}</template></UFormField>
-        <UFormField :label="t('common.fields.locale')" name="locale"><UInput :model-value="form.locale" disabled class="tw:w-full" /></UFormField>
+        <UFormField :label="t('common.fields.gameType')" name="game_type" :help="editing ? t('categories.help.immutableGameType') : undefined"><USelect :model-value="form.game_type" :items="gameTypes" :disabled="editing || pending" class="tw:w-full" @update:model-value="$emit('update', 'game_type', $event)" /></UFormField>
         <UFormField :label="t('categories.fields.sortOrder')" name="sort_order" required><UInput type="number" :min="0" :max="2147483647" :step="1" required :model-value="String(form.sort_order)" class="tw:w-full" @update:model-value="$emit('update', 'sort_order', $event)" /><template v-if="errors.some(issue => issue.name === 'sort_order')" #error="{ error }">{{ typeof error === 'string' ? t(error) : '' }}</template></UFormField>
         <UCheckbox :label="t('common.status.active')" :model-value="form.is_active" :disabled="pending" class="tw:self-center" @update:model-value="$emit('update', 'is_active', $event)" />
       </div>
-      <UFormField :label="t('categories.fields.description')" name="description"><UTextarea :rows="5" :model-value="form.description" class="tw:w-full" @update:model-value="$emit('update', 'description', $event)" /><template v-if="errors.some(issue => issue.name === 'description')" #error="{ error }">{{ typeof error === 'string' ? t(error) : '' }}</template></UFormField>
     </fieldset>
+    <UTabs :model-value="form.locale" :items="tabs" :aria-label="t('common.fields.locale')" :ui="{ list: 'tw:flex-wrap', content: 'tw:space-y-4' }" @update:model-value="$emit('locale', String($event))">
+      <template #content>
+        <p v-if="!translations.some(row => row.locale === form.locale)">{{ t('categories.translations.missing') }}</p>
+        <fieldset :disabled="pending" class="category-form-fields">
+          <UFormField :label="t('categories.fields.name')" name="name" required><UInput :model-value="form.name" required class="tw:w-full" @update:model-value="$emit('update', 'name', $event)" /><template v-if="errors.some(issue => issue.name === 'name')" #error="{ error }">{{ typeof error === 'string' ? t(error) : '' }}</template></UFormField>
+          <UFormField :label="t('categories.fields.description')" name="description"><UTextarea :rows="5" :model-value="form.description" class="tw:w-full" @update:model-value="$emit('update', 'description', $event)" /></UFormField>
+          <UFormField :label="t('common.fields.status')" name="status"><USelect :model-value="form.status" :items="statuses" class="tw:w-full" @update:model-value="$emit('update', 'status', $event)" /></UFormField>
+        </fieldset>
+      </template>
+    </UTabs>
     <UAlert v-if="error" color="error" :description="error" role="alert" />
-    <div class="category-actions"><UButton type="submit" :loading="pending" :disabled="pending" :label="t('categories.actions.save')" /><UButton type="button" color="neutral" variant="outline" :disabled="pending" :label="t('common.actions.cancel')" @click="$emit('cancel')" /></div>
+    <div class="category-actions">
+      <UButton type="submit" :loading="pending" :disabled="pending || conflict" :label="t('categories.actions.save')" />
+      <UButton type="button" :disabled="pending || conflict" :label="t('categories.actions.publish')" @click="$emit('submit', 'published')" />
+      <UButton type="button" color="neutral" variant="outline" :disabled="pending || conflict" :label="t('categories.actions.archive')" @click="$emit('submit', 'archived')" />
+      <UButton type="button" color="neutral" variant="outline" :disabled="pending" :label="t('common.actions.cancel')" @click="$emit('cancel')" />
+    </div>
   </UForm>
   </UCard>
 </template>

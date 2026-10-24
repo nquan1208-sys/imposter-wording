@@ -14,27 +14,30 @@ test('category components render backend rows, immutable fields and destructive 
     await router.push('/')
     const render = async (component: import('vue').Component, props: Record<string, unknown>) => (await renderToString(createSSRApp(component, props).use(router).use(ui).use(i18n))).replace(/<!--[\s\S]*?-->/g, '')
     const table = (await server.ssrLoadModule('/src/components/categories/CategoryTable.vue')).default
-    const row = { id: 'id', name: 'Đồ ăn', slug: 'do-an', game_type: 'word', locale: 'vi', is_active: true, updated_at: '2026-10-12T10:00:00Z', word_prompts: [{ count: 3 }], question_prompts: [{ count: 0 }] }
-    const html = await render(table, { rows: [row], pending: false })
+    const languages = [{ code: 'vi', display_name: 'Tiếng Việt', sort_order: 0 }, { code: 'en', display_name: 'English', sort_order: 1 }]
+    const row = { id: 'id', name: 'Đồ ăn', slug: 'do-an', game_type: 'word', locale: 'vi', is_active: true, updated_at: '2026-10-12T10:00:00Z', word_count: 3, question_count: 0, translations: [{ locale: 'vi', name: 'Đồ ăn', status: 'published' }] }
+    const html = await render(table, { languages, rows: [row], pending: false })
     assert.match(html, /Đồ ăn/)
+    assert.match(html, /Chưa có bản dịch/)
+    assert.match(html, /en:/)
     assert.match(html, /Từ ngữ/)
     assert.match(html, /<td[^>]*>3<\/td>/)
-    const pageHtml = await render(table, { rows: Array.from({ length: 20 }, (_, index) => ({ ...row, id: String(index), name: `Danh mục ${index}` })), pending: false })
+    const pageHtml = await render(table, { rows: Array.from({ length: 20 }, (_, index) => ({ ...row, id: String(index), name: `Danh mục ${index}` })), languages, pending: false })
     assert.equal((pageHtml.match(/class="category-slug"/g) || []).length, 20)
     const filters = (await server.ssrLoadModule('/src/components/categories/CategoryFilters.vue')).default
-    const filterHtml = await render(filters, { filters: { gameType: '', active: '', sort: 'sort_order' }, search: '' })
+    const filterHtml = await render(filters, { languages, filters: { locale: 'vi', gameType: '', active: '', sort: 'sort_order' }, search: '' })
     assert.equal((filterHtml.match(/>Tất cả</g) || []).length, 2)
     const form = (await server.ssrLoadModule('/src/components/categories/CategoryForm.vue')).default
-    const formHtml = await render(form, { form: { ...row, description: '', sort_order: 0 }, editing: true, pending: true, error: 'Lỗi lưu' })
+    const formHtml = await render(form, { languages, translations: row.translations, form: { ...row, status: 'draft', description: '', sort_order: 0 }, editing: true, pending: true, error: 'Lỗi lưu' })
     assert.match(formHtml, /<fieldset[^>]* disabled/)
     assert.match(formHtml, /<button[^>]*role="combobox"[^>]* disabled/)
     assert.match(formHtml, /role="alert"/)
     const dialog = (await server.ssrLoadModule('/src/components/categories/CategoryDeleteDialog.vue')).default
-    const dialogProps = { portal: false, unmountOnHide: false, preview: { category: row, counts: { draft: 1, published: 1, archived: 1 }, version: 'snapshot' }, targets: [], loading: false, pending: false }
+    const dialogProps = { portal: false, unmountOnHide: false, locale: 'vi', preview: { category: row, category_translations: row.translations, counts: { originals: { total: 2, word: 2, question: 0 }, translations: { draft: 1, published: 1, archived: 1 } }, version: 'snapshot' }, targets: [], loading: false, pending: false }
     const dialogHtml = await render(dialog, dialogProps)
     assert.match(dialogHtml, /Đã xuất bản<\/dt><dd[^>]*>1/)
     assert.match(dialogHtml, /Xóa danh mục cùng toàn bộ nội dung/)
-    assert.match(dialogHtml, /Không có danh mục nhận/)
+    assert.match(dialogHtml, /Không có danh mục đang bật/)
     assert.match(dialogHtml, /<button[^>]* disabled[^>]*><span[^>]*>Chuyển nội dung và xóa<\/span>/)
     assert.match(dialogHtml, /Giữ lại toàn bộ nội dung/)
     assert.doesNotMatch(dialogHtml, /<input[^>]*type="text"|Nhập đúng tên/)

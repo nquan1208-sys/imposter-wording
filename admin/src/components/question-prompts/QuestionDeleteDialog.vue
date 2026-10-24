@@ -17,16 +17,16 @@ function submit() {
         <dl class="word-delete-summary">
           <div class="word-delete-content">
             <dt>{{ t('questionPrompts.fields.civilianQuestion') }}</dt>
-            <dd>{{ prompt.civilian_question }}</dd>
+            <dd>{{ prompt.civilian_question || t('categories.translations.missing') }}</dd>
           </div>
-          <div class="word-delete-content"><dt>{{ t('questionPrompts.fields.imposterQuestion') }}</dt><dd>{{ prompt.imposter_question }}</dd></div>
+          <div class="word-delete-content"><dt>{{ t('questionPrompts.fields.imposterQuestion') }}</dt><dd>{{ prompt.imposter_question || t('categories.translations.missing') }}</dd></div>
           <div>
             <dt>{{ t('questionPrompts.fields.categoryId') }}</dt>
             <dd>{{ prompt.game_categories?.name || prompt.category_id }}</dd>
           </div>
           <div>
             <dt>{{ t('questionPrompts.fields.status') }}</dt>
-            <dd><UBadge color="neutral" variant="subtle">{{ t(`questionPrompts.statuses.${prompt.status}`) }}</UBadge></dd>
+            <dd><UBadge color="neutral" variant="subtle">{{ prompt.status ? t(`questionPrompts.statuses.${prompt.status}`) : t('categories.translations.missing') }}</UBadge></dd>
           </div>
         </dl>
         <UAlert icon="i-lucide-triangle-alert" color="error" variant="soft" :title="t('questionPrompts.deleteDialog.irreversible')" :description="t('questionPrompts.deleteDialog.warning')" />

@@ -41,24 +41,21 @@ Table admin_users {
   user_id uuid [pk, note: "FK to auth.users.id"]
   role admin_role [not null, default: 'admin']
   is_active boolean [not null, default: true]
-  created_at timestamp [not null]
+  created_at timestamptz [not null]
 }
 
 Table game_categories {
   id uuid [pk]
   game_type game_type [not null]
-  slug varchar [not null]
-  name varchar [not null]
-  description text
-  locale varchar [not null, default: 'vi']
+  slug text [not null]
   sort_order int [not null, default: 0]
   is_active boolean [not null, default: true]
   created_by uuid [note: "FK to auth.users.id"]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
 
   Indexes {
-    (game_type, slug, locale) [unique]
+    (game_type, slug) [unique]
     (game_type, is_active, sort_order)
   }
 }
@@ -66,38 +63,85 @@ Table game_categories {
 Table word_prompts {
   id uuid [pk]
   category_id uuid [not null, note: "Category must have game_type = word"]
-  text varchar [not null, note: "Secret shown to normal players"]
-  image_path varchar [note: "Optional Supabase Storage path for the word prompt image"]
+  image_path text [note: "Optional Supabase Storage path for the word prompt image"]
   difficulty difficulty_level [not null, default: 'medium']
   is_family_friendly boolean [not null, default: false, note: "Included when Family Mode is enabled"]
-  status content_status [not null, default: 'draft']
-  locale varchar [not null, default: 'vi']
   created_by uuid [note: "FK to auth.users.id"]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
 
   Indexes {
-    (category_id, status, difficulty)
-    (status, locale)
+    (category_id, difficulty)
   }
 }
 
 Table question_prompts {
   id uuid [pk]
   category_id uuid [not null, note: "Category must have game_type = question"]
-  civilian_question text [not null, note: "Question shown to normal players"]
-  imposter_question text [not null, note: "Different question shown to imposter"]
   difficulty difficulty_level [not null, default: 'medium']
   is_family_friendly boolean [not null, default: false, note: "Included when Family Mode is enabled"]
-  status content_status [not null, default: 'draft']
-  locale varchar [not null, default: 'vi']
   created_by uuid [note: "FK to auth.users.id"]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
 
   Indexes {
-    (category_id, status, difficulty)
-    (status, locale)
+    (category_id, difficulty)
+  }
+}
+
+Table content_languages {
+  code text [pk, note: "Nonempty trimmed code; initially vi and en"]
+  display_name text [not null]
+  sort_order int [not null, default: 0]
+}
+
+Table game_category_translations {
+  category_id uuid [not null]
+  locale text [not null]
+  name text [not null]
+  description text
+  status content_status [not null, default: 'draft']
+  created_by uuid [note: "FK to auth.users.id; ON DELETE SET NULL"]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    (category_id, locale) [pk]
+    (locale, status)
+    created_by
+  }
+}
+
+Table word_prompt_translations {
+  prompt_id uuid [not null]
+  locale text [not null]
+  text text [not null, note: "Nonempty trimmed secret"]
+  status content_status [not null, default: 'draft']
+  created_by uuid [note: "FK to auth.users.id; ON DELETE SET NULL"]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    (prompt_id, locale) [pk]
+    (locale, status)
+    created_by
+  }
+}
+
+Table question_prompt_translations {
+  prompt_id uuid [not null]
+  locale text [not null]
+  civilian_question text [not null]
+  imposter_question text [not null, note: "Must differ after trimming and lowercasing"]
+  status content_status [not null, default: 'draft']
+  created_by uuid [note: "FK to auth.users.id; ON DELETE SET NULL"]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Indexes {
+    (prompt_id, locale) [pk]
+    (locale, status)
+    created_by
   }
 }
 
@@ -107,3 +151,15 @@ Ref: word_prompts.category_id > game_categories.id
 Ref: word_prompts.created_by > auth_users.id
 Ref: question_prompts.category_id > game_categories.id
 Ref: question_prompts.created_by > auth_users.id
+
+Ref: game_category_translations.category_id > game_categories.id [delete: cascade]
+Ref: game_category_translations.locale > content_languages.code
+Ref: game_category_translations.created_by > auth_users.id [delete: set null]
+
+Ref: word_prompt_translations.prompt_id > word_prompts.id [delete: cascade]
+Ref: word_prompt_translations.locale > content_languages.code
+Ref: word_prompt_translations.created_by > auth_users.id [delete: set null]
+
+Ref: question_prompt_translations.prompt_id > question_prompts.id [delete: cascade]
+Ref: question_prompt_translations.locale > content_languages.code
+Ref: question_prompt_translations.created_by > auth_users.id [delete: set null]

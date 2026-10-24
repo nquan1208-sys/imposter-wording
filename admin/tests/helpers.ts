@@ -33,3 +33,8 @@ export function setupState(instance: ComponentInternalInstance | null): Record<s
 }
 export type TestApp = App<HostNode>
 export type StubContext = SetupContext
+
+export function promptDetail<T extends { id: string; locale: string; status: string; game_categories?: { id: string; name: string; locale: string; is_active: boolean } }>(row: T) {
+  return { ...row, translations: [{ ...row, prompt_id: row.id }], game_categories: row.game_categories
+    ? { ...row.game_categories, slug: 'fixture-category', translations: [{ ...row.game_categories, category_id: row.game_categories.id }] } : null }
+}

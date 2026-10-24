@@ -1,58 +1,55 @@
 import type { listFilters } from '../utils/categories.ts'
-import type { AdminClient, Category, CategoryPreview, DeleteCategory } from '../types/admin.ts'
-import { categoryPayload, pageSize, searchPattern } from '../utils/categories.ts'
+import type { AdminClient, Category, CategoryDetail, CategoryPreview, CategoryRow, CategoryTarget, DeleteCategory, SavedCategory } from '../types/admin.ts'
+import { categoryPayload } from '../utils/categories.ts'
 
 function resultOrThrow<T>(result: { data: T; error?: unknown }) {
   if (result.error) throw result.error
   return result.data
 }
 
-export async function listCategories(client: AdminClient, filters: ReturnType<typeof listFilters>) {
-  let query = client.from('game_categories').select('*, word_prompts(count), question_prompts(count)', { count: 'exact' })
-  if (filters.search.trim()) {
-    const pattern = searchPattern(filters.search.trim())
-    query = query.or(`name.ilike.${pattern},slug.ilike.${pattern}`)
-  }
-  if (filters.gameType) query = query.eq('game_type', filters.gameType)
-  if (filters.active) query = query.eq('is_active', filters.active === 'true')
-  query = query.order(filters.sort, { ascending: filters.sort !== 'updated_at' })
-  if (filters.sort !== 'name') query = query.order('name')
-  const start = (filters.page - 1) * pageSize
-  const result = await query.order('id').range(start, start + pageSize - 1)
-  return { rows: resultOrThrow(result), total: result.count || 0 }
+export async function listContentLanguages(client: AdminClient) {
+  return resultOrThrow(await client.from('content_languages').select('*').order('sort_order').order('code')) || []
 }
 
-export async function getCategory(client: AdminClient, id: string) {
-  const row = resultOrThrow(await client.from('game_categories').select('*').eq('id', id).single())
+export async function listCategories(client: AdminClient, filters: ReturnType<typeof listFilters>) {
+  return resultOrThrow(await client.rpc('admin_list_categories', {
+    p_locale: filters.locale, p_search: filters.search.trim(), p_game_type: filters.gameType || null,
+    p_is_active: filters.active ? filters.active === 'true' : null, p_sort: filters.sort, p_page: filters.page,
+  })) as { rows: CategoryRow[]; total: number }
+}
+
+export async function getCategory(client: AdminClient, id: string): Promise<CategoryDetail> {
+  const row = resultOrThrow(await client.from('game_categories').select('*, translations:game_category_translations(*)').eq('id', id).single())
   if (!row) throw new Error('categories.errors.notFound')
   return row
 }
 
-export async function saveCategory(client: AdminClient, form: unknown, id?: string) {
-  if (id) return resultOrThrow(await client.from('game_categories').update(categoryPayload(form, true)).eq('id', id).select().single())
-  const payload = categoryPayload(form, false)
-  const { data, error } = await client.auth.getUser()
-  if (error) throw error
-  if (!data.user) throw new Error('common.errors.sessionExpired')
-  return resultOrThrow(await client.from('game_categories').insert({ ...payload, created_by: data.user.id }).select().single())
+export async function saveCategory(client: AdminClient, form: unknown, id: string, updatedAt?: string) {
+  const payload = categoryPayload(form)
+  return resultOrThrow(await client.rpc('save_category', {
+    p_id: id, p_expected_updated_at: updatedAt ?? null, p_game_type: payload.game_type,
+    p_slug: payload.slug, p_sort_order: payload.sort_order, p_is_active: payload.is_active,
+    p_locale: payload.locale, p_name: payload.name, p_description: payload.description, p_status: payload.status,
+  })) as SavedCategory
 }
 
-export async function setCategoryActive(client: AdminClient, id: string, active: boolean) {
-  return resultOrThrow(await client.from('game_categories').update({ is_active: active }).eq('id', id).select().single())
+export async function setCategoryActive(client: AdminClient, category: Category, active: boolean) {
+  return resultOrThrow(await client.rpc('set_category_active', {
+    p_id: category.id, p_is_active: active, p_expected_updated_at: category.updated_at,
+  }))
 }
 
 export async function previewCategoryDelete(client: AdminClient, id: string) {
-  // This RPC returns a JSON snapshot defined by category_content_snapshot.
   return resultOrThrow(await client.rpc('preview_category_delete', { p_id: id })) as CategoryPreview
 }
 
-export async function transferTargets(client: AdminClient, category: Pick<Category, 'id' | 'game_type' | 'locale'>) {
-  const rows = []
+export async function transferTargets(client: AdminClient, sourceId: string, locale: string) {
+  const rows: CategoryTarget[] = []
   // Fetch every candidate rather than silently truncating at the API row limit.
   for (let start = 0; ; start += 100) {
-    const batch = resultOrThrow(await client.from('game_categories').select('id,name,slug')
-      .eq('game_type', category.game_type).eq('locale', category.locale).eq('is_active', true)
-      .neq('id', category.id).order('name').order('id').range(start, start + 99))
+    const batch = resultOrThrow(await client.rpc('admin_category_transfer_targets', {
+      p_source_id: sourceId, p_locale: locale,
+    }).order('name', { nullsFirst: false }).order('id').range(start, start + 99))
     rows.push(...(batch || []))
     if ((batch?.length ?? 0) < 100) return rows
   }

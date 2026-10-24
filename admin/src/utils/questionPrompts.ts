@@ -22,10 +22,10 @@ export function questionPromptFilters(query: LocationQuery) {
   return {
     search: typeof query.search === 'string' ? query.search : '',
     category: z.uuid().safeParse(query.category).success ? String(query.category) : '',
-    difficulty: z.enum(difficulties).safeParse(query.difficulty).success ? String(query.difficulty) : '',
+    difficulty: z.enum(difficulties).safeParse(query.difficulty).success ? query.difficulty as typeof difficulties[number] : '' as const,
     family: typeof query.family === 'string' && ['true', 'false'].includes(query.family) ? query.family : '',
-    locale: typeof query.locale === 'string' ? query.locale : '',
-    status: z.enum(statuses).safeParse(query.status).success ? String(query.status) : '',
+    locale: typeof query.locale === 'string' && query.locale ? query.locale : 'vi',
+    status: z.enum(statuses).safeParse(query.status).success ? query.status as typeof statuses[number] : '' as const,
     sort: query.sort === 'civilian_question' ? 'civilian_question' : 'updated_at',
     page: Number.isSafeInteger(page) && page > 0 ? page : 1,
   }
@@ -35,5 +35,5 @@ export function questionPromptError(cause: unknown) {
   const error = errorFields(cause)
   if (error?.message?.startsWith('questionPrompts.errors.')) return error.message
   if (error?.message === 'common.errors.sessionExpired') return error.message
-  return ({ '23514': 'questionPrompts.errors.invalidData', '23503': 'questionPrompts.errors.categoryRequired', '23505': 'questionPrompts.errors.conflict', '40001': 'questionPrompts.errors.conflict', '22023': 'questionPrompts.errors.invalidData', '42501': 'common.errors.forbidden', P0002: 'questionPrompts.errors.notFound', PGRST116: 'questionPrompts.errors.notFound' } as Record<string, string>)[error.code] || 'common.errors.operationFailed'
+  return ({ '23514': 'questionPrompts.errors.invalidData', '23503': 'questionPrompts.errors.categoryRequired', '23505': 'questionPrompts.errors.conflict', '40001': 'questionPrompts.errors.conflict', 'PT409': 'questionPrompts.errors.conflict', '22023': 'questionPrompts.errors.invalidData', '42501': 'common.errors.forbidden', P0002: 'questionPrompts.errors.notFound', PGRST116: 'questionPrompts.errors.notFound' } as Record<string, string>)[error.code] || 'common.errors.operationFailed'
 }

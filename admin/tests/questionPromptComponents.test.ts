@@ -1,4 +1,4 @@
-import { testWindow, setupState } from './helpers.ts'
+import { testWindow, setupState, promptDetail } from './helpers.ts'
 import type { HostNode, TestApp, StubContext, QueryStub, MockResult, ClientStub } from './helpers.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -48,29 +48,28 @@ test('question editor refreshes clean cache, protects edits, and keeps save conf
     originalFrom = supabase.from; originalGetUser = supabase.auth.getUser
     supabase.auth.getUser = async () => ({ data: { user: { id } } })
     let writes = 0, latest = fresh, readError: Error | null = null, resolveWrite!: () => void
+    supabase.rpc = async () => { writes++; return new Promise<MockResult>(done => { resolveWrite = () => done({ error: { code: 'PT409' } }) }) }
     supabase.from = () => {
-      const query = {} as QueryStub, state = { write: false }
-      for (const name of ['select', 'eq', 'single', 'order', 'range', 'maybeSingle']) query[name] = () => query
-      query.update = () => { state.write = true; writes++; return query }
-      query.then = resolve => state.write
-        ? new Promise<MockResult>(done => { resolveWrite = () => done({ data: null }) }).then(resolve)
-        : Promise.resolve({ data: latest, error: readError }).then(resolve)
+      const query = {} as QueryStub
+      for (const name of ['select', 'eq', 'single', 'order', 'range']) query[name] = () => query
+      query.then = resolve => Promise.resolve({ data: promptDetail(latest), error: readError }).then(resolve)
       return query
     }
-    queryClient.setQueryData(['question-prompts', 'detail', id], row)
+    queryClient.setQueryData(['question-prompts', 'detail', id], promptDetail(row))
+    queryClient.setQueryData(['content-languages'], [{ code: 'vi', display_name: 'Tiếng Việt' }, { code: 'en', display_name: 'English' }])
     const component = (await server.ssrLoadModule('/src/views/question-prompts/QuestionPromptFormView.vue')).default
     app = renderer.createApp({ setup() { provideUnsavedChanges(); return () => h({ ...component, render: () => h('div') }) } })
       .use(router).use(VueQueryPlugin, { queryClient }).use(createI18n({ legacy: false, locale: 'vi', messages: { vi: vn } }))
     app.provide(ssrContextKey, {}); app.provide(matchedRouteKey, computed(() => router.currentRoute.value.matched[0]))
     const editor = setupState(app.mount(node()).$.subTree.component)
     assert.equal(editor.form.civilian_question, row.civilian_question)
-    queryClient.setQueryData(['question-prompts', 'detail', id], fresh)
+    queryClient.setQueryData(['question-prompts', 'detail', id], promptDetail(fresh))
     await nextTick()
     assert.equal(editor.form.civilian_question, fresh.civilian_question)
     assert.equal(editor.saved.updated_at, fresh.updated_at)
     assert.equal(editor.unsaved.dirty, false)
     editor.update('civilian_question', 'My unsaved word')
-    queryClient.setQueryData(['question-prompts', 'detail', id], { ...fresh, civilian_question: 'Another server edit' })
+    queryClient.setQueryData(['question-prompts', 'detail', id], promptDetail({ ...fresh, civilian_question: 'Another server edit' }))
     await nextTick()
     assert.equal(editor.form.civilian_question, 'My unsaved word')
     assert.equal(editor.saved.updated_at, fresh.updated_at)
@@ -101,7 +100,7 @@ test('question editor refreshes clean cache, protects edits, and keeps save conf
     assert.equal(editor.unsaved.dirty, false)
     // A background response must not replace a form while an action is busy.
     editor.unsaved.busy = true
-    queryClient.setQueryData(['question-prompts', 'detail', id], fresh)
+    queryClient.setQueryData(['question-prompts', 'detail', id], promptDetail(fresh))
     await nextTick()
     assert.equal(editor.form.civilian_question, latest.civilian_question)
   } finally {
@@ -135,12 +134,13 @@ test('saved-question deletion preserves input on failure, blocks repeats/leave/l
     supabase.from = () => {
       const query = {} as QueryStub
       for (const method of ['select', 'eq', 'single', 'order', 'range']) query[method] = () => query
-      query.then = resolve => resolve({ data: latest })
+      query.then = resolve => resolve({ data: promptDetail(latest) })
       return query
     }
-    queryClient.setQueryData(['question-prompts', 'detail', id], row)
+    queryClient.setQueryData(['question-prompts', 'detail', id], promptDetail(row))
     async function mount(path: string, props: Record<string, unknown> = {}) {
-      const component = (await server.ssrLoadModule(path)).default
+      queryClient.setQueryData(['content-languages'], [{ code: 'vi', display_name: 'Tiếng Việt' }, { code: 'en', display_name: 'English' }])
+    const component = (await server.ssrLoadModule(path)).default
       const child = { ...component, render: () => h('div') }
       const root = { setup() { provideUnsavedChanges(); return () => h(child, props) } }
       const app = renderer.createApp(root).use(i18n).use(router).use(VueQueryPlugin, { queryClient })
@@ -150,14 +150,15 @@ test('saved-question deletion preserves input on failure, blocks repeats/leave/l
       return { state: setupState(instance), instance }
     }
     const { state: editor } = await mount('/src/views/question-prompts/QuestionPromptFormView.vue')
-    assert.equal(editor.saved.civilian_question, 'Saved apple')
+    assert.equal(editor.saved.translations[0].civilian_question, 'Saved apple')
     assert.ok(editor.categoryItems.some((item: { value: string; label: string }) => item.value === id && item.label.includes('Saved category')))
     assert.equal('imposter_hint' in editor.form, false)
     editor.update('civilian_question', '')
     editor.update('category_id', '')
+    assert.equal(editor.deletePrompt.civilian_question, 'Saved apple', 'delete summary uses persisted content')
     editor.openDelete()
     assert.equal(editor.deleting, true)
-    assert.equal(editor.saved.civilian_question, 'Saved apple')
+    assert.equal(editor.saved.translations[0].civilian_question, 'Saved apple')
     assert.equal(editor.canLeave(), false)
     // Cancel does not save anything and keeps the invalid form.
     editor.deleting = false
@@ -185,7 +186,7 @@ test('saved-question deletion preserves input on failure, blocks repeats/leave/l
     assert.equal(editor.form.civilian_question, '')
     assert.equal(editor.deleting, true)
     assert.equal(calls, 1)
-    supabase.rpc = async () => { calls++; return { error: { code: '40001' } } }
+    supabase.rpc = async () => { calls++; return { error: { code: 'PT409' } } }
     editor.remove(input)
     await new Promise(resolve => setTimeout(resolve, 0))
     assert.equal(editor.conflict, true)
@@ -250,20 +251,22 @@ test('new question saves retain failures, block duplicate submits and support ev
   let supabase: ClientStub | undefined, originalFrom: ClientStub['from'] | undefined, originalGetUser: ClientStub['auth']['getUser'] | undefined
   try {
     globalThis.window = testWindow({ addEventListener() {}, removeEventListener() {}, confirm: () => true })
-    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/question-prompts/new', name: 'question-prompt-new', component: stub }, { path: '/question-prompts', name: 'question-prompts', component: stub }] })
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/question-prompts/:id/edit', name: 'question-prompt-edit', component: stub }, { path: '/question-prompts/new', name: 'question-prompt-new', component: stub }, { path: '/question-prompts', name: 'question-prompts', component: stub }] })
     await router.push('/question-prompts/new?difficulty=hard&search=food')
     const { provideUnsavedChanges } = await server.ssrLoadModule('/src/utils/unsavedChanges.ts')
     supabase = (await server.ssrLoadModule('/src/lib/supabase.ts')).supabase as ClientStub
     originalFrom = supabase.from; originalGetUser = supabase.auth.getUser
     supabase.auth.getUser = async () => ({ data: { user: { id } } })
     let resolveWrite!: (result: MockResult) => void, writes = 0, submitted: Record<string, unknown> = {}
+    supabase.rpc = async (_, payload) => { submitted = payload; writes++; return new Promise<MockResult>(done => { resolveWrite = done }) }
     supabase.from = () => {
       const query = {} as QueryStub
-      for (const name of ['select', 'eq', 'maybeSingle']) query[name] = () => query
-      for (const name of ['insert', 'update']) query[name] = (payload: Record<string, unknown>) => { submitted = payload; writes++; return query }
-      query.then = resolve => new Promise<MockResult>(done => { resolveWrite = done }).then(resolve)
+      for (const name of ['select', 'eq', 'single', 'order', 'range']) query[name] = () => query
+      query.then = resolve => resolve({ data: promptDetail({ id: String(submitted.p_id), category_id: id, difficulty: 'medium', is_family_friendly: false, civilian_question: String(submitted.p_civilian_question).trim(), imposter_question: String(submitted.p_imposter_question).trim(), locale: 'vi', status: String(submitted.p_status), updated_at: 'latest' }) })
       return query
     }
+
+    queryClient.setQueryData(['content-languages'], [{ code: 'vi', display_name: 'Tiếng Việt' }, { code: 'en', display_name: 'English' }])
     const component = (await server.ssrLoadModule('/src/views/question-prompts/QuestionPromptFormView.vue')).default
     app = renderer.createApp({ setup() { provideUnsavedChanges(); return () => h({ ...component, render: () => h('div') }) } })
       .use(router).use(VueQueryPlugin, { queryClient }).use(createI18n({ legacy: false, locale: 'vi', messages: { vi: vn } }))
@@ -274,20 +277,20 @@ test('new question saves retain failures, block duplicate submits and support ev
     editor.update('civilian_question', ' Favourite food? '); editor.update('imposter_question', ' Worst food? '); editor.update('category_id', id)
     editor.submit('draft'); editor.submit('published')
     await new Promise(resolve => setTimeout(resolve, 0))
-    assert.equal(writes, 1); assert.equal(submitted.status, 'draft'); assert.equal(editor.canLeave(), false)
+    assert.equal(writes, 1); assert.equal(submitted.p_status, 'draft'); assert.equal(editor.canLeave(), false)
     resolveWrite({ error: new Error('offline') })
     await new Promise(resolve => setTimeout(resolve, 0))
     assert.equal(editor.form.civilian_question, ' Favourite food? '); assert.equal(editor.unsaved.dirty, true); assert.equal(editor.unsaved.busy, false)
     for (const status of ['draft', 'published', 'draft', 'archived']) {
       editor.submit(status)
       await new Promise(resolve => setTimeout(resolve, 0))
-      assert.equal(submitted.status, status)
+      assert.equal(submitted.p_status, status)
       assert.equal('imposter_hint' in submitted, false)
-      resolveWrite({ data: { ...submitted, id, updated_at: new Date().toISOString() } })
+      resolveWrite({ data: { original: { id: submitted.p_id, category_id: submitted.p_category_id, difficulty: submitted.p_difficulty, is_family_friendly: submitted.p_is_family_friendly, updated_at: new Date().toISOString() }, translation: { prompt_id: submitted.p_id, locale: submitted.p_locale, status: submitted.p_status, civilian_question: String(submitted.p_civilian_question).trim(), imposter_question: String(submitted.p_imposter_question).trim() } } })
       await new Promise(resolve => setTimeout(resolve, 10))
-      assert.equal(editor.saved.status, status); assert.equal(editor.unsaved.dirty, false); assert.equal(editor.unsaved.busy, false)
-      assert.equal(router.currentRoute.value.name, 'question-prompts')
-      assert.deepEqual(router.currentRoute.value.query, { difficulty: 'hard', search: 'food' })
+      assert.equal(editor.activeTranslation.status, status); assert.equal(editor.unsaved.dirty, false); assert.equal(editor.unsaved.busy, false)
+      assert.equal(router.currentRoute.value.name, 'question-prompt-edit')
+      assert.deepEqual(router.currentRoute.value.query, { difficulty: 'hard', search: 'food', locale: 'vi' })
     }
     assert.equal(writes, 5)
   } finally {

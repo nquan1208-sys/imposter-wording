@@ -1,5 +1,12 @@
 # Hướng dẫn môi trường Admin và Supabase
 
+> Cập nhật 2026-10-24: local đã có schema bản gốc + bản dịch, dashboard và Storage private
+> `word-prompt-images`; Dev cloud INACTIVE, chưa cutover. Hợp đồng hiện tại xem
+> [schema và quyền API](./admin-supabase-new-device-guide.md#8-những-gì-migration-hiện-tại-tạo-ra),
+> [DBML](./database-schema.dbml) và [Phase 6 / cutover](./plans/admin-content-translations/admin-content-translations-phase-6.md).
+> Không push migrations translations theo quickstart; phải backup và rehearsal trước.
+
+
 > Nếu đang setup trên một thiết bị mới, hãy đọc
 > [`admin-supabase-new-device-guide.md`](./admin-supabase-new-device-guide.md).
 > Tài liệu này là bản tham khảo ngắn cho việc chuyển đổi giữa các environment.
@@ -143,13 +150,15 @@ yarn dev:development
 
 ### Quy trình local → Dev cloud
 
+Với migrations translations, chỉ push trong cửa sổ cutover theo [Phase 6](./plans/admin-content-translations/admin-content-translations-phase-6.md), sau backup/restore rehearsal và khóa ghi.
+
 Sau mỗi thay đổi database có ý nghĩa và đã kiểm tra local:
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
 
-# Kiểm tra/reset database local nếu cần
-supabase db reset --local
+# Kiểm tra trên bản sao, giữ nguyên DB local
+rtk proxy python3 supabase/tests/content_translations.py
 
 # Xem trước migration sẽ áp dụng trên Dev
 supabase db push --linked --dry-run
@@ -200,10 +209,10 @@ Kiểm tra lịch sử migration trên cloud:
 supabase migration list --linked
 ```
 
-Có thể kiểm tra migration local trước khi push:
+Kiểm tra migration trên bản sao local trước khi push:
 
 ```bash
-supabase db reset --local
+rtk proxy python3 supabase/tests/content_translations.py
 ```
 
 `db reset --local` sẽ xóa và tạo lại database local, vì vậy không dùng nếu

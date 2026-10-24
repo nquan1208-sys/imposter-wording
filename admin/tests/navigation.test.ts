@@ -57,8 +57,8 @@ test('sidebar navigation renders only the current page and retains form leave gu
     const { default: router } = await server.ssrLoadModule('/src/router/index.ts')
     await router.push('/dashboard')
     app = renderer.createApp({ render: () => h(RouterView) }).use(router).use(VueQueryPlugin, { queryClient }).use(createI18n({ legacy: false, locale: 'vi', messages: { vi: vn } }))
-    const ui = { inheritAttrs: false, setup: (_: unknown, { attrs, slots }: StubContext) => () => h('div', attrs, [String(attrs.label ?? ''), slots.default?.({ errors: [] }), slots.body?.({}), slots.actions?.({})]) }
-    for (const name of ['UButton', 'UAvatar', 'UAlert', 'UBreadcrumb', 'UCard', 'USkeleton', 'UInput', 'USelectMenu', 'UFormField', 'UCheckbox', 'UForm', 'UTextarea', 'UPagination', 'UBadge', 'UIcon', 'USwitch']) app.component(name, ui)
+    const ui = { inheritAttrs: false, setup: (_: unknown, { attrs, slots }: StubContext) => () => h('div', attrs, [String(attrs.label ?? ''), slots.default?.({ errors: [] }), slots.body?.({}), slots.actions?.({}), slots.content?.({})]) }
+    for (const name of ['UButton', 'UAvatar', 'UAlert', 'UBreadcrumb', 'UCard', 'USkeleton', 'UInput', 'USelectMenu', 'UFormField', 'UCheckbox', 'UForm', 'UTextarea', 'UPagination', 'UBadge', 'UIcon', 'USwitch', 'UTabs']) app.component(name, ui)
     app.component('USelect', defineComponent({ props: { items: { type: Array as import('vue').PropType<{ value: string }[]>, required: true }, modelValue: null }, setup(props, context) {
       // Reka SelectItem reserves the empty string for clearing, not an option.
       watchEffect(() => assert.ok(props.items.every((item: { value: string }) => item.value !== ''), 'select options must have nonempty values'))
@@ -99,13 +99,13 @@ test('sidebar navigation renders only the current page and retains form leave gu
     }
     await router.push('/question-prompts'); await nextTick()
     assert.match(text(root), /Đang tải đề/)
-    const questionFilters = { search: '', category: '', difficulty: '', family: '', locale: '', status: '', sort: 'updated_at', page: 1 }
+    const questionFilters = { search: '', category: '', difficulty: '', family: '', locale: 'vi', status: '', sort: 'updated_at', page: 1 }
     const questionKey = ['question-prompts', 'list', questionFilters]
     queryClient.setQueryData(questionKey, { rows: [], total: 0 }); await nextTick()
     assert.match(text(root), /Không có đề phù hợp/)
     queryClient.getQueryCache().find({ queryKey: questionKey })!.setState({ status: 'error', error: new Error('offline') }); await nextTick()
     assert.match(text(root), /Thử lại/)
-    queryClient.setQueryData(questionKey, { rows: [{ id: 'question-id', civilian_question: 'Favourite food?', imposter_question: 'Worst food?', game_categories: { name: 'Food' }, status: 'draft', difficulty: 'medium', is_family_friendly: false, updated_at: '2026-10-21T10:00:00Z' }], total: 1 }); await nextTick()
+    queryClient.setQueryData(questionKey, { rows: [{ id: 'question-id', translations: [{ locale: 'vi', status: 'draft' }], civilian_question: 'Favourite food?', imposter_question: 'Worst food?', game_categories: { name: 'Food' }, status: 'draft', difficulty: 'medium', is_family_friendly: false, updated_at: '2026-10-21T10:00:00Z' }], total: 1 }); await nextTick()
     assert.match(text(root), /Favourite food/); assert.match(text(root), /Worst food/)
     const search = nodes(root).find(element => element.props.modelValue === '' && element.props['onUpdate:modelValue'])
     assert.ok(search)
@@ -114,6 +114,7 @@ test('sidebar navigation renders only the current page and retains form leave gu
     assert.equal(router.currentRoute.value.query.search, undefined)
     await new Promise(resolve => setTimeout(resolve, 330)); await nextTick()
     assert.equal(router.currentRoute.value.query.search, 'food')
+    queryClient.setQueryData(['content-languages'], [{ code: 'vi', display_name: 'Tiếng Việt' }, { code: 'en', display_name: 'English' }])
     await router.push('/question-prompts/new?search=food'); await nextTick()
     assert.doesNotMatch(text(root), /Gợi ý danh mục|Hint|Ảnh/)
     for (const [label, question] of [[vn.questionPrompts.fields.civilianQuestion, 'Favourite food?'], [vn.questionPrompts.fields.imposterQuestion, 'Worst food?']]) {
@@ -172,6 +173,87 @@ test('sidebar navigation renders only the current page and retains form leave gu
     globalThis.window.confirm = () => true
     await router.push('/categories'); await nextTick()
     assert.equal(router.currentRoute.value.name, 'categories')
+    queryClient.setQueryData(['content-languages'], [{ code: 'vi', display_name: 'Tiếng Việt' }, { code: 'en', display_name: 'English' }])
+    await router.push('/categories/new'); await nextTick()
+    function categoryName() {
+      const field = nodes(root).find(element => element.props.label === vn.categories.fields.name)
+      assert.ok(field)
+      return nodes(field).find(element => element.props['onUpdate:modelValue'])!
+    }
+    categoryName().props['onUpdate:modelValue']('Unsaved Vietnamese'); await nextTick()
+    const tabs = nodes(root).find(element => element.props['model-value'] === 'vi' && element.props.items?.length === 2)
+    assert.ok(tabs)
+    tabs.props['onUpdate:modelValue']('en'); await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    categoryName().props['onUpdate:modelValue']('Saved English'); await nextTick()
+    let categoryDetail: Record<string, unknown> | null = null
+    const previousFrom = supabase.from
+    supabase.from = table => {
+      if (table !== 'game_categories' || !categoryDetail) return previousFrom(table)
+      const query = {} as QueryStub
+      for (const method of ['select', 'eq', 'single']) query[method] = () => query
+      query.then = resolve => resolve({ data: categoryDetail })
+      return query
+    }
+    supabase.rpc = async (_, input) => {
+      const response = { data: {
+      original: { id: input.p_id, slug: input.p_slug, game_type: input.p_game_type, sort_order: input.p_sort_order, is_active: input.p_is_active, updated_at: 'server-version' },
+      translation: { category_id: input.p_id, locale: input.p_locale, name: input.p_name, description: input.p_description, status: input.p_status },
+    } }
+      categoryDetail = { ...response.data.original, translations: [response.data.translation] }
+      return response
+    }
+    const save = nodes(root).find(element => element.props.label === vn.categories.actions.publish)
+    assert.ok(save)
+    save.props.onClick(); await new Promise(resolve => setTimeout(resolve, 30)); await nextTick()
+    assert.equal(router.currentRoute.value.name, 'category-edit')
+    const savedTabs = nodes(root).find(element => element.props['model-value'] === 'en' && element.props.items?.length === 2)
+    assert.ok(savedTabs)
+    savedTabs.props['onUpdate:modelValue']('vi'); await nextTick()
+    assert.equal(categoryName().props['model-value'], 'Unsaved Vietnamese', 'new-to-edit route preserves drafts in the rendered shell')
+    for (const [kind, fieldLabel, secondaryLabel] of [
+      ['word', vn.wordPrompts.fields.text, null],
+      ['question', vn.questionPrompts.fields.civilianQuestion, vn.questionPrompts.fields.imposterQuestion],
+    ] as const) {
+      await router.push(`/${kind}-prompts/new`); await nextTick()
+      function promptField(label: string) {
+        const field = nodes(root).find(element => element.props.label === label)
+        assert.ok(field)
+        return nodes(field).find(element => element.props['onUpdate:modelValue'])!
+      }
+      promptField(fieldLabel).props['onUpdate:modelValue']('Unsaved Vietnamese'); await nextTick()
+      if (secondaryLabel) promptField(secondaryLabel).props['onUpdate:modelValue']('Other Vietnamese')
+      const languageTabs = nodes(root).find(element => element.props['model-value'] === 'vi' && element.props.items?.length === 2)
+      assert.ok(languageTabs); languageTabs.props['onUpdate:modelValue']('en'); await nextTick()
+      await new Promise(resolve => setTimeout(resolve, 0))
+      promptField(fieldLabel).props['onUpdate:modelValue']('Saved English')
+      if (secondaryLabel) promptField(secondaryLabel).props['onUpdate:modelValue']('Other English')
+      const categoryPicker = nodes(root).find(element => element.props['value-key'] === 'value')!
+      categoryPicker.props['onUpdate:modelValue'](category); await nextTick()
+      let promptDetail: Record<string, unknown> | null = null
+      const oldFrom = supabase.from
+      supabase.from = table => {
+        if (table !== `${kind}_prompts` || !promptDetail) return oldFrom(table)
+        const query = {} as QueryStub
+        for (const method of ['select', 'eq', 'single']) query[method] = () => query
+        query.then = resolve => resolve({ data: promptDetail }); return query
+      }
+      supabase.rpc = async (_, input) => {
+        const original = { id: input.p_id, category_id: input.p_category_id, difficulty: input.p_difficulty, is_family_friendly: input.p_is_family_friendly, image_path: null, updated_at: 'prompt-version' }
+        const translation = { prompt_id: input.p_id, locale: input.p_locale, status: input.p_status, ...(kind === 'word' ? { text: input.p_text } : { civilian_question: input.p_civilian_question, imposter_question: input.p_imposter_question }) }
+        promptDetail = { ...original, translations: [translation], game_categories: null }
+        return { data: { original, translation } }
+      }
+      const publish = nodes(root).find(element => element.props.label === vn[`${kind}Prompts`].actions.publish)!
+      publish.props.onClick(); await new Promise(resolve => setTimeout(resolve, 30)); await nextTick()
+      assert.equal(router.currentRoute.value.name, `${kind}-prompt-edit`)
+      const tabsAfterSave = nodes(root).find(element => element.props['model-value'] === 'en' && element.props.items?.length === 2)
+      assert.ok(tabsAfterSave); tabsAfterSave.props['onUpdate:modelValue']('vi'); await nextTick()
+      assert.equal(promptField(fieldLabel).props['model-value'], 'Unsaved Vietnamese', `${kind} shell preserves drafts through create/edit`)
+      supabase.from = oldFrom
+    }
+    await router.push('/categories?locale=unknown'); await new Promise(resolve => setTimeout(resolve, 30)); await nextTick()
+    assert.equal(router.currentRoute.value.query.locale, 'vi', 'invalid content locale normalizes even when languages were cached')
   } finally {
     try { app?.unmount() }
     finally { queryClient.clear(); globalThis.window = originalWindow; await server.close(); await rm(cacheDir, { recursive: true, force: true }) }

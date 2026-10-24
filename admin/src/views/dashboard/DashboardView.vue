@@ -1,15 +1,25 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { useI18n } from 'vue-i18n'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { getDashboardSummary } from '../../api/dashboard.ts'
+import { listContentLanguages } from '../../api/categories.ts'
 import { supabase } from '../../lib/supabase.ts'
 
 const { t, locale } = useI18n({ useScope: 'global' })
+const route = useRoute(), router = useRouter()
+const languages = useQuery({ queryKey: ['content-languages'], queryFn: () => listContentLanguages(supabase), retry: false })
+const contentLocale = computed(() => typeof route.query.locale === 'string' ? route.query.locale : 'vi')
+const validLocale = computed(() => languages.data.value?.some(row => row.code === contentLocale.value) === true)
+function selectLocale(value: string) { return router.replace({ query: { ...route.query, locale: value } }) }
+watch([languages.data, contentLocale], ([rows, value]) => {
+  if (rows && !rows.some(row => row.code === value)) selectLocale('vi')
+}, { immediate: true })
 const summary = useQuery({
-  queryKey: ['dashboard', 'summary'],
-  queryFn: () => getDashboardSummary(supabase),
+  queryKey: computed(() => ['dashboard', 'summary', contentLocale.value]),
+  queryFn: () => getDashboardSummary(supabase, contentLocale.value),
+  enabled: validLocale,
   retry: false,
 })
 const dateFormat = computed(() => new Intl.DateTimeFormat(locale.value === 'en' ? 'en-US' : 'vi-VN', { dateStyle: 'short', timeStyle: 'short' }))
@@ -22,7 +32,14 @@ function retry() { return summary.refetch() }
 
 <template>
   <section class="dashboard-page">
-    <div v-if="summary.isPending.value" class="dashboard-loading" role="status" aria-live="polite">
+    <UFormField :label="t('common.fields.locale')">
+      <USelect :model-value="contentLocale" :items="(languages.data.value || []).map(row => ({ value: row.code, label: row.display_name }))" :disabled="!languages.data.value" @update:model-value="selectLocale" />
+    </UFormField>
+    <div v-if="languages.isError.value" class="dashboard-error" role="alert">
+      <p>{{ t('dashboard.loadError') }}</p>
+      <button class="dashboard-retry" type="button" :disabled="languages.isFetching.value" @click="languages.refetch()">{{ t('dashboard.retry') }}</button>
+    </div>
+    <div v-else-if="!validLocale || summary.isPending.value" class="dashboard-loading" role="status" aria-live="polite">
       <span class="dashboard-skeleton" aria-hidden="true" />
       <span>{{ t('dashboard.loading') }}</span>
     </div>
@@ -58,15 +75,15 @@ function retry() { return summary.refetch() }
               <h2 id="dashboard-recent-heading">{{ t('dashboard.recent.title') }}</h2>
             </div>
             <nav class="dashboard-panel__actions" :aria-label="t('dashboard.recent.title')">
-              <RouterLink class="dashboard-view-all" :to="{ name: 'word-prompts' }" :aria-label="t('dashboard.recent.allWords')">{{ t('dashboard.recent.allWordsShort') }}</RouterLink>
-              <RouterLink class="dashboard-view-all" :to="{ name: 'question-prompts' }" :aria-label="t('dashboard.recent.allQuestions')">{{ t('dashboard.recent.allQuestionsShort') }}</RouterLink>
+              <RouterLink class="dashboard-view-all" :to="{ name: 'word-prompts', query: { locale: contentLocale } }" :aria-label="t('dashboard.recent.allWords')">{{ t('dashboard.recent.allWordsShort') }}</RouterLink>
+              <RouterLink class="dashboard-view-all" :to="{ name: 'question-prompts', query: { locale: contentLocale } }" :aria-label="t('dashboard.recent.allQuestions')">{{ t('dashboard.recent.allQuestionsShort') }}</RouterLink>
             </nav>
           </div>
           <ul v-if="summary.data.value.recent.length" class="dashboard-items">
             <li v-for="item in summary.data.value.recent" :key="`${item.game_type}-${item.id}`">
               <RouterLink
                 class="dashboard-item"
-                :to="{ name: item.game_type === 'word' ? 'word-prompt-edit' : 'question-prompt-edit', params: { id: item.id } }"
+                :to="{ name: item.game_type === 'word' ? 'word-prompt-edit' : 'question-prompt-edit', params: { id: item.id }, query: { locale: item.locale } }"
                 :aria-label="t('dashboard.editItem', { title: item.title })"
               >
                 <span class="dashboard-item__title">{{ item.title }}</span>
@@ -87,15 +104,15 @@ function retry() { return summary.refetch() }
               <h2 id="dashboard-drafts-heading">{{ t('dashboard.drafts.title') }}</h2>
             </div>
             <nav class="dashboard-panel__actions" :aria-label="t('dashboard.drafts.title')">
-              <RouterLink class="dashboard-view-all" :to="{ name: 'word-prompts', query: { status: 'draft' } }" :aria-label="t('dashboard.drafts.allWords')">{{ t('dashboard.statuses.draft') }} · {{ t('dashboard.warnings.wordPrompts') }}</RouterLink>
-              <RouterLink class="dashboard-view-all" :to="{ name: 'question-prompts', query: { status: 'draft' } }" :aria-label="t('dashboard.drafts.allQuestions')">{{ t('dashboard.statuses.draft') }} · {{ t('dashboard.warnings.questionPrompts') }}</RouterLink>
+              <RouterLink class="dashboard-view-all" :to="{ name: 'word-prompts', query: { locale: contentLocale, status: 'draft' } }" :aria-label="t('dashboard.drafts.allWords')">{{ t('dashboard.statuses.draft') }} · {{ t('dashboard.warnings.wordPrompts') }}</RouterLink>
+              <RouterLink class="dashboard-view-all" :to="{ name: 'question-prompts', query: { locale: contentLocale, status: 'draft' } }" :aria-label="t('dashboard.drafts.allQuestions')">{{ t('dashboard.statuses.draft') }} · {{ t('dashboard.warnings.questionPrompts') }}</RouterLink>
             </nav>
           </div>
           <ul v-if="summary.data.value.drafts.length" class="dashboard-items">
             <li v-for="item in summary.data.value.drafts" :key="`${item.game_type}-${item.id}`">
               <RouterLink
                 class="dashboard-item"
-                :to="{ name: item.game_type === 'word' ? 'word-prompt-edit' : 'question-prompt-edit', params: { id: item.id } }"
+                :to="{ name: item.game_type === 'word' ? 'word-prompt-edit' : 'question-prompt-edit', params: { id: item.id }, query: { locale: item.locale } }"
                 :aria-label="t('dashboard.editItem', { title: item.title })"
               >
                 <span class="dashboard-item__title">{{ item.title }}</span>
@@ -115,16 +132,16 @@ function retry() { return summary.refetch() }
         <h2 id="dashboard-warnings-heading">{{ t('dashboard.warnings.title') }}</h2>
         <ul v-if="hasWarnings" class="dashboard-warning-list">
           <li>
-            <RouterLink :to="{ name: 'categories' }">{{ t('dashboard.warnings.emptyCategories', { count: summary.data.value.warnings.empty_categories }) }}</RouterLink>
+            <RouterLink :to="{ name: 'categories', query: { locale: contentLocale } }">{{ t('dashboard.warnings.emptyCategories', { count: summary.data.value.warnings.empty_categories }) }}</RouterLink>
           </li>
           <li>
-            <RouterLink :to="{ name: 'question-prompts' }">{{ t('dashboard.warnings.duplicateQuestions', { count: summary.data.value.warnings.duplicate_questions }) }}</RouterLink>
+            <RouterLink :to="{ name: 'question-prompts', query: { locale: contentLocale } }">{{ t('dashboard.warnings.duplicateQuestions', { count: summary.data.value.warnings.duplicate_questions }) }}</RouterLink>
           </li>
           <li>
             <span>{{ t('dashboard.warnings.nonFamilyEasyPrompts', { count: summary.data.value.warnings.non_family_easy_prompts }) }}</span>
             <span class="dashboard-warning-links">
-              <RouterLink :to="{ name: 'word-prompts', query: { difficulty: 'easy', family: 'false' } }">{{ t('dashboard.warnings.wordPrompts') }}</RouterLink>
-              <RouterLink :to="{ name: 'question-prompts', query: { difficulty: 'easy', family: 'false' } }">{{ t('dashboard.warnings.questionPrompts') }}</RouterLink>
+              <RouterLink :to="{ name: 'word-prompts', query: { locale: contentLocale, difficulty: 'easy', family: 'false' } }">{{ t('dashboard.warnings.wordPrompts') }}</RouterLink>
+              <RouterLink :to="{ name: 'question-prompts', query: { locale: contentLocale, difficulty: 'easy', family: 'false' } }">{{ t('dashboard.warnings.questionPrompts') }}</RouterLink>
             </span>
           </li>
         </ul>
