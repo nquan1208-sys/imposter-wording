@@ -7,4 +7,6 @@ class RouteInput {
   RouteInput({required this.routeName, this.arguments});
 
   RouteInput.howToPlay() : routeName = RouteName.howToPlay;
+  RouteInput.setup() : routeName = RouteName.setup;
+  RouteInput.categories() : routeName = RouteName.categories;
 }

@@ -15,5 +15,56 @@
   "stepFindBody": "Cả nhóm thảo luận rồi bỏ phiếu cho người có vẻ không biết từ bí mật. Nếu nhóm bỏ phiếu sai, kẻ mạo danh thắng.",
   "proTipTitle": "Mẹo chuyên nghiệp",
   "proTipBody": "Kẻ mạo danh nên lắng nghe cẩn thận, hòa nhập và đưa ra gợi ý phù hợp với danh mục.",
-  "notFound": "Không tìm thấy trang"
+  "notFound": "Không tìm thấy trang",
+  "setupTitle": "Thiết lập trò chơi",
+  "players": "Người chơi",
+  "imposters": "Kẻ mạo danh",
+  "wordGame": "Trò chơi từ ngữ",
+  "gameMode": "Chế độ trò chơi",
+  "classicMode": "Cổ điển",
+  "familyMode": "Gia đình",
+  "categories": "Danh mục",
+  "allCategories": "Tất cả danh mục",
+  "confirm": "Xác nhận",
+  "cancel": "Hủy",
+  "retry": "Thử lại",
+  "loadingContent": "Đang tải nội dung tiếng Việt…",
+  "emptyContent": "Chưa có từ phù hợp trong chế độ này.",
+  "contentError": "Không thể tải nội dung mới. Vui lòng thử lại.",
+  "cachedContent": "Đang dùng nội dung đã lưu.",
+  "cacheWarning": "Nội dung vẫn dùng được nhưng không thể đọc hoặc lưu bộ nhớ ngoại tuyến.",
+  "selectionRemoved": "Đã bỏ danh mục không còn phù hợp. Nếu không còn lựa chọn, tất cả danh mục sẽ được dùng.",
+  "settingsLoading": "Đang khôi phục thiết lập…",
+  "settingsReadError": "Không thể đọc thiết lập đã lưu. Thử lại hoặc đặt lại để tiếp tục.",
+  "settingsWriteError": "Không thể lưu thiết lập. Các thay đổi vẫn được giữ trên màn hình.",
+  "resetSetup": "Đặt lại thiết lập",
+  "resetSetupConfirm": "Thay thiết lập không đọc được bằng thiết lập mặc định?",
+  "startGame": "Bắt đầu ván chơi",
+  "gameComingSoon": "Chơi game sẽ có ở giai đoạn 3. Bạn có thể lưu thiết lập ngay bây giờ.",
+  "decreasePlayers": "Giảm số người",
+  "increasePlayers": "Tăng số người",
+  "wordCount": "{count} từ phù hợp",
+  "@wordCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedCategoryCount": "Đã chọn {count} danh mục",
+  "@selectedCategoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerCount": "{count} người chơi",
+  "@playerCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

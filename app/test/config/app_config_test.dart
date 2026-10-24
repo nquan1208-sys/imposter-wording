@@ -51,6 +51,22 @@ void main() {
     expect((await AppConfig.load()).environment, 'local');
   });
 
+  test('HTTP is restricted to local development', () async {
+    final http = valid.replaceFirst(
+      'https://example.supabase.co',
+      'http://127.0.0.1:54321',
+    );
+    files['env/.env.local'] = http;
+    expect((await AppConfig.load()).supabaseUrl, 'http://127.0.0.1:54321');
+    for (final environment in ['dev', 'prod']) {
+      files['env/.env.$environment'] = http;
+      await expectLater(
+        AppConfig.load(environment: environment),
+        throwsStateError,
+      );
+    }
+  });
+
   test('rejects an unknown environment', () async {
     await expectLater(
       AppConfig.load(environment: '../prod'),

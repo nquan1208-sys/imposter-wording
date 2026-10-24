@@ -67,13 +67,9 @@ class LandingScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              // Setup flow ships in phase 2; keep the entry visible but disabled.
-              FilledButton(onPressed: null, child: Text(l10n.start)),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                l10n.startUnavailable,
-                style: textTheme.bodyMedium?.copyWith(color: AppColors.gray),
-                textAlign: TextAlign.center,
+              FilledButton(
+                onPressed: () => routerService.push(RouteInput.setup()),
+                child: Text(l10n.start),
               ),
               const SizedBox(height: AppSpacing.md),
               OutlinedButton(

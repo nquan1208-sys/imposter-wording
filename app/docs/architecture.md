@@ -14,6 +14,8 @@ Flutter mobile app with Signals state management, Riverpod DI, and a feature-bas
 | JSON serialization | json_serializable / json_annotation | ^6.8.0 / ^4.9.0 |
 | Asset code gen | flutter_gen | ^5.7.0 |
 | Localization | flutter_localizations + intl | ^0.20.0 |
+| Backend content | supabase_flutter | 2.18.3 (pinned) |
+| Local file location | path_provider | 2.1.6 (pinned) |
 
 ---
 
@@ -28,9 +30,12 @@ lib/
     store/                # StoreBase, createAutoDisposeStore, AutoDisposeManager, StoreProvider
   config/                 # Environment config (AppConfig)
   constants/              # AppSpacing, AppEdgeInsets, ...
+  data/                   # Supabase content, scoped atomic JSON files, global DI
+  models/                 # ContentSnapshot, categories/prompts, GameSetup/players
   features/               # One folder per feature
     landing/              # Start screen (initial route)
     how_to_play/          # Rules screen
+    setup/                # Setup store, setup/category screens and content notices
     unknown/              # Fallback for unknown routes
   l10n/
     arb/                  # app_en.arb (template), app_vi.arb
@@ -69,6 +74,8 @@ Riverpod is the DI container. State lives in signals on stores, not in Riverpod 
 - `AppProvider` — raw providers for router and i18n
 - `AppService` — derived providers that compose `AppProvider` dependencies
 - `StoreProvider` — store providers; feature stores use `createAutoDisposeStore`
+- `data/game_providers.dart` — app-lifetime content repository and setup store,
+  watched at startup; share pending loads and committed settings across routes
 
 ---
 
