@@ -1,3 +1,4 @@
+import 'package:untitled/features/word_game/word_game_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -11,10 +12,34 @@ import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 import 'package:untitled/theme/app_colors.dart';
 
-class SetupScreen extends ConsumerWidget {
+class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SetupScreen> createState() => _SetupScreenState();
+}
+
+class _SetupScreenState extends ConsumerState<SetupScreen> {
+  bool _openingGame = false;
+
+  Future<void> _start(SetupStore store) async {
+    if (_openingGame) return;
+    final session = WordGameSession.create(store);
+    if (session == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).gameStartError)),
+      );
+      return;
+    }
+    setState(() => _openingGame = true);
+    try {
+      await ref.read(AppService.router).push(RouteInput.wordGame(session));
+    } finally {
+      if (mounted) setState(() => _openingGame = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final store = ref.watch(setupStoreProvider);
     final content = store.content;
     final l = AppLocalizations.of(context);
@@ -42,7 +67,9 @@ class SetupScreen extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: null,
+                      onPressed: store.editable && count > 0 && !_openingGame
+                          ? () => _start(store)
+                          : null,
                       child: Text(l.startGame),
                     ),
                   ),
@@ -205,7 +232,6 @@ class SetupScreen extends ConsumerWidget {
                     if (count == 0) Text(l.emptyContent),
                   ],
                   const SizedBox(height: AppSpacing.md),
-                  Text(l.gameComingSoon, style: textTheme.bodySmall),
                 ],
               ),
             ),

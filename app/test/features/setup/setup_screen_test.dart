@@ -90,7 +90,7 @@ void main() {
               find.widgetWithText(FilledButton, 'Bắt đầu ván chơi'),
             )
             .onPressed,
-        null,
+        isNotNull,
       );
       await tap(tester, 'Danh mục');
       await tap(tester, 'Category b');

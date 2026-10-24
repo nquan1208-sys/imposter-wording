@@ -12,7 +12,7 @@
   "stepHintTitle": "Give hints",
   "stepHintBody": "Players take turns saying a word related to the secret word. Keep hints subtle so the word stays hidden.",
   "stepFindTitle": "Find the imposter",
-  "stepFindBody": "Discuss as a group, then vote for whoever seems not to know the word. If the group votes wrong, the imposter wins.",
+  "stepFindBody": "Discuss and vote aloud. Select the voted player and confirm: the group wins if the imposter is chosen; otherwise the imposter wins. Vote again if tied.",
   "proTipTitle": "Pro tip",
   "proTipBody": "Imposter: listen carefully, blend in, and give hints that fit the category.",
   "notFound": "Page not found",
@@ -40,7 +40,6 @@
   "resetSetup": "Reset setup",
   "resetSetupConfirm": "Replace the unreadable saved setup with defaults?",
   "startGame": "Start game",
-  "gameComingSoon": "Gameplay is coming in phase 3. You can save your setup now.",
   "decreasePlayers": "Fewer players",
   "increasePlayers": "More players",
   "wordCount": "{count, plural, =1{1 eligible word} other{{count} eligible words}}",
@@ -66,5 +65,55 @@
         "type": "int"
       }
     }
-  }
+  },
+  "wordFor": "Word for {name}",
+  "@wordFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "endGame": "End game",
+  "endGameConfirm": "End this game and return to setup? Progress in this game will be lost.",
+  "voteTitle": "Choose the voted player",
+  "voteHelp": "Vote aloud as a group, then select one player. If tied, vote again before confirming.",
+  "gameStartError": "Could not start a game. Return to setup and check eligible content.",
+  "discussionTitle": "Discussion and voting",
+  "gameResult": "Results",
+  "passPhone": "Pass the phone to each player to view their private card.",
+  "playerDone": "Viewed",
+  "youAreImposter": "You are the imposter",
+  "tapToReveal": "Tap to reveal",
+  "understood": "Got it!",
+  "startingPlayer": "{name} starts the round.",
+  "@startingPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "discussionHelp": "Go clockwise, each saying a word related to the secret word. Play more rounds if needed, then discuss and vote for one player. The group wins if the imposter is chosen; otherwise the imposter wins.",
+  "groupWins": "The group wins!",
+  "imposterWins": "The imposter wins!",
+  "actualImposter": "The imposter is: {name}",
+  "@actualImposter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "votedPlayer": "Voted player: {name}",
+  "@votedPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "secretWord": "Secret word",
+  "announceResult": "Announce results",
+  "playAgain": "Play again"
 }
