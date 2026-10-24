@@ -259,32 +259,38 @@ void main() {
     },
   );
 
-  testWidgets(
-    'small screen and large text keep setup, sheet and two-column picker usable',
-    (tester) async {
-      tester.view.physicalSize = const Size(320, 568);
-      tester.view.devicePixelRatio = 1;
-      tester.platformDispatcher.textScaleFactorTestValue = 2;
-      addTearDown(tester.view.reset);
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      await pump(tester);
-      await tap(tester, 'Người chơi');
-      await tap(tester, 'Xác nhận');
-      await tap(tester, 'Danh mục');
-      await tap(tester, 'Category a');
-      await tap(tester, 'Xác nhận');
-      await tester.scrollUntilVisible(
-        find.text('Bắt đầu ván chơi'),
-        180,
-        scrollable: find.byType(Scrollable).last,
-      );
-      await tester.pumpAndSettle();
-      final buttonRect = tester.getRect(
-        find.widgetWithText(FilledButton, 'Bắt đầu ván chơi'),
-      );
-      expect(buttonRect.top, greaterThanOrEqualTo(0));
-      expect(buttonRect.bottom, lessThanOrEqualTo(568));
-      expect(tester.takeException(), null);
-    },
-  );
+  for (final size in [
+    const Size(320, 568),
+    const Size(844, 390),
+    const Size(1024, 768),
+  ]) {
+    testWidgets(
+      'large text keeps setup, sheet and adaptive picker usable at $size',
+      (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.view.reset);
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await pump(tester);
+        await tap(tester, 'Người chơi');
+        await tap(tester, 'Xác nhận');
+        await tap(tester, 'Danh mục');
+        await tap(tester, 'Category a');
+        await tap(tester, 'Xác nhận');
+        await tester.scrollUntilVisible(
+          find.text('Bắt đầu ván chơi'),
+          180,
+          scrollable: find.byType(Scrollable).last,
+        );
+        await tester.pumpAndSettle();
+        final buttonRect = tester.getRect(
+          find.widgetWithText(FilledButton, 'Bắt đầu ván chơi'),
+        );
+        expect(buttonRect.top, greaterThanOrEqualTo(0));
+        expect(buttonRect.bottom, lessThanOrEqualTo(size.height));
+        expect(tester.takeException(), null);
+      },
+    );
+  }
 }

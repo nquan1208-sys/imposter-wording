@@ -28,6 +28,7 @@ void main() {
       );
     }
     await tester.ensureVisible(target.last);
+    await tester.pumpAndSettle();
     await tester.tap(target.last);
     await tester.pumpAndSettle();
   }
@@ -105,6 +106,16 @@ void main() {
       }
       await tap(tester, english ? 'Got it!' : 'Hiểu rồi!');
       if (p != session.setup.players.last) {
+        await tester.scrollUntilVisible(
+          find.byKey(ValueKey(p.id)),
+          160,
+          scrollable: find
+              .descendant(
+                of: find.byType(CustomScrollView),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
         expect(
           tester.widget<TextButton>(find.byKey(ValueKey(p.id))).onPressed,
           null,
@@ -279,21 +290,27 @@ void main() {
     expect(tester.takeException(), null);
   });
 
-  testWidgets('small screen large text keeps voting and results accessible', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(320, 568);
-    tester.view.devicePixelRatio = 1;
-    tester.platformDispatcher.textScaleFactorTestValue = 2;
-    addTearDown(tester.view.reset);
-    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-    await pump(tester, english: true);
-    await finish(tester, english: true);
-    await tap(tester, 'Announce results');
-    await tap(tester, session.setup.players.first.name);
-    await tap(tester, 'Confirm');
-    expect(find.text('Results'), findsOneWidget);
-    expect(find.text('Play again'), findsOneWidget);
-    expect(tester.takeException(), null);
-  });
+  for (final size in [
+    const Size(320, 568),
+    const Size(844, 390),
+    const Size(1024, 768),
+  ]) {
+    testWidgets('large text keeps voting and results accessible at $size', (
+      tester,
+    ) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await pump(tester, english: true);
+      await finish(tester, english: true);
+      await tap(tester, 'Announce results');
+      await tap(tester, session.setup.players.first.name);
+      await tap(tester, 'Confirm');
+      expect(find.text('Results'), findsOneWidget);
+      expect(find.text('Play again'), findsOneWidget);
+      expect(tester.takeException(), null);
+    });
+  }
 }

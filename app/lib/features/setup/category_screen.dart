@@ -1,4 +1,6 @@
+import 'package:untitled/widgets/app_content.dart';
 import 'package:flutter/material.dart';
+import 'package:untitled/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
@@ -34,7 +36,23 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
         final valid = selected.intersection(available);
         return Scaffold(
           appBar: AppBar(title: Text(l.categories)),
-          body: SafeArea(
+          bottomNavigationBar: AppContent(
+            top: false,
+            child: Padding(
+              padding: AppEdgeInsets.all24,
+              child: FilledButton(
+                onPressed:
+                    store.editable && store.content.snapshot.value != null
+                    ? () {
+                        store.setCategories(selected);
+                        Navigator.pop(context);
+                      }
+                    : null,
+                child: Text(l.confirm),
+              ),
+            ),
+          ),
+          body: AppContent(
             child: ListView(
               padding: AppEdgeInsets.all24,
               children: [
@@ -54,7 +72,12 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                     children: [
                       for (final entry in counts.entries)
                         SizedBox(
-                          width: (constraints.maxWidth - AppSpacing.md) / 2,
+                          width:
+                              constraints.maxWidth < 360 ||
+                                  MediaQuery.textScalerOf(context).scale(16) >
+                                      24
+                              ? constraints.maxWidth
+                              : (constraints.maxWidth - AppSpacing.md) / 2,
                           child: Semantics(
                             selected: valid.contains(entry.key.id),
                             child: OutlinedButton(
@@ -63,7 +86,13 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                     ? Theme.of(
                                         context,
                                       ).colorScheme.primaryContainer
-                                    : null,
+                                    : AppColors.white,
+                                side: BorderSide(
+                                  color: valid.contains(entry.key.id)
+                                      ? AppColors.charcoal
+                                      : AppColors.border,
+                                  width: valid.contains(entry.key.id) ? 2 : 1,
+                                ),
                               ),
                               onPressed: () => setState(() {
                                 selected = Set.of(valid);
@@ -77,12 +106,23 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                 ),
                                 child: Column(
                                   children: [
+                                    Icon(
+                                      valid.contains(entry.key.id)
+                                          ? Icons.check_circle_outline
+                                          : Icons.category_outlined,
+                                      color: AppColors.charcoal,
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
                                     Text(
                                       entry.key.name,
                                       textAlign: TextAlign.center,
                                     ),
                                     Text(
                                       l.wordCount(entry.value),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(color: AppColors.gray),
                                       textAlign: TextAlign.center,
                                     ),
                                   ],
@@ -95,16 +135,6 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                FilledButton(
-                  onPressed:
-                      store.editable && store.content.snapshot.value != null
-                      ? () {
-                          store.setCategories(selected);
-                          Navigator.pop(context);
-                        }
-                      : null,
-                  child: Text(l.confirm),
-                ),
               ],
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:untitled/widgets/app_content.dart';
 import 'package:untitled/features/word_game/word_game_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,15 +50,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         final count = content
             .eligibleWords(family: setup.family, categoryIds: setup.categoryIds)
             .length;
-        const background = Color(0xFFFCF9F8);
         final textTheme = Theme.of(context).textTheme;
         return Scaffold(
-          backgroundColor: background,
-          appBar: AppBar(
-            title: Text(l.setupTitle),
-            backgroundColor: background,
-          ),
-          bottomNavigationBar: SafeArea(
+          appBar: AppBar(title: Text(l.setupTitle)),
+          bottomNavigationBar: AppContent(
             top: false,
             child: Padding(
               padding: AppEdgeInsets.all24,
@@ -77,7 +73,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               ),
             ),
           ),
-          body: SafeArea(
+          body: AppContent(
             child: SingleChildScrollView(
               padding: AppEdgeInsets.all24,
               child: Column(
@@ -156,7 +152,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     constraints: const BoxConstraints(minHeight: 80),
                     padding: AppEdgeInsets.all16,
                     decoration: BoxDecoration(
-                      color: AppColors.yellow.withValues(alpha: 0.1),
+                      color: AppColors.yellow,
                       border: Border.all(color: AppColors.yellow, width: 2),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -164,7 +160,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       children: [
                         const Icon(
                           Icons.font_download_outlined,
-                          color: AppColors.amber,
+                          color: AppColors.charcoal,
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(l.wordGame, style: textTheme.labelLarge),
@@ -174,6 +170,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   const SizedBox(height: AppSpacing.md),
                   Wrap(
                     spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
                     children: [
                       ChoiceChip(
                         label: Text(l.classicMode),
@@ -205,7 +202,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         backgroundColor: AppColors.tealSurface,
                         child: Icon(
                           Icons.category_outlined,
-                          color: Color(0xFF006F4D),
+                          color: AppColors.teal,
                         ),
                       ),
                       title: Text(
@@ -271,6 +268,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(value, style: Theme.of(context).textTheme.headlineLarge),
+              Icon(onTap != null ? Icons.tune : Icons.person_outline, size: 20),
             ],
           ),
         ),
@@ -284,7 +282,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => SafeArea(
+      builder: (context) => AppContent(
         child: StatefulBuilder(
           builder: (context, setState) => SingleChildScrollView(
             padding: AppEdgeInsets.all24,
@@ -292,7 +290,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(l.players, style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: AppSpacing.xl),
                 Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
@@ -313,6 +314,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.xl),
                 FilledButton(
                   onPressed: () {
                     store.setPlayerCount(count);

@@ -19,18 +19,29 @@ class AppTheme {
       fontWeight: FontWeight.w600,
       height: 1.5,
     ),
+    headlineMedium: TextStyle(
+      fontSize: 28,
+      fontWeight: FontWeight.w600,
+      height: 1.4,
+    ),
+    titleMedium: TextStyle(
+      fontSize: 17,
+      fontWeight: FontWeight.w500,
+      height: 1.4,
+    ),
+    bodySmall: TextStyle(fontSize: 15, height: 1.5),
     titleLarge: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.w600,
-      height: 1.25,
+      height: 1.4,
     ),
     bodyLarge: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.w400,
-      height: 1.25,
+      height: 1.4,
     ),
     bodyMedium: TextStyle(
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: FontWeight.w400,
       height: 1.5,
     ),
@@ -46,23 +57,29 @@ class AppTheme {
     colorScheme: const ColorScheme.light(
       primary: AppColors.yellow,
       onPrimary: AppColors.charcoal,
-      secondary: AppColors.coral,
+      primaryContainer: AppColors.yellow,
+      onPrimaryContainer: AppColors.charcoal,
+      secondary: AppColors.teal,
+      secondaryContainer: AppColors.tealSurface,
+      onSecondaryContainer: AppColors.teal,
       onSecondary: AppColors.white,
       surface: AppColors.white,
       onSurface: AppColors.charcoal,
       onSurfaceVariant: AppColors.gray,
-      error: AppColors.coral,
+      error: AppColors.error,
+      onError: AppColors.white,
+      outlineVariant: AppColors.border,
       outline: AppColors.charcoal,
     ),
-    scaffoldBackgroundColor: AppColors.white,
+    scaffoldBackgroundColor: AppColors.background,
     textTheme: _textTheme.apply(
       bodyColor: AppColors.charcoal,
       displayColor: AppColors.charcoal,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.background,
       foregroundColor: AppColors.charcoal,
-      centerTitle: true,
+      centerTitle: false,
       elevation: 0,
       scrolledUnderElevation: 0,
     ),
@@ -100,11 +117,62 @@ class AppTheme {
       color: AppColors.white,
       surfaceTintColor: Colors.transparent,
       shadowColor: AppColors.shadow,
-      elevation: 3,
+      elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
+        side: BorderSide(color: AppColors.border),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.charcoal,
+        disabledForegroundColor: AppColors.gray,
+        minimumSize: const Size(48, 48),
+        shape: _buttonShape,
+        textStyle: _textTheme.labelLarge,
+      ),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        foregroundColor: AppColors.charcoal,
+        minimumSize: const Size(48, 48),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: AppColors.white,
+      selectedColor: AppColors.yellow,
+      checkmarkColor: AppColors.charcoal,
+      labelStyle: _textTheme.bodyMedium,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      side: const BorderSide(color: AppColors.border),
+      shape: _buttonShape,
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: AppColors.white,
+      surfaceTintColor: Colors.transparent,
+      showDragHandle: true,
+      modalBarrierColor: Color(0x99202020),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+    ),
+    dialogTheme: const DialogThemeData(
+      backgroundColor: AppColors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+      ),
+    ),
+    listTileTheme: const ListTileThemeData(
+      selectedColor: AppColors.charcoal,
+      selectedTileColor: AppColors.tealSurface,
+      iconColor: AppColors.teal,
+      minVerticalPadding: 16,
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: AppColors.teal,
+      linearTrackColor: AppColors.tealBorder,
     ),
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
@@ -114,6 +182,6 @@ class AppTheme {
     ),
   );
 
-  // ponytail: no dark design yet, dark mirrors light until a dark palette exists
+  // shortcut: the supplied design is light-only; add dark tokens with a dark design.
   static final dark = light;
 }

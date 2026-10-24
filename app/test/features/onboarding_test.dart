@@ -33,6 +33,37 @@ Future<ProviderContainer> pumpApp(WidgetTester tester) async {
 }
 
 void main() {
+  for (final size in [
+    const Size(375, 812),
+    const Size(812, 375),
+    const Size(1024, 1366),
+  ]) {
+    testWidgets('onboarding remains operable at $size with reduced motion', (
+      tester,
+    ) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(tester.view.reset);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      await pumpApp(tester);
+      final start = find.widgetWithText(FilledButton, 'Bắt đầu');
+      expect(tester.getSize(start).width, lessThanOrEqualTo(592));
+      expect(start.hitTestable(), findsOneWidget);
+      await tester.tap(find.text('Cách chơi'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('proTipCard')),
+        200,
+        scrollable: find.byType(Scrollable),
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('cold start opens Vietnamese landing with start enabled', (
     tester,
   ) async {
