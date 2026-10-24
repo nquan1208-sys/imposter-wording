@@ -30,7 +30,8 @@ class FeatureStore extends StoreBase {
 }
 ```
 
-Mutations are public methods on the store. No `setState`, `notifyListeners` or `emit`.
+Committed mutations are public methods on the store. Route-local drafts (the
+category picker and player-count sheet) use `setState` and commit only on Confirm.
 
 ---
 
@@ -49,6 +50,12 @@ SignalBuilder(builder: (context) => Text('${store.count.value}'));
 
 - Feature stores: `static late Provider<FeatureStore> feature;` on `StoreProvider`, assigned with `createAutoDisposeStore` in the route builder, disposed when the route's scope is released.
 - Global store: `StoreProvider.app` (`AppStore`) is `static final` and lives for the app. It owns `locale` (default `vi`, `setLocale`). Persisting the locale is planned for phase 11.
+- `contentRepositoryProvider` and `setupStoreProvider` in `data/game_providers.dart`
+  are app-lifetime providers. The repository owns content/loading/cache signals;
+  the setup store owns committed setup and persistence errors. Its managed effect
+  revalidates selected IDs when content changes or settings restoration finishes.
+  Settings read errors block mutations until retry or confirmed reset. Writes are
+  serialized and preserve the visible setup on failure.
 
 ---
 

@@ -3,9 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled/base/store/store_provider.dart';
 import 'package:untitled/main.dart';
+import 'package:untitled/data/game_providers.dart';
+import 'package:untitled/data/content_repository.dart';
+import 'package:untitled/features/setup/setup_store.dart';
+import '../data/fixtures.dart';
 
 Future<ProviderContainer> pumpApp(WidgetTester tester) async {
-  final container = ProviderContainer();
+  final content = ContentRepository(
+    cache: MemoryFile(),
+    fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
+  );
+  final store = SetupStore(content: content, file: MemoryFile());
+  await content.load();
+  await store.restore();
+  addTearDown(store.dispose);
+  addTearDown(content.dispose);
+  final container = ProviderContainer(
+    overrides: [
+      contentRepositoryProvider.overrideWithValue(content),
+      setupStoreProvider.overrideWithValue(store),
+    ],
+  );
   addTearDown(container.dispose);
   await tester.pumpWidget(
     UncontrolledProviderScope(container: container, child: const MyApp()),
@@ -15,7 +33,7 @@ Future<ProviderContainer> pumpApp(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('cold start opens Vietnamese landing with start disabled', (
+  testWidgets('cold start opens Vietnamese landing with start enabled', (
     tester,
   ) async {
     await pumpApp(tester);
@@ -25,7 +43,8 @@ void main() {
     final start = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Bắt đầu'),
     );
-    expect(start.onPressed, isNull);
+    expect(start.onPressed, isNotNull);
+    expect(find.text('Sắp ra mắt'), findsNothing);
   });
 
   testWidgets('how to play scrolls and UI back returns to landing', (
@@ -79,9 +98,19 @@ void main() {
     await tester.tap(find.text('Cách chơi'));
     await tester.pumpAndSettle();
     expect(find.text('Thiết lập trò chơi'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Mẹo chuyên nghiệp'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Mẹo chuyên nghiệp').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('setLocale switches strings to English', (tester) async {
+  testWidgets('English onboarding scrolls and back returns to landing', (
+    tester,
+  ) async {
     final container = await pumpApp(tester);
 
     container.read(StoreProvider.app).setLocale(const Locale('en'));
@@ -89,5 +118,31 @@ void main() {
 
     expect(find.text('Imposter'), findsOneWidget);
     expect(find.text('How to play'), findsOneWidget);
+    expect(find.text('Coming soon'), findsNothing);
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Start'))
+          .onPressed,
+      isNotNull,
+    );
+
+    await tester.tap(find.text('How to play'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Set up the game'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Pro tip'),
+      200,
+      scrollable: find.byType(Scrollable),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Pro tip').hitTestable(), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Word game'), findsOneWidget);
+    expect(find.text('Set up the game'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 }

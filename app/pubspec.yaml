@@ -46,6 +46,8 @@ dependencies:
   riverpod: ^3.2.1
   flutter_svg: ^2.0.14
   flutter_dotenv: ^6.0.1
+  supabase_flutter: 2.18.3
+  path_provider: 2.1.6
 dev_dependencies:
   analyzer: ^10.2.0
   flutter_test:
@@ -62,6 +64,8 @@ dev_dependencies:
   change_app_package_name: ^1.4.0
   freezed: ^3.2.5
   flutter_gen: ^5.7.0
+  integration_test:
+    sdk: flutter
 dependency_overrides:
   meta: ^1.15.0
 

@@ -15,5 +15,55 @@
   "stepFindBody": "Discuss as a group, then vote for whoever seems not to know the word. If the group votes wrong, the imposter wins.",
   "proTipTitle": "Pro tip",
   "proTipBody": "Imposter: listen carefully, blend in, and give hints that fit the category.",
-  "notFound": "Page not found"
+  "notFound": "Page not found",
+  "setupTitle": "Game setup",
+  "players": "Players",
+  "imposters": "Imposters: 1",
+  "wordGame": "Game: Word",
+  "classicMode": "Classic",
+  "familyMode": "Family",
+  "categories": "Categories",
+  "allCategories": "All categories",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "retry": "Retry",
+  "loadingContent": "Loading Vietnamese content…",
+  "emptyContent": "No eligible words in this mode.",
+  "contentError": "Content could not be refreshed. Please retry.",
+  "cachedContent": "Using saved content.",
+  "cacheWarning": "Content is available, but the offline cache could not be read or saved.",
+  "selectionRemoved": "Unavailable categories were removed. An empty selection means All categories.",
+  "settingsLoading": "Restoring setup…",
+  "settingsReadError": "Saved setup could not be read. Retry or reset to continue.",
+  "settingsWriteError": "Setup could not be saved. Your changes are still here.",
+  "resetSetup": "Reset setup",
+  "resetSetupConfirm": "Replace the unreadable saved setup with defaults?",
+  "startGame": "Start game",
+  "gameComingSoon": "Gameplay is coming in phase 3. You can save your setup now.",
+  "decreasePlayers": "Fewer players",
+  "increasePlayers": "More players",
+  "wordCount": "{count, plural, =1{1 eligible word} other{{count} eligible words}}",
+  "@wordCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedCategoryCount": "{count, plural, =1{1 selected category} other{{count} selected categories}}",
+  "@selectedCategoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerCount": "{count} players",
+  "@playerCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/base/store/store_provider.dart';
 import 'package:untitled/config/app_config.dart';
 import 'package:untitled/base/dependency/app_service.dart';
@@ -14,6 +16,15 @@ import 'package:untitled/theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   AppConfig.current = await AppConfig.load();
+  await Supabase.initialize(
+    url: AppConfig.current.supabaseUrl,
+    publishableKey: AppConfig.current.supabasePublishableKey,
+    authOptions: const FlutterAuthClientOptions(
+      autoRefreshToken: false,
+      detectSessionInUri: false,
+      localStorage: EmptyLocalStorage(),
+    ),
+  );
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -25,6 +36,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, ref) {
     final routerService = ref.watch(AppService.router);
     final appStore = ref.watch(StoreProvider.app);
+    ref.watch(setupStoreProvider);
     return SignalBuilder(
       builder: (context) => MaterialApp(
         debugShowCheckedModeBanner: false,
