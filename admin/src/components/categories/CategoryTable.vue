@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import ContentStatusBadge from '../admin/ContentStatusBadge.vue'
 import type { CategoryRow, ContentLanguage } from '../../types/admin.ts'
 import { useI18n } from 'vue-i18n'
-const { t, locale } = useI18n({ useScope: 'global' })
+const { t, n, locale } = useI18n({ useScope: 'global' })
 import { computed } from 'vue'
 import { gameTypeLabels } from '../../utils/categories.ts'
 defineProps<{ rows: CategoryRow[]; pending?: boolean; loading?: boolean; languages: ContentLanguage[] }>()
@@ -20,12 +21,12 @@ const columns = computed(() => [
 <template>
   <UTable :data="rows" :columns="columns" :loading="loading" :get-row-id="row => row.id" :caption="t('categories.table.caption')" :empty="t('categories.table.empty')" class="admin-table-scroll" :ui="{ base: 'admin-table category-table', tbody: 'tw:divide-y-0' }">
     <template #name-cell="{ row }">
-      <UButton color="neutral" variant="link" :title="row.original.name ?? undefined" :disabled="pending" class="category-name" @click="$emit('edit', row.original)">{{ row.original.name || t('categories.translations.missing') }}</UButton>
+      <UButton color="neutral" variant="link" :title="row.original.name ?? undefined" :disabled="pending" class="category-name" @click="$emit('edit', row.original)">{{ row.original.name || t('common.statuses.missing') }}</UButton>
       <small class="category-slug" :title="row.original.slug">{{ row.original.slug }}</small>
     </template>
     <template #game_type-cell="{ row }">{{ t(gameTypeLabels[row.original.game_type]) }}</template>
-    <template #content-cell="{ row }">{{ row.original.word_count + row.original.question_count }}</template>
-    <template #translations-cell="{ row }"><div v-for="language in languages" :key="language.code"><UBadge color="neutral" variant="subtle">{{ language.code }}: {{ row.original.translations.some(item => item.locale === language.code) ? t(`categories.deleteDialog.${row.original.translations.find(item => item.locale === language.code)!.status}`) : t('categories.translations.missing') }}</UBadge></div></template>
+    <template #content-cell="{ row }">{{ n(row.original.word_count + row.original.question_count) }}</template>
+    <template #translations-cell="{ row }"><div class="translation-statuses"><ContentStatusBadge v-for="language in languages" :key="language.code" :locale="language.code" :status="row.original.translations.find(item => item.locale === language.code)?.status" /></div></template>
     <template #is_active-cell="{ row }"><UBadge :color="row.original.is_active ? 'success' : 'neutral'" variant="subtle">{{ row.original.is_active ? t('common.status.active') : t('common.status.inactive') }}</UBadge></template>
     <template #updated_at-cell="{ row }">{{ dateFormat.format(new Date(row.original.updated_at)) }}</template>
     <template #actions-cell="{ row }"><div class="category-actions">

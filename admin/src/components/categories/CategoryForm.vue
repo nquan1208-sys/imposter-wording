@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import type { CategoryForm, CategoryTranslation, ContentLanguage, PromptStatus } from '../../types/admin.ts'
+import type { CategoryForm, CategoryTranslation, ContentLanguage } from '../../types/admin.ts'
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 import { categorySchema, gameTypeLabels } from '../../utils/categories.ts'
 const { t } = useI18n({ useScope: 'global' })
 const props = defineProps<{ form: CategoryForm; languages: ContentLanguage[]; translations: CategoryTranslation[]; editing?: boolean; pending?: boolean; conflict?: boolean; error?: string }>()
-defineEmits<{ update: [key: keyof CategoryForm, value: string | number | boolean]; locale: [value: string]; submit: [status?: PromptStatus]; cancel: [] }>()
+defineEmits<{ update: [key: keyof CategoryForm, value: string | number | boolean]; locale: [value: string]; submit: []; cancel: [] }>()
 const schema = categorySchema()
 const gameTypes = computed(() => Object.entries(gameTypeLabels).map(([value, label]) => ({ value, label: t(label) })))
 const tabs = computed(() => props.languages.map(language => ({ label: language.display_name, value: language.code, disabled: props.pending })))
-const statuses = computed(() => (['draft', 'published', 'archived'] as const).map(value => ({ value, label: t(`categories.deleteDialog.${value}`) })))
+const statuses = computed(() => (['draft', 'published', 'archived'] as const).map(value => ({ value, label: t(`common.statuses.${value}`) })))
 </script>
 <template>
   <UCard class="category-form-card" :ui="{ root: 'tw:ring-0 tw:shadow-none', body: 'category-form-body' }">
@@ -26,7 +26,7 @@ const statuses = computed(() => (['draft', 'published', 'archived'] as const).ma
     </fieldset>
     <UTabs :model-value="form.locale" :items="tabs" :aria-label="t('common.fields.locale')" :ui="{ list: 'tw:flex-wrap', content: 'tw:space-y-4' }" @update:model-value="$emit('locale', String($event))">
       <template #content>
-        <p v-if="!translations.some(row => row.locale === form.locale)">{{ t('categories.translations.missing') }}</p>
+        <p v-if="!translations.some(row => row.locale === form.locale)">{{ t('common.statuses.missing') }}</p>
         <fieldset :disabled="pending" class="category-form-fields">
           <UFormField :label="t('categories.fields.name')" name="name" required><UInput :model-value="form.name" required class="tw:w-full" @update:model-value="$emit('update', 'name', $event)" /><template v-if="errors.some(issue => issue.name === 'name')" #error="{ error }">{{ typeof error === 'string' ? t(error) : '' }}</template></UFormField>
           <UFormField :label="t('categories.fields.description')" name="description"><UTextarea :rows="5" :model-value="form.description" class="tw:w-full" @update:model-value="$emit('update', 'description', $event)" /></UFormField>
@@ -36,9 +36,7 @@ const statuses = computed(() => (['draft', 'published', 'archived'] as const).ma
     </UTabs>
     <UAlert v-if="error" color="error" :description="error" role="alert" />
     <div class="category-actions">
-      <UButton type="submit" :loading="pending" :disabled="pending || conflict" :label="t('categories.actions.save')" />
-      <UButton type="button" :disabled="pending || conflict" :label="t('categories.actions.publish')" @click="$emit('submit', 'published')" />
-      <UButton type="button" color="neutral" variant="outline" :disabled="pending || conflict" :label="t('categories.actions.archive')" @click="$emit('submit', 'archived')" />
+      <UButton type="submit" :loading="pending" :disabled="pending || conflict" :label="t('common.actions.save')" />
       <UButton type="button" color="neutral" variant="outline" :disabled="pending" :label="t('common.actions.cancel')" @click="$emit('cancel')" />
     </div>
   </UForm>

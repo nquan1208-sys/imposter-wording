@@ -101,10 +101,10 @@ const mutation = useMutation({
   onError: cause => { if (categoryError(cause) === 'categories.errors.conflict') conflict.value = true },
   onSettled: () => { unsaved.busy = false },
 })
-function submit(status?: PromptStatus) {
+function submit() {
   if (unsaved.busy || reloading.value || conflict.value || mutation.isPending.value || (id.value && saved.value?.id !== id.value)) return
   if (saved.value?.is_active && !shared.is_active && !window.confirm(t('categories.confirmations.deactivate'))) return
-  const nextStatus = status ?? form.value.status
+  const nextStatus = form.value.status
   if (persisted.value.some(row => row.locale === selectedLocale.value && row.status === 'published') && nextStatus === 'archived' && !window.confirm(t('categories.confirmations.archive'))) return
   unsaved.busy = true; mutation.mutate({ ...form.value, status: nextStatus })
 }

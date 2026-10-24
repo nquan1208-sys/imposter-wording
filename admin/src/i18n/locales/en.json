@@ -1,52 +1,386 @@
 {
+  "common": {
+    "actions": {
+      "cancel": "Cancel",
+      "retry": "Retry",
+      "edit": "Edit",
+      "delete": "Delete",
+      "activate": "Enable",
+      "deactivate": "Disable",
+      "save": "Save",
+      "archive": "Archive"
+    },
+    "fields": {
+      "gameType": "Game type",
+      "locale": "Content language",
+      "status": "Status",
+      "uiLanguage": "Interface language"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Disabled"
+    },
+    "gameTypes": {
+      "word": "Word",
+      "question": "Question"
+    },
+    "errors": {
+      "operationFailed": "Unable to complete the action. Please try again.",
+      "forbidden": "You do not have permission to perform this action. Please sign in again.",
+      "sessionExpired": "Your session has expired."
+    },
+    "confirmations": {
+      "discardChanges": "You have unsaved changes. Discard them?"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived",
+      "missing": "No translation"
+    },
+    "pagination": {
+      "first": "First page",
+      "previous": "Previous page",
+      "next": "Next page",
+      "last": "Last page",
+      "page": "Page {page}"
+    }
+  },
+  "navigation": {
+    "accessibility": {
+      "closeMenu": "Close menu",
+      "openMenu": "Open menu",
+      "main": "Main navigation"
+    },
+    "contentManagement": "Content management",
+    "account": {
+      "fallback": "Administrator account",
+      "admin": "Admin"
+    }
+  },
   "auth": {
+    "login": {
+      "routeTitle": "Sign in",
+      "eyebrow": "Administration",
+      "title": "Welcome back",
+      "description": "Sign in to manage your game content.",
+      "email": "Email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Sign in",
+      "footer": "Only authorized administrators can access this area."
+    },
+    "logout": {
+      "pending": "Signing out…",
+      "submit": "Sign out"
+    },
     "errors": {
       "invalidEmail": "Please enter a valid email address.",
-      "passwordRequired": "Please enter your password."
+      "passwordRequired": "Please enter your password.",
+      "loginFailed": "Unable to sign in.",
+      "invalidCredentials": "Incorrect email or password.",
+      "emailNotConfirmed": "This email address has not been confirmed.",
+      "rateLimited": "Too many requests. Please try again later.",
+      "adminRequired": "This account does not have administrator access.",
+      "logoutFailed": "Unable to sign out. Please try again."
+    }
+  },
+  "dashboard": {
+    "title": "Overview",
+    "description": "Track content status and tasks that need attention.",
+    "loading": "Loading overview…",
+    "loadError": "Unable to load the overview. Please try again.",
+    "retry": "Retry",
+    "editItem": "Edit content: {title}",
+    "stats": {
+      "title": "Content statistics",
+      "publishedWordPrompts": "Published word prompts",
+      "publishedQuestionPrompts": "Published question prompts",
+      "activeCategories": "Active categories",
+      "drafts": "Draft content"
+    },
+    "recent": {
+      "title": "Recently updated content",
+      "allWords": "View all word prompts",
+      "allQuestions": "View all question prompts",
+      "allWordsShort": "All word prompts",
+      "allQuestionsShort": "All question prompts",
+      "empty": "No recently updated content."
+    },
+    "drafts": {
+      "title": "Drafts that need attention",
+      "allWords": "View word drafts",
+      "allQuestions": "View question drafts",
+      "empty": "No drafts need attention."
+    },
+    "warnings": {
+      "title": "Data quality warnings",
+      "empty": "No data quality warnings.",
+      "emptyCategories": "Categories without content: {count}",
+      "duplicateQuestions": "Identical civilian and imposter questions: {count}",
+      "nonFamilyEasyPrompts": "Easy prompts not marked as family friendly: {count}",
+      "wordPrompts": "Word prompts",
+      "questionPrompts": "Question prompts"
     }
   },
   "categories": {
+    "title": "Categories",
+    "description": "Manage categories for word and question games.",
+    "help": {
+      "overview": "Manage categories for word and question content.",
+      "slug": "Lowercase letters, numbers and hyphens.",
+      "immutableGameType": "The game type cannot be changed after creation.",
+      "shared": "Shared information affects every language. Saving updates only the selected translation."
+    },
     "actions": {
-      "publish": "Publish",
-      "archive": "Archive",
+      "create": "Add category",
+      "back": "Back to list",
       "reload": "Reload category"
     },
     "form": {
+      "editTitle": "Edit category",
       "shared": "Shared information"
     },
-    "help": {
-      "shared": "Shared information affects every language. Saving updates only the selected translation."
+    "fields": {
+      "name": "Category name",
+      "slug": "Slug",
+      "sortOrder": "Display order",
+      "description": "Description"
     },
-    "translations": {
-      "missing": "No translation"
+    "filters": {
+      "all": "All",
+      "search": "Search",
+      "searchPlaceholder": "Name or slug",
+      "sort": "Sort by",
+      "nameAscending": "Name A–Z",
+      "latestUpdated": "Recently updated"
+    },
+    "table": {
+      "content": "Content",
+      "updated": "Updated",
+      "actions": "Actions",
+      "caption": "Category list",
+      "empty": "No matching categories."
+    },
+    "status": {
+      "loading": "Loading categories",
+      "refreshing": "Refreshing the list…"
+    },
+    "pagination": {
+      "summary": "{count} categories · Page {page} / {pages}",
+      "label": "Category pagination"
     },
     "messages": {
+      "statusUpdated": "Status updated.",
+      "deleted": "Category deleted.",
       "saved": "Category translation saved."
     },
-    "errors": {
-      "conflict": "The category or linked content changed. Reload before confirming.",
-      "slugExists": "This slug already exists for this game type."
-    },
     "confirmations": {
+      "deactivate": "Disable this category? Its content will be retained.",
+      "deactivateNamed": "Disable category “{name}”? Its content will be retained.",
       "archive": "Archiving this category translation hides prompts in this language from players. Continue?"
     },
+    "errors": {
+      "nameRequired": "Please enter a category name.",
+      "invalidSlug": "The slug must contain lowercase letters, numbers and hyphens between words.",
+      "invalidSortOrder": "Display order must be a nonnegative integer no greater than 2147483647.",
+      "invalidGameType": "Invalid game type.",
+      "slugExists": "This slug already exists for this game type.",
+      "notFound": "The category does not exist or you do not have access.",
+      "invalidData": "Invalid data or linked content has changed. Please check and reload the statistics.",
+      "conflict": "The category or linked content changed. Reload before confirming."
+    },
     "deleteDialog": {
-      "originals": "Original prompts: {total} (word: {word}, question: {question})",
-      "translations": "Prompt translations by status",
+      "title": "Delete category",
+      "description": "Choose how to handle content before deleting the category.",
+      "loading": "Loading the latest statistics…",
+      "category": "Category: {name}",
+      "empty": "This category is empty. Permanently delete it?",
+      "linkedContent": "Handle {count} items in this category",
+      "transfer": "Move content and delete category",
+      "purge": "Delete category and all its content",
+      "target": "Move content to category",
+      "targetPlaceholder": "Choose a category",
+      "targetsLoading": "Loading destination categories…",
       "noTargets": "No active category of the same game type publishes every required language.",
-      "warning": "All original prompts and translations, including published content, will be permanently deleted. Image files are retained."
+      "irreversible": "This cannot be undone",
+      "warning": "All original prompts and translations, including published content, will be permanently deleted. Image files are retained.",
+      "confirm": "Permanently delete",
+      "refresh": "Reload statistics",
+      "transferDescription": "Keep all content and move it to the selected category. Only this category will be deleted.",
+      "purgeDescription": "Permanently delete the category and its content in every status.",
+      "confirmTransfer": "Move content and delete",
+      "confirmPurge": "Permanently delete everything",
+      "originals": "Original prompts: {total} (word: {word}, question: {question})",
+      "translations": "Prompt translations by status"
     }
   },
   "wordPrompts": {
-    "sharedWarning": "Changes to these fields affect every language.",
+    "title": "Word content",
+    "description": "Manage secret words for the word game.",
+    "actions": {
+      "create": "Create word prompt",
+      "reload": "Reload prompt",
+      "removeImage": "Remove image",
+      "retryImage": "Reload image"
+    },
+    "fields": {
+      "categoryId": "Category",
+      "difficulty": "Difficulty",
+      "isFamilyFriendly": "Family friendly",
+      "locale": "Content language",
+      "imagePath": "Image",
+      "status": "Status",
+      "updatedAt": "Updated",
+      "text": "Secret word"
+    },
+    "difficulties": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "errors": {
+      "categoryRequired": "Choose a suitable category.",
+      "localeRequired": "Enter a language.",
+      "invalidData": "Invalid data or the category is not eligible for publishing.",
+      "invalidImage": "The image must be a readable JPEG, PNG or WebP file no larger than 5 MiB.",
+      "conflict": "The prompt changed elsewhere. Reload before confirming.",
+      "notFound": "The prompt no longer exists.",
+      "textRequired": "Enter a secret word."
+    },
     "deleteDialog": {
-      "warning": "The original prompt and every translation, including published content, will be permanently deleted. Image files are retained."
-    }
+      "warning": "The original prompt and every translation, including published content, will be permanently deleted. Image files are retained.",
+      "description": "Review the content you are about to permanently delete.",
+      "irreversible": "This cannot be undone",
+      "confirm": "Permanently delete"
+    },
+    "confirmations": {
+      "save": "This prompt is published. Save changes and update the content shown to players?",
+      "archive": "Archiving this translation hides content in the selected language from players. Continue?"
+    },
+    "messages": {
+      "deleted": "Prompt permanently deleted. Image files are retained.",
+      "saved": "Prompt saved."
+    },
+    "preview": {
+      "title": "Preview",
+      "description": "Content shown to each role during the game.",
+      "civilian": "Civilian",
+      "imposter": "Imposter",
+      "role": "You are the imposter",
+      "categoryHint": "Category hint",
+      "selectCategory": "Choose a category to preview",
+      "enterText": "Enter a secret word to preview",
+      "simulationOnly": "Simulation only. Category hints are enabled or disabled when setting up a game."
+    },
+    "upload": {
+      "uploading": "Uploading image…",
+      "uploaded": "Image uploaded.",
+      "failed": "Unable to save the image or prompt."
+    },
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "inactive": "Disabled",
+    "search": "Search secret words",
+    "sort": "Sort by",
+    "actionsLabel": "Actions",
+    "loading": "Loading prompts…",
+    "loadingImage": "Loading image…",
+    "empty": "No matching prompts.",
+    "imageHelp": "JPEG, PNG or WebP; up to 5 MiB. Images are uploaded only when you save.",
+    "pagination": {
+      "summary": "{count} prompts · Page {page} / {pages}",
+      "label": "Word prompt pagination"
+    },
+    "form": {
+      "description": "Enter a secret word, choose a category and review what players will see.",
+      "content": "Content",
+      "classification": "Classification",
+      "textPlaceholder": "Example: Bread",
+      "chooseImage": "Choose an illustration",
+      "editTitle": "Edit word prompt"
+    },
+    "sharedWarning": "Changes to shared information affect every language."
   },
   "questionPrompts": {
-    "sharedWarning": "Changes to these fields affect every language.",
+    "title": "Question content",
+    "description": "Manage question pairs for civilians and imposters.",
+    "actions": {
+      "create": "Create question prompt",
+      "reload": "Reload prompt"
+    },
+    "fields": {
+      "categoryId": "Category",
+      "difficulty": "Difficulty",
+      "isFamilyFriendly": "Family friendly",
+      "locale": "Content language",
+      "status": "Status",
+      "updatedAt": "Updated",
+      "civilianQuestion": "Civilian question",
+      "imposterQuestion": "Imposter question"
+    },
+    "difficulties": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "errors": {
+      "categoryRequired": "Choose a suitable category.",
+      "localeRequired": "Enter a language.",
+      "invalidData": "Invalid data or the category is not eligible for publishing.",
+      "conflict": "The prompt changed elsewhere. Reload before confirming.",
+      "notFound": "The prompt no longer exists.",
+      "civilianRequired": "Please enter the civilian question.",
+      "imposterRequired": "Please enter the imposter question.",
+      "sameQuestions": "The two questions must be different."
+    },
     "deleteDialog": {
-      "warning": "The original prompt and every translation, including published content, will be permanently deleted."
-    }
+      "warning": "The original prompt and every translation, including published content, will be permanently deleted.",
+      "description": "Review the content you are about to permanently delete.",
+      "irreversible": "This cannot be undone",
+      "confirm": "Permanently delete"
+    },
+    "confirmations": {
+      "save": "This prompt is published. Save changes and update the content shown to players?",
+      "archive": "Archiving this translation hides content in the selected language from players. Continue?"
+    },
+    "messages": {
+      "deleted": "Prompt permanently deleted.",
+      "saved": "Prompt saved."
+    },
+    "preview": {
+      "title": "Preview",
+      "description": "Preview the question shown to each role.",
+      "civilian": "Civilian",
+      "imposter": "Imposter",
+      "selectCategory": "Choose a category to preview",
+      "enterQuestion": "Enter a question to preview"
+    },
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "inactive": "Disabled",
+    "search": "Search both questions",
+    "sort": "Sort by",
+    "actionsLabel": "Actions",
+    "loading": "Loading prompts…",
+    "empty": "No matching prompts.",
+    "pagination": {
+      "summary": "{count} prompts · Page {page} / {pages}",
+      "label": "Question prompt pagination"
+    },
+    "form": {
+      "description": "Enter two questions and classify the content.",
+      "content": "Content",
+      "classification": "Classification",
+      "editTitle": "Edit question prompt"
+    },
+    "sharedWarning": "Changes to shared information affect every language."
+  },
+  "placeholder": {
+    "eyebrow": "In development",
+    "title": "This page is in development",
+    "description": "Management features for this page will be available in a future release."
   }
 }

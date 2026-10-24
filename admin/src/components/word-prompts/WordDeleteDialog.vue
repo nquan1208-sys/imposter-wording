@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ContentStatusBadge from '../admin/ContentStatusBadge.vue'
 import type { WordRow, DeletePrompt } from '../../types/admin.ts'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -11,13 +12,13 @@ function submit() {
 }
 </script>
 <template>
-  <UModal :open="true" :title="t('wordPrompts.actions.delete')" :description="t('wordPrompts.deleteDialog.description')" :dismissible="!pending" :close="!pending" :ui="{ content: 'tw:max-w-xl' }" @update:open="open => !open && !pending && emit('close')">
+  <UModal :open="true" :title="t('common.actions.delete')" :description="t('wordPrompts.deleteDialog.description')" :dismissible="!pending" :close="!pending" :ui="{ content: 'tw:max-w-xl' }" @update:open="open => !open && !pending && emit('close')">
     <template #body>
       <div class="word-delete-body">
         <dl class="word-delete-summary">
           <div class="word-delete-content">
             <dt>{{ t('wordPrompts.fields.text') }}</dt>
-            <dd>{{ prompt.text || t('categories.translations.missing') }}</dd>
+            <dd>{{ prompt.text || t('common.statuses.missing') }}</dd>
           </div>
           <div>
             <dt>{{ t('wordPrompts.fields.categoryId') }}</dt>
@@ -25,7 +26,7 @@ function submit() {
           </div>
           <div>
             <dt>{{ t('wordPrompts.fields.status') }}</dt>
-            <dd><UBadge color="neutral" variant="subtle">{{ prompt.status ? t(`wordPrompts.statuses.${prompt.status}`) : t('categories.translations.missing') }}</UBadge></dd>
+            <dd><ContentStatusBadge :status="prompt.status" /></dd>
           </div>
         </dl>
         <UAlert icon="i-lucide-triangle-alert" color="error" variant="soft" :title="t('wordPrompts.deleteDialog.irreversible')" :description="t('wordPrompts.deleteDialog.warning')" />

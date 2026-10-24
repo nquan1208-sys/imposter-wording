@@ -10,6 +10,7 @@ import { confirmDiscard } from '../src/utils/unsavedChanges.ts'
 
 import vn from '../src/i18n/locales/vn.json'
 import en from '../src/i18n/locales/en.json'
+import { readUiLocale, persistUiLocale } from '../src/i18n/index.ts'
 function flatten(messages: object, prefix = ''): Record<string, string> {
   return Object.fromEntries(Object.entries(messages).flatMap(([key, value]) => {
     assert.match(key, /^[a-z][a-zA-Z0-9]*$/)
@@ -26,19 +27,23 @@ const viKeys = flatten(vn)
 const enKeys = flatten(en)
 const placeholders = (text: string) => [...text.matchAll(/\{([a-z][a-zA-Z0-9]*)\}/g)].map(match => match[1]).sort()
 
-test('dictionary keys, nonempty values, English subset and placeholders', () => {
+test('dictionary keys match, values are nonempty and placeholders agree', () => {
+  assert.deepEqual(Object.keys(enKeys).sort(), Object.keys(viKeys).sort())
   for (const [key, value] of Object.entries(enKeys)) {
     assert.ok(Object.hasOwn(viKeys, key), key)
     assert.deepEqual(placeholders(value), placeholders(viKeys[key]), key)
   }
 })
 
-test('English falls back to Vietnamese and every message compiles', () => {
+test('every message compiles in both locales without fallback', () => {
   const i18n = createI18n({ legacy: false, locale: 'en', fallbackLocale: 'vi', messages: { vi: vn, en }, missingWarn: false, fallbackWarn: false })
-  assert.equal(i18n.global.t('categories.fields.name'), 'Tên danh mục')
-  for (const [key, value] of Object.entries(viKeys)) {
-    const params = Object.fromEntries(placeholders(value).map(name => [name, 'test']))
-    assert.notEqual(i18n.global.t(key, params), key)
+  assert.equal(i18n.global.t('categories.fields.name'), 'Category name')
+  for (const locale of ['vi', 'en'] as const) {
+    i18n.global.locale.value = locale
+    for (const [key, value] of Object.entries(viKeys)) {
+      const params = Object.fromEntries(placeholders(value).map(name => [name, 'test']))
+      assert.notEqual(i18n.global.t(key, params), key)
+    }
   }
   assert.equal(categoryPayload({ name: 'Food', slug: 'food', game_type: 'word', sort_order: 0, is_active: true, status: 'draft', locale: 'vi' }).locale, 'vi')
 })
@@ -86,4 +91,27 @@ test('discard confirmation forwards the translated message and cancellation', ()
     globalThis.window.confirm = () => true
     assert.equal(confirmDiscard('Discard changes?'), true)
   } finally { globalThis.window = original }
+})
+
+
+test('UI language preference validates stored values and tolerates unavailable storage', () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+  let stored: string | null = null
+  try {
+    Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+      getItem: (key: string) => { assert.equal(key, 'admin-ui-locale'); return stored },
+      setItem: (key: string, value: string) => { assert.equal(key, 'admin-ui-locale'); stored = value },
+    } })
+    assert.equal(readUiLocale(), 'vi')
+    persistUiLocale('en'); assert.equal(readUiLocale(), 'en')
+    persistUiLocale('fr'); assert.equal(readUiLocale(), 'en')
+    persistUiLocale('vi'); assert.equal(readUiLocale(), 'vi')
+    stored = 'fr'; assert.equal(readUiLocale(), 'vi')
+    Object.defineProperty(globalThis, 'localStorage', { configurable: true, get() { throw new Error('blocked') } })
+    assert.equal(readUiLocale(), 'vi')
+    assert.doesNotThrow(() => persistUiLocale('en'))
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'localStorage', previous)
+    else Reflect.deleteProperty(globalThis, 'localStorage')
+  }
 })

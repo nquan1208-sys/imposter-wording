@@ -32,6 +32,29 @@ test('category components render backend rows, immutable fields and destructive 
     assert.match(formHtml, /<fieldset[^>]* disabled/)
     assert.match(formHtml, /<button[^>]*role="combobox"[^>]* disabled/)
     assert.match(formHtml, /role="alert"/)
+    assert.equal((formHtml.match(/type="submit"/g) || []).length, 1)
+    assert.doesNotMatch(formHtml, />Xuất bản<|>Lưu trữ</)
+    const badge = (await server.ssrLoadModule('/src/components/admin/ContentStatusBadge.vue')).default
+    const pagination = (await server.ssrLoadModule('/src/components/admin/AdminPagination.vue')).default
+    for (const locale of ['vi', 'en'] as const) {
+      i18n.global.locale.value = locale
+      for (const status of ['draft', 'published', 'archived', null]) {
+        const badgeHtml = await render(badge, { status, locale: 'en' })
+        assert.ok(badgeHtml.includes(i18n.global.t(`common.statuses.${status || 'missing'}`)))
+        assert.match(badgeHtml, /en:/)
+        assert.ok(badgeHtml.includes(`content-status--${status || 'missing'}`))
+      }
+      const pages = await render(pagination, { page: 2, itemsPerPage: 20, total: 60 })
+      assert.ok(pages.includes(`aria-label="${i18n.global.t('common.pagination.first')}"`))
+      assert.ok(pages.includes(`aria-label="${i18n.global.t('common.pagination.page', { page: '2' })}"`))
+      const localizedForm = await render(form, { languages, translations: [], form: { ...row, status: 'draft', description: '', sort_order: 0 } })
+      assert.ok(localizedForm.includes(i18n.global.t('common.actions.save')))
+      assert.equal((localizedForm.match(/type="submit"/g) || []).length, 1)
+      const localizedTable = await render(table, { languages, rows: [row] })
+      assert.ok(localizedTable.includes(i18n.global.t('common.statuses.published')))
+      assert.ok(localizedTable.includes(i18n.global.t('common.statuses.missing')))
+    }
+    i18n.global.locale.value = 'vi'
     const dialog = (await server.ssrLoadModule('/src/components/categories/CategoryDeleteDialog.vue')).default
     const dialogProps = { portal: false, unmountOnHide: false, locale: 'vi', preview: { category: row, category_translations: row.translations, counts: { originals: { total: 2, word: 2, question: 0 }, translations: { draft: 1, published: 1, archived: 1 } }, version: 'snapshot' }, targets: [], loading: false, pending: false }
     const dialogHtml = await render(dialog, dialogProps)

@@ -2,7 +2,7 @@
 import type { CategoryPreview, CategoryTarget, DeleteCategory } from '../../types/admin.ts'
 import { useI18n } from 'vue-i18n'
 import { computed, ref, watch } from 'vue'
-const { t } = useI18n({ useScope: 'global' })
+const { t, n } = useI18n({ useScope: 'global' })
 const props = defineProps<{ preview?: CategoryPreview; targets?: CategoryTarget[]; targetsLoading?: boolean; targetsError?: string; loading?: boolean; pending?: boolean; error?: string; conflict?: boolean; locale: string }>()
 const emit = defineEmits<{ close: []; refresh: []; delete: [input: DeleteCategory]; 'retry-targets': [] }>()
 const mode = ref('transfer')
@@ -12,7 +12,7 @@ const canDelete = computed(() => props.preview && !props.loading && !props.pendi
 const modes = computed(() => ['transfer', 'purge'].map(value => ({ value, label: t(`categories.deleteDialog.${value}`), description: t(`categories.deleteDialog.${value}Description`) })))
 const countStatuses = ['draft', 'published', 'archived'] as const
 const deleteLabel = computed(() => t(total.value === 0 ? 'categories.deleteDialog.confirm' : mode.value === 'transfer' ? 'categories.deleteDialog.confirmTransfer' : 'categories.deleteDialog.confirmPurge'))
-const targetItems = computed(() => (props.targets || []).map(target => ({ value: target.id, label: `${target.name || t('categories.translations.missing')} (${target.slug})` })))
+const targetItems = computed(() => (props.targets || []).map(target => ({ value: target.id, label: `${target.name || t('common.statuses.missing')} (${target.slug})` })))
 watch(() => props.targets, rows => { if (!rows?.some(row => row.id === targetId.value)) targetId.value = '' })
 function submit() {
   if (!canDelete.value || !props.preview) return
@@ -32,17 +32,17 @@ function refresh() { emit('refresh') }
 
         </div>
       </div>
-      <p>{{ t('categories.deleteDialog.originals', preview.counts.originals) }}</p>
+      <p>{{ t('categories.deleteDialog.originals', { total: n(preview.counts.originals.total), word: n(preview.counts.originals.word), question: n(preview.counts.originals.question) }) }}</p>
       <h3>{{ t('categories.deleteDialog.translations') }}</h3>
       <dl class="delete-counts">
         <div v-for="status in countStatuses" :key="status">
-          <dt>{{ t(`categories.deleteDialog.${status}`) }}</dt>
-          <dd>{{ preview.counts.translations[status] || 0 }}</dd>
+          <dt>{{ t(`common.statuses.${status}`) }}</dt>
+          <dd>{{ n(preview.counts.translations[status] || 0) }}</dd>
         </div>
       </dl>
       <p v-if="total === 0">{{ t('categories.deleteDialog.empty') }}</p>
       <fieldset v-else :disabled="pending" class="category-form-fields">
-        <legend>{{ t('categories.deleteDialog.linkedContent', { count: total }) }}</legend>
+        <legend>{{ t('categories.deleteDialog.linkedContent', { count: n(total) }) }}</legend>
         <URadioGroup v-model="mode" :items="modes" :disabled="pending" variant="card" color="error" />
         <template v-if="mode === 'transfer'">
           <UFormField :label="t('categories.deleteDialog.target')"><USelectMenu v-model="targetId" :items="targetItems" value-key="value" :placeholder="t('categories.deleteDialog.targetPlaceholder')" :disabled="pending || targetsLoading" :loading="targetsLoading" class="tw:w-full" /></UFormField>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ContentStatusBadge from '../../components/admin/ContentStatusBadge.vue'
 import { computed, watch } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
 import { useI18n } from 'vue-i18n'
@@ -7,7 +8,7 @@ import { getDashboardSummary } from '../../api/dashboard.ts'
 import { listContentLanguages } from '../../api/categories.ts'
 import { supabase } from '../../lib/supabase.ts'
 
-const { t, locale } = useI18n({ useScope: 'global' })
+const { t, n, locale } = useI18n({ useScope: 'global' })
 const route = useRoute(), router = useRouter()
 const languages = useQuery({ queryKey: ['content-languages'], queryFn: () => listContentLanguages(supabase), retry: false })
 const contentLocale = computed(() => typeof route.query.locale === 'string' ? route.query.locale : 'vi')
@@ -37,7 +38,7 @@ function retry() { return summary.refetch() }
     </UFormField>
     <div v-if="languages.isError.value" class="dashboard-error" role="alert">
       <p>{{ t('dashboard.loadError') }}</p>
-      <button class="dashboard-retry" type="button" :disabled="languages.isFetching.value" @click="languages.refetch()">{{ t('dashboard.retry') }}</button>
+      <UButton color="neutral" variant="outline" type="button" :disabled="languages.isFetching.value" @click="languages.refetch()">{{ t('dashboard.retry') }}</UButton>
     </div>
     <div v-else-if="!validLocale || summary.isPending.value" class="dashboard-loading" role="status" aria-live="polite">
       <span class="dashboard-skeleton" aria-hidden="true" />
@@ -45,26 +46,26 @@ function retry() { return summary.refetch() }
     </div>
     <div v-else-if="summary.isError.value" class="dashboard-error" role="alert">
       <p>{{ t('dashboard.loadError') }}</p>
-      <button class="dashboard-retry" type="button" :disabled="summary.isFetching.value" @click="retry">{{ t('dashboard.retry') }}</button>
+      <UButton color="neutral" variant="outline" type="button" :disabled="summary.isFetching.value" @click="retry">{{ t('dashboard.retry') }}</UButton>
     </div>
     <template v-else-if="summary.data.value">
       <section class="dashboard-stats" aria-labelledby="dashboard-stats-heading">
         <h2 id="dashboard-stats-heading" class="dashboard-sr-only">{{ t('dashboard.stats.title') }}</h2>
         <article class="dashboard-stat">
           <p>{{ t('dashboard.stats.publishedWordPrompts') }}</p>
-          <strong>{{ summary.data.value.stats.published_word_prompts }}</strong>
+          <strong>{{ n(summary.data.value.stats.published_word_prompts) }}</strong>
         </article>
         <article class="dashboard-stat">
           <p>{{ t('dashboard.stats.publishedQuestionPrompts') }}</p>
-          <strong>{{ summary.data.value.stats.published_question_prompts }}</strong>
+          <strong>{{ n(summary.data.value.stats.published_question_prompts) }}</strong>
         </article>
         <article class="dashboard-stat">
           <p>{{ t('dashboard.stats.activeCategories') }}</p>
-          <strong>{{ summary.data.value.stats.active_categories }}</strong>
+          <strong>{{ n(summary.data.value.stats.active_categories) }}</strong>
         </article>
         <article class="dashboard-stat">
           <p>{{ t('dashboard.stats.drafts') }}</p>
-          <strong>{{ summary.data.value.stats.drafts }}</strong>
+          <strong>{{ n(summary.data.value.stats.drafts) }}</strong>
         </article>
       </section>
 
@@ -89,7 +90,7 @@ function retry() { return summary.refetch() }
                 <span class="dashboard-item__title">{{ item.title }}</span>
                 <span class="dashboard-item__meta">
                   {{ item.category_name }}
-                  <span class="dashboard-item__status" :class="`dashboard-item__status--${item.status}`">{{ t(`dashboard.statuses.${item.status}`) }}</span>
+                  <ContentStatusBadge :status="item.status" />
                 </span>
                 <time class="dashboard-item__date" :datetime="item.updated_at">{{ dateFormat.format(new Date(item.updated_at)) }}</time>
               </RouterLink>
@@ -104,8 +105,8 @@ function retry() { return summary.refetch() }
               <h2 id="dashboard-drafts-heading">{{ t('dashboard.drafts.title') }}</h2>
             </div>
             <nav class="dashboard-panel__actions" :aria-label="t('dashboard.drafts.title')">
-              <RouterLink class="dashboard-view-all" :to="{ name: 'word-prompts', query: { locale: contentLocale, status: 'draft' } }" :aria-label="t('dashboard.drafts.allWords')">{{ t('dashboard.statuses.draft') }} · {{ t('dashboard.warnings.wordPrompts') }}</RouterLink>
-              <RouterLink class="dashboard-view-all" :to="{ name: 'question-prompts', query: { locale: contentLocale, status: 'draft' } }" :aria-label="t('dashboard.drafts.allQuestions')">{{ t('dashboard.statuses.draft') }} · {{ t('dashboard.warnings.questionPrompts') }}</RouterLink>
+              <RouterLink class="dashboard-view-all" :to="{ name: 'word-prompts', query: { locale: contentLocale, status: 'draft' } }" :aria-label="t('dashboard.drafts.allWords')">{{ t('common.statuses.draft') }} · {{ t('dashboard.warnings.wordPrompts') }}</RouterLink>
+              <RouterLink class="dashboard-view-all" :to="{ name: 'question-prompts', query: { locale: contentLocale, status: 'draft' } }" :aria-label="t('dashboard.drafts.allQuestions')">{{ t('common.statuses.draft') }} · {{ t('dashboard.warnings.questionPrompts') }}</RouterLink>
             </nav>
           </div>
           <ul v-if="summary.data.value.drafts.length" class="dashboard-items">
@@ -118,7 +119,7 @@ function retry() { return summary.refetch() }
                 <span class="dashboard-item__title">{{ item.title }}</span>
                 <span class="dashboard-item__meta">
                   {{ item.category_name }}
-                  <span class="dashboard-item__status dashboard-item__status--draft">{{ t(`dashboard.statuses.${item.status}`) }}</span>
+                  <ContentStatusBadge :status="item.status" />
                 </span>
                 <time class="dashboard-item__date" :datetime="item.updated_at">{{ dateFormat.format(new Date(item.updated_at)) }}</time>
               </RouterLink>
@@ -132,13 +133,13 @@ function retry() { return summary.refetch() }
         <h2 id="dashboard-warnings-heading">{{ t('dashboard.warnings.title') }}</h2>
         <ul v-if="hasWarnings" class="dashboard-warning-list">
           <li>
-            <RouterLink :to="{ name: 'categories', query: { locale: contentLocale } }">{{ t('dashboard.warnings.emptyCategories', { count: summary.data.value.warnings.empty_categories }) }}</RouterLink>
+            <RouterLink :to="{ name: 'categories', query: { locale: contentLocale } }">{{ t('dashboard.warnings.emptyCategories', { count: n(summary.data.value.warnings.empty_categories) }) }}</RouterLink>
           </li>
           <li>
-            <RouterLink :to="{ name: 'question-prompts', query: { locale: contentLocale } }">{{ t('dashboard.warnings.duplicateQuestions', { count: summary.data.value.warnings.duplicate_questions }) }}</RouterLink>
+            <RouterLink :to="{ name: 'question-prompts', query: { locale: contentLocale } }">{{ t('dashboard.warnings.duplicateQuestions', { count: n(summary.data.value.warnings.duplicate_questions) }) }}</RouterLink>
           </li>
           <li>
-            <span>{{ t('dashboard.warnings.nonFamilyEasyPrompts', { count: summary.data.value.warnings.non_family_easy_prompts }) }}</span>
+            <span>{{ t('dashboard.warnings.nonFamilyEasyPrompts', { count: n(summary.data.value.warnings.non_family_easy_prompts) }) }}</span>
             <span class="dashboard-warning-links">
               <RouterLink :to="{ name: 'word-prompts', query: { locale: contentLocale, difficulty: 'easy', family: 'false' } }">{{ t('dashboard.warnings.wordPrompts') }}</RouterLink>
               <RouterLink :to="{ name: 'question-prompts', query: { locale: contentLocale, difficulty: 'easy', family: 'false' } }">{{ t('dashboard.warnings.questionPrompts') }}</RouterLink>

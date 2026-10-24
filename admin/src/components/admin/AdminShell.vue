@@ -4,6 +4,7 @@ import { computed, ref } from "vue"
 import { useMutation, useQueryClient } from "@tanstack/vue-query"
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router"
 import AppIcon from "./AppIcon.vue";
+import LanguageSelect from './LanguageSelect.vue'
 import { supabase } from "../../lib/supabase.ts"
 import { signOutAdmin } from "../../utils/adminAuth.ts"
 
@@ -93,6 +94,7 @@ function logout() {
         </RouterLink>
       </nav>
       <div class="sidebar__account">
+        <LanguageSelect />
         <div class="account-card">
           <UAvatar :alt="email || t('navigation.account.admin')" size="md" />
           <span class="account-card__details"
