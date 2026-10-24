@@ -337,9 +337,31 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
+            "admin_category_transfer_targets": {
+                Args: {
+                    "p_locale": string;
+                    "p_source_id": string;
+                };
+                Returns: {
+                    "id": string;
+                    "name": string;
+                    "slug": string;
+                }[];
+            };
             "admin_dashboard_summary": {
                 Args: {
                     "p_locale"?: string;
+                };
+                Returns: Json;
+            };
+            "admin_list_categories": {
+                Args: {
+                    "p_game_type": Database["public"]['Enums']["game_type"];
+                    "p_is_active": boolean;
+                    "p_locale": string;
+                    "p_page": number;
+                    "p_search": string;
+                    "p_sort": string;
                 };
                 Returns: Json;
             };
@@ -414,6 +436,29 @@ export type Database = {
                     "p_text": string;
                 };
                 Returns: Json;
+            };
+            "set_category_active": {
+                Args: {
+                    "p_expected_updated_at": string;
+                    "p_id": string;
+                    "p_is_active": boolean;
+                };
+                Returns: {
+                    "created_at": string;
+                    "created_by": string | null;
+                    "game_type": Database["public"]['Enums']["game_type"];
+                    "id": string;
+                    "is_active": boolean;
+                    "slug": string;
+                    "sort_order": number;
+                    "updated_at": string;
+                };
+                SetofOptions: {
+                    from: "*";
+                    to: "game_categories";
+                    isOneToOne: true;
+                    isSetofReturn: false;
+                };
             };
         };
         Enums: {

@@ -4,5 +4,37 @@
       "invalidEmail": "Please enter a valid email address.",
       "passwordRequired": "Please enter your password."
     }
+  },
+  "categories": {
+    "actions": {
+      "publish": "Publish",
+      "archive": "Archive",
+      "reload": "Reload category"
+    },
+    "form": {
+      "shared": "Shared information"
+    },
+    "help": {
+      "shared": "Shared information affects every language. Saving updates only the selected translation."
+    },
+    "translations": {
+      "missing": "No translation"
+    },
+    "messages": {
+      "saved": "Category translation saved."
+    },
+    "errors": {
+      "conflict": "The category or linked content changed. Reload before confirming.",
+      "slugExists": "This slug already exists for this game type."
+    },
+    "confirmations": {
+      "archive": "Archiving this category translation hides prompts in this language from players. Continue?"
+    },
+    "deleteDialog": {
+      "originals": "Original prompts: {total} (word: {word}, question: {question})",
+      "translations": "Prompt translations by status",
+      "noTargets": "No active category of the same game type publishes every required language.",
+      "warning": "All original prompts and translations, including published content, will be permanently deleted. Image files are retained."
+    }
   }
 }

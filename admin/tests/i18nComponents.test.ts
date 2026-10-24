@@ -62,9 +62,9 @@ test('mounted components react to locale changes and preserve delete/leave guard
     }
     const shell = await mount('/src/components/admin/AdminShell.vue')
     supabase.auth.getUser = getUser
-    const filters = await mount('/src/components/categories/CategoryFilters.vue', { filters: { gameType: '', active: '', sort: 'sort_order' }, search: '' })
-    const form = await mount('/src/components/categories/CategoryForm.vue', { form: { name: 'Food', game_type: 'word', locale: 'vi' } })
-    const table = await mount('/src/components/categories/CategoryTable.vue', { rows: [] })
+    const filters = await mount('/src/components/categories/CategoryFilters.vue', { languages: [], filters: { gameType: '', active: '', sort: 'sort_order' }, search: '' })
+    const form = await mount('/src/components/categories/CategoryForm.vue', { languages: [], translations: [], form: { name: 'Food', game_type: 'word', locale: 'vi' } })
+    const table = await mount('/src/components/categories/CategoryTable.vue', { rows: [], languages: [] })
     const list = await mount('/src/views/categories/CategoriesView.vue')
     const login = await mount('/src/views/login/LoginView.vue')
     const editor = await mount('/src/views/categories/CategoryFormView.vue')
@@ -106,7 +106,7 @@ test('mounted components react to locale changes and preserve delete/leave guard
     editor.unsaved.busy = false
 
     const deletions: unknown[] = []
-    const dialog = await mount('/src/components/categories/CategoryDeleteDialog.vue', { onDelete: (input: unknown) => deletions.push(input), preview: { category: { id: 'source', name: 'Food' }, counts: { draft: 1 }, version: 'snapshot' }, targets: [] })
+    const dialog = await mount('/src/components/categories/CategoryDeleteDialog.vue', { onDelete: (input: unknown) => deletions.push(input), locale: 'vi', preview: { category: { id: 'source', slug: 'food' }, category_translations: [{ locale: 'vi', name: 'Food' }], counts: { originals: { total: 1, word: 1, question: 0 }, translations: { draft: 1, published: 0, archived: 0 } }, version: 'snapshot' }, targets: [{ id: 'target', slug: 'target', name: 'Target' }] })
     assert.equal(dialog.canDelete, false)
     dialog.targetId = 'target'
     assert.equal(dialog.canDelete, true)

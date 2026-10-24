@@ -1,4 +1,4 @@
-"""Rehearse Phase 2 in disposable copies of local Supabase. Never reset the live DB.
+"""Rehearse content migrations in disposable copies of local Supabase. Never reset the live DB.
 
 Requires Docker and the running supabase_db_imposter-wording container. Restores use
 supabase_admin to retain Supabase-owned schemas; migrations/tests run as postgres.
@@ -100,6 +100,18 @@ class TranslationMigrationTests(unittest.TestCase):
         result = self.migrate()
         self.assertIn('categories=0, words=0, questions=0', result.stderr)
         self.suites()
+
+    def test_phase3_forward_migration_and_suites(self):
+        for populated in [False, True]:
+            with self.subTest(populated=populated):
+                self.fresh_legacy()
+                if populated:
+                    self.seed_legacy()
+                self.migrate()
+                self.execute((ROOT / 'supabase/migrations/20261024053232_admin_category_translations.sql').read_text())
+                self.suites()
+                helper = (ROOT / 'supabase/tests/content_test_helpers.sql').read_text()
+                self.execute((ROOT / 'supabase/tests/admin_category_translations.sql').read_text().replace('\\ir content_test_helpers.sql', helper))
 
     def test_backfill_metadata_locales_statuses_and_slug_mapping(self):
         self.fresh_legacy()

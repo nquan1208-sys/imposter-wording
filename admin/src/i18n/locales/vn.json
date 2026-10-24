@@ -118,15 +118,20 @@
     "help": {
       "overview": "Quản lý danh mục cho nội dung từ ngữ và câu hỏi.",
       "slug": "Chữ thường, số và dấu gạch ngang.",
-      "immutableGameType": "Loại trò chơi được cố định sau khi tạo."
+      "immutableGameType": "Loại trò chơi được cố định sau khi tạo.",
+      "shared": "Thông tin chung ảnh hưởng mọi ngôn ngữ. Lưu chỉ cập nhật bản dịch đang chọn."
     },
     "actions": {
       "create": "Thêm danh mục",
       "save": "Lưu danh mục",
-      "back": "Về danh sách"
+      "back": "Về danh sách",
+      "publish": "Xuất bản",
+      "archive": "Lưu trữ",
+      "reload": "Tải lại danh mục"
     },
     "form": {
-      "editTitle": "Sửa danh mục"
+      "editTitle": "Sửa danh mục",
+      "shared": "Thông tin chung"
     },
     "fields": {
       "name": "Tên danh mục",
@@ -159,20 +164,23 @@
     },
     "messages": {
       "statusUpdated": "Đã cập nhật trạng thái.",
-      "deleted": "Đã xóa danh mục."
+      "deleted": "Đã xóa danh mục.",
+      "saved": "Đã lưu bản dịch danh mục."
     },
     "confirmations": {
       "deactivate": "Tắt danh mục này? Content bên trong sẽ được giữ nguyên.",
-      "deactivateNamed": "Tắt danh mục “{name}”? Content bên trong sẽ được giữ nguyên."
+      "deactivateNamed": "Tắt danh mục “{name}”? Content bên trong sẽ được giữ nguyên.",
+      "archive": "Lưu trữ bản dịch danh mục sẽ ẩn các đề của ngôn ngữ này khỏi người chơi. Tiếp tục?"
     },
     "errors": {
       "nameRequired": "Vui lòng nhập tên danh mục.",
       "invalidSlug": "Slug chỉ gồm chữ thường, số và dấu gạch ngang giữa các từ.",
       "invalidSortOrder": "Thứ tự phải là số nguyên không âm trong giới hạn 2147483647.",
       "invalidGameType": "Loại trò chơi không hợp lệ.",
-      "slugExists": "Slug đã tồn tại trong loại trò chơi và ngôn ngữ này.",
+      "slugExists": "Slug đã tồn tại trong loại trò chơi này.",
       "notFound": "Danh mục không tồn tại hoặc bạn không có quyền truy cập.",
-      "invalidData": "Dữ liệu không hợp lệ hoặc nội dung liên kết đã thay đổi. Vui lòng kiểm tra và tải lại thống kê."
+      "invalidData": "Dữ liệu không hợp lệ hoặc nội dung liên kết đã thay đổi. Vui lòng kiểm tra và tải lại thống kê.",
+      "conflict": "Danh mục hoặc nội dung liên quan đã thay đổi. Tải lại trước khi xác nhận."
     },
     "deleteDialog": {
       "title": "Xóa danh mục",
@@ -186,9 +194,9 @@
       "target": "Chuyển nội dung đến danh mục",
       "targetPlaceholder": "Chọn danh mục",
       "targetsLoading": "Đang tải danh mục nhận…",
-      "noTargets": "Không có danh mục nhận đang hoạt động, cùng loại trò chơi và ngôn ngữ.",
+      "noTargets": "Không có danh mục đang bật, cùng loại trò chơi và đã xuất bản đủ ngôn ngữ cần thiết.",
       "irreversible": "Không thể hoàn tác",
-      "warning": "Toàn bộ nội dung, kể cả nội dung đã xuất bản, sẽ bị xóa vĩnh viễn. File ảnh vẫn được giữ lại.",
+      "warning": "Toàn bộ đề gốc và bản dịch, kể cả nội dung đã xuất bản, sẽ bị xóa vĩnh viễn. File ảnh vẫn được giữ lại.",
       "confirm": "Xóa danh mục",
       "refresh": "Tải lại thống kê",
       "transferDescription": "Giữ lại toàn bộ nội dung và chuyển sang danh mục bạn chọn. Chỉ danh mục này bị xóa.",
@@ -197,7 +205,12 @@
       "published": "Đã xuất bản",
       "archived": "Đã lưu trữ",
       "confirmTransfer": "Chuyển nội dung và xóa",
-      "confirmPurge": "Xóa tất cả vĩnh viễn"
+      "confirmPurge": "Xóa tất cả vĩnh viễn",
+      "originals": "Đề gốc: {total} (từ: {word}, câu hỏi: {question})",
+      "translations": "Bản dịch đề theo trạng thái"
+    },
+    "translations": {
+      "missing": "Chưa có bản dịch"
     }
   },
   "wordPrompts": {

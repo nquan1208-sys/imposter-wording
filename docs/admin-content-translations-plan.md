@@ -66,6 +66,8 @@ Lưu nguyên tử, phân quyền và chống ghi đè được kiểm thử tr�
 
 ## Phase 3 — Admin quản lý danh mục
 
+**Đã hoàn tất trên local (2026-10-24):** [Báo cáo API, editor đa ngôn ngữ và kiểm thử](./admin-content-translations-phase-3.md). Có danh sách theo ngôn ngữ mặc định `vi`, tìm tên mọi bản dịch/slug và phân trang server; RPC bổ sung cho list, bật/tắt có version và danh mục nhận hợp lệ. Admin 48 tests, DB rehearsal 5 nhóm và concurrency 8 race đạt; Vite bundle đạt. Full build/typecheck còn lỗi chuyển tiếp ở hai loại đề của Phase 4. Chưa triển khai cloud.
+
 - Một màn hình chỉnh sửa gồm thông tin chung và các tab ngôn ngữ lấy từ `content_languages`.
 - Mỗi tab có tên, mô tả, trạng thái và thao tác lưu/xuất bản/lưu trữ riêng. Tab thiếu bản dịch hiển thị “Chưa có bản dịch”.
 - Đổi tab giữ nội dung chưa lưu trong bộ nhớ; lưu chỉ gửi phần chung và bản dịch của tab hiện tại. Rời trang vẫn có cảnh báo thay đổi chưa lưu.

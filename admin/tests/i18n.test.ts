@@ -40,7 +40,7 @@ test('English falls back to Vietnamese and every message compiles', () => {
     const params = Object.fromEntries(placeholders(value).map(name => [name, 'test']))
     assert.notEqual(i18n.global.t(key, params), key)
   }
-  assert.equal(categoryPayload({ name: 'Food', slug: 'food', game_type: 'word', sort_order: 0, is_active: true, locale: i18n.global.locale.value }).locale, 'vi')
+  assert.equal(categoryPayload({ name: 'Food', slug: 'food', game_type: 'word', sort_order: 0, is_active: true, status: 'draft', locale: 'vi' }).locale, 'vi')
 })
 
 async function sources(directory: URL): Promise<[URL, string][]> {

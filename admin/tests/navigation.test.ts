@@ -57,8 +57,8 @@ test('sidebar navigation renders only the current page and retains form leave gu
     const { default: router } = await server.ssrLoadModule('/src/router/index.ts')
     await router.push('/dashboard')
     app = renderer.createApp({ render: () => h(RouterView) }).use(router).use(VueQueryPlugin, { queryClient }).use(createI18n({ legacy: false, locale: 'vi', messages: { vi: vn } }))
-    const ui = { inheritAttrs: false, setup: (_: unknown, { attrs, slots }: StubContext) => () => h('div', attrs, [String(attrs.label ?? ''), slots.default?.({ errors: [] }), slots.body?.({}), slots.actions?.({})]) }
-    for (const name of ['UButton', 'UAvatar', 'UAlert', 'UBreadcrumb', 'UCard', 'USkeleton', 'UInput', 'USelectMenu', 'UFormField', 'UCheckbox', 'UForm', 'UTextarea', 'UPagination', 'UBadge', 'UIcon', 'USwitch']) app.component(name, ui)
+    const ui = { inheritAttrs: false, setup: (_: unknown, { attrs, slots }: StubContext) => () => h('div', attrs, [String(attrs.label ?? ''), slots.default?.({ errors: [] }), slots.body?.({}), slots.actions?.({}), slots.content?.({})]) }
+    for (const name of ['UButton', 'UAvatar', 'UAlert', 'UBreadcrumb', 'UCard', 'USkeleton', 'UInput', 'USelectMenu', 'UFormField', 'UCheckbox', 'UForm', 'UTextarea', 'UPagination', 'UBadge', 'UIcon', 'USwitch', 'UTabs']) app.component(name, ui)
     app.component('USelect', defineComponent({ props: { items: { type: Array as import('vue').PropType<{ value: string }[]>, required: true }, modelValue: null }, setup(props, context) {
       // Reka SelectItem reserves the empty string for clearing, not an option.
       watchEffect(() => assert.ok(props.items.every((item: { value: string }) => item.value !== ''), 'select options must have nonempty values'))
@@ -172,6 +172,46 @@ test('sidebar navigation renders only the current page and retains form leave gu
     globalThis.window.confirm = () => true
     await router.push('/categories'); await nextTick()
     assert.equal(router.currentRoute.value.name, 'categories')
+    queryClient.setQueryData(['content-languages'], [{ code: 'vi', display_name: 'Tiếng Việt' }, { code: 'en', display_name: 'English' }])
+    await router.push('/categories/new'); await nextTick()
+    function categoryName() {
+      const field = nodes(root).find(element => element.props.label === vn.categories.fields.name)
+      assert.ok(field)
+      return nodes(field).find(element => element.props['onUpdate:modelValue'])!
+    }
+    categoryName().props['onUpdate:modelValue']('Unsaved Vietnamese'); await nextTick()
+    const tabs = nodes(root).find(element => element.props['model-value'] === 'vi' && element.props.items?.length === 2)
+    assert.ok(tabs)
+    tabs.props['onUpdate:modelValue']('en'); await nextTick()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    categoryName().props['onUpdate:modelValue']('Saved English'); await nextTick()
+    let categoryDetail: Record<string, unknown> | null = null
+    const previousFrom = supabase.from
+    supabase.from = table => {
+      if (table !== 'game_categories' || !categoryDetail) return previousFrom(table)
+      const query = {} as QueryStub
+      for (const method of ['select', 'eq', 'single']) query[method] = () => query
+      query.then = resolve => resolve({ data: categoryDetail })
+      return query
+    }
+    supabase.rpc = async (_, input) => {
+      const response = { data: {
+      original: { id: input.p_id, slug: input.p_slug, game_type: input.p_game_type, sort_order: input.p_sort_order, is_active: input.p_is_active, updated_at: 'server-version' },
+      translation: { category_id: input.p_id, locale: input.p_locale, name: input.p_name, description: input.p_description, status: input.p_status },
+    } }
+      categoryDetail = { ...response.data.original, translations: [response.data.translation] }
+      return response
+    }
+    const save = nodes(root).find(element => element.props.label === vn.categories.actions.publish)
+    assert.ok(save)
+    save.props.onClick(); await new Promise(resolve => setTimeout(resolve, 30)); await nextTick()
+    assert.equal(router.currentRoute.value.name, 'category-edit')
+    const savedTabs = nodes(root).find(element => element.props['model-value'] === 'en' && element.props.items?.length === 2)
+    assert.ok(savedTabs)
+    savedTabs.props['onUpdate:modelValue']('vi'); await nextTick()
+    assert.equal(categoryName().props['model-value'], 'Unsaved Vietnamese', 'new-to-edit route preserves drafts in the rendered shell')
+    await router.push('/categories?locale=unknown'); await new Promise(resolve => setTimeout(resolve, 30)); await nextTick()
+    assert.equal(router.currentRoute.value.query.locale, 'vi', 'invalid content locale normalizes even when languages were cached')
   } finally {
     try { app?.unmount() }
     finally { queryClient.clear(); globalThis.window = originalWindow; await server.close(); await rm(cacheDir, { recursive: true, force: true }) }

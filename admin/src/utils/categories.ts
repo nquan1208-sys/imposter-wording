@@ -12,26 +12,23 @@ const categoryFields = z.object({
   sort_order: z.union([z.string(), z.number()], { error: 'categories.errors.invalidSortOrder' })
     .refine(value => String(value).trim() !== '' && Number.isSafeInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 2147483647, 'categories.errors.invalidSortOrder')
     .transform(Number),
+  locale: z.string().trim().min(1, 'categories.errors.invalidData'),
+  status: z.enum(['draft', 'published', 'archived'], { error: 'categories.errors.invalidData' }),
   is_active: z.boolean({ error: 'categories.errors.invalidData' }).default(false),
 })
 const newCategorySchema = categoryFields.extend({
   game_type: z.enum(['word', 'question'], { error: 'categories.errors.invalidGameType' }),
-}).transform(payload => ({ ...payload, locale: 'vi' }))
+})
 
-export function categorySchema(editing = false) {
-  return editing ? categoryFields : newCategorySchema
-}
+export function categorySchema() { return newCategorySchema }
 
 export function slugFromName(name: string) {
   return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[đĐ]/g, 'd')
     .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-export function categoryPayload(form: unknown, editing?: false): z.output<typeof newCategorySchema>
-export function categoryPayload(form: unknown, editing: true): z.output<typeof categoryFields>
-export function categoryPayload(form: unknown, editing: boolean): z.output<typeof categoryFields> | z.output<typeof newCategorySchema>
-export function categoryPayload(form: unknown, editing = false) {
-  const result = categorySchema(editing).safeParse(form)
+export function categoryPayload(form: unknown) {
+  const result = categorySchema().safeParse(form)
   if (!result.success) throw new Error(result.error.issues[0].message)
   return result.data
 }
@@ -48,6 +45,10 @@ const errorKeys: Record<string, string> = {
   '42501': 'common.errors.forbidden',
   '23514': 'categories.errors.invalidData',
   '22023': 'categories.errors.invalidData',
+  '40001': 'categories.errors.conflict',
+  P0002: 'categories.errors.notFound',
+  '23503': 'categories.errors.invalidData',
+  '23502': 'categories.errors.invalidData',
   PGRST116: 'categories.errors.notFound',
 }
 export function categoryError(cause: unknown) {
@@ -57,9 +58,10 @@ export function categoryError(cause: unknown) {
   return errorKeys[error?.code] || 'common.errors.operationFailed'
 }
 
-export function listFilters(query: LocationQuery): { search: string; gameType: '' | 'word' | 'question'; active: string; sort: string; page: number } {
+export function listFilters(query: LocationQuery): { search: string; gameType: '' | 'word' | 'question'; active: string; sort: string; page: number; locale: string } {
   const page = Number(query.page)
   return {
+    locale: typeof query.locale === 'string' ? query.locale : 'vi',
     search: typeof query.search === 'string' ? query.search : '',
     gameType: query.type === 'word' || query.type === 'question' ? query.type : '',
     active: typeof query.active === 'string' && ['true', 'false'].includes(query.active) ? query.active : '',

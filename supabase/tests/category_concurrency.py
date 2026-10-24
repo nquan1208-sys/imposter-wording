@@ -62,6 +62,10 @@ def races():
     try:
         checked(f"insert into auth.users(id) values('{admin}'); insert into public.admin_users(user_id) values('{admin}');")
         checked(f'begin; {auth} {save_category(category)} {save_category(target)} {save_category(question_category)} commit;')
+        # A translation saved while activation waits invalidates the original version.
+        version = checked(f"select updated_at from public.game_categories where id='{target}';")
+        race(save_category(target, 'en'),
+             f"select public.set_category_active('{target}',false,'{version}');", '40001')
         # Parent deletion must reject a waiting RPC insert, rather than leave an orphan.
         race(f"select public.delete_category('{category}','empty');", save_prompt(word, category), '23514')
         assert checked(f"select count(*) from public.word_prompts where id='{word}';") == '0'
@@ -87,7 +91,7 @@ def races():
         # Revocation committed while a save waits must be observed with the same JWT.
         race(f"reset role; update public.admin_users set is_active=false where user_id='{admin}';",
              save_prompt(word, category, 'vi', current), '42501')
-        print('PASS: 7 lock races (delete/insert, two stale saves, preview/purge, publish/archive, transfer/archive, revoked admin)')
+        print('PASS: 8 lock races (translation/activation, delete/insert, two stale saves, preview/purge, publish/archive, transfer/archive, revoked admin)')
     finally:
         checked(f"delete from public.word_prompts where id='{word}'; delete from public.question_prompts where id='{question}';"
                 f"delete from public.game_categories where id in ('{category}','{target}','{question_category}');"

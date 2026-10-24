@@ -6,12 +6,12 @@ import { categoryPayload, slugFromName, searchPattern, listFilters, categoryErro
 import { listCategories, getCategory, saveCategory, setCategoryActive, previewCategoryDelete, transferTargets, deleteCategory } from '../src/api/categories.ts'
 import { QueryClient, MutationObserver } from '@tanstack/vue-query'
 
-const form = { name: '  Đồ ăn  ', slug: 'do-an', description: '  Món ngon ', game_type: 'word', sort_order: '2', is_active: true, locale: 'en', id: 'injected', created_by: 'injected' }
+const form = { name: '  Đồ ăn  ', slug: 'do-an', description: '  Món ngon ', game_type: 'word', sort_order: '2', is_active: true, locale: 'en', status: 'draft', id: 'injected', created_by: 'injected' }
 function mockClient(result: MockResult | ((calls: Calls) => MockResult) = { data: [], count: 0 }) {
   const calls: Calls = []
   const chain: QueryStub = { then(resolve: (value: MockResult) => unknown, reject?: (reason: unknown) => unknown) { return Promise.resolve(typeof result === 'function' ? result(calls) : result).then(resolve, reject) } }
   for (const method of ['select', 'eq', 'neq', 'or', 'order', 'range', 'single', 'update', 'insert']) chain[method] = (...args: unknown[]) => { calls.push([method, ...args]); return chain }
-  return { calls, from: (table: string) => { calls.push(['from', table]); return chain }, auth: { getUser: async () => ({ data: { user: { id: 'admin' } as { id: string } | null } }) } }
+  return { calls, rpc: (name: string, args: unknown) => { calls.push(['rpc', name, args]); return chain }, from: (table: string) => { calls.push(['from', table]); return chain }, auth: { getUser: async () => ({ data: { user: { id: 'admin' } as { id: string } | null } }) } }
 }
 
 test('Vietnamese slug normalization', () => {
@@ -19,12 +19,11 @@ test('Vietnamese slug normalization', () => {
   assert.equal(slugFromName('!!!'), '')
 })
 test('payload trims and excludes protected fields', () => {
-  assert.deepEqual(categoryPayload(form), { name: 'Đồ ăn', slug: 'do-an', description: 'Món ngon', sort_order: 2, is_active: true, game_type: 'word', locale: 'vi' })
-  const edited = categoryPayload(form, true)
-  for (const key of ['game_type', 'locale', 'created_by', 'id']) assert.equal(key in edited, false)
+  assert.deepEqual(categoryPayload(form), { name: 'Đồ ăn', slug: 'do-an', description: 'Món ngon', sort_order: 2, is_active: true, game_type: 'word', locale: 'en', status: 'draft' })
+  for (const key of ['created_by', 'id']) assert.equal(key in categoryPayload(form), false)
 })
 test('reject invalid names, slugs, types, and sort orders', () => {
-  for (const changes of [{ name: ' ' }, { slug: 'Đồ ăn' }, { slug: '-food' }, { game_type: 'other' }, { sort_order: '' }, { sort_order: -1 }, { sort_order: 1.5 }, { sort_order: 2147483648 }]) assert.throws(() => categoryPayload({ ...form, ...changes }))
+  for (const changes of [{ name: ' ' }, { locale: '' }, { status: 'unknown' }, { slug: 'Đồ ăn' }, { slug: '-food' }, { game_type: 'other' }, { sort_order: '' }, { sort_order: -1 }, { sort_order: 1.5 }, { sort_order: 2147483648 }]) assert.throws(() => categoryPayload({ ...form, ...changes }))
 })
 test('quoted search escapes wildcards, quotes and filter delimiters', () => {
   assert.equal(searchPattern('a,b)(c'), '"%a,b)(c%"')
@@ -32,37 +31,35 @@ test('quoted search escapes wildcards, quotes and filter delimiters', () => {
   assert.equal(searchPattern('%_'), '"%\\\\%\\\\_%"')
 })
 test('URL filters reject invalid page and sort values', () => {
-  assert.deepEqual(listFilters({ page: '-1', type: 'bad', active: 'yes', sort: 'injected' }), { page: 1, search: '', gameType: '', active: '', sort: 'sort_order' })
+  assert.deepEqual(listFilters({ page: '-1', type: 'bad', active: 'yes', sort: 'injected' }), { locale: 'vi', page: 1, search: '', gameType: '', active: '', sort: 'sort_order' })
   assert.equal(listFilters({ page: '2' }).page, 2)
 })
-test('backend search/filter/order/pagination are combined', async () => {
-  const client = mockClient({ data: [{ id: '1' }], count: 24 })
-  const result = await listCategories(asClient(client), { search: '  food,drink ', gameType: 'word', active: 'false', sort: 'updated_at', page: 2 })
+test('backend receives language, filters, sort and page together', async () => {
+  const client = mockClient({ data: { rows: [{ id: '1' }], total: 24 } })
+  const result = await listCategories(asClient(client), { search: '  food,drink ', gameType: 'word', active: 'false', sort: 'updated_at', page: 2, locale: 'en' })
   assert.equal(result.total, 24)
-  assert.ok(client.calls.some(call => call[0] === 'or' && call[1] === 'name.ilike."%food,drink%",slug.ilike."%food,drink%"'))
-  assert.ok(client.calls.some(call => call[0] === 'eq' && call[1] === 'is_active' && call[2] === false))
-  assert.deepEqual(client.calls.at(-1), ['range', 20, 39])
+  assert.deepEqual(client.calls, [['rpc', 'admin_list_categories', { p_locale: 'en', p_search: 'food,drink', p_game_type: 'word', p_is_active: false, p_sort: 'updated_at', p_page: 2 }]])
 })
-test('save creation gets current user and edit cannot change identity', async () => {
-  const client = mockClient({ data: { id: 'new' } })
-  await saveCategory(asClient(client), form)
-  assert.equal((client.calls.find(call => call[0] === 'insert')![1] as Record<string, unknown>).created_by, 'admin')
-  const updateClient = mockClient({ data: { id: 'old' } })
-  await saveCategory(asClient(updateClient), form, 'old')
-  assert.equal('game_type' in (updateClient.calls.find(call => call[0] === 'update')![1] as object), false)
-  assert.deepEqual(updateClient.calls.at(-1), ['single'])
-  client.auth.getUser = async () => ({ data: { user: null } })
-  await assert.rejects(saveCategory(asClient(client), form), { message: 'common.errors.sessionExpired' })
+test('save uses one transactional RPC, selected locale and original version', async () => {
+  const client = mockClient({ data: { original: { id: 'new' }, translation: { locale: 'en' } } })
+  await saveCategory(asClient(client), form, 'new')
+  assert.deepEqual(client.calls[0], ['rpc', 'save_category', {
+    p_id: 'new', p_expected_updated_at: null, p_game_type: 'word', p_slug: 'do-an', p_sort_order: 2,
+    p_is_active: true, p_locale: 'en', p_name: 'Đồ ăn', p_description: 'Món ngon', p_status: 'draft',
+  }])
+  await saveCategory(asClient(client), { ...form, description: '' }, 'new', 'server-version')
+  const args = client.calls[1]![2] as Record<string, unknown>
+  assert.equal(args.p_expected_updated_at, 'server-version'); assert.equal(args.p_description, null)
 })
 test('API failures propagate, including zero-row update', async () => {
   const error = { code: 'PGRST116', message: 'no rows' }
-  for (const action of [(client: object) => getCategory(asClient(client), 'id'), (client: object) => setCategoryActive(asClient(client), 'id', false), (client: object) => saveCategory(asClient(client), form, 'id')]) await assert.rejects(action(mockClient({ data: null, error })), value => value === error)
+  for (const action of [(client: object) => getCategory(asClient(client), 'id'), (client: object) => setCategoryActive(asClient(client), { id: 'id', updated_at: 'version' } as import('../src/types/admin.ts').Category, false), (client: object) => saveCategory(asClient(client), form, 'id')]) await assert.rejects(action(mockClient({ data: null, error })), value => value === error)
   assert.equal(categoryError({ code: '23505' }), 'categories.errors.slugExists')
 })
 test('transfer target discovery reads all pages', async () => {
   const client = mockClient(calls => ({ data: calls.filter(call => call[0] === 'range').length === 1 ? Array.from({ length: 100 }, (_, id) => ({ id })) : [{ id: 'last' }] }))
-  assert.equal((await transferTargets(asClient(client), { id: 'source', game_type: 'word', locale: 'vi' })).length, 101)
-  assert.ok(client.calls.some(call => call[0] === 'neq' && call[1] === 'id' && call[2] === 'source'))
+  assert.equal((await transferTargets(asClient(client), 'source', 'vi')).length, 101)
+  assert.deepEqual(client.calls[0], ['rpc', 'admin_category_transfer_targets', { p_source_id: 'source', p_locale: 'vi' }])
 })
 test('delete RPC includes snapshot without typed confirmation, propagates errors', async () => {
   const calls: Calls = []
