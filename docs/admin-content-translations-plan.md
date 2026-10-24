@@ -99,6 +99,8 @@ Xuất bản Việt trong khi Anh còn nháp được; sửa một bản dịch 
 
 ## Phase 5 — Dashboard và kiểm thử tích hợp
 
+**Đã triển khai và kiểm thử tự động trên local (2026-10-24), chưa hoàn tất manual verification:** [Báo cáo dashboard, sửa conflict HTTP và kiểm thử](./admin-content-translations-phase-5.md). Admin 57/57 tests, full typecheck/build, migration rehearsal 6 nhóm, concurrency 8 race, Storage HTTP integration và DB lint/advisors đạt. Thêm forward migration đổi explicit conflict từ `40001` sang `PT409` để tránh PostgREST retry đến timeout. Đã kiểm tra trực tiếp dashboard, giữ draft đề từ và tạo/lưu/publish/archive đề câu hỏi; còn layout 390px và các luồng UI được liệt kê trong báo cáo vì công cụ browser/capture không ổn định. Chưa triển khai cloud.
+
 - Dashboard thêm bộ chọn ngôn ngữ mặc định `vi`; thống kê đề xuất bản, bản nháp và cảnh báo theo ngôn ngữ đó.
 - `admin_dashboard_summary` nhận `p_locale`; item trả về có locale để liên kết mở đúng tab bản dịch.
 - Cập nhật cache keys và invalidation cho danh mục, đề và dashboard sau mọi thay đổi liên quan.

@@ -40,5 +40,5 @@ export function wordPromptError(cause: unknown) {
   const error = errorFields(cause)
   if (error?.message?.startsWith('wordPrompts.errors.')) return error.message
   if (error?.message === 'common.errors.sessionExpired') return error.message
-  return ({ '23514': 'wordPrompts.errors.invalidData', '23503': 'wordPrompts.errors.categoryRequired', '23505': 'wordPrompts.errors.conflict', '40001': 'wordPrompts.errors.conflict', '22023': 'wordPrompts.errors.invalidData', '42501': 'common.errors.forbidden', P0002: 'wordPrompts.errors.notFound', PGRST116: 'wordPrompts.errors.notFound' } as Record<string, string>)[error.code] || 'common.errors.operationFailed'
+  return ({ '23514': 'wordPrompts.errors.invalidData', '23503': 'wordPrompts.errors.categoryRequired', '23505': 'wordPrompts.errors.conflict', '40001': 'wordPrompts.errors.conflict', 'PT409': 'wordPrompts.errors.conflict', '22023': 'wordPrompts.errors.invalidData', '42501': 'common.errors.forbidden', P0002: 'wordPrompts.errors.notFound', PGRST116: 'wordPrompts.errors.notFound' } as Record<string, string>)[error.code] || 'common.errors.operationFailed'
 }

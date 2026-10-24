@@ -12,7 +12,8 @@ begin
   begin
     execute statement;
   exception when others then
-    if sqlstate = expected_code then return; end if;
+    -- Earlier migration stages use 40001; Phase 5 returns an HTTP conflict without retries.
+    if sqlstate = expected_code or (expected_code = '40001' and sqlstate = 'PT409') then return; end if;
     raise exception 'Expected SQLSTATE %, got %: % (statement: %)', expected_code, sqlstate, sqlerrm, statement;
   end;
   raise exception 'Expected SQLSTATE %, statement succeeded: %', expected_code, statement;

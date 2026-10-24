@@ -21,11 +21,11 @@ test('delete passes saved snapshot only, without auth, validation, save or uploa
   const calls: Calls = [], client: { rpc: (...args: unknown[]) => Promise<MockResult> } = { rpc: async (...args: unknown[]) => { calls.push(args); return { data: null } } }
   await deleteWordPrompt(asClient(client), Object.assign({ id, updatedAt: 'version' }, { form: { text: '' }, file: {} }))
   assert.deepEqual(calls, [['delete_word_prompt', { p_id: id, p_expected_updated_at: 'version' }]])
-  for (const error of [new Error('offline'), { code: '40001' }, { code: 'P0002' }]) {
+  for (const error of [new Error('offline'), { code: 'PT409' }, { code: 'P0002' }]) {
     client.rpc = async () => ({ error })
     await assert.rejects(deleteWordPrompt(asClient(client), { id, updatedAt: 'version' }), value => value === error)
   }
-  assert.equal(wordPromptError({ code: '40001' }), 'wordPrompts.errors.conflict')
+  for (const code of ['PT409', '40001']) assert.equal(wordPromptError({ code }), 'wordPrompts.errors.conflict')
   assert.equal(wordPromptError({ code: 'P0002' }), 'wordPrompts.errors.notFound')
   assert.equal(wordPromptError({ code: '22023' }), 'wordPrompts.errors.invalidData')
 })
@@ -50,14 +50,14 @@ test('word save sends one translation and original version through transactional
  const payload = calls[1]![1] as Record<string, unknown>
  assert.equal(payload.p_expected_updated_at, 'snapshot'); assert.equal(payload.p_locale, 'vi'); assert.equal(payload.p_status, 'published')
  assert.equal(payload.p_text, form.text.trim());
- for (const error of [new Error('offline'), { code: '40001' }, { code: '42501' }]) {
+ for (const error of [new Error('offline'), { code: 'PT409' }, { code: '42501' }]) {
    client.rpc = async () => ({ error })
    await assert.rejects(saveWordPrompt(asClient(client), form, { id, status: 'draft' }), value => value === error)
  }
 })
 
 test('failed word RPC cleans the new upload and preserves the original error', async () => {
- const failure = { code: '40001' }, removed: string[][] = []
+ const failure = { code: 'PT409' }, removed: string[][] = []
  let uploaded = ''
  const client = asClient({ rpc: async () => ({ error: failure }), storage: { from: () => ({
   upload: async (path: string) => { uploaded = path; return { data: {} } },

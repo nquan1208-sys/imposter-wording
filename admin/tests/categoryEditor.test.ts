@@ -63,6 +63,9 @@ test('category tabs retain drafts, save only the selected translation and requir
     }
     cache.setQueryData(['content-languages'], [{ code: 'vi', display_name: 'Tiếng Việt' }, { code: 'en', display_name: 'English' }, { code: 'fr', display_name: 'Français' }])
     cache.setQueryData(['categories', 'detail', id], latest)
+    for (const prefix of ['dashboard', 'categories', 'word-prompts', 'question-prompts']) {
+      for (const locale of ['vi', 'en', 'fr']) cache.setQueryData([prefix, 'list', locale], { fixture: true })
+    }
     const component = (await server.ssrLoadModule('/src/views/categories/CategoryFormView.vue')).default
     const i18n = createI18n({ legacy: false, locale: 'vi', fallbackLocale: 'vi', messages: { vi: vn, en: {} }, missingWarn: false, fallbackWarn: false })
     app = renderer.createApp({ setup() { provideUnsavedChanges(); return () => h({ ...component, render: () => h('div') }) } })
@@ -82,6 +85,9 @@ test('category tabs retain drafts, save only the selected translation and requir
     assert.equal(calls[0]!.p_expected_updated_at, original.updated_at); assert.equal(editor.canLeave(), false)
     editor.selectLocale('vi'); assert.equal(editor.form.locale, 'en', 'busy tab switch blocked')
     finish({ data: { original: { ...original, slug: 'shared-food', updated_at: 'version-2' }, translation: { ...translation, locale: 'en', name: 'Food' } } }); await tick()
+    for (const prefix of ['dashboard', 'categories', 'word-prompts', 'question-prompts']) {
+      for (const locale of ['vi', 'en', 'fr']) assert.equal(cache.getQueryState([prefix, 'list', locale])!.isInvalidated, true, `${prefix}/${locale} refreshed after save`)
+    }
     assert.equal(editor.saved.updated_at, 'version-2'); assert.equal(editor.unsaved.dirty, true, 'Vietnamese edits remain dirty')
     editor.selectLocale('vi'); await tick()
     assert.equal(editor.form.name, 'Việt chưa lưu')
@@ -90,7 +96,7 @@ test('category tabs retain drafts, save only the selected translation and requir
     finish({ error: new Error('offline') }); await tick()
     assert.equal(editor.form.name, 'Việt chưa lưu'); assert.equal(editor.unsaved.busy, false)
     editor.submit(); await tick()
-    finish({ error: { code: '40001' } }); await tick()
+    finish({ error: { code: 'PT409' } }); await tick()
     assert.equal(editor.conflict, true)
     editor.update('name', 'Still editing'); editor.submit(); await tick()
     assert.equal(calls.length, 3)

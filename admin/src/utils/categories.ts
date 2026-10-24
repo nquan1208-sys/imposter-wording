@@ -46,6 +46,7 @@ const errorKeys: Record<string, string> = {
   '23514': 'categories.errors.invalidData',
   '22023': 'categories.errors.invalidData',
   '40001': 'categories.errors.conflict',
+  PT409: 'categories.errors.conflict',
   P0002: 'categories.errors.notFound',
   '23503': 'categories.errors.invalidData',
   '23502': 'categories.errors.invalidData',

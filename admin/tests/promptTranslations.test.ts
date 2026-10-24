@@ -59,6 +59,9 @@ for (const [kind, cap, field, other] of [['word', 'Word', 'text', null], ['quest
    const calls: Record<string, unknown>[] = []
    client.rpc = async (name, input) => { assert.equal(name, `save_${kind}_prompt`); calls.push(input); return new Promise<MockResult>(resolve => { finish = resolve }) }
    cache.setQueryData(['content-languages'], [{ code: 'vi', display_name: 'Tiếng Việt' }, { code: 'en', display_name: 'English' }, { code: 'fr', display_name: 'Français' }])
+   for (const prefix of ['dashboard', 'categories', 'word-prompts', 'question-prompts']) {
+     for (const locale of ['vi', 'en', 'fr']) cache.setQueryData([prefix, 'list', locale], { fixture: true })
+   }
    const component = (await server.ssrLoadModule(`/src/views/${kind}-prompts/${cap}PromptFormView.vue`)).default
    const i18n = createI18n({ legacy: false, locale: 'vi', messages: { vi: vn, en: {} }, missingWarn: false, fallbackWarn: false })
    app = renderer.createApp({ setup() { provideUnsavedChanges(); return () => h({ ...component, render: () => h('div') }) } })
@@ -80,6 +83,9 @@ for (const [kind, cap, field, other] of [['word', 'Word', 'text', null], ['quest
    const translation = { prompt_id: original.id, locale: 'en', [field]: 'English', ...(other ? { [other]: 'Other English' } : {}), status: 'published' }
    latest = { ...original, translations: [translation], game_categories: null }
    finish({ data: { original, translation } }); await tick()
+   for (const prefix of ['dashboard', 'categories', 'word-prompts', 'question-prompts']) {
+     for (const locale of ['vi', 'en', 'fr']) assert.equal(cache.getQueryState([prefix, 'list', locale])!.isInvalidated, true, `${prefix}/${locale} refreshed after save`)
+   }
    assert.equal(router.currentRoute.value.name, `${kind}-prompt-edit`)
    assert.equal(editor.unsaved.busy, false); assert.equal(editor.unsaved.dirty, true)
    editor.selectLocale('vi'); await tick(); assert.equal(editor.form[field], 'Vietnamese draft')
@@ -93,7 +99,7 @@ for (const [kind, cap, field, other] of [['word', 'Word', 'text', null], ['quest
    editor.update(field, 'French'); if (other) editor.update(other, 'Other French')
    editor.submit('draft'); await tick(); assert.equal(calls[2]!.p_expected_updated_at, 'version-2')
    finish({ error: new Error('offline') }); await tick(); assert.equal(editor.form[field], 'French'); assert.equal(editor.unsaved.dirty, true)
-   editor.submit('draft'); await tick(); finish({ error: { code: '40001' } }); await tick()
+   editor.submit('draft'); await tick(); finish({ error: { code: 'PT409' } }); await tick()
    assert.equal(editor.saveConflict, true); editor.submit('draft'); assert.equal(calls.length, 4)
    await editor.reload(); assert.equal(editor.form[field], 'French', 'cancelled reload preserves draft')
    globalThis.window.confirm = () => true; await editor.reload(); await tick()

@@ -19,7 +19,7 @@ test('question deletion sends only the snapshot and maps permission, missing and
   const calls: Calls = [], client: { rpc: (...args: unknown[]) => Promise<MockResult> } = { rpc: async (...args: unknown[]) => { calls.push(args); return { data: null } } }
   await deleteQuestionPrompt(asClient(client), Object.assign({ id, updatedAt: 'version' }, { imposter_hint: 'ignored' }))
   assert.deepEqual(calls, [['delete_question_prompt', { p_id: id, p_expected_updated_at: 'version' }]])
-  for (const [code, key] of [['40001', 'questionPrompts.errors.conflict'], ['P0002', 'questionPrompts.errors.notFound'], ['42501', 'common.errors.forbidden']]) {
+  for (const [code, key] of [['40001', 'questionPrompts.errors.conflict'], ['PT409', 'questionPrompts.errors.conflict'], ['P0002', 'questionPrompts.errors.notFound'], ['42501', 'common.errors.forbidden']]) {
     client.rpc = async () => ({ error: { code } })
     await assert.rejects(deleteQuestionPrompt(asClient(client), { id, updatedAt: 'version' }), error => questionPromptError(error) === key)
   }
@@ -45,7 +45,7 @@ test('question save sends one translation and original version through transacti
  const payload = calls[1]![1] as Record<string, unknown>
  assert.equal(payload.p_expected_updated_at, 'snapshot'); assert.equal(payload.p_locale, 'vi'); assert.equal(payload.p_status, 'published')
  assert.equal(payload.p_civilian_question, form.civilian_question.trim()); assert.equal(payload.p_imposter_question, form.imposter_question.trim());
- for (const error of [new Error('offline'), { code: '40001' }, { code: '42501' }]) {
+ for (const error of [new Error('offline'), { code: 'PT409' }, { code: '42501' }]) {
    client.rpc = async () => ({ error })
    await assert.rejects(saveQuestionPrompt(asClient(client), form, { id, status: 'draft' }), value => value === error)
  }

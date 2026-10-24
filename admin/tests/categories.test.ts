@@ -83,3 +83,7 @@ test('mutation exposes pending, failure, and successful retry', async () => {
     assert.equal(await observer.mutate(), 'saved')
   } finally { unsubscribe(); queryClient.clear() }
 })
+
+test('category conflicts support current HTTP and legacy SQL codes', () => {
+  for (const code of ['PT409', '40001']) assert.equal(categoryError({ code }), 'categories.errors.conflict')
+})

@@ -56,7 +56,8 @@ def races():
             competing = executor.submit(sql, f'begin; {auth} {second} commit;')
             first_result, second_result = holding.result(), competing.result()
         assert first_result.returncode == 0, first_result.stderr
-        assert second_result.returncode != 0 and expected_error in second_result.stderr, second_result.stderr
+        assert second_result.returncode != 0 and (expected_error in second_result.stderr
+            or (expected_error == '40001' and 'PT409' in second_result.stderr)), second_result.stderr
         assert '40P01' not in second_result.stderr, 'Unexpected deadlock'
 
     try:

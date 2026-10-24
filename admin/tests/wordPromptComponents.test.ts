@@ -48,7 +48,7 @@ test('word editor refreshes clean cache, protects edits, and keeps save conflict
     originalFrom = supabase.from; originalGetUser = supabase.auth.getUser
     supabase.auth.getUser = async () => ({ data: { user: { id } } })
     let writes = 0, latest = fresh, readError: Error | null = null, resolveWrite!: () => void
-    supabase.rpc = async () => { writes++; return new Promise<MockResult>(done => { resolveWrite = () => done({ error: { code: '40001' } }) }) }
+    supabase.rpc = async () => { writes++; return new Promise<MockResult>(done => { resolveWrite = () => done({ error: { code: 'PT409' } }) }) }
     supabase.from = () => {
       const query = {} as QueryStub
       for (const name of ['select', 'eq', 'single', 'order', 'range']) query[name] = () => query
@@ -196,7 +196,7 @@ test('saved-word deletion preserves input on failure, blocks repeats/leave/logou
     assert.ok(editor.file)
     assert.equal(editor.deleting, true)
     assert.equal(calls, 1)
-    supabase.rpc = async () => { calls++; return { error: { code: '40001' } } }
+    supabase.rpc = async () => { calls++; return { error: { code: 'PT409' } } }
     editor.remove(input)
     await new Promise(resolve => setTimeout(resolve, 0))
     assert.equal(editor.conflict, true)

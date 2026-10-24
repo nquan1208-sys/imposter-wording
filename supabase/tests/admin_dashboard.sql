@@ -26,4 +26,54 @@ begin
   raise notice 'PASS: dashboard locale filtering, counts and links';
 end;
 $$;
+reset role;
+insert into public.content_languages(code, display_name, sort_order) values ('phase5', 'Phase 5 test', 99);
+set local role authenticated;
+do $$
+declare word_category uuid := gen_random_uuid(); question_category uuid := gen_random_uuid();
+  word_id uuid := gen_random_uuid(); question_id uuid := gen_random_uuid();
+  summary jsonb; baseline jsonb; original_version timestamptz;
+begin
+  baseline := public.admin_dashboard_summary('vi');
+  summary := public.admin_dashboard_summary('phase5');
+  perform pg_temp.assert_true(summary#>>'{stats,drafts}' = '0' and summary->'recent' = '[]'::jsonb,
+    'new language starts empty without fallback');
+  perform pg_temp.save_category(word_category, 'word', 'phase5');
+  perform pg_temp.save_category(question_category, 'question', 'phase5');
+  summary := public.admin_dashboard_summary('phase5');
+  perform pg_temp.assert_true(summary#>>'{warnings,empty_categories}' = '2', 'empty categories use selected language');
+  perform pg_temp.save_word(word_id, word_category, 'phase5', 'draft', 'Phase 5 word');
+  perform pg_temp.save_question(question_id, question_category, 'phase5', 'published');
+  summary := public.admin_dashboard_summary('phase5');
+  perform pg_temp.assert_true(summary#>>'{stats,drafts}' = '1' and summary#>>'{stats,published_question_prompts}' = '1',
+    'third language supports both prompt types');
+  perform pg_temp.assert_true(summary#>>'{warnings,empty_categories}' = '0', 'translated prompts resolve empty warnings');
+  perform pg_temp.assert_true(jsonb_array_length(summary->'drafts') = 1
+    and summary#>>'{drafts,0,locale}' = 'phase5' and summary#>>'{drafts,0,id}' = word_id::text,
+    'draft links carry the selected locale');
+  perform pg_temp.assert_true(public.admin_dashboard_summary('vi')->'stats' = baseline->'stats'
+    and public.admin_dashboard_summary('vi')->'warnings' = baseline->'warnings', 'other language totals stay unchanged');
+  select updated_at into original_version from public.word_prompts where id = word_id;
+  perform public.save_word_prompt(word_id,word_category,'easy',false,null,'phase5','Phase 5 word','published',original_version);
+  summary := public.admin_dashboard_summary('phase5');
+  perform pg_temp.assert_true(summary#>>'{warnings,non_family_easy_prompts}' = '1'
+    and summary#>>'{stats,published_word_prompts}' = '1', 'shared prompt fields affect selected-language warnings');
+  perform pg_temp.save_category(word_category, 'word', 'phase5', 'archived', false);
+  summary := public.admin_dashboard_summary('phase5');
+  perform pg_temp.assert_true(summary#>>'{stats,active_categories}' = '1'
+    and summary#>>'{stats,published_word_prompts}' = '1', 'published status totals remain distinct from public visibility');
+  perform pg_temp.save_category(word_category, 'word', 'en', 'draft', false);
+  perform pg_temp.save_word(word_id, word_category, 'en', 'draft');
+  summary := public.admin_dashboard_summary('en');
+  perform pg_temp.assert_true(exists(select 1 from jsonb_array_elements(summary->'recent') i
+    where i->>'id' = word_id::text and i->>'locale' = 'en'), 'second translation has its own dashboard item');
+  perform pg_temp.save_word(word_id, word_category, 'vi', 'draft');
+  summary := public.admin_dashboard_summary('vi');
+  perform pg_temp.assert_true(exists(select 1 from jsonb_array_elements(summary->'recent') i
+    where i->>'id' = word_id::text and i->'category_name' = 'null'::jsonb), 'missing category translation stays nullable');
+  perform pg_temp.assert_true((select count(*) <= 5 from jsonb_array_elements(summary->'recent'))
+    and (select count(*) <= 5 from jsonb_array_elements(summary->'drafts')), 'dashboard panels remain bounded');
+  raise notice 'PASS: dashboard third language, warnings, independent totals and nullable categories';
+end;
+$$;
 rollback;
