@@ -42,7 +42,7 @@ Các phương án dưới đây là **đề xuất triển khai**, không tự t
 | Mục 3 có `Hiển thị gợi ý`, nhưng mục 7 cấm lộ hint và backend đã bỏ hint | Chỉ giữ `Hiển thị danh mục cho kẻ mạo danh`; không dựng một nguồn hint mới. Nếu cần gợi ý khác danh mục, phải có đặc tả nội dung và dữ liệu riêng. | Phase 4 |
 | Phạm vi số kẻ mạo danh chưa có công thức; `1–4` chỉ là ví dụ | Với N người, dùng 1…floor((N−1)/2), bảo đảm phe thường chiếm đa số; random đều trong phạm vi đó. Với tùy chọn không đi trước, chọn người bắt đầu trước rồi loại người đó khỏi tập gán vai. | Phase 4; phase 3 chỉ dùng 1 kẻ mạo danh |
 | Layout vừa nói không đi trước theo người chơi đầu tiên, vừa nói chọn người bắt đầu | Dùng một `startingPlayerId` làm nguồn duy nhất cho luật gán vai và tên người bắt đầu trên màn thảo luận. | Phase 4 |
-| Chưa có UI ghi nhận người bị bầu, xử lý hòa hoặc luật thắng khi có nhiều kẻ mạo danh | Nhóm bầu bằng lời nói; nút công bố mở sheet chọn người bị nhóm bầu rồi xác nhận. Một imposter: chọn đúng thì nhóm thắng, sai thì imposter thắng. Nhiều imposter: đề xuất chọn đúng K người và nhóm chỉ thắng khi chọn đúng toàn bộ tập imposter. Nếu hòa, nhóm bầu lại trước khi xác nhận; chưa làm hệ thống thu từng phiếu. | Sheet ở phase 3; luật nhiều imposter phải chốt trước phase 4 |
+| Chưa có UI ghi nhận người bị bầu, xử lý hòa hoặc luật thắng khi có nhiều kẻ mạo danh | Nhóm bầu bằng lời nói; nút công bố mở sheet chọn người bị nhóm bầu rồi xác nhận. Một imposter: chọn đúng thì nhóm thắng, sai thì imposter thắng. Nhiều imposter: đề xuất chọn đúng K người và nhóm chỉ thắng khi chọn đúng toàn bộ tập imposter. Nếu hòa, nhóm bầu lại trước khi xác nhận; chưa làm hệ thống thu từng phiếu. | Phase 3 đã chốt chọn một người, đúng thì nhóm thắng/sai thì imposter thắng; luật nhiều imposter còn chờ Phase 4 |
 | Game câu hỏi chưa rõ có báo vai cho người nhận câu hỏi khác hay không | Chỉ hiện câu hỏi riêng, không tự báo vai. Các công tắc tiết lộ danh mục/biết nhau chỉ áp dụng word trong bản đầu; question cần duyệt riêng nếu muốn dùng. | Phase 5 |
 | Tùy chỉnh chỉ dùng cho ván hiện tại nhưng cũng nói lưu local và các ván; sau lưu lại về tab `Cổ điển` không tồn tại ở màn danh mục | Giữ nội dung tùy chỉnh cho bộ thiết lập hiện tại và `Chơi lại`, không làm thư viện lâu dài. Sau lưu trở về picker theo đúng loại game/mode hiện tại. Không tự đổi từ Gia đình sang Cổ điển. | Phase 8 |
 | Một field `Câu hỏi` không đủ tạo game với hai nhóm nhận câu hỏi khác nhau | Form question tùy chỉnh phải nhập một cặp câu hỏi khác nhau. Nhập nhiều dùng hai ô nhiều dòng, ghép cặp theo dòng, kiểm tra số dòng bằng nhau. | Phase 9 |
@@ -86,7 +86,7 @@ Hợp đồng đọc theo schema mới, áp dụng ngay từ phase 2 dù lúc đ
 
 - Thiết lập chứa người chơi có ID ổn định, game type, mode, category IDs, `contentLocale` (ban đầu `vi`) và các tùy chọn. Chỉ thêm trường khi phase đó bắt đầu dùng; UI locale không phải luật chơi và không được preset ghi đè.
 - Session chụp một bản thiết lập, locale, tên danh mục và prompt đã dịch tại thời điểm bắt đầu, gồm vai, người bắt đầu, tiến độ đã xem/trả lời và stage hiện tại. Không random hay đổi bản dịch khi rebuild, quay lại, refresh hoặc resume app.
-- `Chơi lại` tạo session mới và random lại từ tập hợp lệ, giữ thiết lập/người chơi. Có thể trùng prompt khi tập nhỏ; không thêm lịch sử chống lặp ở bản đầu.
+- `Chơi lại` kết thúc session và quay về màn thiết lập, giữ thiết lập/người chơi để chỉnh trước ván kế tiếp. Chỉ khi nhấn bắt đầu tại setup mới tạo session và random lại từ tập hợp lệ. Có thể trùng prompt khi tập nhỏ; không thêm lịch sử chống lặp ở bản đầu.
 - Session sống xuyên các màn của ván, không bị dispose theo màn reveal. Khi kết thúc/rời ván có xác nhận thì hủy session; quay lại không mở được bí mật đã xác nhận xong.
 - Tên người chơi, vai, câu trả lời và kết quả bầu chọn chỉ nằm trên thiết bị, không gửi vào Supabase hoặc log. Thiết lập và danh sách đã lưu tồn tại qua lần mở app; ván đang chơi không bắt buộc khôi phục sau khi hệ điều hành đóng tiến trình.
 - Khi app ra nền hoặc chuyển người chơi, che nội dung bí mật trước khi hiển thị lại. Không hứa chặn screenshot ở cấp hệ điều hành trong phạm vi này.
@@ -199,12 +199,46 @@ xác nhận. Nút bắt đầu ván vẫn chưa khả dụng cho tới phase 3.
 
 ### Phase 3 — Ván word hoàn chỉnh đầu tiên
 
+**Trạng thái triển khai 24/10/2026:** đã nối setup → danh sách người chơi → thẻ
+bí mật → thảo luận → sheet bầu chọn → kết quả → chơi lại. Session sống trong một
+route, giữ bản sao setup/content, đúng một imposter và người bắt đầu random một
+lần từ toàn bộ người chơi. Không bật hiển thị danh mục cho imposter ở phase này.
+
+**Quyết định đã chốt:** nhóm bầu bằng lời; sheet ghi nhận đúng một người. Đúng
+imposter thì nhóm thắng, sai thì imposter thắng; hòa thì nhóm bầu lại trước khi
+xác nhận. Hủy sheet không công bố vai. Layout và hướng dẫn VI/EN đã cập nhật.
+
+Back từ thẻ về danh sách mà chưa đánh dấu hoàn tất; back trong ván hỏi kết thúc,
+back từ kết quả về setup. App ra nền che thẻ và yêu cầu mở lại. `Chơi lại` hủy
+session và quay về setup, giữ nguyên thiết lập; nhấn bắt đầu tại setup mới tạo
+ván tiếp theo từ content hợp lệ hiện tại.
+Không lưu session xuống đĩa; ảnh word vẫn thuộc Phase 7.
+
+**Bằng chứng kiểm tra Phase 3:**
+
+- `flutter gen-l10n`, `flutter analyze`: thành công, không có issue.
+- `flutter test`: **72 tests passed**. Bao gồm gán vai/seed, snapshot bất biến,
+  stage guards, bầu đúng/sai, hủy sheet, back/cancel, nhấn bắt đầu lặp,
+  chơi lại về setup cả khi content rỗng, lifecycle/semantics, UI VI/EN, 100 người và màn 320×568
+  với text scale 2 qua cả bước bầu chọn/kết quả.
+- `flutter test integration_test/word_game_smoke_test.dart -d <iPhone-17-Pro-simulator-id>
+  --dart-define=APP_ENV=local`: **1 test passed** trên iOS 26.5 Simulator.
+  Fixture được ghi vào cache JSON thật ở thư mục test, repository tải lại với
+  nguồn mạng giả lập offline, rồi chơi hết ván → bầu → kết quả → chơi lại về setup
+  → nhấn bắt đầu tạo ván mới → kết thúc về setup.
+  Không gọi backend, không seed DB và không kiểm thử máy bay/kill-relaunch thật.
+- `flutter build apk --debug --dart-define=APP_ENV=local` và
+  `flutter build ios --simulator --debug --dart-define=APP_ENV=local`: thành công.
+- Không chụp hoặc kiểm tra ảnh UI theo hướng dẫn project. Chưa nghiệm thu
+  gameplay trên thiết bị thật, Android runtime hoặc bản release; các quyết định
+  nhiều imposter/luật nâng cao vẫn để Phase 4.
+
 **PR đề xuất:** `feat(app): ship playable word game loop`
 
 - Phạm vi: màn 6–9; dùng setup ở phase 2 và một kẻ mạo danh. Nâng nút bắt đầu từ chưa khả dụng thành tạo session thực.
-- Chọn ngẫu nhiên prompt và vai một lần; danh sách tên mặc định → thẻ che → xem từ hoặc vai → `Hiểu rồi!`. Chỉ người thường được xem từ và ảnh word nếu có; tùy chọn hiển thị danh mục không được rò qua heading khi đang che.
-- Khi tất cả hoàn tất mới sang hướng dẫn thảo luận; hiện người bắt đầu. `Thông báo kết quả` mở sheet chọn đúng một người nhóm đã bầu, xác nhận rồi mới công bố vai thật/từ và bên thắng. Không thu từng phiếu; sheet là phần bổ sung cần chốt vào layout theo mục 3.
-- `Chơi lại` giữ setup và thay session. Back trong ván chỉ trở về danh sách khi an toàn hoặc hỏi kết thúc ván; không pop về một reveal đã hoàn tất. App ra nền che bí mật khi trở lại.
+- Chọn ngẫu nhiên prompt và vai một lần; danh sách tên mặc định → thẻ che → xem từ hoặc vai → `Hiểu rồi!`. Chỉ người thường được xem từ và danh mục sau khi mở thẻ; không rò bí mật qua heading/semantics khi đang che. Ảnh word bổ sung ở phase 7.
+- Khi tất cả hoàn tất mới sang hướng dẫn thảo luận; hiện người bắt đầu. `Thông báo kết quả` mở sheet chọn đúng một người nhóm đã bầu, xác nhận rồi mới công bố vai thật/từ và bên thắng. Không thu từng phiếu; sheet và luật thắng một imposter đã chốt vào layout theo mục 3.
+- `Chơi lại` hủy session và về setup, giữ nguyên cấu hình; chỉ nhấn bắt đầu tại setup mới tạo session tiếp theo. Back trong ván chỉ trở về danh sách khi an toàn hoặc hỏi kết thúc ván; không pop về một reveal đã hoàn tất. App ra nền che bí mật khi trở lại.
 - Điểm chạm: feature word_game, session dùng chung, content repository, routes, ARB; không thêm bảng lưu ván backend.
 - **Nghiệm thu:** 3 người trở lên chơi được từ đầu đến cuối, kể cả ở chế độ máy bay sau khi đã tải content thành công ít nhất một lần; không mở lại thẻ đã xong; rebuild không đổi vai/từ; chạm nhanh không xác nhận hai người hoặc tạo hai ván.
 - **Kiểm tra:** unit test gán đúng một vai, chặn chuyển stage sớm và xác định thắng khi bầu đúng/sai bằng random có seed/fake; widget/integration test trọn ván, hủy sheet bầu chọn, back, pause/resume, giữ setup khi chơi lại. Không kiểm tra phân phối random bằng test xác suất dễ chập chờn.
@@ -228,7 +262,7 @@ xác nhận. Nút bắt đầu ván vẫn chưa khả dụng cho tới phase 3.
 - Phạm vi: màn 10–14; bật chọn question ở setup và picker đúng loại/mode. Tái sử dụng roster, session, random và lớp nội dung hiện có.
 - Chọn một cặp câu hỏi từ cùng hàng `question_prompt_translations` của content locale đang dùng, đã ghép đề gốc qua repository; người thường nhận `civilian_question`, imposter nhận `imposter_question`. Thẻ bí mật che trước khi mở, form trả lời chỉ thuộc người hiện tại, submit trim và chặn rỗng/gửi lặp.
 - Gửi xong khóa người chơi đó, tăng counter, không cho sửa hoặc xem lại; chỉ khi đủ câu trả lời mới hiện câu hỏi chung.
-- Thảo luận công khai tên/câu trả lời nhưng giữ kín câu hỏi khác; công bố mới đánh dấu mọi imposter và hiện câu hỏi riêng. Chơi lại tạo câu trả lời và vai mới.
+- Thảo luận công khai tên/câu trả lời nhưng giữ kín câu hỏi khác; công bố mới đánh dấu mọi imposter và hiện câu hỏi riêng. Chơi lại về setup, giữ cấu hình; bắt đầu ván mới mới tạo câu trả lời và vai mới.
 - Điểm chạm: feature question_game, setup/category mapping, session stages, ARB, local content fixtures; không gửi câu trả lời lên backend.
 - **Nghiệm thu:** cả Cổ điển/Gia đình chơi được từ setup tới replay; chưa gửi đủ không thể vào thảo luận; đổi loại game không mang theo câu trả lời/session cũ.
 - **Kiểm tra:** unit test assignment/stage, answer validation; widget/integration test chuyển máy nhiều người, pause che câu hỏi, double submit, riêng tư trước công bố và reset khi replay.
@@ -317,7 +351,7 @@ xác nhận. Nút bắt đầu ván vẫn chưa khả dụng cho tới phase 3.
 - Lưu `contentLocale` độc lập với UI locale. Thiết lập/preset cũ thiếu trường này được đọc là `vi`; preset mới lưu content locale, validate lại khi nạp và không đổi UI locale. Mã locale không còn trong danh sách sau lần tải thành công phải hiện trạng thái không khả dụng và yêu cầu chọn lại; không âm thầm đổi ngôn ngữ hoặc xóa thiết lập cũ.
 - Đổi content locale ngoài ván: chuyển repository sang snapshot của locale mới, tải/validate đủ trước khi cho bắt đầu; có cache đúng locale thì dùng khi offline. Lỗi tải không hiển thị dữ liệu của locale cũ dưới nhãn mới; không có cache thì báo lỗi/thử lại. Ngôn ngữ hợp lệ nhưng chưa có đề published hiện trạng thái rỗng/chặn bắt đầu, cho đổi ngôn ngữ; không tự fallback sang VI/EN.
 - Scope request và kết quả theo backend + content locale; nếu người dùng đổi nhanh VI→EN→VI, kết quả về trễ chỉ được cập nhật cache tương ứng, không ghi đè danh mục/count hiện đang xem. Picker đang mở phải hủy lựa chọn tạm khi đổi locale; validate lại category IDs và tên hiển thị bằng bộ lọc chung ở mục 4.
-- Word reveal/kết quả dùng `word_prompt_translations.text` đã ghép; question lấy nguyên cặp cùng hàng translation. Session giữ locale, tên category và prompt đã chụp; refresh hoặc đổi UI không làm đổi nội dung ván. `Chơi lại` dùng locale của bộ thiết lập hiện tại và tạo session mới theo quy tắc chung.
+- Word reveal/kết quả dùng `word_prompt_translations.text` đã ghép; question lấy nguyên cặp cùng hàng translation. Session giữ locale, tên category và prompt đã chụp; refresh hoặc đổi UI không làm đổi nội dung ván. `Chơi lại` về setup và giữ locale hiện tại; khi bắt đầu ván tiếp theo mới tạo session theo quy tắc chung.
 - Nội dung tùy chỉnh chỉ hiện trong locale lúc tạo; đổi locale không xóa draft/category/ảnh đang còn vòng đời. Không nhân đôi hoặc tự dịch nội dung người chơi nhập. File ảnh remote dùng chung theo backend + `image_path`, chỉ dọn khi mọi cache locale và session đều hết tham chiếu; đổi locale không tải lại ảnh đã có.
 - Điểm chạm: settings/language picker, `AppStore`/local settings, setup/category picker, data/content/cache keys, preset serialization, custom content, session/reveal/kết quả, ARB và fixtures. Không thêm ARB cho mọi mã ngôn ngữ nội dung hoặc thay cấu trúc state/DI.
 - **Nghiệm thu:** đổi nội dung VI↔EN và chơi trọn cả hai game, hai mode; UI EN + content VI và ngược lại hoạt động đúng. Tên/count/random đều cùng locale, không đếm nhiều bản dịch thành nhiều đề; thiếu bản dịch/đề thì rỗng; khởi động lại nhớ lựa chọn; offline chỉ chơi bằng cache đúng locale. Backend kiểm thử phải có bản dịch published cho từng tổ hợp cần nghiệm thu; mã trong `content_languages` đơn thuần không đủ.

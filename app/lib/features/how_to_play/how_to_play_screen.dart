@@ -1,3 +1,4 @@
+import 'package:untitled/widgets/app_content.dart';
 import 'package:flutter/material.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/constants/app_spacing.dart';
@@ -19,14 +20,19 @@ class HowToPlayScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.howToPlay)),
-      body: SafeArea(
+      body: AppContent(
         top: false,
         child: ListView(
           padding: AppEdgeInsets.all24,
           children: [
-            for (final (icon, title, body) in steps) ...[
+            for (final (index, (icon, title, body)) in steps.indexed) ...[
               Card(
-                child: _StepContent(icon: icon, title: title, body: body),
+                child: _StepContent(
+                  icon: icon,
+                  title: title,
+                  body: body,
+                  number: index + 1,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
             ],
@@ -57,8 +63,10 @@ class _StepContent extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.body,
+    this.number,
   });
 
+  final int? number;
   final IconData icon;
   final String title;
   final String body;
@@ -84,6 +92,15 @@ class _StepContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (number != null) ...[
+                  Text(
+                    number.toString().padLeft(2, '0'),
+                    style: textTheme.labelLarge?.copyWith(
+                      color: AppColors.gray,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                ],
                 Text(title, style: textTheme.titleLarge),
                 const SizedBox(height: AppSpacing.xs),
                 Text(

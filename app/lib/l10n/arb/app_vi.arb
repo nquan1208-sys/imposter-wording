@@ -12,7 +12,7 @@
   "stepHintTitle": "Đưa ra gợi ý",
   "stepHintBody": "Người chơi lần lượt nói một từ liên quan đến từ bí mật. Gợi ý không nên quá rõ ràng để tránh lộ từ.",
   "stepFindTitle": "Tìm kẻ mạo danh",
-  "stepFindBody": "Cả nhóm thảo luận rồi bỏ phiếu cho người có vẻ không biết từ bí mật. Nếu nhóm bỏ phiếu sai, kẻ mạo danh thắng.",
+  "stepFindBody": "Cả nhóm thảo luận và bầu bằng lời. Chọn người bị bầu rồi xác nhận: đúng kẻ mạo danh thì nhóm thắng, sai thì kẻ mạo danh thắng. Nếu hòa, nhóm bầu lại.",
   "proTipTitle": "Mẹo chuyên nghiệp",
   "proTipBody": "Kẻ mạo danh nên lắng nghe cẩn thận, hòa nhập và đưa ra gợi ý phù hợp với danh mục.",
   "notFound": "Không tìm thấy trang",
@@ -40,7 +40,6 @@
   "resetSetup": "Đặt lại thiết lập",
   "resetSetupConfirm": "Thay thiết lập không đọc được bằng thiết lập mặc định?",
   "startGame": "Bắt đầu ván chơi",
-  "gameComingSoon": "Chơi game sẽ có ở giai đoạn 3. Bạn có thể lưu thiết lập ngay bây giờ.",
   "decreasePlayers": "Giảm số người",
   "increasePlayers": "Tăng số người",
   "wordCount": "{count} từ phù hợp",
@@ -66,5 +65,55 @@
         "type": "int"
       }
     }
-  }
+  },
+  "wordFor": "Từ dành cho {name}",
+  "@wordFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "endGame": "Kết thúc ván",
+  "endGameConfirm": "Kết thúc ván và quay về thiết lập? Tiến độ ván này sẽ bị mất.",
+  "voteTitle": "Chọn người bị bầu",
+  "voteHelp": "Nhóm bầu bằng lời rồi chọn một người. Nếu hòa, hãy bầu lại trước khi xác nhận.",
+  "gameStartError": "Không thể tạo ván. Hãy quay về thiết lập và kiểm tra nội dung phù hợp.",
+  "discussionTitle": "Giai đoạn bầu chọn",
+  "gameResult": "Kết quả",
+  "passPhone": "Chuyển máy cho từng người để xem thẻ riêng.",
+  "playerDone": "Đã xem",
+  "youAreImposter": "Bạn là kẻ mạo danh",
+  "tapToReveal": "Nhấn để hiển thị",
+  "understood": "Hiểu rồi!",
+  "startingPlayer": "{name} bắt đầu vòng chơi.",
+  "@startingPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "discussionHelp": "Lần lượt theo chiều kim đồng hồ, mỗi người nói một từ liên quan đến từ bí mật. Có thể chơi nhiều vòng, sau đó thảo luận và bầu một người. Bầu đúng kẻ mạo danh thì nhóm thắng; bầu sai thì kẻ mạo danh thắng.",
+  "groupWins": "Nhóm chiến thắng!",
+  "imposterWins": "Kẻ mạo danh chiến thắng!",
+  "actualImposter": "Kẻ mạo danh là: {name}",
+  "@actualImposter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "votedPlayer": "Người bị bầu: {name}",
+  "@votedPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "secretWord": "Từ bí mật",
+  "announceResult": "Thông báo kết quả",
+  "playAgain": "Chơi lại"
 }

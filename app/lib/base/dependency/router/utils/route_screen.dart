@@ -1,3 +1,5 @@
+import 'package:untitled/features/word_game/word_game_screen.dart';
+import 'package:untitled/features/word_game/word_game_store.dart';
 import 'package:flutter/material.dart';
 import 'package:untitled/features/how_to_play/how_to_play_screen.dart';
 import 'package:untitled/features/landing/landing_screen.dart';
@@ -6,6 +8,13 @@ import 'package:untitled/features/setup/setup_screen.dart';
 import 'package:untitled/features/setup/category_screen.dart';
 
 class RouteScreen {
+  static PageRoute wordGamePageRoute(RouteSettings settings) =>
+      MaterialPageRoute(
+        settings: settings,
+        builder: (_) => settings.arguments is WordGameSession
+            ? WordGameScreen(session: settings.arguments as WordGameSession)
+            : const SetupScreen(),
+      );
   static PageRoute setupPageRoute(RouteSettings settings) => MaterialPageRoute(
     settings: settings,
     builder: (_) => const SetupScreen(),

@@ -1,3 +1,4 @@
+import 'package:untitled/widgets/app_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/base/dependency/app_service.dart';
@@ -17,7 +18,7 @@ class LandingScreen extends ConsumerWidget {
     final routerService = ref.watch(AppService.router);
 
     return Scaffold(
-      body: SafeArea(
+      body: AppContent(
         child: Padding(
           padding: AppEdgeInsets.all24,
           child: Column(
@@ -28,31 +29,36 @@ class LandingScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: AppSpacing.xxl),
-                      // ponytail: placeholder art until the illustration asset exists
                       Container(
-                        width: 160,
-                        height: 160,
+                        width: double.infinity,
+                        padding: AppEdgeInsets.all24,
                         decoration: const BoxDecoration(
                           color: AppColors.yellow,
                           borderRadius: BorderRadius.all(Radius.circular(20)),
                         ),
-                        child: const Icon(
-                          Icons.theater_comedy,
-                          size: 96,
-                          color: AppColors.charcoal,
+                        child: Column(
+                          children: [
+                            const SizedBox(height: AppSpacing.lg),
+                            const Icon(
+                              Icons.theater_comedy_outlined,
+                              size: 80,
+                              color: AppColors.charcoal,
+                            ),
+                            const SizedBox(height: AppSpacing.xl),
+                            Text(
+                              l10n.appTitle,
+                              style: textTheme.headlineLarge,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              l10n.tagline,
+                              style: textTheme.titleLarge,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.xxl),
-                      Text(
-                        l10n.appTitle,
-                        style: textTheme.headlineLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        l10n.tagline,
-                        style: textTheme.titleLarge,
-                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       Text(
@@ -69,7 +75,14 @@ class LandingScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: () => routerService.push(RouteInput.setup()),
-                child: Text(l10n.start),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(child: Text(l10n.start)),
+                    const SizedBox(width: 12),
+                    const Icon(Icons.arrow_forward, size: 20),
+                  ],
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               OutlinedButton(

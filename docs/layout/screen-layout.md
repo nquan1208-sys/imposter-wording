@@ -330,14 +330,14 @@ Cho phép từng người chơi lần lượt mở thông tin bí mật của m�
 
 - Nút quay lại ở góc trên bên trái.
 - Khu vực trung tâm hiển thị tên người nhận, ví dụ `Từ dành cho Hà`.
-- Hiển thị danh mục bên dưới, ví dụ `Danh mục: Phim ảnh`.
+- Khi thẻ còn che, không hiện danh mục hoặc nội dung bí mật qua heading hay screen reader.
 - Vùng nội dung bí mật là một thẻ che kín từ.
 - Hướng dẫn bên dưới: `Nhấn để hiển thị`.
 
 ### Trạng thái sau khi tiết lộ
 
 - Thẻ bí mật hiển thị từ dành cho người chơi, ví dụ `Inception`.
-- Từ được căn giữa và là nội dung nổi bật nhất trên thẻ.
+- Từ được căn giữa và là nội dung nổi bật nhất trên thẻ. Người thường thấy thêm tên danh mục sau khi mở thẻ.
 - Nút hành động cuối màn hình: `Hiểu rồi!`.
 
 ### Hành vi
@@ -347,6 +347,8 @@ Cho phép từng người chơi lần lượt mở thông tin bí mật của m�
 - Kẻ mạo danh thấy vai trò và tên danh mục của từ được chọn khi bật `Hiển thị danh mục cho kẻ mạo danh`; khi tắt chỉ thấy vai trò. Không hiển thị từ, hint hoặc ảnh bí mật. Thiết lập thuộc ván và lưu local, không thuộc từng đề.
 - Chạm `Hiểu rồi!` sẽ quay về màn hình `Người chơi` và đánh dấu người chơi hiện tại đã hoàn tất.
 - Không cho phép hiển thị lại từ của người chơi đã hoàn tất.
+- Phase 3 giữ một kẻ mạo danh và chưa bật hiển thị danh mục cho vai này; ảnh word được bổ sung ở Phase 7.
+- Back khi xem thẻ che nội dung và về danh sách, chưa đánh dấu hoàn tất. App ra nền che thẻ; khi trở lại phải chủ động mở lại.
 
 ## 8. Màn hình giai đoạn bầu chọn
 
@@ -361,7 +363,7 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 - Mô tả: `Đã đến lúc thảo luận và bầu chọn kẻ mạo danh!`.
 - Tiêu đề phụ: `Cách Bầu Chọn`.
 - Các bước hướng dẫn hiển thị thành các thẻ xếp dọc:
-  1. `Người Chơi Bắt Đầu` — người chơi được chọn bắt đầu vòng chơi.
+  1. `Người Chơi Bắt Đầu` — chọn ngẫu nhiên một lần từ tất cả người chơi khi tạo ván; Phase 3 cho phép kẻ mạo danh đi trước.
   2. `Thảo Luận Nhóm` — tiếp tục lần lượt theo chiều kim đồng hồ.
   3. `Thời Gian Bầu Chọn` — mỗi người nói một từ liên quan đến từ bí mật, có thể thực hiện nhiều vòng.
   4. `Giai Đoạn Tiết Lộ` — bầu chọn người bị nghi ngờ, sau đó chạm để xem kết quả.
@@ -369,15 +371,19 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 
 ### Hành vi
 
-- Nút `Thông báo kết quả` chuyển sang màn hình tiết lộ kết quả.
-- Đây là màn hướng dẫn/thông báo; thao tác bầu chọn cụ thể diễn ra ở bước tiếp theo hoặc theo luồng kết quả của ván.
+- Chỉ mở giai đoạn này sau khi tất cả người chơi xác nhận đã xem thẻ.
+- Nhóm thảo luận và bầu bằng lời; app không thu từng phiếu.
+- `Thông báo kết quả` mở bottom sheet chọn đúng một người bị nhóm bầu. Mặc định chưa chọn, nút xác nhận chỉ bật sau khi chọn.
+- Nếu hòa, nhóm bầu lại trước khi xác nhận. Hủy/back sheet không ghi nhận người bị bầu hoặc công bố bí mật.
+- Xác nhận mới chuyển sang kết quả. Chọn đúng kẻ mạo danh thì nhóm thắng; chọn sai thì kẻ mạo danh thắng.
+- Back từ danh sách hoặc giai đoạn thảo luận yêu cầu xác nhận kết thúc; hủy giữ nguyên tiến độ.
 
 ## 9. Màn hình tiết lộ kết quả
 
 ### Bố cục
 
 - Hiển thị thông báo kẻ mạo danh, ví dụ `KẺ MẠO DANH LÀ`.
-- Hiển thị tên người chơi bị xác định là kẻ mạo danh.
+- Hiển thị tên kẻ mạo danh thật, người bị nhóm bầu và bên thắng.
 - Hiển thị nhãn `TỪ BÍ MẬT`.
 - Hiển thị từ bí mật lớn ở trung tâm, ví dụ `BÁNH STRUDEL TÁO`.
 - Nút cuối màn hình: `Chơi lại`.
@@ -385,7 +391,9 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 ### Hành vi
 
 - Kết quả chỉ xuất hiện sau khi nhóm hoàn tất bước bầu chọn.
-- `Chơi lại` bắt đầu ván mới với cùng danh sách người chơi và thiết lập hiện tại.
+- `Chơi lại` kết thúc ván và quay về màn thiết lập trò chơi, giữ nguyên danh sách người chơi, mode và danh mục để có thể chỉnh trước ván tiếp theo.
+- Chỉ tạo session mới và random lại từ/vai/người bắt đầu khi nhấn `Bắt đầu trò chơi` tại màn thiết lập; được phép trùng từ khi tập nhỏ. Thiếu nội dung thì màn thiết lập chặn bắt đầu theo quy tắc chung.
+- Back từ kết quả về thiết lập và hủy session. Ván không được khôi phục sau khi hệ điều hành đóng tiến trình.
 - Nếu người bị bầu chọn không phải kẻ mạo danh, màn hình vẫn hiển thị kết quả thực tế để nhóm biết bên thắng.
 
 ## 10. Màn hình chọn người chơi — Trò chơi câu hỏi
@@ -468,7 +476,7 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 ### Hành vi
 
 - Chỉ sau khi công bố kết quả mới hiển thị câu hỏi riêng của kẻ mạo danh.
-- `Chơi lại` tạo ván mới với cùng danh sách người chơi và thiết lập hiện tại.
+- `Chơi lại` kết thúc ván và quay về màn thiết lập trò chơi, giữ nguyên danh sách người chơi và thiết lập. Ván mới chỉ được tạo sau khi nhấn bắt đầu tại màn thiết lập.
 
 ## 15. Màn hình tên người chơi
 

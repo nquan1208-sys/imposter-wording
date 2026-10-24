@@ -1,3 +1,5 @@
+import 'package:untitled/widgets/app_content.dart';
+import 'package:untitled/features/word_game/word_game_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -11,10 +13,34 @@ import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 import 'package:untitled/theme/app_colors.dart';
 
-class SetupScreen extends ConsumerWidget {
+class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SetupScreen> createState() => _SetupScreenState();
+}
+
+class _SetupScreenState extends ConsumerState<SetupScreen> {
+  bool _openingGame = false;
+
+  Future<void> _start(SetupStore store) async {
+    if (_openingGame) return;
+    final session = WordGameSession.create(store);
+    if (session == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).gameStartError)),
+      );
+      return;
+    }
+    setState(() => _openingGame = true);
+    try {
+      await ref.read(AppService.router).push(RouteInput.wordGame(session));
+    } finally {
+      if (mounted) setState(() => _openingGame = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final store = ref.watch(setupStoreProvider);
     final content = store.content;
     final l = AppLocalizations.of(context);
@@ -24,15 +50,10 @@ class SetupScreen extends ConsumerWidget {
         final count = content
             .eligibleWords(family: setup.family, categoryIds: setup.categoryIds)
             .length;
-        const background = Color(0xFFFCF9F8);
         final textTheme = Theme.of(context).textTheme;
         return Scaffold(
-          backgroundColor: background,
-          appBar: AppBar(
-            title: Text(l.setupTitle),
-            backgroundColor: background,
-          ),
-          bottomNavigationBar: SafeArea(
+          appBar: AppBar(title: Text(l.setupTitle)),
+          bottomNavigationBar: AppContent(
             top: false,
             child: Padding(
               padding: AppEdgeInsets.all24,
@@ -42,7 +63,9 @@ class SetupScreen extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: null,
+                      onPressed: store.editable && count > 0 && !_openingGame
+                          ? () => _start(store)
+                          : null,
                       child: Text(l.startGame),
                     ),
                   ),
@@ -50,7 +73,7 @@ class SetupScreen extends ConsumerWidget {
               ),
             ),
           ),
-          body: SafeArea(
+          body: AppContent(
             child: SingleChildScrollView(
               padding: AppEdgeInsets.all24,
               child: Column(
@@ -129,7 +152,7 @@ class SetupScreen extends ConsumerWidget {
                     constraints: const BoxConstraints(minHeight: 80),
                     padding: AppEdgeInsets.all16,
                     decoration: BoxDecoration(
-                      color: AppColors.yellow.withValues(alpha: 0.1),
+                      color: AppColors.yellow,
                       border: Border.all(color: AppColors.yellow, width: 2),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -137,7 +160,7 @@ class SetupScreen extends ConsumerWidget {
                       children: [
                         const Icon(
                           Icons.font_download_outlined,
-                          color: AppColors.amber,
+                          color: AppColors.charcoal,
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(l.wordGame, style: textTheme.labelLarge),
@@ -147,6 +170,7 @@ class SetupScreen extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.md),
                   Wrap(
                     spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
                     children: [
                       ChoiceChip(
                         label: Text(l.classicMode),
@@ -178,7 +202,7 @@ class SetupScreen extends ConsumerWidget {
                         backgroundColor: AppColors.tealSurface,
                         child: Icon(
                           Icons.category_outlined,
-                          color: Color(0xFF006F4D),
+                          color: AppColors.teal,
                         ),
                       ),
                       title: Text(
@@ -205,7 +229,6 @@ class SetupScreen extends ConsumerWidget {
                     if (count == 0) Text(l.emptyContent),
                   ],
                   const SizedBox(height: AppSpacing.md),
-                  Text(l.gameComingSoon, style: textTheme.bodySmall),
                 ],
               ),
             ),
@@ -245,6 +268,7 @@ class SetupScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(value, style: Theme.of(context).textTheme.headlineLarge),
+              Icon(onTap != null ? Icons.tune : Icons.person_outline, size: 20),
             ],
           ),
         ),
@@ -258,7 +282,7 @@ class SetupScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => SafeArea(
+      builder: (context) => AppContent(
         child: StatefulBuilder(
           builder: (context, setState) => SingleChildScrollView(
             padding: AppEdgeInsets.all24,
@@ -266,7 +290,10 @@ class SetupScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(l.players, style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: AppSpacing.xl),
                 Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
@@ -287,6 +314,7 @@ class SetupScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.xl),
                 FilledButton(
                   onPressed: () {
                     store.setPlayerCount(count);
