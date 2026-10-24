@@ -82,6 +82,8 @@ Tạo, dịch, xuất bản, chuyển và xóa danh mục hoạt động với c
 
 ## Phase 4 — Admin quản lý hai loại đề
 
+**Đã triển khai và kiểm thử tự động trên local (2026-10-24):** [Báo cáo editor, RPC danh sách và kiểm thử](./admin-content-translations-phase-4.md). Hai editor dùng phần chung + tab ngôn ngữ, lưu nguyên tử một bản dịch và giữ các draft còn lại. Admin tests, full typecheck/build, SQL rehearsal, concurrency và Storage integration đạt. Kiểm tra trực tiếp bàn phím/layout còn chuyển sang Phase 5 vì phiên công cụ không truy cập được browser window. Chưa triển khai cloud.
+
 - Áp dụng bố cục phần chung và tab bản dịch cho đề từ, đề câu hỏi bằng các component Nuxt UI hiện có.
 - Thêm bản dịch không nhân đôi đề gốc; không tự sao chép nội dung từ ngôn ngữ khác.
 - Nút lưu, xuất bản và lưu trữ chỉ tác động bản dịch đang chọn. Xóa đề gốc xóa toàn bộ bản dịch và phải ghi rõ trong hộp xác nhận.

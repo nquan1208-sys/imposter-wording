@@ -6,12 +6,6 @@ import { deleteQuestionPrompt, saveQuestionPrompt, listQuestionPrompts, question
 import { questionPromptPayload, questionPromptFilters, questionPromptError } from '../src/utils/questionPrompts.ts'
 const id = '00000000-0000-4000-8000-000000000001'
 const form = { civilian_question: '  Favourite food?  ', imposter_question: ' Worst food? ', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi' }
-function mockQuery(result: MockResult) {
-  const calls: Calls = [], query = {} as QueryStub
-  for (const method of ['select', 'eq', 'or', 'order', 'range', 'update', 'insert', 'maybeSingle']) query[method] = (...args: unknown[]) => { calls.push([method, ...args]); return query }
-  query.then = resolve => resolve(result)
-  return { query, calls }
-}
 test('question payload trims, requires distinct questions in every state and excludes hint', () => {
   for (const status of ['draft', 'published', 'archived']) {
     assert.deepEqual(questionPromptPayload({ ...form, imposter_hint: 'ignored' }, status), { ...form, civilian_question: 'Favourite food?', imposter_question: 'Worst food?', status })
@@ -20,34 +14,6 @@ test('question payload trims, requires distinct questions in every state and exc
     assert.throws(() => questionPromptPayload({ ...form, civilian_question: '\u00a0\ufeff' }, status))
   }
   assert.throws(() => questionPromptPayload(form, 'other'))
-})
-test('question listing searches both fields, filters and paginates with stable sorts', async () => {
-  for (const sort of ['updated_at', 'civilian_question']) {
-    const { query, calls } = mockQuery({ data: [], count: 21 })
-    const filters = questionPromptFilters({ search: 'a,b', category: id, locale: 'vi', status: 'archived', family: 'false', difficulty: 'hard', page: '2', sort })
-    assert.deepEqual(await listQuestionPrompts(asClient({ from: (table: string) => { assert.equal(table, 'question_prompts'); return query } }), filters), { rows: [], total: 21 })
-    assert.deepEqual(calls.at(-1), ['range', 20, 39])
-    assert.deepEqual(calls.filter(call => call[0] === 'order'), [['order', sort, { ascending: sort === 'civilian_question' }], ['order', 'id']])
-    assert.deepEqual(calls.find(call => call[0] === 'or'), ['or', 'civilian_question.ilike."%a,b%",imposter_question.ilike."%a,b%"'])
-    for (const [field, value] of Object.entries({ category_id: id, locale: 'vi', status: 'archived', difficulty: 'hard', is_family_friendly: false })) assert.ok(calls.some(call => call[0] === 'eq' && call[1] === field && call[2] === value))
-  }
-  assert.equal(questionPromptFilters({ page: '-1', sort: 'text', status: 'bad' }).page, 1)
-  assert.equal(questionPromptFilters({ sort: 'text' }).sort, 'updated_at')
-})
-test('question saves use a version predicate and authenticated creator, propagating errors', async () => {
-  const { query, calls } = mockQuery({ data: { id } })
-  const client = { auth: { getUser: async () => ({ data: { user: { id } as { id: string } | null } }) }, from: () => query }
-  await saveQuestionPrompt(asClient(client), form, { id, status: 'draft' })
-  assert.deepEqual(calls.find(call => call[0] === 'insert')![1], { ...questionPromptPayload(form, 'draft'), id, created_by: id })
-  calls.length = 0
-  await saveQuestionPrompt(asClient(client), form, { id, status: 'published', updatedAt: 'snapshot' })
-  assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'updated_at' && call[2] === 'snapshot'))
-  client.from = () => mockQuery({ data: null }).query
-  await assert.rejects(saveQuestionPrompt(asClient(client), form, { id, status: 'draft', updatedAt: 'old' }), /conflict/)
-  client.from = () => mockQuery({ error: { code: '42501' } }).query
-  await assert.rejects(saveQuestionPrompt(asClient(client), form, { id, status: 'draft' }), error => questionPromptError(error) === 'common.errors.forbidden')
-  client.auth.getUser = async () => ({ data: { user: null } })
-  await assert.rejects(saveQuestionPrompt(asClient(client), form, { id, status: 'draft' }), /sessionExpired/)
 })
 test('question deletion sends only the snapshot and maps permission, missing and conflict errors', async () => {
   const calls: Calls = [], client: { rpc: (...args: unknown[]) => Promise<MockResult> } = { rpc: async (...args: unknown[]) => { calls.push(args); return { data: null } } }
@@ -58,11 +24,44 @@ test('question deletion sends only the snapshot and maps permission, missing and
     await assert.rejects(deleteQuestionPrompt(asClient(client), { id, updatedAt: 'version' }), error => questionPromptError(error) === key)
   }
 })
-test('question category discovery paginates and limits form options to active matching locale', async () => {
-  const calls: Calls[] = []
-  let page = 0
-  const client = { from: () => { const mock = mockQuery({ data: page++ === 0 ? Array.from({ length: 100 }, () => ({ id })) : [] }); calls.push(mock.calls); return mock.query } }
-  assert.equal((await questionCategories(asClient(client), 'vi')).length, 100)
-  assert.equal(calls.length, 2)
-  for (const pageCalls of calls) for (const filter of [['eq', 'game_type', 'question'], ['eq', 'locale', 'vi'], ['eq', 'is_active', true]]) assert.ok(pageCalls.some(call => JSON.stringify(call) === JSON.stringify(filter)))
+
+test('question list passes selected language, filters and pagination to one RPC', async () => {
+ const filters = questionPromptFilters({ search: ' a,b %_ ', category: id, difficulty: 'hard', family: 'false', status: 'archived', page: '2', sort: 'civilian_question' })
+ const calls: Calls = []
+ const client = asClient({ rpc: async (...args: unknown[]) => { calls.push(args); return { data: { rows: [], total: 21 } } } })
+ assert.deepEqual(await listQuestionPrompts(client, filters), { rows: [], total: 21 })
+ assert.deepEqual(calls, [['admin_list_question_prompts', { p_locale: 'vi', p_search: 'a,b %_', p_category_id: id, p_difficulty: 'hard', p_is_family_friendly: false, p_status: 'archived', p_sort: 'civilian_question', p_page: 2 }]])
+ assert.equal(questionPromptFilters({ page: '-1', locale: '' }).page, 1)
+ assert.equal(questionPromptFilters({}).locale, 'vi')
+})
+test('question save sends one translation and original version through transactional RPC', async () => {
+ const calls: Calls = []
+ const result = { original: { id, updated_at: 'new-version' }, translation: { locale: 'vi', status: 'draft' } }
+ const client = { rpc: async (...args: unknown[]): Promise<MockResult> => { calls.push(args); return { data: result } } }
+ assert.deepEqual(await saveQuestionPrompt(asClient(client), form, { id, status: 'draft' }), result)
+ assert.equal(calls[0]![0], 'save_question_prompt')
+ assert.equal((calls[0]![1] as Record<string, unknown>).p_expected_updated_at, null)
+ await saveQuestionPrompt(asClient(client), form, { id, status: 'published', updatedAt: 'snapshot' })
+ const payload = calls[1]![1] as Record<string, unknown>
+ assert.equal(payload.p_expected_updated_at, 'snapshot'); assert.equal(payload.p_locale, 'vi'); assert.equal(payload.p_status, 'published')
+ assert.equal(payload.p_civilian_question, form.civilian_question.trim()); assert.equal(payload.p_imposter_question, form.imposter_question.trim());
+ for (const error of [new Error('offline'), { code: '40001' }, { code: '42501' }]) {
+   client.rpc = async () => ({ error })
+   await assert.rejects(saveQuestionPrompt(asClient(client), form, { id, status: 'draft' }), value => value === error)
+ }
+})
+
+test('question category discovery reads all pages and labels only the selected language', async () => {
+ let requests = 0
+ const calls: Calls = []
+ const client = asClient({ from: () => {
+  const query = {} as QueryStub
+  for (const method of ['select', 'eq', 'order', 'range']) query[method] = (...args: unknown[]) => { calls.push([method, ...args]); return query }
+  query.then = resolve => resolve({ data: requests++ === 0 ? Array.from({ length: 100 }, () => ({ id, slug: 'fallback-slug', is_active: false, translations: [{ locale: 'vi', name: 'Vietnamese' }] })) : [] })
+  return query
+ } })
+ const rows = await questionCategories(client, 'en')
+ assert.equal(requests, 2); assert.equal(rows.length, 100); assert.equal(rows[0]!.name, null)
+ assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'game_type' && call[2] === 'question'))
+ assert.ok(!calls.some(call => call[0] === 'eq' && call[1] === 'locale'), 'category identity is shared')
 })

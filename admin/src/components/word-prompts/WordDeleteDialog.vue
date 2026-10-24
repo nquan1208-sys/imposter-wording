@@ -17,7 +17,7 @@ function submit() {
         <dl class="word-delete-summary">
           <div class="word-delete-content">
             <dt>{{ t('wordPrompts.fields.text') }}</dt>
-            <dd>{{ prompt.text }}</dd>
+            <dd>{{ prompt.text || t('categories.translations.missing') }}</dd>
           </div>
           <div>
             <dt>{{ t('wordPrompts.fields.categoryId') }}</dt>
@@ -25,7 +25,7 @@ function submit() {
           </div>
           <div>
             <dt>{{ t('wordPrompts.fields.status') }}</dt>
-            <dd><UBadge color="neutral" variant="subtle">{{ t(`wordPrompts.statuses.${prompt.status}`) }}</UBadge></dd>
+            <dd><UBadge color="neutral" variant="subtle">{{ prompt.status ? t(`wordPrompts.statuses.${prompt.status}`) : t('categories.translations.missing') }}</UBadge></dd>
           </div>
         </dl>
         <UAlert icon="i-lucide-triangle-alert" color="error" variant="soft" :title="t('wordPrompts.deleteDialog.irreversible')" :description="t('wordPrompts.deleteDialog.warning')" />

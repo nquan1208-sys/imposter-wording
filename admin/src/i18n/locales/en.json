@@ -36,5 +36,17 @@
       "noTargets": "No active category of the same game type publishes every required language.",
       "warning": "All original prompts and translations, including published content, will be permanently deleted. Image files are retained."
     }
+  },
+  "wordPrompts": {
+    "sharedWarning": "Changes to these fields affect every language.",
+    "deleteDialog": {
+      "warning": "The original prompt and every translation, including published content, will be permanently deleted. Image files are retained."
+    }
+  },
+  "questionPrompts": {
+    "sharedWarning": "Changes to these fields affect every language.",
+    "deleteDialog": {
+      "warning": "The original prompt and every translation, including published content, will be permanently deleted."
+    }
   }
 }

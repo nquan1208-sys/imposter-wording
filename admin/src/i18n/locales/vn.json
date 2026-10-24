@@ -258,7 +258,7 @@
       "textRequired": "Nhập từ bí mật."
     },
     "deleteDialog": {
-      "warning": "Nội dung này sẽ bị xóa vĩnh viễn. Thay đổi chưa lưu sẽ bị bỏ. File ảnh vẫn được giữ lại.",
+      "warning": "Đề gốc và toàn bộ bản dịch, kể cả nội dung đã xuất bản, sẽ bị xóa vĩnh viễn. File ảnh được giữ lại.",
       "description": "Kiểm tra nội dung bạn sắp xóa vĩnh viễn.",
       "irreversible": "Không thể hoàn tác",
       "confirm": "Xóa vĩnh viễn"
@@ -307,7 +307,8 @@
       "classification": "Phân loại",
       "textPlaceholder": "Ví dụ: Bánh mì",
       "chooseImage": "Chọn ảnh minh họa"
-    }
+    },
+    "sharedWarning": "Thay đổi thông tin chung ảnh hưởng mọi ngôn ngữ."
   },
   "questionPrompts": {
     "title": "Nội dung câu hỏi",
@@ -353,7 +354,7 @@
       "sameQuestions": "Hai câu hỏi phải khác nhau."
     },
     "deleteDialog": {
-      "warning": "Nội dung này sẽ bị xóa vĩnh viễn. Thay đổi chưa lưu sẽ bị bỏ.",
+      "warning": "Đề gốc và toàn bộ bản dịch, kể cả nội dung đã xuất bản, sẽ bị xóa vĩnh viễn.",
       "description": "Kiểm tra nội dung bạn sắp xóa vĩnh viễn.",
       "irreversible": "Không thể hoàn tác",
       "confirm": "Xóa vĩnh viễn"
@@ -390,7 +391,8 @@
       "description": "Nhập hai câu hỏi và phân loại nội dung.",
       "content": "Nội dung",
       "classification": "Phân loại"
-    }
+    },
+    "sharedWarning": "Thay đổi thông tin chung ảnh hưởng mọi ngôn ngữ."
   },
   "placeholder": {
     "eyebrow": "Đang phát triển",

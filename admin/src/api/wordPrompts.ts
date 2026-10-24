@@ -1,39 +1,30 @@
 import type { wordPromptFilters } from '../utils/wordPrompts.ts'
-import type { AdminClient, DeletePrompt, SaveWord } from '../types/admin.ts'
-import { pageSize, searchPattern } from '../utils/categories.ts'
+import type { AdminClient, DeletePrompt, SaveWord, WordRow, WordDetail, SavedWord } from '../types/admin.ts'
 import { imageBucket, imageTypes, validateImage, wordPromptPayload } from '../utils/wordPrompts.ts'
 function dataOrThrow<T>(result: { data: T; error?: unknown }) { if (result.error) throw result.error; return result.data }
 export async function listWordPrompts(client: AdminClient, filters: ReturnType<typeof wordPromptFilters>) {
-  let query = client.from('word_prompts').select('*, game_categories(id,name,is_active)', { count: 'exact' })
-  if (filters.search.trim()) {
-    const pattern = searchPattern(filters.search.trim())
-    query = query.or(`text.ilike.${pattern}`)
-  }
-  for (const [filter, field] of Object.entries({ category: 'category_id', difficulty: 'difficulty', locale: 'locale', status: 'status' }) as [keyof typeof filters, string][]) {
-    if (filters[filter]) query = query.eq(field, filters[filter])
-  }
-  if (filters.family) query = query.eq('is_family_friendly', filters.family === 'true')
-  const start = (filters.page - 1) * pageSize
-  const result = await query.order(filters.sort, { ascending: filters.sort === 'text' }).order('id').range(start, start + pageSize - 1)
-  return { rows: dataOrThrow(result), total: result.count || 0 }
+  return dataOrThrow(await client.rpc('admin_list_word_prompts', {
+    p_locale: filters.locale, p_search: filters.search.trim(), p_category_id: filters.category || null,
+    p_difficulty: filters.difficulty || null, p_is_family_friendly: filters.family ? filters.family === 'true' : null,
+    p_status: filters.status || null, p_sort: filters.sort, p_page: filters.page,
+  })) as { rows: WordRow[]; total: number }
 }
 export async function getWordPrompt(client: AdminClient, id: string) {
-  const row = dataOrThrow(await client.from('word_prompts').select('*, game_categories(id,name,is_active,locale)').eq('id', id).single())
+  const row = dataOrThrow(await client.from('word_prompts').select('*, translations:word_prompt_translations(*), game_categories(*, translations:game_category_translations(*))').eq('id', id).single())
   if (!row) throw new Error('wordPrompts.errors.notFound')
-  return row
+  return row as WordDetail
 }
 export async function deleteWordPrompt(client: AdminClient, { id, updatedAt }: DeletePrompt) {
   return dataOrThrow(await client.rpc('delete_word_prompt', {
     p_id: id, p_expected_updated_at: updatedAt,
   }))
 }
-export async function wordCategories(client: AdminClient, locale?: string) {
+export async function wordCategories(client: AdminClient, locale = 'vi') {
   const rows = []
   for (let start = 0; ; start += 100) {
-    let query = client.from('game_categories').select('id,name,locale,is_active').eq('game_type', 'word')
-    if (locale !== undefined) query = query.eq('locale', locale).eq('is_active', true)
-    const batch = dataOrThrow(await query.order('name').order('id').range(start, start + 99))
-    rows.push(...(batch || []))
+    const batch = dataOrThrow(await client.from('game_categories').select('*, translations:game_category_translations(*)')
+      .eq('game_type', 'word').order('slug').order('id').range(start, start + 99))
+    rows.push(...(batch || []).map(row => ({ ...row, locale, name: row.translations.find(t => t.locale === locale)?.name ?? null })))
     if ((batch?.length ?? 0) < 100) return rows
   }
 }
@@ -50,9 +41,6 @@ export async function wordImageUrl(client: AdminClient, path: string) {
 }
 export async function saveWordPrompt(client: AdminClient, form: unknown, { id, status, updatedAt, file, onUpload }: SaveWord) {
   const payload = wordPromptPayload(form, status)
-  const { data, error } = await client.auth.getUser()
-  if (error) throw error
-  if (!data.user) throw new Error('common.errors.sessionExpired')
   let uploaded
   try {
     if (file) {
@@ -61,10 +49,9 @@ export async function saveWordPrompt(client: AdminClient, form: unknown, { id, s
       payload.image_path = uploaded
       onUpload?.('uploaded')
     }
-    const query = updatedAt ? client.from('word_prompts').update(payload).eq('id', id).eq('updated_at', updatedAt) : client.from('word_prompts').insert({ ...payload, id, created_by: data.user.id })
-    const row = dataOrThrow(await query.select().maybeSingle())
-    if (!row) throw new Error('wordPrompts.errors.conflict')
-    return row
+    return dataOrThrow(await client.rpc('save_word_prompt', { p_id: id, p_expected_updated_at: updatedAt ?? null, p_category_id: payload.category_id,
+      p_difficulty: payload.difficulty, p_is_family_friendly: payload.is_family_friendly,
+      p_locale: payload.locale, p_status: payload.status, p_text: payload.text, p_image_path: payload.image_path })) as SavedWord
   } catch (error) {
     // Preserve the save error even if cleanup is offline or the file is already referenced.
     if (uploaded) { try { await client.storage.from(imageBucket).remove([uploaded]) } catch {} }

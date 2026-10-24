@@ -2,7 +2,7 @@ import { asClient } from './helpers.ts'
 import type { QueryStub, MockResult, Calls } from './helpers.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { deleteWordPrompt, saveWordPrompt, listWordPrompts } from '../src/api/wordPrompts.ts'
+import { deleteWordPrompt, saveWordPrompt, listWordPrompts, wordCategories } from '../src/api/wordPrompts.ts'
 import { wordPromptPayload, wordPromptFilters, wordPromptError, validateImage } from '../src/utils/wordPrompts.ts'
 const id = '00000000-0000-4000-8000-000000000001'
 const form = { text: '  Apple  ', image_path: '', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi' }
@@ -29,26 +29,55 @@ test('delete passes saved snapshot only, without auth, validation, save or uploa
   assert.equal(wordPromptError({ code: 'P0002' }), 'wordPrompts.errors.notFound')
   assert.equal(wordPromptError({ code: '22023' }), 'wordPrompts.errors.invalidData')
 })
-test('list combines URL filters and stable pagination', async () => {
-  const calls: Calls = [], query = {} as QueryStub
-  for (const method of ['select', 'eq', 'or', 'order', 'range']) query[method] = (...args: unknown[]) => { calls.push([method, ...args]); return query }
-  query.then = resolve => resolve({ data: [], count: 21 })
-  const filters = wordPromptFilters({ search: 'a,b', category: id, status: 'archived', family: 'false', difficulty: 'hard', page: '2' })
-  const result = await listWordPrompts(asClient({ from: () => query }), filters)
-  assert.equal(result.total, 21)
-  assert.deepEqual(calls.at(-1), ['range', 20, 39])
-  assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'is_family_friendly' && call[2] === false))
-  assert.deepEqual(calls.find(call => call[0] === 'or'), ['or', 'text.ilike."%a,b%"'])
-  assert.equal(wordPromptFilters({ page: '-1', status: 'bad' }).page, 1)
-  for (const sort of ['text', 'civilian_text']) assert.equal(wordPromptFilters({ sort }).sort, 'text')
-  assert.equal(wordPromptFilters({ sort: 'unexpected' }).sort, 'updated_at')
+
+test('word list passes selected language, filters and pagination to one RPC', async () => {
+ const filters = wordPromptFilters({ search: ' a,b %_ ', category: id, difficulty: 'hard', family: 'false', status: 'archived', page: '2', sort: 'text' })
+ const calls: Calls = []
+ const client = asClient({ rpc: async (...args: unknown[]) => { calls.push(args); return { data: { rows: [], total: 21 } } } })
+ assert.deepEqual(await listWordPrompts(client, filters), { rows: [], total: 21 })
+ assert.deepEqual(calls, [['admin_list_word_prompts', { p_locale: 'vi', p_search: 'a,b %_', p_category_id: id, p_difficulty: 'hard', p_is_family_friendly: false, p_status: 'archived', p_sort: 'text', p_page: 2 }]])
+ assert.equal(wordPromptFilters({ page: '-1', locale: '' }).page, 1)
+ assert.equal(wordPromptFilters({}).locale, 'vi')
 })
-test('save conflicts keep the original error even if image cleanup fails', async () => {
-  const calls: Calls = [], query = {} as QueryStub
-  for (const method of ['update', 'eq', 'select', 'maybeSingle']) query[method] = (...args: unknown[]) => { calls.push([method, ...args]); return query }
-  query.then = resolve => resolve({ data: null })
-  const client = { auth: { getUser: async () => ({ data: { user: { id } as { id: string } | null } }) }, from: () => query,
-    storage: { from: () => ({ upload: async () => ({ data: {} }), remove: async () => { throw new Error('cleanup offline') } }) } }
-  await assert.rejects(saveWordPrompt(asClient(client), form, { id, status: 'draft', updatedAt: 'snapshot', file: new File(['x'], 'image.png', { type: 'image/png' }) }), /wordPrompts.errors.conflict/)
-  assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'updated_at' && call[2] === 'snapshot'))
+test('word save sends one translation and original version through transactional RPC', async () => {
+ const calls: Calls = []
+ const result = { original: { id, updated_at: 'new-version' }, translation: { locale: 'vi', status: 'draft' } }
+ const client = { rpc: async (...args: unknown[]): Promise<MockResult> => { calls.push(args); return { data: result } } }
+ assert.deepEqual(await saveWordPrompt(asClient(client), form, { id, status: 'draft' }), result)
+ assert.equal(calls[0]![0], 'save_word_prompt')
+ assert.equal((calls[0]![1] as Record<string, unknown>).p_expected_updated_at, null)
+ await saveWordPrompt(asClient(client), form, { id, status: 'published', updatedAt: 'snapshot' })
+ const payload = calls[1]![1] as Record<string, unknown>
+ assert.equal(payload.p_expected_updated_at, 'snapshot'); assert.equal(payload.p_locale, 'vi'); assert.equal(payload.p_status, 'published')
+ assert.equal(payload.p_text, form.text.trim());
+ for (const error of [new Error('offline'), { code: '40001' }, { code: '42501' }]) {
+   client.rpc = async () => ({ error })
+   await assert.rejects(saveWordPrompt(asClient(client), form, { id, status: 'draft' }), value => value === error)
+ }
+})
+
+test('failed word RPC cleans the new upload and preserves the original error', async () => {
+ const failure = { code: '40001' }, removed: string[][] = []
+ let uploaded = ''
+ const client = asClient({ rpc: async () => ({ error: failure }), storage: { from: () => ({
+  upload: async (path: string) => { uploaded = path; return { data: {} } },
+  remove: async (paths: string[]) => { removed.push(paths); throw new Error('offline cleanup') },
+ }) } })
+ await assert.rejects(saveWordPrompt(client, form, { id, status: 'draft', file: new File(['x'], 'image.png', { type: 'image/png' }) }), error => error === failure)
+ assert.deepEqual(removed, [[uploaded]]); assert.ok(uploaded.startsWith(id + '/'))
+})
+
+test('word category discovery reads all pages and labels only the selected language', async () => {
+ let requests = 0
+ const calls: Calls = []
+ const client = asClient({ from: () => {
+  const query = {} as QueryStub
+  for (const method of ['select', 'eq', 'order', 'range']) query[method] = (...args: unknown[]) => { calls.push([method, ...args]); return query }
+  query.then = resolve => resolve({ data: requests++ === 0 ? Array.from({ length: 100 }, () => ({ id, slug: 'fallback-slug', is_active: false, translations: [{ locale: 'vi', name: 'Vietnamese' }] })) : [] })
+  return query
+ } })
+ const rows = await wordCategories(client, 'en')
+ assert.equal(requests, 2); assert.equal(rows.length, 100); assert.equal(rows[0]!.name, null)
+ assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'game_type' && call[2] === 'word'))
+ assert.ok(!calls.some(call => call[0] === 'eq' && call[1] === 'locale'), 'category identity is shared')
 })

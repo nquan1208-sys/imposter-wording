@@ -132,7 +132,7 @@ function logout() {
           <h1>{{ pageTitle }}</h1>
         </div>
       </header>
-      <main class="page-content"><RouterView v-slot="{ Component }"><component :is="Component" :key="route.name === 'category-new' || route.name === 'category-edit' ? 'category-editor' : route.path" /></RouterView></main>
+      <main class="page-content"><RouterView v-slot="{ Component }"><component :is="Component" :key="route.name === 'category-new' || route.name === 'category-edit' ? 'category-editor' : route.name === 'word-prompt-new' || route.name === 'word-prompt-edit' ? 'word-editor' : route.name === 'question-prompt-new' || route.name === 'question-prompt-edit' ? 'question-editor' : route.path" /></RouterView></main>
     </div>
   </div>
 </template>

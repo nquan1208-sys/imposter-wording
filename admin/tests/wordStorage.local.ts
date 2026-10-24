@@ -5,6 +5,7 @@ import { wordPromptFilters } from '../src/utils/wordPrompts.ts'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createClient } from '@supabase/supabase-js'
+import { saveCategory } from '../src/api/categories.ts'
 import { deleteWordPrompt, saveWordPrompt, listWordPrompts } from '../src/api/wordPrompts.ts'
 const status = JSON.parse(execFileSync('supabase', ['status', '-o', 'json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }))
 const url = status.API_URL
@@ -27,31 +28,40 @@ async function account(target: AdminClient) {
   return user.id
 }
 try {
+  console.log('Storage: creating isolated accounts')
   const adminId = await account(admin)
   await account(user)
   sql(`insert into public.admin_users(user_id) values('${adminId}');`)
-  data(await admin.from('game_categories').insert({ id: category, game_type: 'word', name: 'Storage deletion test', slug: category }))
+  await saveCategory(admin, { game_type: 'word', name: 'Storage deletion test', slug: category, locale: 'vi', status: 'published', description: '', sort_order: 0, is_active: true }, category)
+  console.log('Storage: uploading image')
   const path = `${prompt}/${crypto.randomUUID()}.png`; paths.push(path)
   data(await admin.storage.from(bucket).upload(path, png, { contentType: 'image/png', upsert: false }))
   const form = { category_id: category, text: 'Storage test', imposter_text: 'Ignored legacy word', imposter_hint: 'Ignored legacy hint', image_path: path, difficulty: 'medium', is_family_friendly: false, locale: 'vi' }
-  let row = await saveWordPrompt(admin, form, { id: prompt, status: 'draft' })
+  console.log('Storage: saving draft')
+  let result = await saveWordPrompt(admin, form, { id: prompt, status: 'draft' })
+  let row = { ...result.translation, ...result.original }
   assert.equal('imposter_text' in row, false)
   assert.equal('imposter_hint' in row, false)
   for (const target of [anon, user]) {
     assert.ok((await target.storage.from(bucket).download(path)).error, 'draft download denied')
     assert.ok((await target.storage.from(bucket).createSignedUrl(path, 60)).error, 'draft signed URL denied')
   }
+  console.log('Storage: publishing and searching')
   const text = 'Edited a,b %_ " word'
-  row = await saveWordPrompt(admin, { ...form, text: text }, { id: prompt, updatedAt: row.updated_at, status: 'published' })
-  const result = await listWordPrompts(admin, wordPromptFilters({ search: text, category, sort: 'updated_at' }))
-  assert.deepEqual(result.rows!.map(row => row.id), [prompt], 'literal search works after removing imposter column')
-  row = await saveWordPrompt(admin, row, { id: prompt, updatedAt: row.updated_at, status: 'archived' })
+  result = await saveWordPrompt(admin, { ...form, text: text }, { id: prompt, updatedAt: row.updated_at, status: 'published' })
+  row = { ...result.translation, ...result.original }
+  const listing = await listWordPrompts(admin, wordPromptFilters({ search: text, category, sort: 'updated_at' }))
+  assert.deepEqual(listing.rows!.map(row => row.id), [prompt], 'literal search works after removing imposter column')
+  result = await saveWordPrompt(admin, row, { id: prompt, updatedAt: row.updated_at, status: 'archived' })
+  row = { ...result.translation, ...result.original }
   assert.equal(row.status, 'archived')
-  row = await saveWordPrompt(admin, row, { id: prompt, updatedAt: row.updated_at, status: 'published' })
+  result = await saveWordPrompt(admin, row, { id: prompt, updatedAt: row.updated_at, status: 'published' })
+  row = { ...result.translation, ...result.original }
   for (const target of [anon, user]) {
     data(await target.storage.from(bucket).download(path))
     data(await target.storage.from(bucket).createSignedUrl(path, 60))
   }
+  console.log('Storage: deleting and verifying retained bytes')
   const signed = data(await anon.storage.from(bucket).createSignedUrl(path, 60))!.signedUrl
   await deleteWordPrompt(admin, { id: prompt, updatedAt: row.updated_at })
   assert.equal(data(await admin.from('word_prompts').select('id').eq('id', prompt))!.length, 0)
@@ -67,7 +77,7 @@ try {
   assert.ok((await admin.storage.from(bucket).createSignedUrl(path, 60)).error, 'disabled admin denied')
   console.log('PASS: Local Storage retains deleted image, denies new player access, and preserves existing signed URL')
 } finally {
-  sql(`delete from public.word_prompts where category_id = '${category}'; delete from public.game_categories where id = '${category}';`)
+  sql(`begin; select id from public.game_categories where id = '${category}' for update; delete from public.word_prompts where category_id = '${category}'; delete from public.game_categories where id = '${category}'; commit;`)
   if (paths.length) data(await service.storage.from(bucket).remove(paths))
   for (const id of users) data(await service.auth.admin.deleteUser(id))
 }

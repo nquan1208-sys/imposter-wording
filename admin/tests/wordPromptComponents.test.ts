@@ -1,4 +1,4 @@
-import { testWindow, setupState } from './helpers.ts'
+import { testWindow, setupState, promptDetail } from './helpers.ts'
 import type { HostNode, TestApp, StubContext, QueryStub, MockResult, ClientStub } from './helpers.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -48,23 +48,22 @@ test('word editor refreshes clean cache, protects edits, and keeps save conflict
     originalFrom = supabase.from; originalGetUser = supabase.auth.getUser
     supabase.auth.getUser = async () => ({ data: { user: { id } } })
     let writes = 0, latest = fresh, readError: Error | null = null, resolveWrite!: () => void
+    supabase.rpc = async () => { writes++; return new Promise<MockResult>(done => { resolveWrite = () => done({ error: { code: '40001' } }) }) }
     supabase.from = () => {
-      const query = {} as QueryStub, state = { write: false }
-      for (const name of ['select', 'eq', 'single', 'order', 'range', 'maybeSingle']) query[name] = () => query
-      query.update = () => { state.write = true; writes++; return query }
-      query.then = resolve => state.write
-        ? new Promise<MockResult>(done => { resolveWrite = () => done({ data: null }) }).then(resolve)
-        : Promise.resolve({ data: latest, error: readError }).then(resolve)
+      const query = {} as QueryStub
+      for (const name of ['select', 'eq', 'single', 'order', 'range']) query[name] = () => query
+      query.then = resolve => Promise.resolve({ data: promptDetail(latest), error: readError }).then(resolve)
       return query
     }
-    queryClient.setQueryData(['word-prompts', 'detail', id], row)
+    queryClient.setQueryData(['word-prompts', 'detail', id], promptDetail(row))
+    queryClient.setQueryData(['content-languages'], [{ code: 'vi', display_name: 'Tiếng Việt' }, { code: 'en', display_name: 'English' }])
     const component = (await server.ssrLoadModule('/src/views/word-prompts/WordPromptFormView.vue')).default
     app = renderer.createApp({ setup() { provideUnsavedChanges(); return () => h({ ...component, render: () => h('div') }) } })
       .use(router).use(VueQueryPlugin, { queryClient }).use(createI18n({ legacy: false, locale: 'vi', messages: { vi: vn } }))
     app.provide(ssrContextKey, {}); app.provide(matchedRouteKey, computed(() => router.currentRoute.value.matched[0]))
     const editor = setupState(app.mount(node()).$.subTree.component)
     assert.equal(editor.form.text, row.text)
-    queryClient.setQueryData(['word-prompts', 'detail', id], fresh)
+    queryClient.setQueryData(['word-prompts', 'detail', id], promptDetail(fresh))
     await nextTick()
     assert.equal(editor.form.text, fresh.text)
     assert.equal(editor.saved.updated_at, fresh.updated_at)
@@ -73,7 +72,7 @@ test('word editor refreshes clean cache, protects edits, and keeps save conflict
     assert.equal(editor.unsaved.dirty, false, 'preview settings are not content edits')
     editor.update('text', 'My unsaved word')
     editor.file = { type: 'image/png', size: 1 }
-    queryClient.setQueryData(['word-prompts', 'detail', id], { ...fresh, text: 'Another server edit' })
+    queryClient.setQueryData(['word-prompts', 'detail', id], promptDetail({ ...fresh, text: 'Another server edit' }))
     await nextTick()
     assert.equal(editor.form.text, 'My unsaved word')
     assert.ok(editor.file)
@@ -106,7 +105,7 @@ test('word editor refreshes clean cache, protects edits, and keeps save conflict
     assert.equal(editor.unsaved.dirty, false)
     // A background response must not replace a form while an action is busy.
     editor.unsaved.busy = true
-    queryClient.setQueryData(['word-prompts', 'detail', id], fresh)
+    queryClient.setQueryData(['word-prompts', 'detail', id], promptDetail(fresh))
     await nextTick()
     assert.equal(editor.form.text, latest.text)
   } finally {
@@ -140,12 +139,13 @@ test('saved-word deletion preserves input on failure, blocks repeats/leave/logou
     supabase.from = () => {
       const query = {} as QueryStub
       for (const method of ['select', 'eq', 'single', 'order', 'range']) query[method] = () => query
-      query.then = resolve => resolve({ data: latest })
+      query.then = resolve => resolve({ data: promptDetail(latest) })
       return query
     }
-    queryClient.setQueryData(['word-prompts', 'detail', id], row)
+    queryClient.setQueryData(['word-prompts', 'detail', id], promptDetail(row))
     async function mount(path: string, props: Record<string, unknown> = {}) {
-      const component = (await server.ssrLoadModule(path)).default
+      queryClient.setQueryData(['content-languages'], [{ code: 'vi', display_name: 'Tiếng Việt' }, { code: 'en', display_name: 'English' }])
+    const component = (await server.ssrLoadModule(path)).default
       const child = { ...component, render: () => h('div') }
       const root = { setup() { provideUnsavedChanges(); return () => h(child, props) } }
       const app = renderer.createApp(root).use(i18n).use(router).use(VueQueryPlugin, { queryClient })
@@ -155,17 +155,18 @@ test('saved-word deletion preserves input on failure, blocks repeats/leave/logou
       return { state: setupState(instance), instance }
     }
     const { state: editor } = await mount('/src/views/word-prompts/WordPromptFormView.vue')
-    assert.equal(editor.saved.text, 'Saved apple')
-    assert.equal(editor.previewCategoryName, 'Saved category')
+    assert.equal(editor.saved.translations[0].text, 'Saved apple')
+    assert.match(editor.previewCategoryName, /Saved category/)
     assert.equal('imposter_text' in editor.form, false)
     assert.equal('imposter_hint' in editor.form, false)
     editor.update('text', '')
     editor.update('category_id', '')
+    assert.equal(editor.deletePrompt.text, 'Saved apple', 'delete summary uses persisted content')
     assert.equal(editor.previewCategoryName, '')
     editor.file = { type: 'image/png', size: 1 }
     editor.openDelete()
     assert.equal(editor.deleting, true)
-    assert.equal(editor.saved.text, 'Saved apple')
+    assert.equal(editor.saved.translations[0].text, 'Saved apple')
     assert.equal(editor.canLeave(), false)
     // Cancel does not save anything and keeps the invalid form/file.
     editor.deleting = false

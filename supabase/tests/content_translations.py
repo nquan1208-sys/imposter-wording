@@ -113,6 +113,21 @@ class TranslationMigrationTests(unittest.TestCase):
                 helper = (ROOT / 'supabase/tests/content_test_helpers.sql').read_text()
                 self.execute((ROOT / 'supabase/tests/admin_category_translations.sql').read_text().replace('\\ir content_test_helpers.sql', helper))
 
+    def test_phase4_forward_migration_and_suites(self):
+        for populated in [False, True]:
+            with self.subTest(populated=populated):
+                self.fresh_legacy()
+                if populated:
+                    self.seed_legacy()
+                self.migrate()
+                for migration in sorted((ROOT / 'supabase/migrations').glob('*.sql')):
+                    if migration.name > MIGRATION.name:
+                        self.execute(migration.read_text())
+                self.suites()
+                helper = (ROOT / 'supabase/tests/content_test_helpers.sql').read_text()
+                for suite in ['admin_category_translations', 'admin_prompt_translations']:
+                    self.execute((ROOT / f'supabase/tests/{suite}.sql').read_text().replace('\\ir content_test_helpers.sql', helper))
+
     def test_backfill_metadata_locales_statuses_and_slug_mapping(self):
         self.fresh_legacy()
         self.seed_legacy()

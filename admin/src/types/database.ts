@@ -365,6 +365,32 @@ export type Database = {
                 };
                 Returns: Json;
             };
+            "admin_list_question_prompts": {
+                Args: {
+                    "p_category_id": string;
+                    "p_difficulty": Database["public"]['Enums']["difficulty_level"];
+                    "p_is_family_friendly": boolean;
+                    "p_locale": string;
+                    "p_page": number;
+                    "p_search": string;
+                    "p_sort": string;
+                    "p_status": Database["public"]['Enums']["content_status"];
+                };
+                Returns: Json;
+            };
+            "admin_list_word_prompts": {
+                Args: {
+                    "p_category_id": string;
+                    "p_difficulty": Database["public"]['Enums']["difficulty_level"];
+                    "p_is_family_friendly": boolean;
+                    "p_locale": string;
+                    "p_page": number;
+                    "p_search": string;
+                    "p_sort": string;
+                    "p_status": Database["public"]['Enums']["content_status"];
+                };
+                Returns: Json;
+            };
             "delete_category": {
                 Args: {
                     "p_expected_version"?: string;
