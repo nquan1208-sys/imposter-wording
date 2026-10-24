@@ -53,14 +53,17 @@ void main() {
   }
 
   Future<void> tap(WidgetTester tester, String text) async {
-    if (find.text(text).evaluate().isEmpty) {
+    final target = text == 'Danh mục' || text == 'Categories'
+        ? find.byType(ListTile)
+        : find.text(text);
+    if (target.evaluate().isEmpty) {
       await tester.scrollUntilVisible(
-        find.text(text),
+        target,
         180,
         scrollable: find.byType(Scrollable).last,
       );
     }
-    final finder = find.text(text).last;
+    final finder = target.last;
     await tester.ensureVisible(finder);
     await tester.tap(finder);
     await tester.pumpAndSettle();
@@ -70,7 +73,16 @@ void main() {
     'landing opens setup; picker cancel discards and confirm commits',
     (tester) async {
       await pump(tester);
-      expect(find.text('4 người chơi'), findsOneWidget);
+      expect(find.text('4'), findsOneWidget);
+      final semantics = tester.ensureSemantics();
+      expect(find.bySemanticsLabel('4 người chơi'), findsOneWidget);
+      semantics.dispose();
+      expect(find.byType(Switch), findsNothing);
+      expect(find.byIcon(Icons.settings), findsNothing);
+      final player = tester.getRect(find.text('Người chơi'));
+      final imposter = tester.getRect(find.text('Kẻ mạo danh'));
+      expect(player.center.dy, imposter.center.dy);
+      expect(player.center.dx, lessThan(imposter.center.dx));
       expect(find.text('3 từ phù hợp'), findsOneWidget);
       expect(
         tester
@@ -140,9 +152,12 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     await tap(tester, 'Start');
-    expect(find.text('100 players'), findsOneWidget);
-    expect(find.text('Game: Word'), findsOneWidget);
-    expect(find.text('Imposters: 1'), findsOneWidget);
+    expect(find.text('100'), findsOneWidget);
+    final semantics = tester.ensureSemantics();
+    expect(find.bySemanticsLabel('100 players'), findsOneWidget);
+    semantics.dispose();
+    expect(find.text('Word game'), findsOneWidget);
+    expect(find.text('Imposters'), findsOneWidget);
   });
 
   testWidgets('loading, error and retry without cache', (tester) async {
@@ -196,6 +211,7 @@ void main() {
     );
     file.failWrite = false;
     // Settings retry is the first retry; content retry remains below it.
+    await tester.ensureVisible(find.text('Retry').first);
     await tester.tap(find.text('Retry').first);
     await tester.pumpAndSettle();
     expect(store.writeFailed.value, false);

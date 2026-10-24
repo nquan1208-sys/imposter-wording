@@ -62,7 +62,7 @@ void main() {
       await tester.tap(find.text('Bắt đầu'));
       await tester.pumpAndSettle();
       expect(find.text('1 từ phù hợp'), findsOneWidget);
-      await tester.tap(find.text('Danh mục'));
+      await tester.tap(find.byIcon(Icons.chevron_right));
       await tester.pumpAndSettle();
       expect(find.text('Đồ ăn Việt Nam'), findsOneWidget);
       expect(find.text('Nhân vật hư cấu'), findsNothing);
@@ -105,7 +105,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Bắt đầu'));
       await tester.pumpAndSettle();
-      expect(find.text('5 người chơi'), findsOneWidget);
+      expect(find.text('5'), findsOneWidget);
       expect(find.text('1 từ phù hợp'), findsOneWidget);
       expect(find.text('Đang dùng nội dung đã lưu.'), findsOneWidget);
       await tester.tap(find.text('Gia đình'));
