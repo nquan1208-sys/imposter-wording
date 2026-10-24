@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ContentStatusBadge from '../../components/admin/ContentStatusBadge.vue'
 import type { WordRow, WordDetail, WordForm, DeletePrompt, PromptStatus } from '../../types/admin.ts'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -7,7 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { supabase } from '../../lib/supabase.ts'
 import { getWordPrompt, wordCategories, saveWordPrompt, deleteWordPrompt } from '../../api/wordPrompts.ts'
 import { listContentLanguages } from '../../api/categories.ts'
-import { difficulties, validateImage, wordPromptPayload, wordPromptError } from '../../utils/wordPrompts.ts'
+import { statuses, difficulties, validateImage, wordPromptPayload, wordPromptError } from '../../utils/wordPrompts.ts'
 import { useUnsavedChanges, confirmDiscard } from '../../utils/unsavedChanges.ts'
 import WordImage from '../../components/word-prompts/WordImage.vue'
 import WordDeleteDialog from '../../components/word-prompts/WordDeleteDialog.vue'
@@ -85,6 +86,7 @@ const categoryItems = computed(() => {
   return rows.map(row => ({ value: row.id, label: (row.name || row.slug) + (row.is_active ? '' : ` (${t('wordPrompts.inactive')})`) }))
 })
 const previewCategoryName = computed(() => categoryItems.value.find(row => row.value === form.category_id)?.label || '')
+const statusItems = computed(() => statuses.map(value => ({ value, label: t(`common.statuses.${value}`) })))
 const difficultyItems = computed(() => difficulties.map(value => ({ value, label: t(`wordPrompts.difficulties.${value}`) })))
 function update<K extends keyof WordForm>(key: K, value: WordForm[K]) { if (unsaved.busy) return; if (key === 'locale') { selectLocale(String(value)); return } form[key] = value; localError.value = null; message.value = ''; if (!saveConflict.value) saving.reset() }
 async function chooseImage(event: Event) {
@@ -128,7 +130,7 @@ const deletion = useMutation({ mutationFn: (input: DeletePrompt) => deleteWordPr
   onSuccess: async () => { deleting.value = false; clearFile(); sharedBaseline.value = JSON.stringify(sharedDraft()); stash(); for (const key of Object.keys(drafts)) baselines[key] = JSON.stringify(drafts[key]); unsaved.dirty = false; await invalidate(); unsaved.busy = false; await back() },
   onSettled: () => { unsaved.busy = false },
 })
-function submit(status: PromptStatus) {
+function submit(status: PromptStatus = currentStatus.value) {
   if (unsaved.busy || reloading.value || saveConflict.value || saving.isPending.value || deletion.isPending.value) return
   localError.value = null
   try { wordPromptPayload(form, status) } catch (error) { localError.value = error; return }
@@ -141,6 +143,10 @@ function remove(input: DeletePrompt) {
   unsaved.busy = true; deletion.mutate(input)
 }
 const conflict = computed(() => wordPromptError(deletion.error.value) === 'wordPrompts.errors.conflict')
+function updateStatus(status: PromptStatus) {
+  if (unsaved.busy || reloading.value) return
+  currentStatus.value = status; localError.value = null; message.value = ''; if (!saveConflict.value) saving.reset()
+}
 async function reload() {
   if (unsaved.busy || reloading.value || (unsaved.dirty && !confirmDiscard(t('common.confirmations.discardChanges')))) return
   reloading.value = true; unsaved.busy = true
@@ -167,8 +173,8 @@ onBeforeUnmount(() => { disposed = true; clearFile(); window.removeEventListener
       <UAlert v-if="message" color="success" :description="t(message)" role="status" />
       <form class="category-form" novalidate @submit.prevent="submit(currentStatus)">
         <header class="word-editor-heading">
-          <div><h2>{{ t(editing ? 'wordPrompts.actions.edit' : 'wordPrompts.actions.create') }}</h2><p>{{ t('wordPrompts.form.description') }}</p></div>
-          <UBadge color="neutral" variant="soft" :label="t(`wordPrompts.statuses.${currentStatus}`)" />
+          <div><h2>{{ t(editing ? 'wordPrompts.form.editTitle' : 'wordPrompts.actions.create') }}</h2><p>{{ t('wordPrompts.form.description') }}</p></div>
+          <ContentStatusBadge :status="currentStatus" />
         </header>
         <fieldset :disabled="unsaved.busy" class="category-form-fields word-form-section">
           <legend>{{ t('wordPrompts.form.classification') }}</legend><p>{{ t('wordPrompts.sharedWarning') }}</p>
@@ -193,7 +199,8 @@ onBeforeUnmount(() => { disposed = true; clearFile(); window.removeEventListener
         <fieldset :disabled="unsaved.busy" class="category-form-fields word-form-section">
           <legend>{{ t('wordPrompts.form.content') }}</legend>
           <UTabs :model-value="selectedLocale" :items="(languages.data.value || []).map(row => ({ label: row.display_name, value: row.code, disabled: unsaved.busy }))" :content="false" :aria-label="t('common.fields.locale')" :ui="{ list: 'tw:flex-wrap' }" @update:model-value="selectLocale(String($event))" />
-          <p v-if="!activeTranslation" role="status">{{ t('categories.translations.missing') }}</p>
+          <UFormField :label="t('common.fields.status')"><USelect :model-value="currentStatus" :items="statusItems" class="tw:w-full" @update:model-value="updateStatus($event)" /></UFormField>
+          <p v-if="!activeTranslation" role="status">{{ t('common.statuses.missing') }}</p>
           <UFormField :label="t('wordPrompts.fields.text')" required><UInput :model-value="form.text" class="tw:w-full" :placeholder="t('wordPrompts.form.textPlaceholder')" @update:model-value="update('text', $event)" /></UFormField>
         </fieldset>
 
@@ -228,13 +235,10 @@ onBeforeUnmount(() => { disposed = true; clearFile(); window.removeEventListener
         </section>
         <footer class="word-form-footer">
           <div class="category-actions">
-            <UButton type="submit" :label="t('wordPrompts.actions.save')" :loading="saving.isPending.value" :disabled="unsaved.busy || saveConflict" />
-            <UButton v-if="activeTranslation?.status !== 'published'" type="button" :label="t('wordPrompts.actions.publish')" :disabled="unsaved.busy || saveConflict" @click="submit('published')" />
-            <UButton v-if="activeTranslation && activeTranslation.status !== 'draft'" type="button" variant="outline" :label="t('wordPrompts.actions.draft')" :disabled="unsaved.busy || saveConflict" @click="submit('draft')" />
-            <UButton v-if="activeTranslation && activeTranslation.status !== 'archived'" type="button" variant="outline" :label="t('wordPrompts.actions.archive')" :disabled="unsaved.busy || saveConflict" @click="submit('archived')" />
-            <UButton type="button" color="neutral" variant="ghost" :label="t('common.actions.cancel')" :disabled="unsaved.busy" @click="back" />
+            <UButton type="submit" :label="t('common.actions.save')" :loading="saving.isPending.value" :disabled="unsaved.busy || saveConflict" />
+            <UButton type="button" color="neutral" variant="outline" :label="t('common.actions.cancel')" :disabled="unsaved.busy" @click="back" />
           </div>
-          <UButton v-if="saved" type="button" color="error" variant="outline" :label="t('wordPrompts.actions.delete')" :disabled="unsaved.busy" @click="openDelete" />
+          <UButton v-if="saved" type="button" color="error" variant="outline" :label="t('common.actions.delete')" :disabled="unsaved.busy" @click="openDelete" />
         </footer>
       </form>
     </UCard>

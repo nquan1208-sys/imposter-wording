@@ -9,6 +9,7 @@ import { createI18n } from 'vue-i18n'
 import { createMemoryHistory, createRouter, matchedRouteKey } from 'vue-router'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 
+const en = JSON.parse(await readFile(new URL('../src/i18n/locales/en.json', import.meta.url), 'utf8'))
 const vn = JSON.parse(await readFile(new URL('../src/i18n/locales/vn.json', import.meta.url), 'utf8'))
 
 // In-memory host mounts real Vue components without a browser or UI library DOM.
@@ -63,7 +64,7 @@ for (const [kind, cap, field, other] of [['word', 'Word', 'text', null], ['quest
      for (const locale of ['vi', 'en', 'fr']) cache.setQueryData([prefix, 'list', locale], { fixture: true })
    }
    const component = (await server.ssrLoadModule(`/src/views/${kind}-prompts/${cap}PromptFormView.vue`)).default
-   const i18n = createI18n({ legacy: false, locale: 'vi', messages: { vi: vn, en: {} }, missingWarn: false, fallbackWarn: false })
+   const i18n = createI18n({ legacy: false, locale: 'vi', messages: { vi: vn, en }, missingWarn: false, fallbackWarn: false })
    app = renderer.createApp({ setup() { provideUnsavedChanges(); return () => h({ ...component, render: () => h('div') }) } })
     .use(router).use(VueQueryPlugin, { queryClient: cache }).use(i18n)
    app.provide(ssrContextKey, {}); app.provide(matchedRouteKey, computed(() => router.currentRoute.value.matched[0]))
@@ -72,13 +73,20 @@ for (const [kind, cap, field, other] of [['word', 'Word', 'text', null], ['quest
    assert.equal(editor.unsaved.dirty, false)
    editor.update(field, 'Vietnamese draft'); if (other) editor.update(other, 'Other Vietnamese')
    editor.update('category_id', category)
+   editor.updateStatus('archived'); assert.equal(calls.length, 0, 'selecting a status does not save')
    editor.selectLocale('en'); await tick()
    assert.equal(editor.form[field], ''); assert.equal(editor.form.category_id, category, 'shared category survives tab switch')
    editor.update(field, 'English'); if (other) editor.update(other, 'Other English')
-   i18n.global.locale.value = 'en'; await tick(); assert.equal(editor.form.locale, 'en')
-   editor.submit('published'); editor.submit('archived'); await tick()
+   editor.updateStatus('published')
+   i18n.global.locale.value = 'en'; await tick()
+   assert.equal(editor.form.locale, 'en'); assert.equal(editor.currentStatus, 'published')
+   assert.equal(editor.statusItems[1].label, 'Published')
+   assert.equal(editor.form[field], 'English'); assert.equal(editor.form.category_id, category)
+   editor.submit(); editor.submit(); await tick()
+   assert.equal(calls[0]!.p_status, 'published')
    assert.equal(calls.length, 1); assert.equal(calls[0]!.p_locale, 'en'); assert.equal(calls[0]!.p_expected_updated_at, null)
    editor.selectLocale('vi'); assert.equal(editor.form.locale, 'en', 'busy switch blocked')
+   editor.updateStatus('draft'); assert.equal(editor.currentStatus, 'published', 'busy status changes blocked')
    const original = { id: calls[0]!.p_id, category_id: category, difficulty: 'medium', is_family_friendly: false, image_path: null, updated_at: 'version-1' }
    const translation = { prompt_id: original.id, locale: 'en', [field]: 'English', ...(other ? { [other]: 'Other English' } : {}), status: 'published' }
    latest = { ...original, translations: [translation], game_categories: null }
@@ -89,16 +97,22 @@ for (const [kind, cap, field, other] of [['word', 'Word', 'text', null], ['quest
    assert.equal(router.currentRoute.value.name, `${kind}-prompt-edit`)
    assert.equal(editor.unsaved.busy, false); assert.equal(editor.unsaved.dirty, true)
    editor.selectLocale('vi'); await tick(); assert.equal(editor.form[field], 'Vietnamese draft')
-   editor.submit('draft'); await tick(); assert.equal(calls[1]!.p_expected_updated_at, 'version-1')
+   assert.equal(editor.currentStatus, 'archived', 'status draft survives a language tab switch')
+   editor.updateStatus('draft'); editor.submit(); await tick(); assert.equal(calls[1]!.p_expected_updated_at, 'version-1')
    const vietnamese = { ...translation, locale: 'vi', [field]: 'Vietnamese draft', ...(other ? { [other]: 'Other Vietnamese' } : {}), status: 'draft' }
    latest = { ...original, updated_at: 'version-2', translations: [translation, vietnamese], game_categories: null }
    finish({ data: { original: { ...original, updated_at: 'version-2' }, translation: vietnamese } }); await tick()
    assert.equal(editor.unsaved.dirty, false)
    editor.selectLocale('en'); await tick(); assert.equal(editor.form[field], 'English'); assert.equal(editor.activeTranslation.status, 'published')
+   editor.updateStatus('archived'); assert.equal(editor.unsaved.dirty, true)
+   editor.submit(); await tick(); assert.equal(calls.length, 2, 'cancelled published-content confirmation sends nothing')
+   assert.equal(editor.currentStatus, 'archived'); editor.updateStatus('published')
+   assert.equal(editor.unsaved.dirty, false)
    editor.selectLocale('fr'); await tick(); assert.equal(editor.form[field], ''); assert.equal(editor.unsaved.dirty, false)
    editor.update(field, 'French'); if (other) editor.update(other, 'Other French')
-   editor.submit('draft'); await tick(); assert.equal(calls[2]!.p_expected_updated_at, 'version-2')
-   finish({ error: new Error('offline') }); await tick(); assert.equal(editor.form[field], 'French'); assert.equal(editor.unsaved.dirty, true)
+   editor.updateStatus('archived'); editor.submit(); await tick(); assert.equal(calls[2]!.p_expected_updated_at, 'version-2')
+   assert.equal(calls[2]!.p_status, 'archived')
+   finish({ error: new Error('offline') }); await tick(); assert.equal(editor.currentStatus, 'archived'); assert.equal(editor.form[field], 'French'); assert.equal(editor.unsaved.dirty, true)
    editor.submit('draft'); await tick(); finish({ error: { code: 'PT409' } }); await tick()
    assert.equal(editor.saveConflict, true); editor.submit('draft'); assert.equal(calls.length, 4)
    await editor.reload(); assert.equal(editor.form[field], 'French', 'cancelled reload preserves draft')

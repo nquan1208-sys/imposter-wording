@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ContentStatusBadge from '../../components/admin/ContentStatusBadge.vue'
 import type { QuestionRow, QuestionDetail, QuestionForm, DeletePrompt, PromptStatus } from '../../types/admin.ts'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -7,7 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { supabase } from '../../lib/supabase.ts'
 import { getQuestionPrompt, questionCategories, saveQuestionPrompt, deleteQuestionPrompt } from '../../api/questionPrompts.ts'
 import { listContentLanguages } from '../../api/categories.ts'
-import { difficulties, questionPromptPayload, questionPromptError } from '../../utils/questionPrompts.ts'
+import { statuses, difficulties, questionPromptPayload, questionPromptError } from '../../utils/questionPrompts.ts'
 import { useUnsavedChanges, confirmDiscard } from '../../utils/unsavedChanges.ts'
 import QuestionDeleteDialog from '../../components/question-prompts/QuestionDeleteDialog.vue'
 const { t } = useI18n({ useScope: 'global' })
@@ -81,6 +82,7 @@ const categoryItems = computed(() => {
   if (current && !rows.some(row => row.id === current.id)) rows.push({ ...current, locale: form.locale, name: current.translations.find(t => t.locale === form.locale)?.name ?? null })
   return rows.map(row => ({ value: row.id, label: (row.name || row.slug) + (row.is_active ? '' : ` (${t('questionPrompts.inactive')})`) }))
 })
+const statusItems = computed(() => statuses.map(value => ({ value, label: t(`common.statuses.${value}`) })))
 const difficultyItems = computed(() => difficulties.map(value => ({ value, label: t(`questionPrompts.difficulties.${value}`) })))
 function update<K extends keyof QuestionForm>(key: K, value: QuestionForm[K]) { if (unsaved.busy) return; if (key === 'locale') { selectLocale(String(value)); return } form[key] = value; localError.value = null; message.value = ''; if (!saveConflict.value) saving.reset() }
 async function invalidate() { await Promise.all(['word-prompts', 'question-prompts', 'categories', 'dashboard'].map(key => cache.invalidateQueries({ queryKey: [key] }))) }
@@ -108,7 +110,7 @@ const deletion = useMutation({ mutationFn: (input: DeletePrompt) => deleteQuesti
   onSuccess: async () => { deleting.value = false; sharedBaseline.value = JSON.stringify(sharedDraft()); stash(); for (const key of Object.keys(drafts)) baselines[key] = JSON.stringify(drafts[key]); unsaved.dirty = false; await invalidate(); unsaved.busy = false; await back() },
   onSettled: () => { unsaved.busy = false },
 })
-function submit(status: PromptStatus) {
+function submit(status: PromptStatus = currentStatus.value) {
   if (unsaved.busy || reloading.value || saveConflict.value || saving.isPending.value || deletion.isPending.value) return
   localError.value = null
   try { questionPromptPayload(form, status) } catch (error) { localError.value = error; return }
@@ -121,6 +123,10 @@ function remove(input: DeletePrompt) {
   unsaved.busy = true; deletion.mutate(input)
 }
 const conflict = computed(() => questionPromptError(deletion.error.value) === 'questionPrompts.errors.conflict')
+function updateStatus(status: PromptStatus) {
+  if (unsaved.busy || reloading.value) return
+  currentStatus.value = status; localError.value = null; message.value = ''; if (!saveConflict.value) saving.reset()
+}
 async function reload() {
   if (unsaved.busy || reloading.value || (unsaved.dirty && !confirmDiscard(t('common.confirmations.discardChanges')))) return
   reloading.value = true; unsaved.busy = true
@@ -146,8 +152,8 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
       <UAlert v-if="message" color="success" :description="t(message)" role="status" />
       <form class="category-form" novalidate @submit.prevent="submit(currentStatus)">
         <header class="word-editor-heading">
-          <div><h2>{{ t(editing ? 'questionPrompts.actions.edit' : 'questionPrompts.actions.create') }}</h2><p>{{ t('questionPrompts.form.description') }}</p></div>
-          <UBadge color="neutral" variant="soft" :label="t(`questionPrompts.statuses.${currentStatus}`)" />
+          <div><h2>{{ t(editing ? 'questionPrompts.form.editTitle' : 'questionPrompts.actions.create') }}</h2><p>{{ t('questionPrompts.form.description') }}</p></div>
+          <ContentStatusBadge :status="currentStatus" />
         </header>
         <fieldset :disabled="unsaved.busy" class="category-form-fields word-form-section">
           <legend>{{ t('questionPrompts.form.classification') }}</legend><p>{{ t('questionPrompts.sharedWarning') }}</p>
@@ -161,7 +167,8 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
         <fieldset :disabled="unsaved.busy" class="category-form-fields word-form-section">
           <legend>{{ t('questionPrompts.form.content') }}</legend>
           <UTabs :model-value="selectedLocale" :items="(languages.data.value || []).map(row => ({ label: row.display_name, value: row.code, disabled: unsaved.busy }))" :content="false" :aria-label="t('common.fields.locale')" :ui="{ list: 'tw:flex-wrap' }" @update:model-value="selectLocale(String($event))" />
-          <p v-if="!activeTranslation" role="status">{{ t('categories.translations.missing') }}</p>
+          <UFormField :label="t('common.fields.status')"><USelect :model-value="currentStatus" :items="statusItems" class="tw:w-full" @update:model-value="updateStatus($event)" /></UFormField>
+          <p v-if="!activeTranslation" role="status">{{ t('common.statuses.missing') }}</p>
           <div class="category-form-grid">
             <UFormField v-for="field in (['civilian_question', 'imposter_question'] as const)" :key="field" :label="t(field === 'civilian_question' ? 'questionPrompts.fields.civilianQuestion' : 'questionPrompts.fields.imposterQuestion')" required><UTextarea :model-value="form[field]" :rows="5" class="tw:w-full" @update:model-value="update(field, $event)" /></UFormField>
           </div>
@@ -183,13 +190,10 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
         </section>
         <footer class="word-form-footer">
           <div class="category-actions">
-            <UButton type="submit" :label="t('questionPrompts.actions.save')" :loading="saving.isPending.value" :disabled="unsaved.busy || saveConflict" />
-            <UButton v-if="activeTranslation?.status !== 'published'" type="button" :label="t('questionPrompts.actions.publish')" :disabled="unsaved.busy || saveConflict" @click="submit('published')" />
-            <UButton v-if="activeTranslation && activeTranslation.status !== 'draft'" type="button" variant="outline" :label="t('questionPrompts.actions.draft')" :disabled="unsaved.busy || saveConflict" @click="submit('draft')" />
-            <UButton v-if="activeTranslation && activeTranslation.status !== 'archived'" type="button" variant="outline" :label="t('questionPrompts.actions.archive')" :disabled="unsaved.busy || saveConflict" @click="submit('archived')" />
-            <UButton type="button" color="neutral" variant="ghost" :label="t('common.actions.cancel')" :disabled="unsaved.busy" @click="back" />
+            <UButton type="submit" :label="t('common.actions.save')" :loading="saving.isPending.value" :disabled="unsaved.busy || saveConflict" />
+            <UButton type="button" color="neutral" variant="outline" :label="t('common.actions.cancel')" :disabled="unsaved.busy" @click="back" />
           </div>
-          <UButton v-if="saved" type="button" color="error" variant="outline" :label="t('questionPrompts.actions.delete')" :disabled="unsaved.busy" @click="openDelete" />
+          <UButton v-if="saved" type="button" color="error" variant="outline" :label="t('common.actions.delete')" :disabled="unsaved.busy" @click="openDelete" />
         </footer>
       </form>
     </UCard>

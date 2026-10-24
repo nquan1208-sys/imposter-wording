@@ -138,12 +138,12 @@ test('sidebar navigation renders only the current page and retains form leave gu
     const preview = nodes(root).find(element => String(element.props.class).includes('word-preview-imposter'))
     assert.ok(preview)
     assert.match(text(preview), /Gợi ý danh mục/)
-    assert.match(text(preview), /Bạn là imposter/)
+    assert.match(text(preview), /Bạn là kẻ mạo danh/)
     const hint = nodes(preview).find(element => element.props.label === vn.wordPrompts.preview.categoryHint)
     assert.ok(hint)
     hint.props['onUpdate:modelValue'](true); await nextTick()
     assert.match(text(preview), /Chọn danh mục để xem trước/)
-    assert.doesNotMatch(text(preview), /Bạn là imposter/)
+    assert.doesNotMatch(text(preview), /Bạn là kẻ mạo danh/)
     const category = '00000000-0000-4000-8000-000000000002'
     queryClient.setQueryData(['categories', 'word-options', 'vi'], [{ id: category, name: 'Food category', locale: 'vi', is_active: true }])
     await nextTick()
@@ -158,7 +158,7 @@ test('sidebar navigation renders only the current page and retains form leave gu
     assert.match(text(preview), /Movie category/)
     assert.doesNotMatch(text(preview), /Food category/)
     hint.props['onUpdate:modelValue'](false); await nextTick()
-    assert.match(text(preview), /Bạn là imposter/)
+    assert.match(text(preview), /Bạn là kẻ mạo danh/)
     assert.doesNotMatch(text(preview), /Movie category/)
     // Inline templates do not expose setup bindings; exercise the rendered input handler.
     const civilian = nodes(root).find(element => element.props.label === vn.wordPrompts.fields.text)
@@ -203,9 +203,12 @@ test('sidebar navigation renders only the current page and retains form leave gu
       categoryDetail = { ...response.data.original, translations: [response.data.translation] }
       return response
     }
-    const save = nodes(root).find(element => element.props.label === vn.categories.actions.publish)
+    const statusField = nodes(root).find(element => element.props.label === vn.common.fields.status)!
+    nodes(statusField).find(element => element.props['onUpdate:modelValue'])!.props['onUpdate:modelValue']('published')
+    const save = nodes(root).find(element => element.props.onSubmit)
     assert.ok(save)
-    save.props.onClick(); await new Promise(resolve => setTimeout(resolve, 30)); await nextTick()
+    assert.equal(nodes(root).filter(element => element.props.type === 'submit').length, 1)
+    save.props.onSubmit(); await new Promise(resolve => setTimeout(resolve, 30)); await nextTick()
     assert.equal(router.currentRoute.value.name, 'category-edit')
     const savedTabs = nodes(root).find(element => element.props['model-value'] === 'en' && element.props.items?.length === 2)
     assert.ok(savedTabs)
@@ -244,8 +247,11 @@ test('sidebar navigation renders only the current page and retains form leave gu
         promptDetail = { ...original, translations: [translation], game_categories: null }
         return { data: { original, translation } }
       }
-      const publish = nodes(root).find(element => element.props.label === vn[`${kind}Prompts`].actions.publish)!
-      publish.props.onClick(); await new Promise(resolve => setTimeout(resolve, 30)); await nextTick()
+      const statusField = nodes(root).find(element => element.props.label === vn.common.fields.status)!
+      nodes(statusField).find(element => element.props['onUpdate:modelValue'])!.props['onUpdate:modelValue']('published')
+      assert.equal(nodes(root).filter(element => element.props.type === 'submit').length, 1)
+      const form = nodes(root).find(element => element.tag === 'form')!
+      form.props.onSubmit({ preventDefault() {} }); await new Promise(resolve => setTimeout(resolve, 30)); await nextTick()
       assert.equal(router.currentRoute.value.name, `${kind}-prompt-edit`)
       const tabsAfterSave = nodes(root).find(element => element.props['model-value'] === 'en' && element.props.items?.length === 2)
       assert.ok(tabsAfterSave); tabsAfterSave.props['onUpdate:modelValue']('vi'); await nextTick()

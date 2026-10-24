@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AdminPagination from '../../components/admin/AdminPagination.vue'
 import type { CategoryRow, DeleteCategory } from '../../types/admin.ts'
 import { useI18n } from 'vue-i18n'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
@@ -11,7 +12,7 @@ import { categoryError, listFilters, pageSize } from '../../utils/categories.ts'
 import CategoryFilters from '../../components/categories/CategoryFilters.vue'
 import CategoryTable from '../../components/categories/CategoryTable.vue'
 import CategoryDeleteDialog from '../../components/categories/CategoryDeleteDialog.vue'
-const { t } = useI18n({ useScope: 'global' })
+const { t, n } = useI18n({ useScope: 'global' })
 
 const unsaved = useUnsavedChanges()
 const route = useRoute()
@@ -91,7 +92,7 @@ onBeforeRouteLeave(() => !unsaved.busy)
     <template v-else>
       <p v-if="list.isFetching.value" role="status">{{ t('categories.status.refreshing') }}</p>
       <CategoryTable :rows="rows" :languages="languages.data.value || []" :loading="list.isFetching.value" :pending="statusMutation.isPending.value || deleteMutation.isPending.value || categoryError(statusMutation.error.value) === 'categories.errors.conflict'" @edit="edit" @toggle="toggle" @delete="openDelete" />
-      <div class="category-pagination"><span>{{ t('categories.pagination.summary', { count: total, page: filters.page, pages }) }}</span><UPagination :page="filters.page" :items-per-page="pageSize" :total="total" :sibling-count="1" :disabled="list.isFetching.value" :aria-label="t('categories.pagination.label')" @update:page="changePage" /></div>
+      <div class="category-pagination"><span>{{ t('categories.pagination.summary', { count: n(total), page: n(filters.page), pages: n(pages) }) }}</span><AdminPagination :page="filters.page" :items-per-page="pageSize" :total="total" :sibling-count="1" :disabled="list.isFetching.value" :aria-label="t('categories.pagination.label')" @update:page="changePage" /></div>
     </template>
     <CategoryDeleteDialog :locale="filters.locale" :conflict="categoryError(deleteMutation.error.value) === 'categories.errors.conflict'" v-if="deleteId" :key="deleteId" :preview="preview.data.value" :targets="targets.data.value || []" :targets-loading="targets.isFetching.value" :targets-error="targets.error.value ? t(categoryError(targets.error.value)) : ''" :loading="preview.isFetching.value" :pending="deleteMutation.isPending.value" :error="(deleteMutation.error.value || preview.error.value) ? t(categoryError(deleteMutation.error.value || preview.error.value)) : ''" @close="deleteId = ''" @refresh="refreshPreview" @retry-targets="targets.refetch()" @delete="input => !deleteMutation.isPending.value && deleteMutation.mutate(input)" />
   </section>

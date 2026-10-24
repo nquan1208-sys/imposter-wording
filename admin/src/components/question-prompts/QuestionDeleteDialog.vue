@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ContentStatusBadge from '../admin/ContentStatusBadge.vue'
 import type { QuestionRow, DeletePrompt } from '../../types/admin.ts'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -11,22 +12,22 @@ function submit() {
 }
 </script>
 <template>
-  <UModal :open="true" :title="t('questionPrompts.actions.delete')" :description="t('questionPrompts.deleteDialog.description')" :dismissible="!pending" :close="!pending" :ui="{ content: 'tw:max-w-xl' }" @update:open="open => !open && !pending && emit('close')">
+  <UModal :open="true" :title="t('common.actions.delete')" :description="t('questionPrompts.deleteDialog.description')" :dismissible="!pending" :close="!pending" :ui="{ content: 'tw:max-w-xl' }" @update:open="open => !open && !pending && emit('close')">
     <template #body>
       <div class="word-delete-body">
         <dl class="word-delete-summary">
           <div class="word-delete-content">
             <dt>{{ t('questionPrompts.fields.civilianQuestion') }}</dt>
-            <dd>{{ prompt.civilian_question || t('categories.translations.missing') }}</dd>
+            <dd>{{ prompt.civilian_question || t('common.statuses.missing') }}</dd>
           </div>
-          <div class="word-delete-content"><dt>{{ t('questionPrompts.fields.imposterQuestion') }}</dt><dd>{{ prompt.imposter_question || t('categories.translations.missing') }}</dd></div>
+          <div class="word-delete-content"><dt>{{ t('questionPrompts.fields.imposterQuestion') }}</dt><dd>{{ prompt.imposter_question || t('common.statuses.missing') }}</dd></div>
           <div>
             <dt>{{ t('questionPrompts.fields.categoryId') }}</dt>
             <dd>{{ prompt.game_categories?.name || prompt.category_id }}</dd>
           </div>
           <div>
             <dt>{{ t('questionPrompts.fields.status') }}</dt>
-            <dd><UBadge color="neutral" variant="subtle">{{ prompt.status ? t(`questionPrompts.statuses.${prompt.status}`) : t('categories.translations.missing') }}</UBadge></dd>
+            <dd><ContentStatusBadge :status="prompt.status" /></dd>
           </div>
         </dl>
         <UAlert icon="i-lucide-triangle-alert" color="error" variant="soft" :title="t('questionPrompts.deleteDialog.irreversible')" :description="t('questionPrompts.deleteDialog.warning')" />

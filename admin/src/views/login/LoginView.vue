@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
+import LanguageSelect from '../../components/admin/LanguageSelect.vue'
 import { useI18n } from 'vue-i18n'
 import { computed, reactive } from 'vue'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
@@ -42,6 +43,7 @@ function submitLogin(event: FormSubmitEvent<{ email: string; password: string }>
 <template>
   <main class="login-page">
     <section class="login-card" aria-labelledby="login-title">
+      <LanguageSelect />
       <div class="login-card__brand">
         <span class="brand__mark">I</span>
         <span><strong>Imposter</strong><small>{{ t('navigation.account.admin') }}</small></span>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AdminPagination from '../../components/admin/AdminPagination.vue'
+import ContentStatusBadge from '../../components/admin/ContentStatusBadge.vue'
 import type { WordRow, DeletePrompt } from '../../types/admin.ts'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -13,7 +15,7 @@ import { useUnsavedChanges } from '../../utils/unsavedChanges.ts'
 import WordImage from '../../components/word-prompts/WordImage.vue'
 import WordDeleteDialog from '../../components/word-prompts/WordDeleteDialog.vue'
 function fieldLabel(field: string) { return 'wordPrompts.fields.' + field.replace(/_([a-z])/g, (_: string, letter: string) => letter.toUpperCase()) }
-const { t, locale } = useI18n({ useScope: 'global' })
+const { t, n, locale } = useI18n({ useScope: 'global' })
 const route = useRoute(), router = useRouter(), cache = useQueryClient(), unsaved = useUnsavedChanges()
 const filters = computed(() => wordPromptFilters(route.query))
 const languages = useQuery({ queryKey: ['content-languages'], queryFn: () => listContentLanguages(supabase), retry: false })
@@ -24,7 +26,7 @@ const rows = computed(() => list.data.value?.rows || [])
 const total = computed(() => list.data.value?.total || 0)
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
 const categoryItems = computed(() => [{ label: t('wordPrompts.all'), value: 'all' }, ...(categoryOptions.data.value || []).map(row => ({ label: (row.name || row.slug), value: row.id }))])
-function items(values: readonly string[], group: string) { return [{ label: t('wordPrompts.all'), value: 'all' }, ...values.map(value => ({ label: t(`wordPrompts.${group}.${value}`), value }))] }
+function items(values: readonly string[], group: string) { return [{ label: t('wordPrompts.all'), value: 'all' }, ...values.map(value => ({ label: t(`${group === 'statuses' ? 'common' : 'wordPrompts'}.${group}.${value}`), value }))] }
 function setFilter(key: string, value: string | number) { if (!unsaved.busy) router.replace({ name: 'word-prompts', query: { ...route.query, [key]: value || undefined, page: undefined } }) }
 function changePage(page: number) { if (!unsaved.busy) router.replace({ name: 'word-prompts', query: { ...route.query, page: page === 1 ? undefined : String(page) } }) }
 watch([total, () => filters.value.page, list.isFetching, () => unsaved.busy], () => { if (list.data.value && !list.isFetching.value && filters.value.page > pages.value) changePage(pages.value) })
@@ -52,7 +54,7 @@ async function reloadList() {
   const result = await list.refetch()
   if (!result.error) { archiveMutation.reset(); actionError.value = null }
 }
-function archive(row: WordRow) { if (unsaved.busy || !row.status || wordPromptError(archiveMutation.error.value) === 'wordPrompts.errors.conflict' || !window.confirm(t('wordPrompts.confirmations.save'))) return; unsaved.busy = true; archiveMutation.mutate(row) }
+function archive(row: WordRow) { if (unsaved.busy || !row.status || wordPromptError(archiveMutation.error.value) === 'wordPrompts.errors.conflict' || !window.confirm(t('wordPrompts.confirmations.archive'))) return; unsaved.busy = true; archiveMutation.mutate(row) }
 function edit(row: WordRow) { if (!unsaved.busy) router.push({ name: 'word-prompt-edit', params: { id: row.id }, query: route.query }) }
 function beforeUnload(event: BeforeUnloadEvent) { if (unsaved.busy) { event.preventDefault(); event.returnValue = '' } }
 window.addEventListener('beforeunload', beforeUnload)
@@ -82,10 +84,10 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
       <p v-if="!rows.length">{{ t('wordPrompts.empty') }}</p>
       <div v-else class="admin-table-scroll"><table class="admin-table word-table"><thead><tr><th v-for="field in ['image_path', 'text', 'category_id', 'difficulty', 'is_family_friendly', 'status', 'updated_at']" :key="field" :class="`word-column-${field}`" scope="col">{{ t(fieldLabel(field)) }}</th><th scope="col">{{ t('wordPrompts.actionsLabel') }}</th></tr></thead>
         <tbody><tr v-for="row in rows" :key="row.id">
-          <td><WordImage :path="row.image_path" :alt="row.text || ''" /></td><td class="word-text-cell"><UButton color="neutral" variant="link" :label="row.text || t('categories.translations.missing')" class="word-text-link" :disabled="unsaved.busy" @click="edit(row)" /></td><td class="word-category-cell">{{ row.game_categories?.name || row.game_categories?.slug }}</td><td>{{ t(`wordPrompts.difficulties.${row.difficulty}`) }}</td><td>{{ t(row.is_family_friendly ? 'wordPrompts.yes' : 'wordPrompts.no') }}</td><td><span v-for="language in (languages.data.value || [])" :key="language.code" class="tw:block">{{ language.code }}: {{ row.translations.some(t => t.locale === language.code) ? t(`wordPrompts.statuses.${row.translations.find(t => t.locale === language.code)!.status}`) : t('categories.translations.missing') }}</span></td><td>{{ dateFormat.format(new Date(row.updated_at)) }}</td>
-          <td><div class="category-actions"><UButton color="neutral" :label="t('wordPrompts.actions.edit')" variant="outline" :disabled="unsaved.busy" @click="edit(row)" /><UButton color="neutral" v-if="row.status && row.status !== 'archived'" :label="t('wordPrompts.actions.archive')" variant="outline" :disabled="unsaved.busy || wordPromptError(archiveMutation.error.value) === 'wordPrompts.errors.conflict'" @click="archive(row)" /><UButton color="error" variant="outline" :label="t('wordPrompts.actions.delete')" :disabled="unsaved.busy" @click="openDelete(row)" /></div></td>
+          <td><WordImage :path="row.image_path" :alt="row.text || ''" /></td><td class="word-text-cell"><UButton color="neutral" variant="link" :label="row.text || t('common.statuses.missing')" class="word-text-link" :disabled="unsaved.busy" @click="edit(row)" /></td><td class="word-category-cell">{{ row.game_categories?.name || row.game_categories?.slug }}</td><td>{{ t(`wordPrompts.difficulties.${row.difficulty}`) }}</td><td>{{ t(row.is_family_friendly ? 'wordPrompts.yes' : 'wordPrompts.no') }}</td><td><div class="translation-statuses"><ContentStatusBadge v-for="language in (languages.data.value || [])" :key="language.code" :locale="language.code" :status="row.translations.find(item => item.locale === language.code)?.status" /></div></td><td>{{ dateFormat.format(new Date(row.updated_at)) }}</td>
+          <td><div class="category-actions"><UButton color="neutral" :label="t('common.actions.edit')" variant="outline" :disabled="unsaved.busy" @click="edit(row)" /><UButton color="neutral" v-if="row.status && row.status !== 'archived'" :label="t('common.actions.archive')" variant="outline" :disabled="unsaved.busy || wordPromptError(archiveMutation.error.value) === 'wordPrompts.errors.conflict'" @click="archive(row)" /><UButton color="error" variant="outline" :label="t('common.actions.delete')" :disabled="unsaved.busy" @click="openDelete(row)" /></div></td>
         </tr></tbody></table></div>
-      <div class="category-pagination"><span>{{ t('wordPrompts.pagination.summary', { count: total, page: filters.page, pages }) }}</span><UPagination :page="filters.page" :items-per-page="pageSize" :total="total" :disabled="unsaved.busy || list.isFetching.value" :aria-label="t('wordPrompts.pagination.label')" @update:page="changePage" /></div>
+      <div class="category-pagination"><span>{{ t('wordPrompts.pagination.summary', { count: n(total), page: n(filters.page), pages: n(pages) }) }}</span><AdminPagination :page="filters.page" :items-per-page="pageSize" :total="total" :disabled="unsaved.busy || list.isFetching.value" :aria-label="t('wordPrompts.pagination.label')" @update:page="changePage" /></div>
     </template>
     <WordDeleteDialog v-if="selected" :key="selected.id + selected.updated_at" :prompt="selected" :pending="unsaved.busy" :error="(actionError || deletion.error.value) ? t(wordPromptError(actionError || deletion.error.value)) : ''" :conflict="wordPromptError(deletion.error.value) === 'wordPrompts.errors.conflict'" @close="!unsaved.busy && (selected = null)" @delete="remove" @reload="reloadDelete" />
   </section>

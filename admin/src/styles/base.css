@@ -63,3 +63,11 @@ h3 {
   height: 20px;
   flex: 0 0 auto;
 }
+
+.language-select { min-width: 0; }
+.login-card > .language-select { margin-bottom: var(--space-5); }
+.translation-statuses { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+.content-status { border-radius: var(--radius-pill); white-space: nowrap; }
+.content-status--draft { color: var(--color-charcoal); background: var(--color-warning-surface); --tw-ring-color: var(--color-warning); }
+.content-status--published { color: var(--color-teal-dark); background: var(--color-success-surface); --tw-ring-color: var(--color-teal-border); }
+.content-status--archived, .content-status--missing { color: var(--color-charcoal-soft); background: var(--color-gray-100); --tw-ring-color: var(--color-gray-300); }

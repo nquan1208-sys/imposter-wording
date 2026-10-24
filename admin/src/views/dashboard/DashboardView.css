@@ -137,26 +137,6 @@
   font-size: var(--text-caption-size);
 }
 
-.dashboard-item__status {
-  padding: 0.1rem var(--space-1);
-  border-radius: var(--radius-pill);
-  color: var(--color-charcoal);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.dashboard-item__status--draft {
-  background: var(--color-warning-surface);
-}
-
-.dashboard-item__status--published {
-  background: var(--color-success-surface);
-}
-
-.dashboard-item__status--archived {
-  background: var(--color-gray-200);
-}
-
 .dashboard-item__date {
   grid-column: 2;
   grid-row: 1 / span 2;
@@ -213,18 +193,6 @@
 
 .dashboard-error p {
   margin-bottom: var(--space-3);
-}
-
-.dashboard-retry {
-  padding: var(--space-2) var(--space-4);
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--color-charcoal);
-  color: var(--color-white);
-}
-
-.dashboard-retry:disabled {
-  opacity: 0.65;
 }
 
 .dashboard-sr-only {

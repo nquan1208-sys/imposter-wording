@@ -6,12 +6,15 @@
       "edit": "Sửa",
       "delete": "Xóa",
       "activate": "Bật",
-      "deactivate": "Tắt"
+      "deactivate": "Tắt",
+      "save": "Lưu",
+      "archive": "Lưu trữ"
     },
     "fields": {
       "gameType": "Loại trò chơi",
-      "locale": "Ngôn ngữ",
-      "status": "Trạng thái"
+      "locale": "Ngôn ngữ nội dung",
+      "status": "Trạng thái",
+      "uiLanguage": "Ngôn ngữ giao diện"
     },
     "status": {
       "active": "Đang hoạt động",
@@ -28,6 +31,19 @@
     },
     "confirmations": {
       "discardChanges": "Bạn có thay đổi chưa lưu. Bạn muốn bỏ các thay đổi này?"
+    },
+    "statuses": {
+      "draft": "Nháp",
+      "published": "Đã xuất bản",
+      "archived": "Đã lưu trữ",
+      "missing": "Chưa có bản dịch"
+    },
+    "pagination": {
+      "first": "Trang đầu",
+      "previous": "Trang trước",
+      "next": "Trang sau",
+      "last": "Trang cuối",
+      "page": "Trang {page}"
     }
   },
   "navigation": {
@@ -76,11 +92,6 @@
     "loadError": "Không thể tải tổng quan. Vui lòng thử lại.",
     "retry": "Thử lại",
     "editItem": "Sửa nội dung: {title}",
-    "statuses": {
-      "draft": "Nháp",
-      "published": "Đã xuất bản",
-      "archived": "Đã lưu trữ"
-    },
     "stats": {
       "title": "Thống kê nội dung",
       "publishedWordPrompts": "Đề từ ngữ đã xuất bản",
@@ -106,8 +117,8 @@
       "title": "Cảnh báo chất lượng dữ liệu",
       "empty": "Không có cảnh báo dữ liệu.",
       "emptyCategories": "Danh mục không có nội dung: {count}",
-      "duplicateQuestions": "Cặp câu hỏi civilian và imposter bị trùng: {count}",
-      "nonFamilyEasyPrompts": "Nội dung mức dễ chưa được đánh dấu phù hợp với Family Mode: {count}",
+      "duplicateQuestions": "Cặp câu hỏi dân thường và kẻ mạo danh bị trùng: {count}",
+      "nonFamilyEasyPrompts": "Nội dung mức dễ chưa được đánh dấu phù hợp với chế độ gia đình: {count}",
       "wordPrompts": "Từ ngữ",
       "questionPrompts": "Câu hỏi"
     }
@@ -123,10 +134,7 @@
     },
     "actions": {
       "create": "Thêm danh mục",
-      "save": "Lưu danh mục",
       "back": "Về danh sách",
-      "publish": "Xuất bản",
-      "archive": "Lưu trữ",
       "reload": "Tải lại danh mục"
     },
     "form": {
@@ -148,7 +156,7 @@
       "latestUpdated": "Cập nhật mới nhất"
     },
     "table": {
-      "content": "Content",
+      "content": "Nội dung",
       "updated": "Cập nhật",
       "actions": "Thao tác",
       "caption": "Danh sách danh mục",
@@ -168,8 +176,8 @@
       "saved": "Đã lưu bản dịch danh mục."
     },
     "confirmations": {
-      "deactivate": "Tắt danh mục này? Content bên trong sẽ được giữ nguyên.",
-      "deactivateNamed": "Tắt danh mục “{name}”? Content bên trong sẽ được giữ nguyên.",
+      "deactivate": "Tắt danh mục này? Nội dung bên trong sẽ được giữ nguyên.",
+      "deactivateNamed": "Tắt danh mục “{name}”? Nội dung bên trong sẽ được giữ nguyên.",
       "archive": "Lưu trữ bản dịch danh mục sẽ ẩn các đề của ngôn ngữ này khỏi người chơi. Tiếp tục?"
     },
     "errors": {
@@ -197,20 +205,14 @@
       "noTargets": "Không có danh mục đang bật, cùng loại trò chơi và đã xuất bản đủ ngôn ngữ cần thiết.",
       "irreversible": "Không thể hoàn tác",
       "warning": "Toàn bộ đề gốc và bản dịch, kể cả nội dung đã xuất bản, sẽ bị xóa vĩnh viễn. File ảnh vẫn được giữ lại.",
-      "confirm": "Xóa danh mục",
+      "confirm": "Xóa vĩnh viễn",
       "refresh": "Tải lại thống kê",
       "transferDescription": "Giữ lại toàn bộ nội dung và chuyển sang danh mục bạn chọn. Chỉ danh mục này bị xóa.",
       "purgeDescription": "Xóa vĩnh viễn cả danh mục lẫn nội dung bên trong, ở mọi trạng thái.",
-      "draft": "Nháp",
-      "published": "Đã xuất bản",
-      "archived": "Đã lưu trữ",
       "confirmTransfer": "Chuyển nội dung và xóa",
       "confirmPurge": "Xóa tất cả vĩnh viễn",
       "originals": "Đề gốc: {total} (từ: {word}, câu hỏi: {question})",
       "translations": "Bản dịch đề theo trạng thái"
-    },
-    "translations": {
-      "missing": "Chưa có bản dịch"
     }
   },
   "wordPrompts": {
@@ -218,12 +220,6 @@
     "description": "Quản lý các từ bí mật cho trò chơi từ ngữ.",
     "actions": {
       "create": "Tạo đề từ ngữ",
-      "edit": "Sửa đề",
-      "save": "Lưu",
-      "publish": "Publish",
-      "draft": "Đưa về nháp",
-      "archive": "Archive",
-      "delete": "Xóa vĩnh viễn",
       "reload": "Tải lại đề",
       "removeImage": "Bỏ ảnh",
       "retryImage": "Tải lại ảnh"
@@ -231,17 +227,12 @@
     "fields": {
       "categoryId": "Danh mục",
       "difficulty": "Độ khó",
-      "isFamilyFriendly": "Family Mode",
-      "locale": "Ngôn ngữ",
+      "isFamilyFriendly": "Phù hợp với gia đình",
+      "locale": "Ngôn ngữ nội dung",
       "imagePath": "Ảnh",
       "status": "Trạng thái",
       "updatedAt": "Cập nhật",
       "text": "Từ bí mật"
-    },
-    "statuses": {
-      "draft": "Nháp",
-      "published": "Published",
-      "archived": "Archived"
     },
     "difficulties": {
       "easy": "Dễ",
@@ -251,7 +242,7 @@
     "errors": {
       "categoryRequired": "Chọn danh mục phù hợp.",
       "localeRequired": "Nhập ngôn ngữ.",
-      "invalidData": "Dữ liệu không hợp lệ hoặc danh mục không phù hợp để publish.",
+      "invalidData": "Dữ liệu không hợp lệ hoặc danh mục không phù hợp để xuất bản.",
       "invalidImage": "Ảnh phải đọc được, thuộc JPEG, PNG hoặc WebP và không quá 5 MiB.",
       "conflict": "Đề đã thay đổi ở nơi khác. Hãy tải lại trước khi xác nhận.",
       "notFound": "Đề không còn tồn tại.",
@@ -264,7 +255,8 @@
       "confirm": "Xóa vĩnh viễn"
     },
     "confirmations": {
-      "save": "Đề đang published. Lưu nội dung và thay đổi trạng thái ngay cho người chơi?"
+      "save": "Đề đã xuất bản. Lưu thay đổi và cập nhật nội dung hiển thị cho người chơi?",
+      "archive": "Lưu trữ bản dịch này sẽ ẩn nội dung của ngôn ngữ đang chọn khỏi người chơi. Tiếp tục?"
     },
     "messages": {
       "deleted": "Đã xóa vĩnh viễn đề. File ảnh vẫn được giữ.",
@@ -274,16 +266,16 @@
       "title": "Xem trước",
       "description": "Nội dung hiển thị cho từng vai trò trong ván chơi.",
       "civilian": "Dân thường",
-      "imposter": "Imposter",
-      "role": "Bạn là imposter",
+      "imposter": "Kẻ mạo danh",
+      "role": "Bạn là kẻ mạo danh",
       "categoryHint": "Gợi ý danh mục",
       "selectCategory": "Chọn danh mục để xem trước",
       "enterText": "Nhập từ bí mật để xem trước",
       "simulationOnly": "Chỉ mô phỏng. Gợi ý được bật hoặc tắt khi thiết lập ván chơi."
     },
     "upload": {
-      "uploading": "Đang upload ảnh…",
-      "uploaded": "Đã upload ảnh.",
+      "uploading": "Đang tải ảnh lên…",
+      "uploaded": "Đã tải ảnh lên.",
       "failed": "Lưu ảnh hoặc đề không thành công."
     },
     "all": "Tất cả",
@@ -292,11 +284,11 @@
     "inactive": "Đã tắt",
     "search": "Tìm từ bí mật",
     "sort": "Sắp xếp",
-    "actionsLabel": "Hành động",
+    "actionsLabel": "Thao tác",
     "loading": "Đang tải đề…",
     "loadingImage": "Đang tải ảnh…",
     "empty": "Không có đề phù hợp.",
-    "imageHelp": "JPEG, PNG hoặc WebP; tối đa 5 MiB. Ảnh chỉ upload khi lưu.",
+    "imageHelp": "JPEG, PNG hoặc WebP; tối đa 5 MiB. Ảnh chỉ tải lên khi lưu.",
     "pagination": {
       "summary": "{count} đề · Trang {page} / {pages}",
       "label": "Phân trang đề từ ngữ"
@@ -306,7 +298,8 @@
       "content": "Nội dung",
       "classification": "Phân loại",
       "textPlaceholder": "Ví dụ: Bánh mì",
-      "chooseImage": "Chọn ảnh minh họa"
+      "chooseImage": "Chọn ảnh minh họa",
+      "editTitle": "Sửa đề từ ngữ"
     },
     "sharedWarning": "Thay đổi thông tin chung ảnh hưởng mọi ngôn ngữ."
   },
@@ -315,28 +308,17 @@
     "description": "Quản lý cặp câu hỏi cho dân thường và kẻ mạo danh.",
     "actions": {
       "create": "Tạo đề câu hỏi",
-      "edit": "Sửa đề",
-      "save": "Lưu",
-      "publish": "Publish",
-      "draft": "Đưa về nháp",
-      "archive": "Archive",
-      "delete": "Xóa vĩnh viễn",
       "reload": "Tải lại đề"
     },
     "fields": {
       "categoryId": "Danh mục",
       "difficulty": "Độ khó",
-      "isFamilyFriendly": "Family Mode",
-      "locale": "Ngôn ngữ",
+      "isFamilyFriendly": "Phù hợp với gia đình",
+      "locale": "Ngôn ngữ nội dung",
       "status": "Trạng thái",
       "updatedAt": "Cập nhật",
       "civilianQuestion": "Câu hỏi dân thường",
       "imposterQuestion": "Câu hỏi kẻ mạo danh"
-    },
-    "statuses": {
-      "draft": "Nháp",
-      "published": "Published",
-      "archived": "Archived"
     },
     "difficulties": {
       "easy": "Dễ",
@@ -346,7 +328,7 @@
     "errors": {
       "categoryRequired": "Chọn danh mục phù hợp.",
       "localeRequired": "Nhập ngôn ngữ.",
-      "invalidData": "Dữ liệu không hợp lệ hoặc danh mục không phù hợp để publish.",
+      "invalidData": "Dữ liệu không hợp lệ hoặc danh mục không phù hợp để xuất bản.",
       "conflict": "Đề đã thay đổi ở nơi khác. Hãy tải lại trước khi xác nhận.",
       "notFound": "Đề không còn tồn tại.",
       "civilianRequired": "Vui lòng nhập câu hỏi dân thường.",
@@ -360,7 +342,8 @@
       "confirm": "Xóa vĩnh viễn"
     },
     "confirmations": {
-      "save": "Đề đang published. Lưu nội dung và thay đổi trạng thái ngay cho người chơi?"
+      "save": "Đề đã xuất bản. Lưu thay đổi và cập nhật nội dung hiển thị cho người chơi?",
+      "archive": "Lưu trữ bản dịch này sẽ ẩn nội dung của ngôn ngữ đang chọn khỏi người chơi. Tiếp tục?"
     },
     "messages": {
       "deleted": "Đã xóa vĩnh viễn đề.",
@@ -370,7 +353,7 @@
       "title": "Xem trước",
       "description": "Xem câu hỏi hiển thị cho từng vai trò.",
       "civilian": "Dân thường",
-      "imposter": "Imposter",
+      "imposter": "Kẻ mạo danh",
       "selectCategory": "Chọn danh mục để xem trước",
       "enterQuestion": "Nhập câu hỏi để xem trước"
     },
@@ -380,7 +363,7 @@
     "inactive": "Đã tắt",
     "search": "Tìm trong hai câu hỏi",
     "sort": "Sắp xếp",
-    "actionsLabel": "Hành động",
+    "actionsLabel": "Thao tác",
     "loading": "Đang tải đề…",
     "empty": "Không có đề phù hợp.",
     "pagination": {
@@ -390,7 +373,8 @@
     "form": {
       "description": "Nhập hai câu hỏi và phân loại nội dung.",
       "content": "Nội dung",
-      "classification": "Phân loại"
+      "classification": "Phân loại",
+      "editTitle": "Sửa đề câu hỏi"
     },
     "sharedWarning": "Thay đổi thông tin chung ảnh hưởng mọi ngôn ngữ."
   },

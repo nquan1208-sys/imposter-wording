@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AdminPagination from '../../components/admin/AdminPagination.vue'
+import ContentStatusBadge from '../../components/admin/ContentStatusBadge.vue'
 import type { QuestionRow, DeletePrompt } from '../../types/admin.ts'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -12,7 +14,7 @@ import { pageSize } from '../../utils/categories.ts'
 import { useUnsavedChanges } from '../../utils/unsavedChanges.ts'
 import QuestionDeleteDialog from '../../components/question-prompts/QuestionDeleteDialog.vue'
 function fieldLabel(field: string) { return 'questionPrompts.fields.' + field.replace(/_([a-z])/g, (_: string, letter: string) => letter.toUpperCase()) }
-const { t, locale } = useI18n({ useScope: 'global' })
+const { t, n, locale } = useI18n({ useScope: 'global' })
 const route = useRoute(), router = useRouter(), cache = useQueryClient(), unsaved = useUnsavedChanges()
 const search = ref(typeof route.query.search === 'string' ? route.query.search : '')
 let searchTimer: ReturnType<typeof setTimeout> | undefined
@@ -27,7 +29,7 @@ const rows = computed(() => list.data.value?.rows || [])
 const total = computed(() => list.data.value?.total || 0)
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
 const categoryItems = computed(() => [{ label: t('questionPrompts.all'), value: 'all' }, ...(categoryOptions.data.value || []).map(row => ({ label: (row.name || row.slug), value: row.id }))])
-function items(values: readonly string[], group: string) { return [{ label: t('questionPrompts.all'), value: 'all' }, ...values.map(value => ({ label: t(`questionPrompts.${group}.${value}`), value }))] }
+function items(values: readonly string[], group: string) { return [{ label: t('questionPrompts.all'), value: 'all' }, ...values.map(value => ({ label: t(`${group === 'statuses' ? 'common' : 'questionPrompts'}.${group}.${value}`), value }))] }
 function setFilter(key: string, value: string | number) { if (!unsaved.busy) router.replace({ name: 'question-prompts', query: { ...route.query, [key]: value || undefined, page: undefined } }) }
 function changePage(page: number) { if (!unsaved.busy) router.replace({ name: 'question-prompts', query: { ...route.query, page: page === 1 ? undefined : String(page) } }) }
 watch([total, () => filters.value.page, list.isFetching, () => unsaved.busy], () => { if (list.data.value && !list.isFetching.value && filters.value.page > pages.value) changePage(pages.value) })
@@ -55,7 +57,7 @@ async function reloadList() {
   const result = await list.refetch()
   if (!result.error) { archiveMutation.reset(); actionError.value = null }
 }
-function archive(row: QuestionRow) { if (unsaved.busy || !row.status || questionPromptError(archiveMutation.error.value) === 'questionPrompts.errors.conflict' || !window.confirm(t('questionPrompts.confirmations.save'))) return; unsaved.busy = true; archiveMutation.mutate(row) }
+function archive(row: QuestionRow) { if (unsaved.busy || !row.status || questionPromptError(archiveMutation.error.value) === 'questionPrompts.errors.conflict' || !window.confirm(t('questionPrompts.confirmations.archive'))) return; unsaved.busy = true; archiveMutation.mutate(row) }
 function edit(row: QuestionRow) { if (!unsaved.busy) router.push({ name: 'question-prompt-edit', params: { id: row.id }, query: route.query }) }
 function beforeUnload(event: BeforeUnloadEvent) { if (unsaved.busy) { event.preventDefault(); event.returnValue = '' } }
 window.addEventListener('beforeunload', beforeUnload)
@@ -86,10 +88,10 @@ onBeforeUnmount(() => { clearTimeout(searchTimer); window.removeEventListener('b
       <p v-if="!rows.length">{{ t('questionPrompts.empty') }}</p>
       <div v-else class="admin-table-scroll"><table class="admin-table word-table question-table"><thead><tr><th v-for="field in ['civilian_question', 'imposter_question', 'category_id', 'difficulty', 'is_family_friendly', 'status', 'updated_at']" :key="field" :class="`word-column-${field}`" scope="col">{{ t(fieldLabel(field)) }}</th><th scope="col">{{ t('questionPrompts.actionsLabel') }}</th></tr></thead>
         <tbody><tr v-for="row in rows" :key="row.id">
-          <td class="word-text-cell"><UButton color="neutral" variant="link" :label="row.civilian_question || t('categories.translations.missing')" class="word-text-link question-truncate" :disabled="unsaved.busy" @click="edit(row)" /></td><td class="question-text-cell"><span class="question-truncate">{{ row.imposter_question || t('categories.translations.missing') }}</span></td><td class="word-category-cell">{{ row.game_categories?.name || row.game_categories?.slug }}</td><td>{{ t(`questionPrompts.difficulties.${row.difficulty}`) }}</td><td>{{ t(row.is_family_friendly ? 'questionPrompts.yes' : 'questionPrompts.no') }}</td><td><span v-for="language in (languages.data.value || [])" :key="language.code" class="tw:block">{{ language.code }}: {{ row.translations.some(t => t.locale === language.code) ? t(`questionPrompts.statuses.${row.translations.find(t => t.locale === language.code)!.status}`) : t('categories.translations.missing') }}</span></td><td>{{ dateFormat.format(new Date(row.updated_at)) }}</td>
-          <td><div class="category-actions"><UButton color="neutral" :label="t('questionPrompts.actions.edit')" variant="outline" :disabled="unsaved.busy" @click="edit(row)" /><UButton color="neutral" v-if="row.status && row.status !== 'archived'" :label="t('questionPrompts.actions.archive')" variant="outline" :disabled="unsaved.busy || questionPromptError(archiveMutation.error.value) === 'questionPrompts.errors.conflict'" @click="archive(row)" /><UButton color="error" variant="outline" :label="t('questionPrompts.actions.delete')" :disabled="unsaved.busy" @click="openDelete(row)" /></div></td>
+          <td class="word-text-cell"><UButton color="neutral" variant="link" :label="row.civilian_question || t('common.statuses.missing')" class="word-text-link question-truncate" :disabled="unsaved.busy" @click="edit(row)" /></td><td class="question-text-cell"><span class="question-truncate">{{ row.imposter_question || t('common.statuses.missing') }}</span></td><td class="word-category-cell">{{ row.game_categories?.name || row.game_categories?.slug }}</td><td>{{ t(`questionPrompts.difficulties.${row.difficulty}`) }}</td><td>{{ t(row.is_family_friendly ? 'questionPrompts.yes' : 'questionPrompts.no') }}</td><td><div class="translation-statuses"><ContentStatusBadge v-for="language in (languages.data.value || [])" :key="language.code" :locale="language.code" :status="row.translations.find(item => item.locale === language.code)?.status" /></div></td><td>{{ dateFormat.format(new Date(row.updated_at)) }}</td>
+          <td><div class="category-actions"><UButton color="neutral" :label="t('common.actions.edit')" variant="outline" :disabled="unsaved.busy" @click="edit(row)" /><UButton color="neutral" v-if="row.status && row.status !== 'archived'" :label="t('common.actions.archive')" variant="outline" :disabled="unsaved.busy || questionPromptError(archiveMutation.error.value) === 'questionPrompts.errors.conflict'" @click="archive(row)" /><UButton color="error" variant="outline" :label="t('common.actions.delete')" :disabled="unsaved.busy" @click="openDelete(row)" /></div></td>
         </tr></tbody></table></div>
-      <div class="category-pagination"><span>{{ t('questionPrompts.pagination.summary', { count: total, page: filters.page, pages }) }}</span><UPagination :page="filters.page" :items-per-page="pageSize" :total="total" :disabled="unsaved.busy || list.isFetching.value" :aria-label="t('questionPrompts.pagination.label')" @update:page="changePage" /></div>
+      <div class="category-pagination"><span>{{ t('questionPrompts.pagination.summary', { count: n(total), page: n(filters.page), pages: n(pages) }) }}</span><AdminPagination :page="filters.page" :items-per-page="pageSize" :total="total" :disabled="unsaved.busy || list.isFetching.value" :aria-label="t('questionPrompts.pagination.label')" @update:page="changePage" /></div>
     </template>
     <QuestionDeleteDialog v-if="selected" :key="selected.id + selected.updated_at" :prompt="selected" :pending="unsaved.busy" :error="(actionError || deletion.error.value) ? t(questionPromptError(actionError || deletion.error.value)) : ''" :conflict="questionPromptError(deletion.error.value) === 'questionPrompts.errors.conflict'" @close="!unsaved.busy && (selected = null)" @delete="remove" @reload="reloadDelete" />
   </section>

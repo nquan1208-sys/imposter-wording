@@ -11,7 +11,9 @@
   display: flex;
   flex: 0 0 var(--sidebar-width);
   flex-direction: column;
-  min-height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  align-self: flex-start;
   padding: var(--space-7) var(--space-2) var(--space-3);
   background: var(--color-charcoal);
   color: var(--color-gray-100);
@@ -278,3 +280,7 @@
     font-size: 1.5rem;
   }
 }
+
+.sidebar .language-select { margin-bottom: var(--space-3); }
+.sidebar .language-select [data-slot="label"] { color: var(--color-gray-300); }
+.sidebar .language-select button { background: var(--color-white); color: var(--color-charcoal); }
