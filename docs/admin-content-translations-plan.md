@@ -15,12 +15,15 @@ Chuyển danh mục, đề từ và đề câu hỏi sang mô hình **bản gố
 
 ## Phase 1 — Kiểm kê dữ liệu và chốt migration
 
+**Đã hoàn tất trên local (2026-10-24):** [Báo cáo kiểm kê, dependencies và hợp đồng migration](./admin-content-translations-phase-1.md). Có audit SQL chỉ đọc và tests; số lượng đích hiện là dự kiến. Đối chiếu backfill thật thuộc Phase 2, audit DB triển khai phải chạy lại trước Phase 6.
+
 ### Công việc
 
 - Kiểm kê dữ liệu theo ngôn ngữ, trạng thái, danh mục và ảnh; rà soát tất cả truy vấn, trigger, RLS, RPC và fixtures phụ thuộc các cột sẽ chuyển.
 - Kiểm tra mã ngôn ngữ thực tế trước khi tạo danh sách ngôn ngữ; giữ lại tất cả mã đang có.
 - Mỗi bản ghi hiện tại trở thành một bản gốc và một bản dịch tương ứng. Giữ nguyên ID gốc, liên kết danh mục, đường dẫn ảnh và người tạo.
 - Không tự ghép hai bản ghi Việt–Anh thành cùng một đề hoặc danh mục vì hiện chưa có liên kết đáng tin cậy.
+- Bản dịch danh mục cũ nhận trạng thái `published`; giữ nguyên `is_active` trên bản gốc, kể cả danh mục đang tắt.
 - Slug trở thành mã dùng chung của danh mục, duy nhất theo loại trò chơi. Nếu trùng khi bỏ `locale`, giữ slug cho ID nhỏ nhất, thêm hậu tố UUID đầy đủ cho các bản còn lại và ghi rõ trong báo cáo chuyển đổi.
 
 ### Tiêu chí hoàn thành
@@ -120,4 +123,4 @@ SQL tests, admin tests, typecheck, build local và Storage integration đều đ
 
 ## Giới hạn và rủi ro
 
-Chưa đối chiếu DB đang chạy. Schema và API nội dung sẽ thay đổi; admin cũ phải dừng trong lúc chuyển đổi, và các client ngoài repo nếu có phải được kiểm kê ở Phase 1.
+Đã đối chiếu DB local ở Phase 1; chưa đối chiếu Dev cloud đang inactive hoặc DB triển khai. Không có client ngoài repo được biết đến theo xác nhận của người dùng. Schema và API nội dung sẽ thay đổi; admin cũ phải dừng trong lúc chuyển đổi và cần kiểm tra lại consumers trước triển khai.
