@@ -32,6 +32,8 @@ Có đối chiếu số lượng trước/sau và không có dữ liệu bị b�
 
 ## Phase 2 — Schema, bảo mật và API DB
 
+**Đã hoàn tất trên local (2026-10-24):** [Báo cáo migration, hợp đồng RPC và kiểm thử](./admin-content-translations-phase-2.md). Đã áp dụng migration, đối chiếu đủ 5 dòng nguồn, sinh lại database types; SQL suites, concurrency, DB lint và advisors đạt. Theo ranh giới đã chốt, admin callers/UI và fixtures TypeScript chuyển ở Phase 3–5; admin hiện chưa tương thích với schema mới, typecheck chưa đạt. Chưa triển khai cloud.
+
 ### Cấu trúc mới
 
 | Bảng | Dữ liệu chính |
