@@ -1,5 +1,12 @@
 .admin-filter-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); }
 .admin-table-scroll { min-width: 0; overflow-x: auto; border: 1px solid var(--color-teal-border); border-radius: var(--radius-md); background: var(--color-white); }
+/* Reserve scrollbar space so revealing it does not shift the table. */
+.admin-table-scroll::-webkit-scrollbar { height: 14px; }
+.admin-table-scroll::-webkit-scrollbar-track { background: transparent; border-radius: var(--radius-pill); }
+.admin-table-scroll::-webkit-scrollbar-thumb { background: transparent; background-clip: padding-box; border: 3px solid transparent; border-radius: var(--radius-pill); }
+.admin-table-scroll:is(:hover, :focus-within)::-webkit-scrollbar-track { background: var(--color-gray-100); }
+.admin-table-scroll:is(:hover, :focus-within)::-webkit-scrollbar-thumb { background-color: var(--color-charcoal-soft); }
+.admin-table-scroll:is(:hover, :focus-within)::-webkit-scrollbar-thumb:hover { background-color: var(--color-charcoal); }
 .admin-table { width: 100%; border-collapse: collapse; color: var(--color-charcoal); }
 .admin-table th, .admin-table td { padding: var(--space-3); text-align: left; vertical-align: middle; white-space: nowrap; border-bottom: 1px solid var(--color-teal-border); }
 .admin-table th { background: var(--color-teal-surface); color: var(--color-charcoal); font-size: .875rem; font-weight: 600; }
