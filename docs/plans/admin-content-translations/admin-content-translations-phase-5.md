@@ -15,7 +15,7 @@
 
 Storage integration cố ý gửi version cũ sau upload đã tái hiện request timeout thay vì trả lỗi conflict. Nguyên nhân là RPC dùng SQLSTATE `40001` cho xung đột phiên bản do ứng dụng phát hiện; PostgREST retry lỗi này. Đây là [lỗi được Supabase mô tả](https://supabase.com/kb/troubleshooting/high-cpu-and-infinite-transaction-retries-when-using-custom-error-codes-in-rpc-functions).
 
-- Forward migration [20261024093556_admin_content_conflict_errors.sql](../supabase/migrations/20261024093556_admin_content_conflict_errors.sql) đổi literal lỗi explicit conflict sang `PT409` trong bảy RPC: ba save, ba delete và bật/tắt danh mục.
+- Forward migration [20261024093556_admin_content_conflict_errors.sql](../../../supabase/migrations/20261024093556_admin_content_conflict_errors.sql) đổi literal lỗi explicit conflict sang `PT409` trong bảy RPC: ba save, ba delete và bật/tắt danh mục.
 - Migration dùng `CREATE OR REPLACE` từ định nghĩa hiện tại, chỉ thay literal SQLSTATE; giữ signatures, locks, validation, security attributes và grants. Không sửa migration lịch sử hoặc đổi database types.
 - Admin nhận `PT409` là conflict và vẫn hiểu `40001` để tương thích. Tests editor dùng mã mới và giữ hành vi chặn lưu/xóa đến khi explicit reload.
 - Suite mới `admin_content_conflicts.sql` yêu cầu chính xác `PT409` ở cả bảy RPC và kiểm tra không ghi dở shared fields/bản dịch. Helpers và concurrency suites hiểu cả mã cũ/mới để rehearsal các mốc migration trước vẫn chạy được.

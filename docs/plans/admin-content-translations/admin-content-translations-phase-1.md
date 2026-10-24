@@ -4,7 +4,7 @@ Ngày kiểm kê: 2026-10-24. Phạm vi: local Supabase của repo `imposter-wor
 
 ## Kết quả và cách chạy lại
 
-Đã chạy [audit SQL](../supabase/scripts/audit_content_translations.sql) bằng role `postgres`, transaction `REPEATABLE READ READ ONLY`, kết thúc bằng `ROLLBACK`. Không thay schema, nội dung, quyền hoặc file Storage. Audit trả hai dòng JSON: dữ liệu/ánh xạ dự kiến và catalog dependencies. Chạy từ thư mục gốc:
+Đã chạy [audit SQL](../../../supabase/scripts/audit_content_translations.sql) bằng role `postgres`, transaction `REPEATABLE READ READ ONLY`, kết thúc bằng `ROLLBACK`. Không thay schema, nội dung, quyền hoặc file Storage. Audit trả hai dòng JSON: dữ liệu/ánh xạ dự kiến và catalog dependencies. Chạy từ thư mục gốc:
 
 ```bash
 # Local: nhập password DB local khi psql yêu cầu.

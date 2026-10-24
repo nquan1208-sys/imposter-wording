@@ -1,6 +1,6 @@
 # Phase 2 — Schema, bảo mật và API DB
 
-Hoàn tất local ngày 2026-10-24. Migration: [20261024045640_content_translations.sql](../supabase/migrations/20261024045640_content_translations.sql).
+Hoàn tất local ngày 2026-10-24. Migration: [20261024045640_content_translations.sql](../../../supabase/migrations/20261024045640_content_translations.sql).
 
 ## Kết quả chuyển đổi
 

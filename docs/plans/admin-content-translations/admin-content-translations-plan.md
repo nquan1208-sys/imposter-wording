@@ -122,6 +122,8 @@ SQL tests, admin tests, typecheck, build local và Storage integration đều đ
 
 ## Phase 6 — Chuyển đổi và triển khai
 
+**Đã hoàn tất backup/restore, kiểm thử tự động và tài liệu local (2026-10-24); còn manual UI verification, chưa triển khai cloud:** [Báo cáo Phase 6 và quy trình cutover](./admin-content-translations-phase-6.md). Theo phạm vi đã chốt, không resume Dev hoặc triển khai hosting. Backup restore khớp 13 bảng, admin 57 tests, rehearsal 6 nhóm / 8 races, Storage integration và lint/advisors đạt. Các kiểm tra UI còn lại giữ trạng thái chưa xác minh; cloud cutover bên dưới là hướng dẫn, chưa thực hiện.
+
 - Chạy thử migration trên bản sao DB, đối chiếu dữ liệu và kiểm tra quyền trước khi triển khai thật.
 - Sao lưu DB; tạm dừng admin, đóng các phiên cũ, áp dụng migration rồi triển khai admin mới.
 - Chỉ bỏ các cột nội dung cũ sau khi đối chiếu backfill thành công trong transaction; cập nhật đầy đủ dependencies trước khi commit migration.

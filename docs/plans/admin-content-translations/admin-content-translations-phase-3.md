@@ -1,6 +1,6 @@
 # Phase 3 — Admin quản lý danh mục
 
-Hoàn tất local ngày 2026-10-24. Migration bổ sung: [20261024053232_admin_category_translations.sql](../supabase/migrations/20261024053232_admin_category_translations.sql). Chưa triển khai cloud.
+Hoàn tất local ngày 2026-10-24. Migration bổ sung: [20261024053232_admin_category_translations.sql](../../../supabase/migrations/20261024053232_admin_category_translations.sql). Chưa triển khai cloud.
 
 ## Hành vi đã triển khai
 

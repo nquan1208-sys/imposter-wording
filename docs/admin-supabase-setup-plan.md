@@ -1,5 +1,13 @@
 # Plan: Setup Admin với Supabase
 
+> Cập nhật 2026-10-24: local đã có schema bản gốc + bản dịch, dashboard và Storage private
+> `word-prompt-images`; Dev cloud INACTIVE, chưa cutover. Hợp đồng hiện tại xem
+> [schema và quyền API](./admin-supabase-new-device-guide.md#8-những-gì-migration-hiện-tại-tạo-ra),
+> [DBML](./database-schema.dbml) và [Phase 6 / cutover](./plans/admin-content-translations/admin-content-translations-phase-6.md).
+> Không push migrations translations theo quickstart; phải backup và rehearsal trước.
+> Các phase bên dưới lưu kế hoạch setup ban đầu; các field nội dung và quyền ghi cũ đã được thay bởi hợp đồng translations ở trên.
+
+
 ## Mục tiêu
 
 Xây dựng Admin Vue để:
@@ -151,46 +159,22 @@ migration thứ hai chứa RLS và policies.
 - [x] `public.game_categories`.
 - [x] `public.word_prompts`.
 - [x] `public.question_prompts`.
+- [x] `public.content_languages` và ba bảng bản dịch (local).
 
-### Field quan trọng
+### Field hiện tại sau translations
 
-`admin_users`:
+- `admin_users`: user Auth, role và `is_active`.
+- `content_languages`: `code`, `display_name`, `sort_order`.
+- `game_categories`: `game_type`, slug duy nhất theo loại trò chơi, `sort_order`, `is_active`.
+- `word_prompts`: `category_id`, `image_path`, `difficulty`, `is_family_friendly`.
+- `question_prompts`: `category_id`, `difficulty`, `is_family_friendly`.
+- `game_category_translations`: `category_id`, `locale`, `name`, `description`, `status`.
+- `word_prompt_translations`: `prompt_id`, `locale`, `text`, `status`.
+- `question_prompt_translations`: `prompt_id`, `locale`, `civilian_question`, `imposter_question`, `status`.
 
-- `user_id` → foreign key đến `auth.users.id`.
-- `role`.
-- `is_active`.
-
-`game_categories`:
-
-- `game_type`.
-- `slug`.
-- `name`.
-- `locale`.
-- `is_active`.
-- `sort_order`.
-
-`word_prompts`:
-
-- `category_id`.
-- `text`.
-- `image_path`.
-- `difficulty`.
-- `is_family_friendly`.
-- `status`.
-
-Schema đã có trong `20261003072606_initial_schema.sql`. Ngoài các enum
-trên, migration tạo `admin_role`, index cho các query chính và trigger kiểm
-tra category của prompt phải khớp `game_type`.
-
-`question_prompts`:
-
-- `category_id`.
-- `civilian_question`.
-- `imposter_question`.
-- `imposter_hint` (schema lịch sử; đã bị bỏ bởi migration `20261021045906_question_prompt_management.sql`, không còn trong payload hiện tại).
-- `difficulty`.
-- `is_family_friendly`.
-- `status`.
+Bản gốc và bản dịch có metadata tạo/cập nhật; bản dịch dùng khóa ghép ID gốc + locale,
+locale tham chiếu `content_languages`. `imposter_hint` đã bị bỏ. Schema đầy đủ nằm trong
+[DBML](./database-schema.dbml); migrations lịch sử là nguồn triển khai, không sửa lại chúng.
 
 ---
 
@@ -208,24 +192,21 @@ tra category của prompt phải khớp `game_type`.
 - [x] Bật RLS cho `admin_users`.
 - [x] Bật RLS cho `game_categories`.
 - [x] Bật RLS cho `word_prompts`.
-- [x] Bật RLS cho `question_prompts`.
+- [x] Bật RLS cho `question_prompts` và bốn bảng ngôn ngữ/bản dịch.
 
 ### Public app policies
 
-- [x] `anon` được đọc category đang active.
-- [x] `anon` được đọc word prompt có `status = published`.
-- [x] `anon` được đọc question prompt có `status = published`.
+- [x] Public chỉ đọc bản dịch đã published, danh mục đang active; đề cần bản dịch danh mục published cùng locale.
+- [x] Bản gốc chỉ public khi có bản dịch đủ điều kiện; không fallback locale.
 - [x] `anon` không được insert, update hoặc delete.
 
 ### Admin policies
 
 - [x] Admin được đọc toàn bộ content.
-- [x] Admin được tạo content.
-- [x] Admin được cập nhật content.
-- [x] Admin được archive content.
+- [x] Admin active tạo/cập nhật/archive qua RPC transactional có kiểm tra phiên bản; client không ghi bảng nội dung trực tiếp.
 - [x] User đã login nhưng không có trong `admin_users` không được thao tác.
 
-RLS và policies nằm trong `20261003072909_rls_and_policies.sql`. Function
+RLS ban đầu nằm trong `20261003072909_rls_and_policies.sql`; quyền hiện tại được cập nhật bởi các migrations translations ngày 2026-10-24. Function
 `private.is_admin()` bị revoke khỏi `public`, chỉ được cấp execute cho role
 `authenticated`; schema `private` cũng không nằm trong Data API schemas.
 
@@ -259,6 +240,8 @@ supabase db reset
 ---
 
 ## Phase 6 — Đẩy schema lên Supabase Cloud
+
+Trạng thái đánh dấu bên dưới chỉ ghi nhận hai migrations setup ban đầu. Dev hiện INACTIVE; migrations translations chưa được triển khai. Lần cutover tiếp theo phải theo [runbook Phase 6 translations](./plans/admin-content-translations/admin-content-translations-phase-6.md), không chạy riêng lệnh push dưới đây.
 
 ```bash
 supabase login
@@ -461,44 +444,41 @@ Bảo vệ các route:
 
 ## Phase 11 — Storage cho ảnh từ ngữ
 
-- [ ] Tạo bucket `game-content`.
-- [ ] Quyết định bucket public hoặc signed URL.
-- [ ] Tạo Storage policies cho admin upload/update/delete.
-- [ ] Cho phép app người chơi đọc ảnh published.
-- [ ] Lưu `image_path` vào `word_prompts`.
-- [ ] Không lưu service key trong app.
+- [x] Tạo bucket private `word-prompt-images` bằng migration; ảnh dùng chung giữa các bản dịch.
+- [x] Bucket private, dùng signed URL; URL đã cấp còn hiệu lực tới hết hạn.
+- [x] Policies cho admin active upload/cleanup; giới hạn JPEG/PNG/WebP, 5 MiB.
+- [x] Cho đọc ảnh khi có bản dịch đề công khai hợp lệ; signed URL đã cấp sống tới hết hạn.
+- [x] Lưu đường dẫn ảnh chung ở `word_prompts.image_path`.
+- [x] Không dùng service key trong frontend. Kết nối Flutter chưa thuộc phạm vi.
 
 ---
 
 ## Phase 12 — Data API queries
 
-Các query chính:
+Query đọc công khai lấy bản dịch theo locale, join phần chung; RLS lọc các dòng không đủ điều kiện:
 
 ```js
 supabase
-  .from('game_categories')
-  .select('*')
-  .eq('is_active', true)
-  .order('sort_order')
-```
-
-```js
-supabase
-  .from('word_prompts')
-  .select('*')
+  .from('word_prompt_translations')
+  .select('*, word_prompts!inner(*)')
+  .eq('locale', locale)
   .eq('status', 'published')
 ```
+
+Tương tự với `question_prompt_translations` và `game_category_translations`.
+Admin dùng các RPC list/save hiện có thay vì query public này.
+Với query bản dịch ở trên, bộ lọc phần chung phải dùng tên quan hệ:
 
 Family Mode:
 
 ```js
-query = query.eq('is_family_friendly', true)
+query = query.eq('word_prompts.is_family_friendly', true)
 ```
 
 Category filter:
 
 ```js
-query = query.in('category_id', selectedCategoryIds)
+query = query.in('word_prompts.category_id', selectedCategoryIds)
 ```
 
 - [ ] Không chọn category → random trong toàn bộ content hợp lệ.

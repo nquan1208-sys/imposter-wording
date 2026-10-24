@@ -10,15 +10,14 @@ mới, bao gồm:
 Guide này được viết dựa trên `docs/admin-supabase-setup-plan.md` và trạng thái
 thực tế của repository.
 
-> **Lưu ý về trạng thái hiện tại:** migration, RLS và Supabase client đã có.
-> Các phần login, route guard, màn hình CRUD Admin và Storage bucket vẫn là
-> phần việc trong kế hoạch, chưa hoàn tất trong code hiện tại. Vì vậy sau khi
-> chạy được project, màn hình hiện tại có thể vẫn là màn hình Vue mẫu; việc
-> này không có nghĩa là setup Supabase bị lỗi.
+> **Trạng thái 2026-10-24:** local đã có login, route guard, CRUD đa ngôn ngữ,
+> dashboard và bucket private `word-prompt-images`. Dev cloud đang INACTIVE và
+> chưa triển khai bộ migrations translations. Dùng local trước; không push cloud
+> theo quickstart khi chưa làm [quy trình cutover](./plans/admin-content-translations/admin-content-translations-phase-6.md).
 
 ## 1. Chọn cách chạy
 
-### Cách A — Dev cloud, nhanh nhất
+### Cách A — Dev cloud, sau khi hoàn tất cutover
 
 Chọn cách này nếu mục tiêu là chạy code Admin trên máy mới và dùng chung
 database Dev hiện tại.
@@ -38,10 +37,9 @@ máy.
 - Cần Supabase CLI.
 - Dữ liệu local độc lập với project Dev cloud.
 
-Nếu chỉ muốn mở Admin ngay, dùng **Cách A**. Nếu đang phát triển database,
-dùng **Cách B** trước rồi mới push migration lên Dev.
+Hiện tại dùng **Cách B** để mở Admin. Cách A chỉ dùng sau khi Dev hoạt động và schema đã tương thích.
 
-### Lộ trình nhanh nhất: chạy Dev cloud
+### Lộ trình Dev cloud — chỉ sau cutover
 
 Sau khi cài Git, Node.js và Yarn, các lệnh chính là:
 
@@ -57,16 +55,14 @@ cp .env.example .env.development.local
 cd ..
 supabase login
 supabase link --project-ref pxycsjwjakzehcuygngv
-supabase db push --linked --dry-run
-supabase db push --linked
+supabase migration list --linked
+# Nếu còn migration pending: thực hiện quy trình cutover, không push trực tiếp.
 
 cd admin
 yarn dev:development
 ```
 
-Nếu chỉ chạy frontend với database Dev đã được setup sẵn, có thể bỏ qua hai
-lệnh `supabase db push` và chạy thẳng `yarn dev:development` sau khi tạo
-file environment.
+Chỉ chạy `yarn dev:development` khi Dev đã hoạt động và ledger khớp schema admin mới.
 
 ## 2. Những thứ cần chuẩn bị
 
@@ -343,7 +339,11 @@ where table_schema = 'public'
     'admin_users',
     'game_categories',
     'word_prompts',
-    'question_prompts'
+    'question_prompts',
+    'content_languages',
+    'game_category_translations',
+    'word_prompt_translations',
+    'question_prompt_translations'
   )
 order by table_name;
 ```
@@ -358,12 +358,16 @@ where schemaname = 'public'
     'admin_users',
     'game_categories',
     'word_prompts',
-    'question_prompts'
+    'question_prompts',
+    'content_languages',
+    'game_category_translations',
+    'word_prompt_translations',
+    'question_prompt_translations'
   )
 order by tablename;
 ```
 
-`rowsecurity` cần là `true` cho cả bốn bảng.
+`rowsecurity` cần là `true` cho cả tám bảng.
 
 ### 6.3. Tạo admin user local để test
 
@@ -485,6 +489,8 @@ supabase migration list --linked
 
 ### 7.3. Áp dụng migration lên Dev
 
+Chỉ chạy bước này trong cửa sổ cutover sau backup và rehearsal theo [Phase 6](./plans/admin-content-translations/admin-content-translations-phase-6.md). Danh sách dry-run đúng chưa đủ để bỏ qua backup hoặc khóa ghi.
+
 Trước tiên xem trước thay đổi:
 
 ```bash
@@ -503,12 +509,16 @@ Kiểm tra lại:
 supabase migration list --linked
 ```
 
-Có thể mở Supabase Dashboard → **Table Editor** để xác nhận bốn bảng:
+Có thể mở Supabase Dashboard → **Table Editor** để xác nhận tám bảng:
 
 - `admin_users`
 - `game_categories`
 - `word_prompts`
 - `question_prompts`
+- `content_languages`
+- `game_category_translations`
+- `word_prompt_translations`
+- `question_prompt_translations`
 
 Không cần chạy `supabase start` khi làm việc với Dev cloud.
 
@@ -582,18 +592,22 @@ Migration trong repository tạo các enum:
 
 Các bảng chính:
 
-- `public.admin_users`: ánh xạ user Auth với quyền admin.
-- `public.game_categories`: category cho word/question.
-- `public.word_prompts`: content từ ngữ.
-- `public.question_prompts`: content câu hỏi.
+- `admin_users`: quyền admin của user Auth.
+- `content_languages`: mã, tên và thứ tự ngôn ngữ; ban đầu `vi`, `en`.
+- `game_categories`, `word_prompts`, `question_prompts`: thông tin chung của bản gốc.
+- `game_category_translations`, `word_prompt_translations`, `question_prompt_translations`: nội dung và trạng thái riêng từng locale; khóa ghép ID gốc + locale.
 
-RLS hiện tại có các nguyên tắc:
+Danh mục giữ slug duy nhất theo `game_type`; ảnh, độ khó và nhãn gia đình thuộc đề gốc.
+Không fallback nội dung sang locale khác. Ngôn ngữ nội dung độc lập locale giao diện.
+Thêm ngôn ngữ bằng dữ liệu `content_languages` qua quyền quản trị DB; chưa có UI quản lý ngôn ngữ.
 
-- Anonymous chỉ đọc category active.
-- Anonymous chỉ đọc prompt có `status = 'published'`.
-- Admin active đọc được toàn bộ content.
-- Chỉ admin được insert/update qua Data API.
-- User Auth nhưng không có trong `admin_users` không có quyền admin.
+RLS và quyền API:
+
+- Public chỉ đọc bản dịch `published`; đề còn cần danh mục đang bật và bản dịch danh mục cùng locale đã xuất bản.
+- Bản gốc chỉ public khi có ít nhất một bản dịch đủ điều kiện.
+- Admin active đọc toàn bộ nội dung; ghi qua các RPC save/delete/toggle/transfer có kiểm tra quyền và phiên bản, không ghi bảng trực tiếp từ client.
+- Lưu chỉ cập nhật phần chung và bản dịch đang chọn trong một transaction. Version cũ trả `PT409`; phải tải lại trước khi ghi tiếp.
+- User đăng nhập không có quyền admin active không được ghi.
 
 Migration không tạo `auth_users`; Supabase đã quản lý `auth.users`.
 
@@ -633,17 +647,17 @@ cd /path/to/imposter-wording
 supabase migration new ten_thay_doi
 ```
 
-Sau khi viết SQL, kiểm tra lại từ đầu trên local:
+Sau khi viết SQL, kiểm tra bằng rehearsal trên bản sao dùng một lần; không reset DB đang giữ dữ liệu:
 
 ```bash
-supabase db reset --local
+rtk proxy python3 supabase/tests/content_translations.py
 ```
 
 Xem trước và push lên Dev:
 
 ```bash
-supabase db push --linked --dry-run
-supabase db push --linked
+supabase migration list --linked
+# Nếu còn migration pending: thực hiện quy trình cutover, không push trực tiếp.
 ```
 
 Sau khi migration đã push lên Dev, không sửa file migration cũ. Tạo migration
@@ -684,7 +698,7 @@ Trước khi dùng production cần hoàn thành tối thiểu:
 - Auth provider và policy phù hợp.
 - Migration đã được kiểm tra và push đúng project.
 - Admin user production.
-- Storage bucket `game-content` và Storage policies nếu dùng upload ảnh.
+- Storage bucket private `word-prompt-images` và các policies trong migrations.
 - Hosting cho `admin/dist/`.
 
 File `admin/.env.production` đang để trống có chủ ý, nhằm tránh build
@@ -692,19 +706,15 @@ production tự động dùng nhầm `.env.local`.
 
 ## 11. Storage ảnh từ ngữ
 
-Theo setup plan, Storage bucket `game-content` và Storage policies vẫn chưa
-được tạo trong migration hiện tại. Vì vậy không coi upload ảnh là đã sẵn sàng
-chỉ vì database đã chạy.
+Bucket private `word-prompt-images` đã được tạo bằng migration. Ảnh dùng chung giữa các bản dịch;
+đường dẫn là `<prompt-uuid>/<file-uuid>.jpg|png|webp`, tối đa 5 MiB.
+Admin active upload và cleanup theo policy; không tạo bucket public thay thế.
+Ảnh chỉ được cấp quyền đọc mới khi đề có ít nhất một bản dịch công khai hợp lệ.
+Signed URL đã cấp còn hiệu lực tới hết hạn. Xóa đề giữ bytes và chặn truy cập mới;
+upload/save thất bại dọn ảnh mới theo quy trình editor.
 
-Khi triển khai phần này cần:
-
-1. Tạo bucket `game-content`.
-2. Chọn bucket public hoặc dùng signed URL.
-3. Tạo policy cho admin upload/update/delete.
-4. Cho phép app người chơi đọc ảnh phù hợp.
-5. Lưu đường dẫn file vào `word_prompts.image_path`.
-
-Không đưa service key vào Vue Admin hoặc Flutter app.
+Chạy `cd admin && yarn test:storage` với local stack để kiểm tra Storage HTTP.
+DB dump chứa metadata Storage, không chứa bytes ảnh; xem quy trình backup ở báo cáo Phase 6.
 
 ## 12. Chạy Flutter app (tuỳ chọn)
 
@@ -823,11 +833,11 @@ supabase migration list --linked
 
 Chỉ tạo migration mới khi thực sự có thay đổi database.
 
-### Admin chạy được nhưng chưa có login/CRUD
+### Admin chạy được nhưng lỗi schema/RPC
 
-Đối chiếu trạng thái hiện tại ở đầu tài liệu. Repository hiện mới có nền tảng
-Vue/Vite, Supabase client và database migration; các phase login, route guard,
-CRUD và Storage trong setup plan chưa hoàn thành.
+Kiểm tra đúng environment và migration ledger. Admin mới cần toàn bộ migrations translations,
+bao gồm migration conflict `20261024093556`; không chạy admin cũ với schema mới.
+Không dùng reset để xử lý trên DB có dữ liệu cần giữ.
 
 ## 15. Tài liệu tham khảo
 

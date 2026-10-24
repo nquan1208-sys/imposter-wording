@@ -1,6 +1,6 @@
 # Phase 4 — Admin quản lý hai loại đề
 
-Triển khai local ngày 2026-10-24. Migration bổ sung: [20261024055441_admin_prompt_translations.sql](../supabase/migrations/20261024055441_admin_prompt_translations.sql). Chưa triển khai cloud.
+Triển khai local ngày 2026-10-24. Migration bổ sung: [20261024055441_admin_prompt_translations.sql](../../../supabase/migrations/20261024055441_admin_prompt_translations.sql). Chưa triển khai cloud.
 
 ## Hành vi
 

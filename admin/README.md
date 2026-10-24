@@ -86,8 +86,8 @@ menus, options, columns and visible messages. Route metadata stores `titleKey`
 and `descriptionKey`; shared helpers return stable error keys and preserve
 backend errors. Translate only known keys at the UI boundary.
 
-UI locale never changes database content, enum values, URLs, filters or the
-`vi` locale in category creation payloads. Browser validation and beforeunload
+UI locale is independent of content locale. Content language defaults to `vi`;
+editors and dashboard use `content_languages`, with no content fallback. Browser validation and beforeunload
 messages follow the browser/OS language. Run `yarn test` for dictionary,
 fallback, locale switching and existing category/auth behavior checks.
 
@@ -124,3 +124,17 @@ checkout. These declarations remain ignored; `src/types/database.ts` is committe
 Start local Supabase with the repository migrations applied before regenerating
 database types. The small RPC nullability override lives in `src/types/admin.ts`.
 The storage test creates isolated fixtures and cleans them up in `finally`.
+
+## Content translations and rollout
+
+Content uses originals plus per-language translations with independent statuses.
+Shared category/image/difficulty changes affect every language. Saves use transactional
+RPCs with optimistic versions; `PT409` requires an explicit reload. Active admins
+write through RPCs, not directly to content tables. Public translations require
+published content and a published category translation in the same language, with
+an active category. Images use the private `word-prompt-images` bucket.
+
+See the [translation plan](../docs/plans/admin-content-translations/admin-content-translations-plan.md)
+and [Phase 6 verification / cutover runbook](../docs/plans/admin-content-translations/admin-content-translations-phase-6.md).
+Local migrations are applied; Dev cloud has not been deployed. Do not mix old admin
+builds with the new schema. Database backups do not include Storage file bytes.
