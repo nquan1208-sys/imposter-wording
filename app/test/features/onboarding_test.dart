@@ -10,10 +10,10 @@ import '../data/fixtures.dart';
 
 Future<ProviderContainer> pumpApp(WidgetTester tester) async {
   final content = ContentRepository(
-    cache: MemoryFile(),
+    cache: MemoryStorage(),
     fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
   );
-  final store = SetupStore(content: content, file: MemoryFile());
+  final store = SetupStore(content: content, file: MemoryStorage());
   await content.load();
   await store.restore();
   addTearDown(store.dispose);

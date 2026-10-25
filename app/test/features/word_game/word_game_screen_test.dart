@@ -40,10 +40,10 @@ void main() {
     bool advanced = false,
   }) async {
     content = ContentRepository(
-      cache: MemoryFile(),
+      cache: MemoryStorage(),
       fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
     );
-    setup = SetupStore(content: content, file: MemoryFile());
+    setup = SetupStore(content: content, file: MemoryStorage());
     await content.load();
     await setup.restore();
     setup.setPlayerCount(advanced ? 5 : 3);

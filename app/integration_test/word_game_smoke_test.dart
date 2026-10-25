@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:untitled/data/content_repository.dart';
 import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/data/scoped_json_file.dart';
+import 'package:untitled/data/hive_local_storage.dart';
+import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/features/word_game/word_game_screen.dart';
 import 'package:untitled/main.dart';
@@ -44,12 +46,23 @@ void main() {
               )
             : GameSetup.defaults();
         await file('setup').write(initial.toJson());
+        var storage = HiveLocalStorage(directory: () async => root);
+        LocalJsonStore local(String name) => storage.scoped(
+          environment: 'local',
+          backendUrl: 'http://localhost:54321',
+          locale: 'vi',
+          name: name,
+        );
+        expect(await local('snapshot').read(), fixture());
+        expect(await local('setup').read(), initial.toJson());
+        await storage.close();
+        storage = HiveLocalStorage(directory: () async => root);
         final content = ContentRepository(
-          cache: file('snapshot'),
+          cache: local('snapshot'),
           fetchPage: (t, l, f, e) async =>
               throw const SocketException('simulated offline'),
         );
-        final setup = SetupStore(content: content, file: file('setup'));
+        final setup = SetupStore(content: content, file: local('setup'));
         final container = ProviderContainer(
           overrides: [
             contentRepositoryProvider.overrideWithValue(content),
@@ -61,6 +74,8 @@ void main() {
           container.dispose();
           setup.dispose();
           content.dispose();
+          await setup.pendingWrites;
+          await storage.close();
           await root.delete(recursive: true);
         });
         await content.load();

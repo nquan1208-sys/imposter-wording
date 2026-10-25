@@ -14,21 +14,21 @@ import '../../data/fixtures.dart';
 void main() {
   late ContentRepository content;
   late SetupStore store;
-  late MemoryFile file;
+  late MemoryStorage file;
   late ProviderContainer container;
 
   Future<void> pump(
     WidgetTester tester, {
     FetchContentPage? fetch,
-    MemoryFile? cache,
+    MemoryStorage? cache,
     bool load = true,
     bool english = false,
   }) async {
     content = ContentRepository(
-      cache: cache ?? MemoryFile(),
+      cache: cache ?? MemoryStorage(),
       fetchPage: fetch ?? (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
     );
-    file = MemoryFile();
+    file = MemoryStorage();
     store = SetupStore(content: content, file: file);
     addTearDown(content.dispose);
     addTearDown(store.dispose);
@@ -73,7 +73,7 @@ void main() {
     tester,
   ) async {
     await pump(tester, english: true);
-    await tap(tester, 'Edit player names');
+    await tap(tester, 'Players');
     await tester.enterText(find.byKey(const ValueKey('name-player-1')), '  ');
     await tester.pumpAndSettle();
     expect(find.text('Enter a name.'), findsOneWidget);
@@ -96,7 +96,7 @@ void main() {
     await tap(tester, 'Confirm');
     expect(store.setup.value.players[1].name, 'Alex');
     expect(store.setup.value.players[1].id, 'player-1');
-    await tap(tester, 'Edit player names');
+    await tap(tester, 'Players');
     await tester.tap(find.byTooltip('Remove player').first);
     await tester.pumpAndSettle();
     expect(find.byTooltip('Remove player'), findsNWidgets(3));
@@ -109,7 +109,7 @@ void main() {
     await tap(tester, 'Confirm');
     expect(store.setup.value.players, hasLength(4));
     expect(store.setup.value.players.last.id, 'player-5');
-    await tap(tester, 'Edit player names');
+    await tap(tester, 'Players');
     await tester.enterText(find.byType(TextFormField).first, 'Unsaved');
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
@@ -198,35 +198,52 @@ void main() {
     },
   );
 
-  testWidgets('player sheet bounds, confirmation and navigation retain setup', (
+  testWidgets('player card opens roster and saved count follows roster', (
     tester,
   ) async {
     await pump(tester, english: true);
+    expect(find.text('Edit player names'), findsNothing);
     await tap(tester, 'Players');
-    await tester.tap(find.byTooltip('Fewer players'));
-    await tester.pump();
-    expect(
-      tester
-          .widget<IconButton>(
-            find.byWidgetPredicate(
-              (w) => w is IconButton && w.tooltip == 'Fewer players',
-            ),
-          )
-          .onPressed,
-      null,
-    );
+    expect(find.text('Edit player names'), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.byTooltip('Fewer players'), findsNothing);
+    expect(find.byTooltip('More players'), findsNothing);
+    await tester.tap(find.byTooltip('Remove player').first);
+    await tester.pumpAndSettle();
+    for (final button in tester.widgetList<IconButton>(
+      find.byWidgetPredicate(
+        (w) => w is IconButton && w.tooltip == 'Remove player',
+      ),
+    )) {
+      expect(button.onPressed, null);
+    }
     await tap(tester, 'Confirm');
     expect(store.setup.value.players.length, 3);
+    expect(find.bySemanticsLabel('3 players'), findsOneWidget);
+
+    await tap(tester, 'Players');
+    await tap(tester, 'Add player');
+    await tap(tester, 'Confirm');
+    expect(find.bySemanticsLabel('4 players'), findsOneWidget);
+    await tap(tester, 'Players');
+    await tester.tap(find.byTooltip('Remove player').first);
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    await tap(tester, 'Discard');
+    expect(find.bySemanticsLabel('4 players'), findsOneWidget);
+
     store.setPlayerCount(100);
     await tester.pumpAndSettle();
     await tap(tester, 'Players');
+    await tester.scrollUntilVisible(
+      find.text('Add player'),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(
       tester
-          .widget<IconButton>(
-            find.byWidgetPredicate(
-              (w) => w is IconButton && w.tooltip == 'More players',
-            ),
-          )
+          .widget<TextButton>(find.widgetWithText(TextButton, 'Add player'))
           .onPressed,
       null,
     );
@@ -240,6 +257,22 @@ void main() {
     semantics.dispose();
     expect(find.text('Word game'), findsOneWidget);
     expect(find.text('Imposters'), findsOneWidget);
+  });
+
+  testWidgets('saving fewer players clamps the displayed imposter count', (
+    tester,
+  ) async {
+    await pump(tester, english: true);
+    store.setPlayerCount(5);
+    store.setRules(imposters: 2);
+    await tester.pumpAndSettle();
+    await tap(tester, 'Players');
+    await tester.tap(find.byTooltip('Remove player').first);
+    await tester.pumpAndSettle();
+    await tap(tester, 'Confirm');
+    expect(find.bySemanticsLabel('4 players'), findsOneWidget);
+    expect(find.bySemanticsLabel('Imposters: 1'), findsOneWidget);
+    expect(store.setup.value.imposters, 1);
   });
 
   testWidgets('loading, error and retry without cache', (tester) async {
@@ -279,7 +312,7 @@ void main() {
     await pump(
       tester,
       english: true,
-      cache: MemoryFile(data),
+      cache: MemoryStorage(data),
       fetch: (t, l, f, e) async => throw const SocketException('offline'),
     );
     expect(find.text('Using saved content.'), findsOneWidget);
@@ -355,7 +388,7 @@ void main() {
         addTearDown(tester.view.reset);
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
         await pump(tester);
-        await tap(tester, 'Chỉnh sửa người chơi');
+        await tap(tester, 'Người chơi');
         await tester.enterText(
           find.byKey(const ValueKey('name-player-1')),
           '  An  ',

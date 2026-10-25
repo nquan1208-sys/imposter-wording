@@ -3,7 +3,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/base/store/auto_dispose_manager.dart';
 import 'package:untitled/base/store/store_base.dart';
-import 'package:untitled/data/scoped_json_file.dart';
+import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/models/content.dart';
 
 typedef FetchContentPage =
@@ -51,7 +51,7 @@ class SupabaseContentSource {
 
 class ContentRepository extends StoreBase {
   final FetchContentPage fetchPage;
-  final ScopedJsonFile cache;
+  final LocalJsonStore cache;
   final String contentLocale;
   final int pageSize;
   final _disposers = AutoDisposeManager();
@@ -74,7 +74,6 @@ class ContentRepository extends StoreBase {
     loading.value = true;
     loadFailed.value = false;
     if (!_readCache) {
-      _readCache = true;
       try {
         final data = await cache.read();
         if (isDispose) return;
@@ -82,6 +81,8 @@ class ContentRepository extends StoreBase {
           snapshot.value = ContentSnapshot.fromJson(data, contentLocale);
           cached.value = true;
         }
+        _readCache = true;
+        cacheWarning.value = false;
       } catch (_) {
         if (!isDispose) cacheWarning.value = true;
       }

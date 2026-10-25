@@ -24,9 +24,9 @@ void main() {
   setUp(() async {
     content = ContentRepository(
       fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
-      cache: MemoryFile(),
+      cache: MemoryStorage(),
     );
-    setup = SetupStore(content: content, file: MemoryFile());
+    setup = SetupStore(content: content, file: MemoryStorage());
     await content.load();
     await setup.restore();
   });
@@ -139,7 +139,7 @@ void main() {
     }, 'vi');
     expect(WordGameSession.create(setup), null);
     content.snapshot.value = ContentSnapshot.fromJson(fixture(), 'vi');
-    (setup.file as MemoryFile).failRead = true;
+    (setup.file as MemoryStorage).failRead = true;
     await setup.restore();
     expect(WordGameSession.create(setup), null);
   });

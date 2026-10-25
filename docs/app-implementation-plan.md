@@ -197,6 +197,45 @@ xác nhận. Nút bắt đầu ván vẫn chưa khả dụng cho tới phase 3.
 - **Nghiệm thu:** số lượng category và đề `vi` khớp bộ lọc trên backend đã có schema mới, kể cả dữ liệu vượt một trang; đổi mode không giữ ID không hợp lệ; nhớ thiết lập sau mở lại; mất mạng sau lần tải đầu vẫn cấu hình được. Nút bắt đầu ván ghi rõ chưa khả dụng cho tới phase 3; mọi thao tác cấu hình khác dùng được.
 - **Kiểm tra:** unit test loại/mode/status/category active, nhiều category, nhiều trang và tập rỗng. Fixture có cùng ID gốc với VI published/EN draft và ngược lại; category VI ẩn nhưng EN public; thiếu translation; không đếm trùng ID hoặc lọt EN vào tập VI. Payload lỗi/không tương thích và lỗi trang giữa không ghi đè cache; simulation HTTP cho lỗi mạng/không có cache; read-only check backend local/dev xác minh anon đọc cả bảng gốc lẫn translation đúng quyền. Widget test xác nhận/hủy picker, thử lại và khôi phục thiết lập.
 
+### Cập nhật lưu trữ local — Hive CE (25/10/2026)
+
+- Setup/người chơi và snapshot nội dung hiện lưu trong hai box `settings` và
+  `content_cache` tại `<ApplicationSupport>/hive/`. Mỗi bản ghi là chuỗi JSON
+  có `version: 1`, `scope`, `data`; key scope giữ môi trường + URL backend chuẩn
+  hóa + locale nội dung hiện tại (`vi`). Signals giữ state, Riverpod cấp một
+  `HiveLocalStorage` dùng chung; không thêm adapter, generator hoặc bước mở box
+  chặn `runApp`.
+- `SetupStore` và `ContentRepository` dùng `LocalJsonStore`. Storage mở box khi
+  cần, chia sẻ lần mở, cho thử lại sau lỗi, tuần tự hóa thao tác và chờ `put()`
+  hoàn tất. Khi Riverpod dispose, hàng đợi ghi setup được bàn giao cho storage;
+  storage chờ ghi xong rồi đóng box. Lỗi đọc cache có thể thử lại ngay khi offline.
+- Khi chưa có key Hive, đọc `content/<scope-base64>/setup.json` hoặc
+  `snapshot.json` cũ, kiểm tra version/scope và `GameSetup.fromJson` hoặc
+  `ContentSnapshot.fromJson`, rồi ghi Hive. Chỉ key đã ghi thành công mới xác
+  nhận migration; không tạo marker. Bản ghi Hive tồn tại luôn được ưu tiên;
+  Hive hỏng báo lỗi theo luồng hiện có, không fallback sang JSON. Lỗi đọc/ghi
+  không tự xóa/reset dữ liệu.
+- File JSON cũ được giữ nguyên để phục hồi thủ công và không cập nhật sau
+  migration. Rollback sang app chỉ đọc JSON sẽ thấy dữ liệu tại thời điểm
+  migration, không thấy thay đổi mới trong Hive. Không thêm nhiều danh sách
+  người chơi, lưu ván, UI locale, tài khoản, đồng bộ hoặc mã hóa.
+- Fake test đã chuyển thành `MemoryStorage` theo interface. Test Hive thật trong
+  thư mục tạm kiểm tra restart, scope, lỗi mở/thử lại, migration hợp lệ/thiếu/
+  sai version/scope/data/JSON, lỗi `put()` rồi restart, ưu tiên Hive mới hơn JSON,
+  Hive hỏng, đóng storage chờ ghi và lifecycle Riverpod.
+- Kiểm tra: `flutter analyze` sạch; **110/110 unit/widget test pass**. Smoke `word_game_smoke_test.dart` **2/2 pass** trên iPhone 17
+  Pro Simulator iOS 26.5: nhập cả hai JSON cũ, đóng/mở storage, khôi phục người
+  chơi/luật, chơi offline, vote/replay/back ở cấu hình thường và nâng cao.
+  Không có cảnh báo đọc signal sau dispose trong lần chạy cuối.
+- `setup_smoke_test.dart` đã đổi sang Hive, có migration setup và đóng/mở lại
+  trước khôi phục offline; chưa chạy lại smoke này vì chưa xác nhận fixture
+  backend local đúng yêu cầu của test (1 từ Classic, 0 Family, tên danh mục
+  cố định). Không seed hoặc sửa backend. Các bằng chứng JSON/smoke phase 2–4
+  bên dưới là lịch sử trước thay đổi Hive.
+- Giữ nguyên thay đổi gộp ô “Người chơi” đang có. Không chụp ảnh UI; chưa kiểm
+  tra thiết bị thật, Android runtime, release, kill/relaunch tiến trình hoặc
+  chế độ máy bay thật.
+
 ### Phase 3 — Ván word hoàn chỉnh đầu tiên
 
 **Trạng thái triển khai 24/10/2026:** đã nối setup → danh sách người chơi → thẻ
@@ -270,10 +309,14 @@ tên đồng vai chỉ sau khi imposter mở thẻ. Cách chơi VI/EN và layout
   không gọi backend, seed DB, kill/relaunch hoặc dùng chế độ máy bay thật.
 - Không chụp hoặc kiểm tra ảnh UI. Chưa kiểm tra thiết bị thật, Android runtime
   hoặc bản release; Phase 4 không thay schema, plugin hoặc cấu hình native.
+- Sau khi gộp thao tác người chơi: `flutter analyze` không có issue,
+  `flutter test` **90 tests passed**; đã cập nhật integration test setup sang
+  màn chỉnh danh sách nhưng chưa chạy lại trên simulator.
 
 **PR đề xuất:** `feat(app): add roster editing and imposter options`
 
 - Phạm vi: màn 15 phần danh sách hiện tại và phần còn lại của màn 3/bottom sheet, chưa gồm danh sách đã lưu.
+- Ô **Người chơi** trên setup mở thẳng màn chỉnh danh sách hiện tại; bỏ nút **Chỉnh sửa người chơi** riêng và sheet tăng/giảm số lượng. Số hiển thị lấy từ danh sách đã xác nhận; hủy draft giữ nguyên số cũ. Khi giảm người, tự giới hạn lại số kẻ mạo danh theo N.
 - Đổi tên, thêm/xóa, sắp xếp người chơi; 3–100 người, trim tên, tên trống không được lưu. Dùng ID riêng để tên trùng không làm gán nhầm vai/câu trả lời; thêm người sinh tên mặc định theo danh sách hiện tại.
 - Fixed/random số kẻ mạo danh, validation theo N, cập nhật lại cấu hình khi giảm người chơi; tùy chọn không đi trước, hiển thị danh mục, biết nhau. `Biết nhau` chỉ hiện tên đồng vai sau khi mở thẻ và không lộ từ/ảnh.
 - Chốt xử lý công tắc hint và luật nhiều kẻ mạo danh trước khi bật UI; cập nhật Cách chơi cho đúng luật đã duyệt. Mở rộng sheet ghi nhận người bị bầu và kết quả theo số imposter; không bỏ tính thắng/thua của phase 3.

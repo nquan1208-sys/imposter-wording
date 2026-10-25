@@ -6,7 +6,7 @@ import 'package:untitled/models/content.dart';
 import 'package:untitled/models/game_setup.dart';
 import '../../data/fixtures.dart';
 
-class SlowFile extends MemoryFile {
+class SlowStorage extends MemoryStorage {
   final gate = Completer<void>();
   int active = 0, maxActive = 0;
   @override
@@ -22,14 +22,14 @@ class SlowFile extends MemoryFile {
 void main() {
   late ContentRepository content;
   late SetupStore store;
-  late MemoryFile file;
+  late MemoryStorage file;
   setUp(() async {
     final data = fixture();
     content = ContentRepository(
-      cache: MemoryFile(),
+      cache: MemoryStorage(),
       fetchPage: (t, l, f, e) => fixturePage(data, t, l, f, e),
     );
-    file = MemoryFile();
+    file = MemoryStorage();
     store = SetupStore(content: content, file: file);
     await content.load();
     await store.restore();
@@ -224,7 +224,7 @@ void main() {
   });
 
   test('writes serialize and last committed setup wins', () async {
-    final slow = SlowFile();
+    final slow = SlowStorage();
     final other = SetupStore(content: content, file: slow);
     addTearDown(other.dispose);
     await other.restore();

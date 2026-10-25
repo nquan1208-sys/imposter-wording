@@ -9,8 +9,11 @@ import 'package:untitled/config/app_config.dart';
 import 'package:untitled/data/content_repository.dart';
 import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/data/scoped_json_file.dart';
+import 'package:untitled/data/hive_local_storage.dart';
+import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/main.dart';
+import 'package:untitled/models/game_setup.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -37,11 +40,19 @@ void main() {
         name: name,
         directory: () async => directory,
       );
+      await file('setup').write(GameSetup.defaults().toJson());
+      var storage = HiveLocalStorage(directory: () async => directory);
+      LocalJsonStore local(String name) => storage.scoped(
+        environment: AppConfig.current.environment,
+        backendUrl: AppConfig.current.supabaseUrl,
+        locale: 'vi',
+        name: name,
+      );
       final content = ContentRepository(
         fetchPage: SupabaseContentSource(Supabase.instance.client).fetch,
-        cache: file('snapshot'),
+        cache: local('snapshot'),
       );
-      final store = SetupStore(content: content, file: file('setup'));
+      final store = SetupStore(content: content, file: local('setup'));
       await content.load();
       await store.restore();
       expect(content.loadFailed.value, false);
@@ -71,7 +82,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Người chơi'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Tăng số người'));
+      await tester.ensureVisible(find.text('Thêm người chơi'));
+      await tester.tap(find.text('Thêm người chơi'));
       await tester.tap(find.text('Xác nhận'));
       await tester.pumpAndSettle();
       await store.save();
@@ -83,12 +95,15 @@ void main() {
       store.dispose();
       content.dispose();
 
+      await storage.close();
+      storage = HiveLocalStorage(directory: () async => directory);
+
       final offline = ContentRepository(
-        cache: file('snapshot'),
+        cache: local('snapshot'),
         fetchPage: (t, l, f, e) async =>
             throw const SocketException('simulated offline'),
       );
-      final restored = SetupStore(content: offline, file: file('setup'));
+      final restored = SetupStore(content: offline, file: local('setup'));
       await offline.load();
       await restored.restore();
       expect(restored.setup.value.players.map((p) => p.id), playerIds);
@@ -118,6 +133,7 @@ void main() {
       container.dispose();
       restored.dispose();
       offline.dispose();
+      await storage.close();
       await directory.delete(recursive: true);
     },
   );

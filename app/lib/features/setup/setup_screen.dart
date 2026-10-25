@@ -129,7 +129,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                             value: '${setup.players.length}',
                             semantics: l.playerCount(setup.players.length),
                             onTap: store.editable
-                                ? () => _players(context, store)
+                                ? () => ref
+                                      .read(AppService.router)
+                                      .push(RouteInput.playerNames())
                                 : null,
                           ),
                         ),
@@ -150,14 +152,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         ),
                       ],
                     ),
-                  ),
-                  TextButton(
-                    onPressed: store.editable
-                        ? () => ref
-                              .read(AppService.router)
-                              .push(RouteInput.playerNames())
-                        : null,
-                    child: Text(l.editPlayers),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   Text(l.gameMode, style: textTheme.titleLarge),
@@ -361,60 +355,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 FilledButton(
                   onPressed: () {
                     store.setRules(imposters: count, randomImposters: random);
-                    Navigator.pop(context);
-                  },
-                  child: Text(l.confirm),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _players(BuildContext context, SetupStore store) {
-    final l = AppLocalizations.of(context);
-    var count = store.setup.value.players.length;
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => AppContent(
-        child: StatefulBuilder(
-          builder: (context, setState) => SingleChildScrollView(
-            padding: AppEdgeInsets.all24,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(l.players, style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: AppSpacing.xl),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    IconButton(
-                      tooltip: l.decreasePlayers,
-                      onPressed: count > 3
-                          ? () => setState(() => count--)
-                          : null,
-                      icon: const Icon(Icons.remove),
-                    ),
-                    Text(l.playerCount(count)),
-                    IconButton(
-                      tooltip: l.increasePlayers,
-                      onPressed: count < 100
-                          ? () => setState(() => count++)
-                          : null,
-                      icon: const Icon(Icons.add),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                FilledButton(
-                  onPressed: () {
-                    store.setPlayerCount(count);
                     Navigator.pop(context);
                   },
                   child: Text(l.confirm),

@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:untitled/data/local_json_store.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:untitled/models/content.dart';
 
-class ScopedJsonFile {
+class ScopedJsonFile implements LocalJsonStore {
   final Future<Directory> Function() directory;
   final String scope;
   final String name;
@@ -28,6 +29,7 @@ class ScopedJsonFile {
     return File('${root.path}/content/$id/$name.json');
   }
 
+  @override
   Future<JsonMap?> read() async {
     final target = await file;
     if (!await target.exists()) return null;
@@ -38,6 +40,7 @@ class ScopedJsonFile {
     return json['data'] as JsonMap;
   }
 
+  @override
   Future<void> write(JsonMap data) async {
     final target = await file;
     await target.parent.create(recursive: true);

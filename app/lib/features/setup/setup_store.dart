@@ -2,12 +2,12 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/base/store/auto_dispose_manager.dart';
 import 'package:untitled/base/store/store_base.dart';
 import 'package:untitled/data/content_repository.dart';
-import 'package:untitled/data/scoped_json_file.dart';
+import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/models/game_setup.dart';
 
 class SetupStore extends StoreBase {
   final ContentRepository content;
-  final ScopedJsonFile file;
+  final LocalJsonStore file;
   final _disposers = AutoDisposeManager();
   late final setup = signal(GameSetup.defaults()).manageBy(_disposers);
   late final reading = signal(true).manageBy(_disposers);
@@ -16,6 +16,7 @@ class SetupStore extends StoreBase {
   late final selectionRemoved = signal(false).manageBy(_disposers);
   Future<void> _writes = Future.value();
   Future<void>? _read;
+  Future<void> get pendingWrites => _writes;
   bool get editable => !reading.value && !readFailed.value;
 
   SetupStore({required this.content, required this.file}) {
