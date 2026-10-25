@@ -11,14 +11,15 @@ enum WordGameStage { players, discussion, result }
 class WordGameSession {
   final GameSetup setup;
   final WordPrompt prompt;
-  final String categoryName, imposterId, startingPlayerId;
+  final String categoryName, startingPlayerId;
+  final Set<String> imposterIds;
   String get contentLocale => prompt.contentLocale;
 
   WordGameSession._(
     this.setup,
     this.prompt,
     this.categoryName,
-    this.imposterId,
+    this.imposterIds,
     this.startingPlayerId,
   );
 
@@ -27,7 +28,8 @@ class WordGameSession {
     store.revalidate();
     final setup = store.setup.value;
     final players = setup.players;
-    if (players.length < 3 ||
+    if (!setup.validRules ||
+        players.length < 3 ||
         players.length > 100 ||
         players.map((p) => p.id).toSet().length != players.length ||
         players.any((p) => p.id.isEmpty || p.name.trim().isEmpty)) {
@@ -43,6 +45,15 @@ class WordGameSession {
     final category = store.content.snapshot.value!.categories.firstWhere(
       (c) => c.id == prompt.categoryId,
     );
+    final startingPlayerId = players[rng.nextInt(players.length)].id;
+    final count = setup.randomImposters
+        ? 1 + rng.nextInt(setup.maxImposters)
+        : setup.imposters;
+    final candidates =
+        players
+            .where((p) => !setup.imposterNotFirst || p.id != startingPlayerId)
+            .toList()
+          ..shuffle(rng);
     return WordGameSession._(
       setup.copyWith(
         players: List.unmodifiable(players),
@@ -50,8 +61,8 @@ class WordGameSession {
       ),
       prompt,
       category.name,
-      players[rng.nextInt(players.length)].id,
-      players[rng.nextInt(players.length)].id,
+      Set.unmodifiable(candidates.take(count).map((p) => p.id)),
+      startingPlayerId,
     );
   }
 }
@@ -63,13 +74,16 @@ class WordGameStore extends StoreBase {
   late final completed = signal<Set<String>>(const {}).manageBy(_disposers);
   late final currentPlayerId = signal<String?>(null).manageBy(_disposers);
   late final revealed = signal(false).manageBy(_disposers);
-  late final votedPlayerId = signal<String?>(null).manageBy(_disposers);
+  late final votedPlayerIds = signal<Set<String>>(
+    const {},
+  ).manageBy(_disposers);
 
   WordGameStore(this.session);
 
   bool get groupWon =>
       stage.value == WordGameStage.result &&
-      votedPlayerId.value == session.imposterId;
+      votedPlayerIds.value.length == session.imposterIds.length &&
+      votedPlayerIds.value.containsAll(session.imposterIds);
 
   void selectPlayer(String id) {
     if (stage.value != WordGameStage.players ||
@@ -107,12 +121,13 @@ class WordGameStore extends StoreBase {
     }
   }
 
-  void confirmVote(String id) {
+  void confirmVote(Set<String> ids) {
     if (stage.value != WordGameStage.discussion ||
-        !session.setup.players.any((p) => p.id == id)) {
+        ids.length != session.imposterIds.length ||
+        !ids.every((id) => session.setup.players.any((p) => p.id == id))) {
       return;
     }
-    votedPlayerId.value = id;
+    votedPlayerIds.value = Set.unmodifiable(ids);
     stage.value = WordGameStage.result;
   }
 

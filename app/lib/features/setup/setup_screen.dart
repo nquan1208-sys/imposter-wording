@@ -138,12 +138,26 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                           child: _statCard(
                             context,
                             label: l.imposters,
-                            value: '1',
-                            semantics: '${l.imposters}: 1',
+                            value: setup.randomImposters
+                                ? l.randomCount
+                                : '${setup.imposters}',
+                            semantics:
+                                '${l.imposters}: ${setup.randomImposters ? l.randomCount : setup.imposters}',
+                            onTap: store.editable
+                                ? () => _imposters(context, store)
+                                : null,
                           ),
                         ),
                       ],
                     ),
+                  ),
+                  TextButton(
+                    onPressed: store.editable
+                        ? () => ref
+                              .read(AppService.router)
+                              .push(RouteInput.playerNames())
+                        : null,
+                    child: Text(l.editPlayers),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   Text(l.gameMode, style: textTheme.titleLarge),
@@ -197,6 +211,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: ListTile(
+                      key: const Key('categoryPicker'),
                       contentPadding: AppEdgeInsets.all24,
                       leading: const CircleAvatar(
                         backgroundColor: AppColors.tealSurface,
@@ -228,6 +243,27 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     ),
                     if (count == 0) Text(l.emptyContent),
                   ],
+                  SwitchListTile(
+                    title: Text(l.imposterNotFirst),
+                    value: setup.imposterNotFirst,
+                    onChanged: store.editable
+                        ? (v) => store.setRules(imposterNotFirst: v)
+                        : null,
+                  ),
+                  SwitchListTile(
+                    title: Text(l.showCategory),
+                    value: setup.showCategory,
+                    onChanged: store.editable
+                        ? (v) => store.setRules(showCategory: v)
+                        : null,
+                  ),
+                  SwitchListTile(
+                    title: Text(l.knowEachOther),
+                    value: setup.knowEachOther,
+                    onChanged: store.editable
+                        ? (v) => store.setRules(knowEachOther: v)
+                        : null,
+                  ),
                   const SizedBox(height: AppSpacing.md),
                 ],
               ),
@@ -275,6 +311,67 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       ),
     ),
   );
+
+  void _imposters(BuildContext context, SetupStore store) {
+    final l = AppLocalizations.of(context);
+    final setup = store.setup.value;
+    var count = setup.imposters;
+    var random = setup.randomImposters;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => AppContent(
+        child: StatefulBuilder(
+          builder: (context, setState) => SingleChildScrollView(
+            padding: AppEdgeInsets.all24,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l.imposters,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                SwitchListTile(
+                  title: Text(l.randomCount),
+                  subtitle: Text(l.imposterRange(setup.maxImposters)),
+                  value: random,
+                  onChanged: (v) => setState(() => random = v),
+                ),
+                if (!random)
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      IconButton(
+                        tooltip: l.fewerImposters,
+                        onPressed: count > 1
+                            ? () => setState(() => count--)
+                            : null,
+                        icon: const Icon(Icons.remove),
+                      ),
+                      Text('$count'),
+                      IconButton(
+                        tooltip: l.moreImposters,
+                        onPressed: count < setup.maxImposters
+                            ? () => setState(() => count++)
+                            : null,
+                        icon: const Icon(Icons.add),
+                      ),
+                    ],
+                  ),
+                FilledButton(
+                  onPressed: () {
+                    store.setRules(imposters: count, randomImposters: random);
+                    Navigator.pop(context);
+                  },
+                  child: Text(l.confirm),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   void _players(BuildContext context, SetupStore store) {
     final l = AppLocalizations.of(context);

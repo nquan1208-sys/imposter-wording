@@ -54,7 +54,7 @@ void main() {
 
   Future<void> tap(WidgetTester tester, String text) async {
     final target = text == 'Danh mục' || text == 'Categories'
-        ? find.byType(ListTile)
+        ? find.byKey(const Key('categoryPicker'))
         : find.text(text);
     if (target.evaluate().isEmpty) {
       await tester.scrollUntilVisible(
@@ -69,6 +69,88 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('roster edits validate, reorder, cancel and persist', (
+    tester,
+  ) async {
+    await pump(tester, english: true);
+    await tap(tester, 'Edit player names');
+    await tester.enterText(find.byKey(const ValueKey('name-player-1')), '  ');
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a name.'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Confirm'))
+          .onPressed,
+      null,
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('name-player-1')),
+      '  Alex  ',
+    );
+    await tester.tap(find.byTooltip('Move down').first);
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    await tap(tester, 'Cancel');
+    expect(store.setup.value.players.first.name, 'Player 1');
+    await tap(tester, 'Confirm');
+    expect(store.setup.value.players[1].name, 'Alex');
+    expect(store.setup.value.players[1].id, 'player-1');
+    await tap(tester, 'Edit player names');
+    await tester.tap(find.byTooltip('Remove player').first);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Remove player'), findsNWidgets(3));
+    await tester.scrollUntilVisible(
+      find.text('Add player'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tap(tester, 'Add player');
+    await tap(tester, 'Confirm');
+    expect(store.setup.value.players, hasLength(4));
+    expect(store.setup.value.players.last.id, 'player-5');
+    await tap(tester, 'Edit player names');
+    await tester.enterText(find.byType(TextFormField).first, 'Unsaved');
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    await tap(tester, 'Discard');
+    expect(store.setup.value.players.any((p) => p.name == 'Unsaved'), false);
+    expect(file.data!['players'], hasLength(4));
+  });
+
+  testWidgets('imposter sheet cancel/confirm and rule switches', (
+    tester,
+  ) async {
+    await pump(tester, english: true);
+    store.setPlayerCount(7);
+    await tester.pumpAndSettle();
+    await tap(tester, 'Imposters');
+    await tester.tap(find.byTooltip('More imposters'));
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(store.setup.value.imposters, 1);
+    await tap(tester, 'Imposters');
+    await tester.tap(find.byTooltip('More imposters'));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Confirm');
+    expect(store.setup.value.imposters, 2);
+    await tap(tester, 'Imposters');
+    await tap(tester, 'Random');
+    await tap(tester, 'Confirm');
+    expect(store.setup.value.randomImposters, true);
+    for (final label in [
+      'Imposters never start',
+      'Show category to imposters',
+      'Imposters know each other',
+    ]) {
+      await tap(tester, label);
+    }
+    expect(store.setup.value.imposterNotFirst, true);
+    expect(store.setup.value.showCategory, true);
+    expect(store.setup.value.knowEachOther, true);
+  });
+
   testWidgets(
     'landing opens setup; picker cancel discards and confirm commits',
     (tester) async {
@@ -77,7 +159,7 @@ void main() {
       final semantics = tester.ensureSemantics();
       expect(find.bySemanticsLabel('4 người chơi'), findsOneWidget);
       semantics.dispose();
-      expect(find.byType(Switch), findsNothing);
+      expect(find.byType(Switch), findsNWidgets(3));
       expect(find.byIcon(Icons.settings), findsNothing);
       final player = tester.getRect(find.text('Người chơi'));
       final imposter = tester.getRect(find.text('Kẻ mạo danh'));
@@ -273,6 +355,23 @@ void main() {
         addTearDown(tester.view.reset);
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
         await pump(tester);
+        await tap(tester, 'Chỉnh sửa người chơi');
+        await tester.enterText(
+          find.byKey(const ValueKey('name-player-1')),
+          '  An  ',
+        );
+        await tester.pumpAndSettle();
+        await tap(tester, 'Xác nhận');
+        expect(store.setup.value.players.first.name, 'An');
+        await tap(tester, 'Kẻ mạo danh');
+        await tap(tester, 'Ngẫu nhiên');
+        await tap(tester, 'Xác nhận');
+        expect(store.setup.value.randomImposters, true);
+        await tester.scrollUntilVisible(
+          find.text('Người chơi'),
+          -180,
+          scrollable: find.byType(Scrollable).first,
+        );
         await tap(tester, 'Người chơi');
         await tap(tester, 'Xác nhận');
         await tap(tester, 'Danh mục');

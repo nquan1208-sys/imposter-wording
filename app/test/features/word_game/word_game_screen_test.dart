@@ -37,6 +37,7 @@ void main() {
     WidgetTester tester, {
     bool english = false,
     bool direct = true,
+    bool advanced = false,
   }) async {
     content = ContentRepository(
       cache: MemoryFile(),
@@ -45,7 +46,15 @@ void main() {
     setup = SetupStore(content: content, file: MemoryFile());
     await content.load();
     await setup.restore();
-    setup.setPlayerCount(3);
+    setup.setPlayerCount(advanced ? 5 : 3);
+    if (advanced) {
+      setup.setRules(
+        imposters: 2,
+        showCategory: true,
+        knowEachOther: true,
+        imposterNotFirst: true,
+      );
+    }
     session = WordGameSession.create(setup, random: Random(3))!;
     container = ProviderContainer(
       overrides: [
@@ -98,9 +107,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(session.prompt.text), findsNothing);
       await tap(tester, english ? 'Tap to reveal' : 'Nhấn để hiển thị');
-      if (p.id == session.imposterId) {
+      if (session.imposterIds.contains(p.id)) {
         expect(find.text(session.prompt.text), findsNothing);
-        expect(find.text(session.categoryName), findsNothing);
+        expect(
+          find.text(session.categoryName),
+          session.setup.showCategory ? findsOneWidget : findsNothing,
+        );
       } else {
         expect(find.text(session.prompt.text), findsOneWidget);
       }
@@ -124,6 +136,64 @@ void main() {
     }
   }
 
+  testWidgets(
+    'teammates/category are private until reveal; exact multi-vote wins',
+    (tester) async {
+      await pump(tester, english: true, advanced: true);
+      final semantics = tester.ensureSemantics();
+      final imposter = session.setup.players.firstWhere(
+        (p) => session.imposterIds.contains(p.id),
+      );
+      await tap(tester, imposter.name);
+      expect(find.textContaining('Other imposters:'), findsNothing);
+      expect(find.text(session.categoryName), findsNothing);
+      expect(find.text(session.prompt.text), findsNothing);
+      await tap(tester, 'Tap to reveal');
+      final other = session.setup.players.firstWhere(
+        (p) => session.imposterIds.contains(p.id) && p.id != imposter.id,
+      );
+      expect(find.text('Other imposters: ${other.name}'), findsOneWidget);
+      expect(find.text(session.categoryName), findsOneWidget);
+      expect(find.text(session.prompt.text), findsNothing);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      expect(find.bySemanticsLabel(RegExp('Other imposters:')), findsNothing);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      semantics.dispose();
+      await finish(tester, english: true);
+      final starter = session.setup.players.firstWhere(
+        (p) => p.id == session.startingPlayerId,
+      );
+      expect(find.text('${starter.name} starts the round.'), findsOneWidget);
+      expect(session.imposterIds.contains(starter.id), false);
+      await tap(tester, 'Announce results');
+      await tap(tester, imposter.name);
+      expect(
+        tester
+            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Confirm'))
+            .onPressed,
+        null,
+      );
+      await tap(tester, other.name);
+      await tap(tester, 'Cancel');
+      expect(find.text('Results'), findsNothing);
+      await tap(tester, 'Announce results');
+      expect(
+        tester
+            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Confirm'))
+            .onPressed,
+        null,
+      );
+      await tap(tester, imposter.name);
+      await tap(tester, other.name);
+      await tap(tester, 'Confirm');
+      expect(find.text('The group wins!'), findsOneWidget);
+      expect(find.textContaining('Imposters:'), findsOneWidget);
+    },
+  );
+
   testWidgets('complete round, cancel vote, confirm winner and replay', (
     tester,
   ) async {
@@ -141,7 +211,7 @@ void main() {
     expect(find.text('Kết quả'), findsNothing);
     await tap(tester, 'Thông báo kết quả');
     final imposter = session.setup.players.firstWhere(
-      (p) => p.id == session.imposterId,
+      (p) => p.id == session.imposterIds.single,
     );
     await tap(tester, imposter.name);
     await tap(tester, 'Xác nhận');
@@ -173,7 +243,7 @@ void main() {
       await pump(tester);
       final semantics = tester.ensureSemantics();
       final civilian = session.setup.players.firstWhere(
-        (p) => p.id != session.imposterId,
+        (p) => p.id != session.imposterIds.single,
       );
       await tap(tester, civilian.name);
       expect(

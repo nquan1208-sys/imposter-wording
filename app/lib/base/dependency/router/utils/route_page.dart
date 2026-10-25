@@ -12,6 +12,8 @@ class RoutePage {
         return RouteScreen.landingPageRoute(settings);
       case RouteName.howToPlay:
         return RouteScreen.howToPlayPageRoute(settings);
+      case RouteName.playerNames:
+        return RouteScreen.playerNamesPageRoute(settings);
       case RouteName.setup:
         return RouteScreen.setupPageRoute(settings);
       case RouteName.categories:

@@ -78,8 +78,8 @@ class _WordGameScreenState extends State<WordGameScreen>
     if (_voteOpen || store.stage.value != WordGameStage.discussion) return;
     _voteOpen = true;
     final l = AppLocalizations.of(context);
-    String? selected;
-    final voted = await showModalBottomSheet<String>(
+    final selected = <String>{};
+    final voted = await showModalBottomSheet<Set<String>>(
       context: context,
       isScrollControlled: true,
       builder: (context) => AppContent(
@@ -100,18 +100,30 @@ class _WordGameScreenState extends State<WordGameScreen>
                       ),
                       Padding(
                         padding: AppEdgeInsets.h16,
-                        child: Text(l.voteHelp),
+                        child: Text(
+                          l.voteHelp(store.session.imposterIds.length),
+                        ),
                       ),
                       for (final p in store.session.setup.players)
                         ListTile(
                           title: Text(p.name),
                           leading: Icon(
-                            selected == p.id
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
+                            selected.contains(p.id)
+                                ? Icons.check_box
+                                : Icons.check_box_outline_blank,
                           ),
-                          selected: selected == p.id,
-                          onTap: () => setState(() => selected = p.id),
+                          selected: selected.contains(p.id),
+                          onTap: () => setState(() {
+                            if (!selected.remove(p.id)) {
+                              if (store.session.imposterIds.length == 1) {
+                                selected.clear();
+                              }
+                              if (selected.length <
+                                  store.session.imposterIds.length) {
+                                selected.add(p.id);
+                              }
+                            }
+                          }),
                         ),
                     ],
                   ),
@@ -126,7 +138,8 @@ class _WordGameScreenState extends State<WordGameScreen>
                         child: Text(l.cancel),
                       ),
                       FilledButton(
-                        onPressed: selected == null
+                        onPressed:
+                            selected.length != store.session.imposterIds.length
                             ? null
                             : () => Navigator.pop(context, selected),
                         child: Text(l.confirm),
@@ -307,7 +320,7 @@ class _WordGameScreenState extends State<WordGameScreen>
                                   child: Column(
                                     children: [
                                       Text(
-                                        current == session.imposterId
+                                        session.imposterIds.contains(current)
                                             ? l.youAreImposter
                                             : session.prompt.text,
                                         textAlign: TextAlign.center,
@@ -315,8 +328,29 @@ class _WordGameScreenState extends State<WordGameScreen>
                                           context,
                                         ).textTheme.headlineMedium,
                                       ),
-                                      if (current != session.imposterId)
+                                      if (!session.imposterIds.contains(
+                                            current,
+                                          ) ||
+                                          session.setup.showCategory)
                                         Text(session.categoryName),
+                                      if (session.imposterIds.contains(
+                                            current,
+                                          ) &&
+                                          session.setup.knowEachOther &&
+                                          session.imposterIds.length > 1)
+                                        Text(
+                                          l.fellowImposters(
+                                            session.setup.players
+                                                .where(
+                                                  (p) =>
+                                                      p.id != current &&
+                                                      session.imposterIds
+                                                          .contains(p.id),
+                                                )
+                                                .map((p) => p.name)
+                                                .join(', '),
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ),
@@ -338,9 +372,26 @@ class _WordGameScreenState extends State<WordGameScreen>
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
                             const SizedBox(height: AppSpacing.xl),
-                            Text(l.actualImposter(name(session.imposterId))),
                             Text(
-                              l.votedPlayer(name(store.votedPlayerId.value!)),
+                              l.actualImposter(
+                                session.setup.players
+                                    .where(
+                                      (p) => session.imposterIds.contains(p.id),
+                                    )
+                                    .map((p) => p.name)
+                                    .join(', '),
+                              ),
+                            ),
+                            Text(
+                              l.votedPlayer(
+                                session.setup.players
+                                    .where(
+                                      (p) => store.votedPlayerIds.value
+                                          .contains(p.id),
+                                    )
+                                    .map((p) => p.name)
+                                    .join(', '),
+                              ),
                             ),
                             const SizedBox(height: AppSpacing.xl),
                             const Divider(height: 32),

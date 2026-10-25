@@ -59,7 +59,7 @@ Giải thích luật chơi theo từng bước trước khi người dùng bắt
 #### Bước 1 — Thiết lập trò chơi
 
 - Người chơi chọn danh sách người chơi và danh mục từ.
-- Một người chơi sẽ được chọn làm kẻ mạo danh.
+- Chọn số kẻ mạo danh cố định hoặc ngẫu nhiên trong 1…floor((N−1)/2); người thường luôn chiếm đa số.
 - Biểu tượng: thiết lập/cài đặt.
 
 #### Bước 2 — Tiết lộ từ
@@ -142,7 +142,7 @@ Cho phép người chơi cấu hình ván chơi trước khi bắt đầu.
    - `Kẻ giả mạo biết nhau`.
    - Mỗi tùy chọn gồm biểu tượng, nhãn và công tắc bật/tắt.
    - Danh sách tùy chọn nằm trong cùng một thẻ và được ngăn cách bằng các đường phân chia.
-   - Riêng chế độ `Trò chơi từ ngữ` có thêm tùy chọn `Hiển thị gợi ý cho kẻ mạo danh`.
+   - Word chỉ có tiết lộ danh mục, không có công tắc hoặc dữ liệu hint riêng. Các tùy chọn tiết lộ danh mục/biết nhau hiện chỉ áp dụng word.
    - Chế độ `Trò chơi câu hỏi` không hiển thị tùy chọn gợi ý này.
 
 7. **Nút bắt đầu**
@@ -165,7 +165,7 @@ Cho phép người chơi cấu hình ván chơi trước khi bắt đầu.
 - Có thể chọn nhiều danh mục cùng lúc.
 - Không chọn danh mục sẽ random trong toàn bộ content đã publish phù hợp với loại game và mode.
 - Chọn một hoặc nhiều danh mục sẽ giới hạn random trong các category đó.
-- Chỉ chế độ `Trò chơi từ ngữ` mới có công tắc hiển thị gợi ý cho kẻ mạo danh.
+- Word không có gợi ý riêng ngoài tên danh mục khi bật công tắc tương ứng.
 - Số kẻ mạo danh phải phù hợp với số người chơi.
 - Nút quay lại đưa người dùng về màn hình trước đó.
 
@@ -173,14 +173,14 @@ Cho phép người chơi cấu hình ván chơi trước khi bắt đầu.
 
 - Chạm vào thẻ số lượng kẻ mạo danh sẽ mở một bảng chọn dạng bottom sheet.
 - Tiêu đề bảng: `Chọn kẻ mạo danh`.
-- Có hai lựa chọn dạng radio:
+- Công tắc `Ngẫu nhiên` chuyển giữa hai cách chọn:
   - `Cố định`: chọn chính xác số kẻ mạo danh cho mỗi ván.
     - Có nút `−` và `+` để điều chỉnh số lượng.
     - Hiển thị giá trị hiện tại ở giữa.
-    - Hiển thị phạm vi hợp lệ, ví dụ `Phạm vi: 1–4`.
-  - `Ngẫu nhiên`: số kẻ mạo danh được chọn ngẫu nhiên mỗi ván.
-- Có công tắc `Kẻ mạo danh không bao giờ đi trước`.
-- Tùy chọn này kiểm soát việc người chơi đầu tiên có được chọn làm kẻ mạo danh hay không.
+    - Phạm vi hợp lệ là 1…floor((N−1)/2), với N từ 3 đến 100. Giảm N tự hạ số cố định về giới hạn mới.
+  - `Ngẫu nhiên`: chọn đều số lượng trong cùng phạm vi hợp lệ, một lần khi bắt đầu ván.
+- Công tắc `Kẻ mạo danh không đi trước` nằm ở setup. Chọn `startingPlayerId` trước; khi bật, loại ID này khỏi tập gán vai. Tên hiển thị ở thảo luận dùng cùng ID.
+- Back bảng chọn hủy thay đổi; `Xác nhận` mới áp dụng.
 
 ## 4. Màn hình chọn danh mục
 
@@ -347,7 +347,7 @@ Cho phép từng người chơi lần lượt mở thông tin bí mật của m�
 - Kẻ mạo danh thấy vai trò và tên danh mục của từ được chọn khi bật `Hiển thị danh mục cho kẻ mạo danh`; khi tắt chỉ thấy vai trò. Không hiển thị từ, hint hoặc ảnh bí mật. Thiết lập thuộc ván và lưu local, không thuộc từng đề.
 - Chạm `Hiểu rồi!` sẽ quay về màn hình `Người chơi` và đánh dấu người chơi hiện tại đã hoàn tất.
 - Không cho phép hiển thị lại từ của người chơi đã hoàn tất.
-- Phase 3 giữ một kẻ mạo danh và chưa bật hiển thị danh mục cho vai này; ảnh word được bổ sung ở Phase 7.
+- Phase 4 hỗ trợ nhiều kẻ mạo danh; khi bật `Biết nhau`, chỉ imposter đã mở thẻ mới thấy tên các imposter khác. Không hiện từ/ảnh cho imposter. Ảnh word được bổ sung ở Phase 7.
 - Back khi xem thẻ che nội dung và về danh sách, chưa đánh dấu hoàn tất. App ra nền che thẻ; khi trở lại phải chủ động mở lại.
 
 ## 8. Màn hình giai đoạn bầu chọn
@@ -363,7 +363,7 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 - Mô tả: `Đã đến lúc thảo luận và bầu chọn kẻ mạo danh!`.
 - Tiêu đề phụ: `Cách Bầu Chọn`.
 - Các bước hướng dẫn hiển thị thành các thẻ xếp dọc:
-  1. `Người Chơi Bắt Đầu` — chọn ngẫu nhiên một lần từ tất cả người chơi khi tạo ván; Phase 3 cho phép kẻ mạo danh đi trước.
+  1. `Người Chơi Bắt Đầu` — chọn ngẫu nhiên một lần khi tạo ván; khi bật ràng buộc không đi trước, người này không được gán vai imposter.
   2. `Thảo Luận Nhóm` — tiếp tục lần lượt theo chiều kim đồng hồ.
   3. `Thời Gian Bầu Chọn` — mỗi người nói một từ liên quan đến từ bí mật, có thể thực hiện nhiều vòng.
   4. `Giai Đoạn Tiết Lộ` — bầu chọn người bị nghi ngờ, sau đó chạm để xem kết quả.
@@ -373,9 +373,9 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 
 - Chỉ mở giai đoạn này sau khi tất cả người chơi xác nhận đã xem thẻ.
 - Nhóm thảo luận và bầu bằng lời; app không thu từng phiếu.
-- `Thông báo kết quả` mở bottom sheet chọn đúng một người bị nhóm bầu. Mặc định chưa chọn, nút xác nhận chỉ bật sau khi chọn.
+- `Thông báo kết quả` mở bottom sheet chọn đúng K người bị nhóm bầu, K bằng số imposter thực của ván (kể cả chế độ ngẫu nhiên). Mặc định chưa chọn; chỉ bật xác nhận khi chọn đủ K ID riêng biệt.
 - Nếu hòa, nhóm bầu lại trước khi xác nhận. Hủy/back sheet không ghi nhận người bị bầu hoặc công bố bí mật.
-- Xác nhận mới chuyển sang kết quả. Chọn đúng kẻ mạo danh thì nhóm thắng; chọn sai thì kẻ mạo danh thắng.
+- Xác nhận mới chuyển sang kết quả. Nhóm chỉ thắng nếu tập K ID bị bầu trùng toàn bộ tập imposter; sai bất kỳ người nào thì phe mạo danh thắng.
 - Back từ danh sách hoặc giai đoạn thảo luận yêu cầu xác nhận kết thúc; hủy giữ nguyên tiến độ.
 
 ## 9. Màn hình tiết lộ kết quả
@@ -383,7 +383,7 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 ### Bố cục
 
 - Hiển thị thông báo kẻ mạo danh, ví dụ `KẺ MẠO DANH LÀ`.
-- Hiển thị tên kẻ mạo danh thật, người bị nhóm bầu và bên thắng.
+- Hiển thị tên toàn bộ kẻ mạo danh thật, những người bị nhóm bầu và bên thắng.
 - Hiển thị nhãn `TỪ BÍ MẬT`.
 - Hiển thị từ bí mật lớn ở trung tâm, ví dụ `BÁNH STRUDEL TÁO`.
 - Nút cuối màn hình: `Chơi lại`.
@@ -394,7 +394,7 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 - `Chơi lại` kết thúc ván và quay về màn thiết lập trò chơi, giữ nguyên danh sách người chơi, mode và danh mục để có thể chỉnh trước ván tiếp theo.
 - Chỉ tạo session mới và random lại từ/vai/người bắt đầu khi nhấn `Bắt đầu trò chơi` tại màn thiết lập; được phép trùng từ khi tập nhỏ. Thiếu nội dung thì màn thiết lập chặn bắt đầu theo quy tắc chung.
 - Back từ kết quả về thiết lập và hủy session. Ván không được khôi phục sau khi hệ điều hành đóng tiến trình.
-- Nếu người bị bầu chọn không phải kẻ mạo danh, màn hình vẫn hiển thị kết quả thực tế để nhóm biết bên thắng.
+- Nếu tập bị bầu không đúng toàn bộ imposter, màn hình vẫn hiển thị kết quả thực tế và phe mạo danh thắng.
 
 ## 10. Màn hình chọn người chơi — Trò chơi câu hỏi
 
@@ -507,6 +507,15 @@ Cho phép nhập, sắp xếp và quản lý danh sách người chơi trước 
 5. **Thanh hành động cuối màn hình**
    - `Xóa`: xóa người chơi hoặc thao tác xóa theo ngữ cảnh hiện tại.
    - `Thêm`: thêm một người chơi mới vào danh sách.
+
+### Hành vi danh sách hiện tại (Phase 4)
+
+- Mở bằng `Chỉnh sửa người chơi` tại setup; chưa mở thư viện danh sách đã lưu (Phase 6).
+- Nhập tên, trim khi xác nhận, chặn tên trống. Cho phép trùng tên vì vai được gắn bằng ID riêng ổn định.
+- Thêm/xóa trong giới hạn 3–100; dùng số tên mặc định còn trống trong danh sách hiện tại, ID mới không tái sử dụng.
+- Nút lên/xuống sắp xếp từng người, dùng được với screen reader; không cần kéo thả.
+- Thao tác nằm trong draft; `Xác nhận` mới áp dụng/lưu. Back có thay đổi hỏi bỏ draft; hủy giữ nguyên form.
+- Lỗi lưu giữ roster trong bộ nhớ và hiện cảnh báo/thử lại tại setup.
 
 ### Danh sách đã lưu
 
