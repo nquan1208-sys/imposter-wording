@@ -144,6 +144,7 @@
   "fewerImposters": "Fewer imposters",
   "moreImposters": "More imposters",
   "imposterNotFirst": "Imposters never start",
+  "showWordImages": "Show images",
   "showCategory": "Show category to imposters",
   "knowEachOther": "Imposters know each other",
   "fellowImposters": "Other imposters: {name}",

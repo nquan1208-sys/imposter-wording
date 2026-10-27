@@ -70,6 +70,7 @@ void main() {
     ]) {
       expect(() => GameSetup.fromJson(invalid), throwsA(anything));
     }
+    expect(p.keys, isNot(contains('showWordImages')));
     expect(p.keys, isNot(contains('gameType')));
     expect(p.keys, isNot(contains('categoryIds')));
     expect(p.keys, isNot(contains('contentLocale')));
@@ -115,6 +116,7 @@ void main() {
       );
       final id = await store.createPreset('Small', small);
       await store.setPlayerCount(100);
+      await store.setShowWordImages(true);
       await store.setGameType('question');
       await store.setFamily(true);
       await store.setCategories({'q'});
@@ -124,8 +126,11 @@ void main() {
       expect(s.activePresetId, id);
       expect(s.gameType, 'question');
       expect(s.family, true);
+      expect(s.showWordImages, true);
       expect(s.categoryIds, {'q'});
       expect(GameSetup.fromJson(file.data!).toJson(), s.toJson());
+      await store.confirmDraft(small, null);
+      expect(store.setup.value.showWordImages, true);
       await store.setPlayerCount(4);
       expect(store.setup.value.players.last.id, 'player-4');
     },

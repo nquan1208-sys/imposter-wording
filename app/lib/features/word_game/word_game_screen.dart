@@ -329,9 +329,10 @@ class _WordGameScreenState extends State<WordGameScreen>
                                           context,
                                         ).textTheme.headlineMedium,
                                       ),
-                                      if (!session.imposterIds.contains(
-                                        current,
-                                      ))
+                                      if (session.showWordImages &&
+                                          !session.imposterIds.contains(
+                                            current,
+                                          ))
                                         WordImage(session.prompt),
                                       if (!session.imposterIds.contains(
                                             current,
@@ -409,7 +410,8 @@ class _WordGameScreenState extends State<WordGameScreen>
                               session.prompt.text,
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
-                            WordImage(session.prompt),
+                            if (session.showWordImages)
+                              WordImage(session.prompt),
                           ],
                         ],
                       ),

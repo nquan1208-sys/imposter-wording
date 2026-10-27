@@ -42,7 +42,7 @@ class GameSetup {
   final String gameType;
   final List<SetupPlayer> players;
   final int nextPlayerId;
-  final bool family;
+  final bool family, showWordImages;
   final int imposters;
   final bool randomImposters, imposterNotFirst, showCategory, knowEachOther;
   int get maxImposters => (players.length - 1) ~/ 2;
@@ -56,6 +56,7 @@ class GameSetup {
     required this.players,
     required this.nextPlayerId,
     this.family = false,
+    this.showWordImages = false,
     this.imposters = 1,
     this.randomImposters = false,
     this.imposterNotFirst = false,
@@ -131,6 +132,7 @@ class GameSetup {
       players: players,
       nextPlayerId: next,
       family: json['mode'] == 'family',
+      showWordImages: json['showWordImages'] as bool? ?? false,
       categoryIds: ids,
       imposters: json['imposters'] as int,
       randomImposters: json['randomImposters'] as bool? ?? false,
@@ -160,6 +162,7 @@ class GameSetup {
     List<SetupPlayer>? players,
     int? nextPlayerId,
     bool? family,
+    bool? showWordImages,
     int? imposters,
     bool? randomImposters,
     bool? imposterNotFirst,
@@ -176,6 +179,7 @@ class GameSetup {
     players: players ?? this.players,
     nextPlayerId: nextPlayerId ?? this.nextPlayerId,
     family: family ?? this.family,
+    showWordImages: showWordImages ?? this.showWordImages,
     imposters: imposters ?? this.imposters,
     randomImposters: randomImposters ?? this.randomImposters,
     imposterNotFirst: imposterNotFirst ?? this.imposterNotFirst,
@@ -227,6 +231,7 @@ class GameSetup {
     'nextPresetId': nextPresetId,
     ...rosterJson(),
     'mode': family ? 'family' : 'classic',
+    'showWordImages': showWordImages,
     'categoryIds': categoryIds.toList(),
     'contentLocale': 'vi',
     'gameType': gameType,

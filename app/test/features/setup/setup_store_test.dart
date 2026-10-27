@@ -114,9 +114,11 @@ void main() async {
         ..remove('randomImposters')
         ..remove('imposterNotFirst')
         ..remove('showCategory')
-        ..remove('knowEachOther');
+        ..remove('knowEachOther')
+        ..remove('showWordImages');
       expect(GameSetup.fromJson(legacy).randomImposters, false);
       expect(GameSetup.fromJson(legacy).showCategory, false);
+      expect(GameSetup.fromJson(legacy).showWordImages, false);
       legacy['imposters'] = 2;
       file.data = legacy;
       await store.restore();
@@ -214,6 +216,33 @@ void main() async {
     await store.save();
     expect(file.writes, 0);
   });
+
+  test(
+    'word images default off, persist globally, and retry failed writes',
+    () async {
+      expect(store.setup.value.showWordImages, false);
+      file.failWrite = true;
+      expect(await store.setShowWordImages(true), false);
+      expect(store.setup.value.showWordImages, false);
+      expect(store.writeFailed.value, true);
+      file.failWrite = false;
+      expect(await store.save(), true);
+      expect(store.writeFailed.value, false);
+      expect(store.setup.value.showWordImages, true);
+      for (final family in [true, false]) {
+        await store.setFamily(family);
+        for (final type in ['question', 'word']) {
+          await store.setGameType(type);
+          expect(store.setup.value.showWordImages, true);
+        }
+      }
+      await store.restore();
+      expect(store.setup.value.showWordImages, true);
+      expect(await store.setShowWordImages(false), true);
+      await store.restore();
+      expect(store.setup.value.showWordImages, false);
+    },
+  );
 
   test('write failure keeps visible setup and retry saves it', () async {
     file.failWrite = true;

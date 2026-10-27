@@ -91,6 +91,8 @@ void main() {
     bool english = false,
     bool direct = true,
     bool advanced = false,
+    bool family = false,
+    bool showWordImages = false,
     WordImageCache? images,
     bool failNavigation = false,
   }) async {
@@ -103,6 +105,8 @@ void main() {
     setup = SetupStore(content: content, file: MemoryStorage());
     await content.load();
     await setup.restore();
+    await setup.setFamily(family);
+    await setup.setShowWordImages(showWordImages);
     await setup.setPlayerCount(advanced ? 5 : 3);
     if (advanced) {
       await setup.setRules(
@@ -178,7 +182,10 @@ void main() {
         );
       } else {
         expect(find.text(session.prompt.text), findsOneWidget);
-        expect(find.byType(WordImage), findsOneWidget);
+        expect(
+          find.byType(WordImage),
+          session.showWordImages ? findsOneWidget : findsNothing,
+        );
       }
       await tap(tester, english ? 'Got it!' : 'Hiểu rồi!');
       if (p != session.setup.players.last) {
@@ -200,8 +207,52 @@ void main() {
     }
   }
 
+  for (final (family, showImages) in [
+    (false, false),
+    (false, true),
+    (true, false),
+  ]) {
+    testWidgets(
+      'text only through result (family=$family, images=$showImages)',
+      (tester) async {
+        final images = WidgetImageCache();
+        addTearDown(images.dispose);
+        await pump(
+          tester,
+          english: true,
+          direct: false,
+          images: images,
+          family: family,
+          showWordImages: showImages,
+        );
+        await tap(tester, 'Start');
+        await tap(tester, 'Start game');
+        expect(images.pins, 0);
+        session = tester
+            .widget<WordGameScreen>(find.byType(WordGameScreen))
+            .session;
+        await finish(tester, english: true);
+        expect(find.byType(WordImage), findsNothing);
+        await tap(tester, 'Announce results');
+        final imposter = session.setup.players.firstWhere(
+          (p) => session.imposterIds.contains(p.id),
+        );
+        await tap(tester, imposter.name);
+        await tap(tester, 'Confirm');
+        expect(find.text(session.prompt.text), findsOneWidget);
+        expect(find.byType(WordImage), findsNothing);
+      },
+    );
+  }
+
   testWidgets('prompts without image paths stay text-only', (tester) async {
-    await pump(tester, english: true, direct: false);
+    await pump(
+      tester,
+      english: true,
+      direct: false,
+      family: true,
+      showWordImages: true,
+    );
     for (final row in fetchData['words'] as List) {
       row['image_path'] = null;
     }
@@ -232,6 +283,8 @@ void main() {
           english: true,
           direct: false,
           images: images,
+          family: true,
+          showWordImages: true,
           failNavigation: failure,
         );
         await tap(tester, 'Start');
@@ -270,7 +323,13 @@ void main() {
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
         final images = WidgetImageCache();
         addTearDown(images.dispose);
-        await pump(tester, english: true, images: images);
+        await pump(
+          tester,
+          english: true,
+          images: images,
+          family: true,
+          showWordImages: true,
+        );
         final semantics = tester.ensureSemantics();
 
         final civilian = session.setup.players.firstWhere(
@@ -423,7 +482,7 @@ void main() {
   testWidgets('complete round, cancel vote, confirm winner and replay', (
     tester,
   ) async {
-    await pump(tester);
+    await pump(tester, family: true, showWordImages: true);
     await finish(tester);
     expect(find.text('Giai đoạn bầu chọn'), findsOneWidget);
     expect(find.byType(WordImage), findsNothing);

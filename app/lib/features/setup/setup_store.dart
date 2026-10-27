@@ -199,6 +199,8 @@ class SetupStore extends StoreBase {
 
   Future<bool> setFamily(bool family) =>
       _mutate((s) => s.copyWith(family: family), retryable: true);
+  Future<bool> setShowWordImages(bool show) =>
+      _mutate((s) => s.copyWith(showWordImages: show), retryable: true);
   Future<bool> setGameType(String type) =>
       _mutate((s) => s.copyWith(gameType: type), retryable: true);
   Future<bool> setCategories(Set<String> ids) {

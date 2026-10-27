@@ -83,6 +83,46 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  for (final english in [false, true]) {
+    testWidgets(
+      'image switch is Family word only and remembers choice (english=$english)',
+      (tester) async {
+        final disk = GatedMemoryStorage();
+        await pump(tester, english: english, setupFile: disk);
+        final label = english ? 'Show images' : 'Hiển thị ảnh';
+        final toggle = find.widgetWithText(SwitchListTile, label);
+        expect(toggle, findsNothing);
+        await tap(tester, english ? 'Family' : 'Gia đình');
+        await tester.ensureVisible(toggle);
+        expect(tester.widget<SwitchListTile>(toggle).value, false);
+        await tap(tester, label);
+        expect(tester.widget<SwitchListTile>(toggle).value, true);
+        await store.setFamily(false);
+        await tester.pumpAndSettle();
+        expect(toggle, findsNothing);
+        await store.setFamily(true);
+        await store.setGameType('question');
+        await tester.pumpAndSettle();
+        expect(toggle, findsNothing);
+        await store.setGameType('word');
+        await tester.pumpAndSettle();
+        expect(tester.widget<SwitchListTile>(toggle).value, true);
+        disk.gate = Completer<void>();
+        final pending = store.setShowWordImages(false);
+        await tester.pump();
+        expect(tester.widget<SwitchListTile>(toggle).onChanged, null);
+        disk.gate!.complete();
+        await pending;
+        await tester.pumpAndSettle();
+        expect(tester.widget<SwitchListTile>(toggle).value, false);
+        disk.failRead = true;
+        await store.restore();
+        await tester.pumpAndSettle();
+        expect(tester.widget<SwitchListTile>(toggle).onChanged, null);
+      },
+    );
+  }
+
   testWidgets(
     'create, discard, select, confirm, autosave, manage, rename and delete',
     (tester) async {

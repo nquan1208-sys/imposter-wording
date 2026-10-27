@@ -38,7 +38,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       final session = WordGameSession.create(store);
       if (session != null) {
         input = RouteInput.wordGame(session);
-        releaseImage = store.content.images?.pin(session.prompt.imagePath);
+        if (session.showWordImages) {
+          releaseImage = store.content.images?.pin(session.prompt.imagePath);
+        }
       }
     }
     if (input == null || store.writeFailed.value) {
@@ -213,6 +215,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       ),
                     ],
                   ),
+                  if (setup.family && setup.gameType == 'word')
+                    SwitchListTile(
+                      title: Text(l.showWordImages),
+                      value: setup.showWordImages,
+                      onChanged: store.editable
+                          ? store.setShowWordImages
+                          : null,
+                    ),
                   const SizedBox(height: AppSpacing.xl),
                   Text(l.categories, style: textTheme.titleLarge),
                   const SizedBox(height: AppSpacing.md),
