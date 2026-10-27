@@ -29,7 +29,7 @@
   "cancel": "Cancel",
   "retry": "Retry",
   "loadingContent": "Loading Vietnamese content…",
-  "emptyContent": "No eligible words in this mode.",
+  "emptyContent": "No eligible content in this mode.",
   "contentError": "Content could not be refreshed. Please retry.",
   "cachedContent": "Using saved content.",
   "cacheWarning": "Content is available, but the offline cache could not be read or saved.",
@@ -161,5 +161,44 @@
       }
     }
   },
-  "playerLimits": "3–100 players"
+  "playerLimits": "3–100 players",
+  "questionGame": "Question game",
+  "questionCount": "{count, plural, =1{1 eligible question pair} other{{count} eligible question pairs}}",
+  "questionFor": "Question for {name}",
+  "everyonesAnswers": "Everyone’s answers",
+  "questionDiscussion": "Discussion",
+  "questionPassPhone": "Each player privately opens their question and submits an answer. Roles stay secret.",
+  "answersSubmitted": "{count} / {total} answers submitted",
+  "answerSent": "Submitted",
+  "yourAnswer": "Your answer",
+  "answerHint": "Enter your answer here…",
+  "submitAnswer": "Submit answer",
+  "commonQuestionHelp": "This is the common question. Next, read everyone’s answers and discuss who received a different question.",
+  "startRound": "Start round",
+  "findImposters": "Find the imposters",
+  "questionInstructions": "Open your private question and answer without showing anyone. Your role is not revealed. Unsent answers remain private until you reopen your card. After everyone submits, read the common question and discuss the answers. Reveal the imposters when ready; there is no scored vote.",
+  "@questionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@questionFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@answersSubmitted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }

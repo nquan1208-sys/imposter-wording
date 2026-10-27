@@ -31,6 +31,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
       builder: (context) {
         final counts = store.content.categoryCounts(
           family: store.setup.value.family,
+          gameType: store.setup.value.gameType,
         );
         final available = counts.keys.map((c) => c.id).toSet();
         final valid = selected.intersection(available);
@@ -56,6 +57,9 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
             child: ListView(
               padding: AppEdgeInsets.all24,
               children: [
+                Text(
+                  '${store.setup.value.gameType == 'question' ? l.questionGame : l.wordGame} · ${store.setup.value.family ? l.familyMode : l.classicMode}',
+                ),
                 ContentNotices(store.content),
                 if (selected.length != valid.length) Text(l.selectionRemoved),
                 if (counts.isEmpty) Text(l.emptyContent),
@@ -118,7 +122,9 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                       textAlign: TextAlign.center,
                                     ),
                                     Text(
-                                      l.wordCount(entry.value),
+                                      store.setup.value.gameType == 'question'
+                                          ? l.questionCount(entry.value)
+                                          : l.wordCount(entry.value),
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall

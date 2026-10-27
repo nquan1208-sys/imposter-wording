@@ -5,6 +5,7 @@ import 'package:untitled/base/store/store_base.dart';
 import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/models/content.dart';
 import 'package:untitled/models/game_setup.dart';
+import 'package:untitled/models/game_assignment.dart';
 
 enum WordGameStage { players, discussion, result }
 
@@ -27,12 +28,7 @@ class WordGameSession {
     if (!store.editable) return null;
     store.revalidate();
     final setup = store.setup.value;
-    final players = setup.players;
-    if (!setup.validRules ||
-        players.length < 3 ||
-        players.length > 100 ||
-        players.map((p) => p.id).toSet().length != players.length ||
-        players.any((p) => p.id.isEmpty || p.name.trim().isEmpty)) {
+    if (setup.gameType != 'word' || !GameAssignment.validSetup(setup)) {
       return null;
     }
     final words = store.content.eligibleWords(
@@ -45,24 +41,13 @@ class WordGameSession {
     final category = store.content.snapshot.value!.categories.firstWhere(
       (c) => c.id == prompt.categoryId,
     );
-    final startingPlayerId = players[rng.nextInt(players.length)].id;
-    final count = setup.randomImposters
-        ? 1 + rng.nextInt(setup.maxImposters)
-        : setup.imposters;
-    final candidates =
-        players
-            .where((p) => !setup.imposterNotFirst || p.id != startingPlayerId)
-            .toList()
-          ..shuffle(rng);
+    final assignment = GameAssignment.create(setup, rng);
     return WordGameSession._(
-      setup.copyWith(
-        players: List.unmodifiable(players),
-        categoryIds: Set.unmodifiable(setup.categoryIds),
-      ),
+      assignment.setup,
       prompt,
       category.name,
-      Set.unmodifiable(candidates.take(count).map((p) => p.id)),
-      startingPlayerId,
+      assignment.imposterIds,
+      assignment.startingPlayerId,
     );
   }
 }

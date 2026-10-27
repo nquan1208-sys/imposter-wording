@@ -55,6 +55,8 @@ void main() {
   Future<void> tap(WidgetTester tester, String text) async {
     final target = text == 'Danh mục' || text == 'Categories'
         ? find.byKey(const Key('categoryPicker'))
+        : text.startsWith('Category ')
+        ? find.widgetWithText(OutlinedButton, text)
         : find.text(text);
     if (target.evaluate().isEmpty) {
       await tester.scrollUntilVisible(
@@ -65,6 +67,7 @@ void main() {
     }
     final finder = target.last;
     await tester.ensureVisible(finder);
+    await tester.pumpAndSettle();
     await tester.tap(finder);
     await tester.pumpAndSettle();
   }
@@ -319,7 +322,7 @@ void main() {
     file.failWrite = true;
     await tap(tester, 'Family');
     expect(find.text('0 eligible words'), findsOneWidget);
-    expect(find.text('No eligible words in this mode.'), findsOneWidget);
+    expect(find.text('No eligible content in this mode.'), findsOneWidget);
     expect(
       find.text('Setup could not be saved. Your changes are still here.'),
       findsOneWidget,

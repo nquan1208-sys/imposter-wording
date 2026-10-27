@@ -29,7 +29,7 @@
   "cancel": "Hủy",
   "retry": "Thử lại",
   "loadingContent": "Đang tải nội dung tiếng Việt…",
-  "emptyContent": "Chưa có từ phù hợp trong chế độ này.",
+  "emptyContent": "Chưa có nội dung phù hợp trong chế độ này.",
   "contentError": "Không thể tải nội dung mới. Vui lòng thử lại.",
   "cachedContent": "Đang dùng nội dung đã lưu.",
   "cacheWarning": "Nội dung vẫn dùng được nhưng không thể đọc hoặc lưu bộ nhớ ngoại tuyến.",
@@ -161,5 +161,44 @@
       }
     }
   },
-  "playerLimits": "3–100 người chơi"
+  "playerLimits": "3–100 người chơi",
+  "questionGame": "Trò chơi câu hỏi",
+  "questionCount": "{count} cặp câu hỏi phù hợp",
+  "questionFor": "Câu hỏi cho {name}",
+  "everyonesAnswers": "Câu trả lời của mọi người",
+  "questionDiscussion": "Giai đoạn thảo luận",
+  "questionPassPhone": "Mỗi người chơi mở câu hỏi và gửi câu trả lời riêng tư. Vai trò được giữ kín.",
+  "answersSubmitted": "{count} / {total} câu trả lời đã gửi",
+  "answerSent": "Đã gửi",
+  "yourAnswer": "Câu trả lời của bạn",
+  "answerHint": "Nhập câu trả lời của bạn ở đây…",
+  "submitAnswer": "Gửi câu trả lời",
+  "commonQuestionHelp": "Đây là câu hỏi chung. Tiếp theo, xem tất cả câu trả lời và thảo luận xem ai đã nhận câu hỏi khác.",
+  "startRound": "Bắt đầu vòng",
+  "findImposters": "Tìm kẻ giả mạo",
+  "questionInstructions": "Mở câu hỏi riêng và trả lời kín đáo. Không ai được báo vai. Câu trả lời chưa gửi được giữ riêng và chỉ hiện khi mở lại thẻ. Khi mọi người gửi xong, xem câu hỏi chung và thảo luận các câu trả lời. Công bố khi đã sẵn sàng; không ghi nhận phiếu hay tính bên thắng.",
+  "@questionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@questionFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@answersSubmitted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }

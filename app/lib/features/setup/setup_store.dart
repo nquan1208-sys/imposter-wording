@@ -138,6 +138,13 @@ class SetupStore extends StoreBase {
     save();
   }
 
+  void setGameType(String gameType) {
+    if (!editable || !const ['word', 'question'].contains(gameType)) return;
+    setup.value = setup.value.copyWith(gameType: gameType);
+    revalidate();
+    save();
+  }
+
   void setCategories(Set<String> ids) {
     if (!editable || content.snapshot.value == null) return;
     setup.value = setup.value.copyWith(categoryIds: Set.of(ids));
@@ -149,7 +156,7 @@ class SetupStore extends StoreBase {
     if (!editable || content.snapshot.value == null) return;
     final current = setup.value;
     final available = content
-        .categoryCounts(family: current.family)
+        .categoryCounts(family: current.family, gameType: current.gameType)
         .keys
         .map((c) => c.id)
         .toSet();

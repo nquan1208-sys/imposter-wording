@@ -421,16 +421,16 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 
 ### Trạng thái câu hỏi bí mật
 
-- Với người chơi nhận câu hỏi khác, thẻ câu hỏi ở trạng thái khóa.
+- Tất cả người chơi có cùng thẻ khóa; không báo vai hoặc tên đồng vai trong game câu hỏi.
 - Hiển thị biểu tượng khóa và dòng `Nhấn để hiển thị`.
 - Sau khi chạm, câu hỏi mới được hiển thị để người chơi trả lời.
-- Câu hỏi và câu trả lời chỉ dành cho người chơi hiện tại.
+- Câu hỏi, danh mục và ô trả lời chỉ hiện sau khi mở thẻ, chỉ dành cho người chơi hiện tại. App ra nền che câu hỏi/ô nhập, bỏ focus bàn phím và yêu cầu mở lại khi trở về.
 
 ### Hành vi
 
 - Nút `Gửi câu trả lời` chỉ bật khi câu trả lời không trống.
 - Sau khi gửi, tăng bộ đếm đã gửi và quay về màn hình `Người chơi`.
-- Không cho phép sửa hoặc xem lại câu trả lời sau khi đã gửi.
+- Không cho phép sửa hoặc xem lại câu trả lời sau khi đã gửi. Trước khi gửi, back về danh sách giữ bản nháp riêng theo ID người chơi trong bộ nhớ; chỉ hiện lại sau khi mở thẻ của đúng người đó. Không lưu câu trả lời/bản nháp xuống đĩa hoặc backend.
 - Khi tất cả người chơi đã gửi, chuyển sang bước thảo luận và tìm người nhận câu hỏi khác.
 
 ## 12. Màn hình xem câu hỏi chung
@@ -461,7 +461,7 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 
 - Người chơi thảo luận dựa trên các câu trả lời được công khai.
 - Không hiển thị câu hỏi riêng của người nhận câu hỏi khác trước khi tìm kẻ giả mạo.
-- `Tìm kẻ giả mạo` chuyển sang trạng thái công bố kết quả.
+- `Tìm kẻ giả mạo` công bố trực tiếp mọi kẻ mạo danh; không mở sheet bầu hoặc tính bên thắng trong game câu hỏi. Các luật bầu/thắng của word giữ nguyên.
 
 ## 14. Màn hình kết quả — Trò chơi câu hỏi
 
@@ -469,13 +469,13 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 
 - Giữ tiêu đề `Giai đoạn thảo luận` và câu hỏi chung ở đầu màn hình.
 - Các câu trả lời vẫn hiển thị trong danh sách.
-- Thẻ của người nhận câu hỏi khác được đánh dấu nổi bật bằng nhãn `Kẻ mạo danh`.
+- Thẻ của mọi người nhận câu hỏi khác được đánh dấu nổi bật bằng nhãn `Kẻ mạo danh`.
 - Thẻ này hiển thị thêm câu hỏi riêng mà người đó đã nhận.
 - Nút cuối màn hình: `Chơi lại`.
 
 ### Hành vi
 
-- Chỉ sau khi công bố kết quả mới hiển thị câu hỏi riêng của kẻ mạo danh.
+- Chỉ sau khi công bố kết quả mới hiển thị câu hỏi riêng của mọi kẻ mạo danh. Số imposter cố định/ngẫu nhiên và luật không đi trước dùng lại Phase 4; hiện tên người bắt đầu khi thảo luận. Back trước kết quả hỏi kết thúc ván.
 - `Chơi lại` kết thúc ván và quay về màn thiết lập trò chơi, giữ nguyên danh sách người chơi và thiết lập. Ván mới chỉ được tạo sau khi nhấn bắt đầu tại màn thiết lập.
 
 ## 15. Màn hình tên người chơi

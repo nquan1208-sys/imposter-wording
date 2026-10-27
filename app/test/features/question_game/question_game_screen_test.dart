@@ -1,0 +1,342 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:untitled/base/store/store_provider.dart';
+import 'package:untitled/data/content_repository.dart';
+import 'package:untitled/data/game_providers.dart';
+import 'package:untitled/features/question_game/question_game_screen.dart';
+import 'package:untitled/features/setup/setup_store.dart';
+import 'package:untitled/main.dart';
+import '../../data/fixtures.dart';
+
+void main() {
+  late ContentRepository content;
+  late SetupStore setup;
+  late ProviderContainer container;
+
+  Future<void> tap(WidgetTester tester, Finder finder) async {
+    if (finder.evaluate().isEmpty) {
+      await tester.scrollUntilVisible(
+        finder,
+        160,
+        scrollable: find.byType(Scrollable).first,
+      );
+    }
+    await tester.ensureVisible(finder);
+    await tester.pumpAndSettle();
+    await tester.tap(finder);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> pump(
+    WidgetTester tester, {
+    bool english = false,
+    bool family = false,
+  }) async {
+    content = ContentRepository(
+      cache: MemoryStorage(),
+      fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
+    );
+    setup = SetupStore(content: content, file: MemoryStorage());
+    await content.load();
+    await setup.restore();
+    setup.setPlayerCount(5);
+    setup.setRules(
+      imposters: 2,
+      showCategory: true,
+      knowEachOther: true,
+      imposterNotFirst: true,
+    );
+    setup.setFamily(family);
+    container = ProviderContainer(
+      overrides: [
+        contentRepositoryProvider.overrideWithValue(content),
+        setupStoreProvider.overrideWithValue(setup),
+      ],
+    );
+    if (english) {
+      container.read(StoreProvider.app).setLocale(const Locale('en'));
+    }
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+      setup.dispose();
+      content.dispose();
+    });
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: const MyApp()),
+    );
+    await tester.pumpAndSettle();
+    await tap(tester, find.text(english ? 'Start' : 'Bắt đầu'));
+    await tap(
+      tester,
+      find.widgetWithText(
+        ChoiceChip,
+        english ? 'Question game' : 'Trò chơi câu hỏi',
+      ),
+    );
+    expect(setup.setup.value.gameType, 'question');
+    expect(
+      find.text(
+        english
+            ? 'Show category to imposters'
+            : 'Hiển thị danh mục cho kẻ mạo danh',
+      ),
+      findsNothing,
+    );
+    expect(
+      find.text(
+        english ? 'Imposters know each other' : 'Kẻ mạo danh biết nhau',
+      ),
+      findsNothing,
+    );
+    await tap(tester, find.byKey(const Key('categoryPicker')));
+    expect(find.text('Category a'), findsNothing);
+    await tap(tester, find.widgetWithText(OutlinedButton, 'Category q'));
+    await tap(
+      tester,
+      find.widgetWithText(FilledButton, english ? 'Confirm' : 'Xác nhận'),
+    );
+    expect(setup.setup.value.categoryIds, {'q'});
+    await tap(
+      tester,
+      find.widgetWithText(
+        FilledButton,
+        english ? 'Start game' : 'Bắt đầu ván chơi',
+      ),
+    );
+  }
+
+  for (final english in [false, true]) {
+    for (final family in [false, true]) {
+      testWidgets(
+        'private flow, drafts, lifecycle, reveal and replay (en: $english, family: $family)',
+        (tester) async {
+          tester.view.physicalSize = family
+              ? const Size(844, 390)
+              : const Size(320, 568);
+          tester.view.devicePixelRatio = 1;
+          tester.platformDispatcher.textScaleFactorTestValue = 2;
+          tester.platformDispatcher.platformBrightnessTestValue = family
+              ? Brightness.dark
+              : Brightness.light;
+          addTearDown(tester.view.reset);
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+          addTearDown(
+            tester.platformDispatcher.clearPlatformBrightnessTestValue,
+          );
+          final semantics = tester.ensureSemantics();
+          try {
+            await pump(tester, english: english, family: family);
+            final session = tester
+                .widget<QuestionGameScreen>(find.byType(QuestionGameScreen))
+                .session;
+            final reveal = english ? 'Tap to reveal' : 'Nhấn để hiển thị';
+            final submit = english ? 'Submit answer' : 'Gửi câu trả lời';
+            final first = session.setup.players.first.id;
+            final second = session.setup.players[1].id;
+            await tap(tester, find.byKey(ValueKey(first)));
+            expect(find.text(session.prompt.civilianQuestion), findsNothing);
+            expect(find.text(session.prompt.imposterQuestion), findsNothing);
+            expect(find.byKey(const Key('privateAnswer')), findsNothing);
+            expect(
+              find.bySemanticsLabel(session.prompt.imposterQuestion),
+              findsNothing,
+            );
+            await tap(tester, find.text(reveal));
+            await tester.enterText(
+              find.byKey(const Key('privateAnswer')),
+              '  private draft  ',
+            );
+            await tester.pumpAndSettle();
+            tester.view.viewInsets = const FakeViewPadding(bottom: 180);
+            await tester.pumpAndSettle();
+            final submitRect = tester.getRect(
+              find.widgetWithText(FilledButton, submit),
+            );
+            expect(
+              submitRect.bottom,
+              lessThanOrEqualTo(tester.view.physicalSize.height - 180),
+            );
+            tester.view.resetViewInsets();
+            await tester.pumpAndSettle();
+            tester.binding.handleAppLifecycleStateChanged(
+              AppLifecycleState.inactive,
+            );
+            await tester.pumpAndSettle();
+            expect(find.byType(TextField), findsNothing);
+            expect(find.text(session.prompt.imposterQuestion), findsNothing);
+            expect(find.text(session.prompt.civilianQuestion), findsNothing);
+            expect(find.bySemanticsLabel('private draft'), findsNothing);
+            tester.binding.handleAppLifecycleStateChanged(
+              AppLifecycleState.resumed,
+            );
+            await tester.pumpAndSettle();
+            expect(find.byType(TextField), findsNothing);
+            await tap(tester, find.text(reveal));
+            expect(
+              tester.widget<TextField>(find.byType(TextField)).controller!.text,
+              '  private draft  ',
+            );
+            await tester.binding.handlePopRoute();
+            await tester.pumpAndSettle();
+            await tap(tester, find.byKey(ValueKey(second)));
+            await tap(tester, find.text(reveal));
+            expect(
+              tester.widget<TextField>(find.byType(TextField)).controller!.text,
+              '',
+            );
+            await tester.binding.handlePopRoute();
+            await tester.pumpAndSettle();
+            for (final p in session.setup.players) {
+              await tap(tester, find.byKey(ValueKey(p.id)));
+              expect(find.byType(TextField), findsNothing);
+              await tap(tester, find.text(reveal));
+              expect(
+                find.text(
+                  session.imposterIds.contains(p.id)
+                      ? session.prompt.imposterQuestion
+                      : session.prompt.civilianQuestion,
+                ),
+                findsOneWidget,
+              );
+              expect(
+                find.text(
+                  english ? 'You are the imposter' : 'Bạn là kẻ mạo danh',
+                ),
+                findsNothing,
+              );
+              if (p.id == first) {
+                expect(
+                  tester
+                      .widget<TextField>(find.byType(TextField))
+                      .controller!
+                      .text,
+                  '  private draft  ',
+                );
+              }
+              await tester.enterText(find.byType(TextField), '   ');
+              await tester.pumpAndSettle();
+              expect(
+                tester
+                    .widget<FilledButton>(
+                      find.widgetWithText(FilledButton, submit),
+                    )
+                    .onPressed,
+                null,
+              );
+              await tester.enterText(
+                find.byType(TextField),
+                '  answer ${p.id}  ',
+              );
+              await tester.pumpAndSettle();
+              await tap(tester, find.widgetWithText(FilledButton, submit));
+              if (p != session.setup.players.last) {
+                expect(find.text('answer ${p.id}'), findsNothing);
+                if (find.byKey(ValueKey(p.id)).evaluate().isEmpty) {
+                  await tester.scrollUntilVisible(
+                    find.byKey(ValueKey(p.id)),
+                    160,
+                    scrollable: find.byType(Scrollable).first,
+                  );
+                }
+                await tester.ensureVisible(find.byKey(ValueKey(p.id)));
+                expect(
+                  tester
+                      .widget<TextButton>(find.byKey(ValueKey(p.id)))
+                      .onPressed,
+                  null,
+                );
+              }
+            }
+            expect(find.text(session.prompt.civilianQuestion), findsOneWidget);
+            expect(find.text('answer $first'), findsNothing);
+            await tap(
+              tester,
+              find.widgetWithText(
+                FilledButton,
+                english ? 'Start round' : 'Bắt đầu vòng',
+              ),
+            );
+            expect(find.text(session.prompt.imposterQuestion), findsNothing);
+            expect(
+              find.bySemanticsLabel(session.prompt.imposterQuestion),
+              findsNothing,
+            );
+            for (final p in session.setup.players) {
+              expect(find.text('answer ${p.id}'), findsOneWidget);
+            }
+            await tap(
+              tester,
+              find.widgetWithText(
+                FilledButton,
+                english ? 'Find the imposters' : 'Tìm kẻ giả mạo',
+              ),
+            );
+            expect(
+              find.text(session.prompt.imposterQuestion),
+              findsNWidgets(2),
+            );
+            final previous = setup.setup.value.toJson();
+            await tap(
+              tester,
+              find.widgetWithText(
+                FilledButton,
+                english ? 'Play again' : 'Chơi lại',
+              ),
+            );
+            expect(setup.setup.value.toJson(), previous);
+            await tap(
+              tester,
+              find.widgetWithText(
+                FilledButton,
+                english ? 'Start game' : 'Bắt đầu ván chơi',
+              ),
+            );
+            final next = tester
+                .widget<QuestionGameScreen>(find.byType(QuestionGameScreen))
+                .session;
+            expect(identical(next, session), false);
+            await tap(tester, find.byKey(ValueKey(first)));
+            await tap(tester, find.text(reveal));
+            expect(
+              tester.widget<TextField>(find.byType(TextField)).controller!.text,
+              '',
+            );
+            await tester.binding.handlePopRoute();
+            await tester.pumpAndSettle();
+            await tester.binding.handlePopRoute();
+            await tester.pumpAndSettle();
+            await tap(
+              tester,
+              find.widgetWithText(TextButton, english ? 'Cancel' : 'Hủy'),
+            );
+            expect(find.byType(QuestionGameScreen), findsOneWidget);
+            await tester.binding.handlePopRoute();
+            await tester.pumpAndSettle();
+            await tap(
+              tester,
+              find.widgetWithText(
+                TextButton,
+                english ? 'End game' : 'Kết thúc ván',
+              ),
+            );
+            await tap(
+              tester,
+              find.widgetWithText(
+                ChoiceChip,
+                english ? 'Word game' : 'Trò chơi từ ngữ',
+              ),
+            );
+            expect(setup.setup.value.gameType, 'word');
+            expect(setup.setup.value.categoryIds, isEmpty);
+            expect(setup.setup.value.showCategory, true);
+            expect(tester.takeException(), null);
+          } finally {
+            semantics.dispose();
+          }
+        },
+      );
+    }
+  }
+}

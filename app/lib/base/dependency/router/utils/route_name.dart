@@ -4,6 +4,7 @@ class RouteName {
   static const playerNames = 'player-names';
   static const setup = 'setup';
   static const categories = 'categories';
+  static const questionGame = 'question-game';
   static const wordGame = 'word-game';
   static const unknown = 'unknown';
 }

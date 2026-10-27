@@ -1,3 +1,4 @@
+import 'package:untitled/features/question_game/question_game_store.dart';
 import 'package:untitled/features/word_game/word_game_store.dart';
 import 'package:untitled/base/dependency/router/utils/route_name.dart';
 
@@ -12,6 +13,9 @@ class RouteInput {
   RouteInput.setup() : routeName = RouteName.setup;
   RouteInput.wordGame(WordGameSession session)
     : routeName = RouteName.wordGame,
+      arguments = session;
+  RouteInput.questionGame(QuestionGameSession session)
+    : routeName = RouteName.questionGame,
       arguments = session;
   RouteInput.categories() : routeName = RouteName.categories;
 }
