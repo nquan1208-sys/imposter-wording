@@ -1,11 +1,11 @@
 import 'dart:math';
+import 'package:untitled/models/game_setup.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/base/store/auto_dispose_manager.dart';
 import 'package:untitled/base/store/store_base.dart';
 import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/models/content.dart';
 import 'package:untitled/models/game_assignment.dart';
-import 'package:untitled/models/game_setup.dart';
 
 enum QuestionGameStage { players, commonQuestion, discussion, result }
 
@@ -22,7 +22,6 @@ class QuestionGameSession {
 
   static QuestionGameSession? create(SetupStore store, {Random? random}) {
     if (!store.editable) return null;
-    store.revalidate();
     final setup = store.setup.value;
     if (setup.gameType != 'question' || !GameAssignment.validSetup(setup)) {
       return null;
@@ -57,6 +56,20 @@ class QuestionGameStore extends StoreBase {
   final _drafts = <String, String>{};
 
   QuestionGameStore(this.session);
+
+  List<SetupPlayer> get teammates =>
+      revealed.value &&
+          session.setup.knowEachOther &&
+          session.imposterIds.length > 1 &&
+          session.imposterIds.contains(currentPlayerId.value)
+      ? session.setup.players
+            .where(
+              (p) =>
+                  p.id != currentPlayerId.value &&
+                  session.imposterIds.contains(p.id),
+            )
+            .toList()
+      : const [];
 
   String get draft => _drafts[currentPlayerId.value] ?? '';
   String get question => session.imposterIds.contains(currentPlayerId.value)

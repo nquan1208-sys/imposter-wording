@@ -18,7 +18,7 @@ class BoundaryRandom implements Random {
   double nextDouble() => upper ? .99 : 0;
 }
 
-void main() {
+void main() async {
   late ContentRepository content;
   late SetupStore setup;
   setUp(() async {
@@ -30,7 +30,7 @@ void main() {
     await content.load();
     await setup.restore();
   });
-  tearDown(() {
+  tearDown(() async {
     setup.dispose();
     content.dispose();
   });
@@ -50,16 +50,16 @@ void main() {
     }
   }
 
-  test('fixed/random count boundaries and starting-player exclusion', () {
+  test('fixed/random count boundaries and starting-player exclusion', () async {
     for (final count in [3, 5, 100]) {
-      setup.setPlayerCount(count);
+      await setup.setPlayerCount(count);
       final max = (count - 1) ~/ 2;
-      setup.setRules(imposters: max, imposterNotFirst: true);
+      await setup.setRules(imposters: max, imposterNotFirst: true);
       final fixed = session();
       expect(fixed.imposterIds, hasLength(max));
       expect(fixed.imposterIds.contains(fixed.startingPlayerId), false);
       expect(() => fixed.imposterIds.clear(), throwsUnsupportedError);
-      setup.setRules(randomImposters: true);
+      await setup.setRules(randomImposters: true);
       for (final upper in [false, true]) {
         final random = WordGameSession.create(
           setup,
@@ -68,20 +68,20 @@ void main() {
         expect(random.imposterIds, hasLength(upper ? max : 1));
         expect(random.imposterIds.contains(random.startingPlayerId), false);
       }
-      setup.setRules(randomImposters: false);
+      await setup.setRules(randomImposters: false);
     }
   });
 
   test(
     'multiple imposters require the exact vote set; IDs disambiguate duplicate names',
-    () {
-      setup.setPlayerCount(5);
+    () async {
+      await setup.setPlayerCount(5);
       final current = setup.setup.value;
-      setup.setRoster(
+      await setup.setRoster(
         current.players.map((p) => SetupPlayer(p.id, 'Same')).toList(),
         current.nextPlayerId,
       );
-      setup.setRules(imposters: 2);
+      await setup.setRules(imposters: 2);
       final correct = game();
       finish(correct);
       correct.confirmVote({correct.session.imposterIds.first});
@@ -101,10 +101,10 @@ void main() {
     },
   );
 
-  test('bounds, seeded selection and frozen setup/content', () {
+  test('bounds, seeded selection and frozen setup/content', () async {
     for (final count in [3, 100]) {
-      setup.setPlayerCount(count);
-      setup.setFamily(true);
+      await setup.setPlayerCount(count);
+      await setup.setFamily(true);
       final first = session();
       final second = session();
       expect(first.prompt.id, '2');
@@ -118,7 +118,7 @@ void main() {
         first.setup.players.any((p) => p.id == first.startingPlayerId),
         true,
       );
-      setup.setPlayerCount(4);
+      await setup.setPlayerCount(4);
       content.snapshot.value = ContentSnapshot.fromJson(fixture(), 'vi');
       expect(first.setup.players, hasLength(count));
       expect(first.prompt.text, 'Word 2');
@@ -130,7 +130,7 @@ void main() {
   });
 
   test('category filter, empty content and unreadable settings', () async {
-    setup.setCategories({'b'});
+    await setup.setCategories({'b'});
     expect(session().prompt.id, '3');
     content.snapshot.value = ContentSnapshot.fromJson({
       'categories': [],
@@ -146,7 +146,7 @@ void main() {
 
   test(
     'guards early vote, hidden completion, duplicate taps and completed cards',
-    () {
+    () async {
       final store = game();
       final p = store.session.setup.players.first;
       store.confirmVote({p.id});
@@ -172,31 +172,34 @@ void main() {
     },
   );
 
-  test('card back is safe; votes determine winner once; new game resets', () {
-    final store = game();
-    store.selectPlayer(store.session.imposterIds.single);
-    store.reveal();
-    store.leaveCard();
-    expect(store.revealed.value, false);
-    expect(store.completed.value, isEmpty);
-    finish(store);
-    expect(store.stage.value, WordGameStage.discussion);
-    store.confirmVote({'missing'});
-    expect(store.stage.value, WordGameStage.discussion);
-    store.confirmVote({store.session.imposterIds.single});
-    expect(store.groupWon, true);
-    final civilian = store.session.setup.players.firstWhere(
-      (p) => p.id != store.session.imposterIds.single,
-    );
-    store.confirmVote({civilian.id});
-    expect(store.groupWon, true);
-    final next = game();
-    expect(next.completed.value, isEmpty);
-    expect(next.votedPlayerIds.value, isEmpty);
-    expect(next.revealed.value, false);
-    finish(next);
-    next.confirmVote({civilian.id});
-    expect(next.groupWon, false);
-    expect(next.stage.value, WordGameStage.result);
-  });
+  test(
+    'card back is safe; votes determine winner once; new game resets',
+    () async {
+      final store = game();
+      store.selectPlayer(store.session.imposterIds.single);
+      store.reveal();
+      store.leaveCard();
+      expect(store.revealed.value, false);
+      expect(store.completed.value, isEmpty);
+      finish(store);
+      expect(store.stage.value, WordGameStage.discussion);
+      store.confirmVote({'missing'});
+      expect(store.stage.value, WordGameStage.discussion);
+      store.confirmVote({store.session.imposterIds.single});
+      expect(store.groupWon, true);
+      final civilian = store.session.setup.players.firstWhere(
+        (p) => p.id != store.session.imposterIds.single,
+      );
+      store.confirmVote({civilian.id});
+      expect(store.groupWon, true);
+      final next = game();
+      expect(next.completed.value, isEmpty);
+      expect(next.votedPlayerIds.value, isEmpty);
+      expect(next.revealed.value, false);
+      finish(next);
+      next.confirmVote({civilian.id});
+      expect(next.groupWon, false);
+      expect(next.stage.value, WordGameStage.result);
+    },
+  );
 }

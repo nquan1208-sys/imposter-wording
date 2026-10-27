@@ -31,7 +31,7 @@ class FeatureStore extends StoreBase {
 ```
 
 Committed mutations are public methods on the store. Route-local drafts (the
-category picker and player-count sheet) use `setState` and commit only on Confirm.
+category picker, player editor and imposter sheet) use `setState` and commit only on Confirm.
 
 ---
 
@@ -54,8 +54,13 @@ SignalBuilder(builder: (context) => Text('${store.count.value}'));
   are app-lifetime providers. The repository owns content/loading/cache signals;
   the setup store owns committed setup and persistence errors. Its managed effect
   revalidates selected IDs when content changes or settings restoration finishes.
-  Settings read errors block mutations until retry or confirmed reset. Writes are
-  serialized and preserve the visible setup on failure.
+  Settings read errors block mutations until retry succeeds. `SetupStore` owns
+  presets, the active association and both stable ID counters in the setup record.
+  Mutation methods return awaitable success/failure and serialize against the
+  latest committed record. They publish only after a successful write; autosaves
+  retain a failed operation for retry while dialogs/editors keep their local drafts.
+  Category validation uses the same queue. The provider hands pending writes to
+  Hive storage before closing, including writes accepted before disposal.
 
 ---
 

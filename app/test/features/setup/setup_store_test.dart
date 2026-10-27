@@ -19,7 +19,7 @@ class SlowStorage extends MemoryStorage {
   }
 }
 
-void main() {
+void main() async {
   late ContentRepository content;
   late SetupStore store;
   late MemoryStorage file;
@@ -34,7 +34,7 @@ void main() {
     await content.load();
     await store.restore();
   });
-  tearDown(() {
+  tearDown(() async {
     store.dispose();
     content.dispose();
   });
@@ -42,8 +42,8 @@ void main() {
   test(
     'roster trims names, permits duplicates, retains IDs/order and clamps rules',
     () async {
-      store.setPlayerCount(7);
-      store.setRules(
+      await store.setPlayerCount(7);
+      await store.setRules(
         imposters: 3,
         randomImposters: true,
         imposterNotFirst: true,
@@ -54,7 +54,10 @@ void main() {
           .take(3)
           .map((p) => SetupPlayer(p.id, '  Same  '))
           .toList();
-      expect(store.setRoster(players, store.setup.value.nextPlayerId), true);
+      expect(
+        await store.setRoster(players, store.setup.value.nextPlayerId),
+        true,
+      );
       expect(
         store.setup.value.players.map((p) => p.id),
         players.map((p) => p.id),
@@ -74,32 +77,35 @@ void main() {
     },
   );
 
-  test('rejects empty names, invalid IDs, invalid count and duplicate IDs', () {
-    final current = store.setup.value;
-    for (final players in [
-      current.players.take(2).toList(),
-      [const SetupPlayer('player-1', '  '), ...current.players.skip(1)],
-      [
-        current.players.first,
-        ...current.players.skip(1),
-        current.players.first,
-      ],
-      [const SetupPlayer('wrong', 'Name'), ...current.players.skip(1)],
-    ]) {
-      expect(store.setRoster(players, current.nextPlayerId), false);
+  test(
+    'rejects empty names, invalid IDs, invalid count and duplicate IDs',
+    () async {
+      final current = store.setup.value;
+      for (final players in [
+        current.players.take(2).toList(),
+        [const SetupPlayer('player-1', '  '), ...current.players.skip(1)],
+        [
+          current.players.first,
+          ...current.players.skip(1),
+          current.players.first,
+        ],
+        [const SetupPlayer('wrong', 'Name'), ...current.players.skip(1)],
+      ]) {
+        expect(await store.setRoster(players, current.nextPlayerId), false);
+        expect(store.setup.value, same(current));
+      }
+      await store.setRules(imposters: 0);
+      await store.setRules(imposters: 2);
       expect(store.setup.value, same(current));
-    }
-    store.setRules(imposters: 0);
-    store.setRules(imposters: 2);
-    expect(store.setup.value, same(current));
-    store.setPlayerCount(100);
-    store.setRules(imposters: 49);
-    expect(store.setup.value.imposters, 49);
-    store.setRules(imposters: 50);
-    expect(store.setup.value.imposters, 49);
-    store.setPlayerCount(3);
-    expect(store.setup.value.imposters, 1);
-  });
+      await store.setPlayerCount(100);
+      await store.setRules(imposters: 49);
+      expect(store.setup.value.imposters, 49);
+      await store.setRules(imposters: 50);
+      expect(store.setup.value.imposters, 49);
+      await store.setPlayerCount(3);
+      expect(store.setup.value.imposters, 1);
+    },
+  );
 
   test(
     'legacy settings default new options; malformed rules preserve saved data',
@@ -120,13 +126,13 @@ void main() {
     },
   );
 
-  test('new default names use available numbers and unique IDs', () {
+  test('new default names use available numbers and unique IDs', () async {
     final current = store.setup.value;
-    store.setRoster(
+    await store.setRoster(
       current.players.map((p) => SetupPlayer(p.id, 'Guest')).toList(),
       current.nextPlayerId,
     );
-    store.setPlayerCount(5);
+    await store.setPlayerCount(5);
     expect(store.setup.value.players.last.name, 'Player 1');
     expect(store.setup.value.players.last.id, 'player-5');
   });
@@ -136,14 +142,14 @@ void main() {
     () async {
       expect(store.setup.value.players.length, 4);
       final first = store.setup.value.players.first;
-      store.setPlayerCount(2);
+      await store.setPlayerCount(2);
       expect(store.setup.value.players.length, 4);
-      store.setPlayerCount(100);
+      await store.setPlayerCount(100);
       expect(store.setup.value.players.first, same(first));
-      store.setPlayerCount(101);
+      await store.setPlayerCount(101);
       expect(store.setup.value.players.length, 100);
-      store.setPlayerCount(3);
-      store.setPlayerCount(4);
+      await store.setPlayerCount(3);
+      await store.setPlayerCount(4);
       expect(store.setup.value.players.last.id, 'player-101');
       await store.save();
       expect(GameSetup.fromJson(file.data!).players.last.id, 'player-101');
@@ -153,8 +159,8 @@ void main() {
   test(
     'mode change removes unavailable categories, falls back to all and persists',
     () async {
-      store.setCategories({'b'});
-      store.setFamily(true);
+      await store.setCategories({'b'});
+      await store.setFamily(true);
       expect(store.setup.value.categoryIds, isEmpty);
       expect(store.selectionRemoved.value, true);
       await store.save();
@@ -163,27 +169,29 @@ void main() {
     },
   );
 
-  test('replacement prunes selections and keeps surviving IDs', () {
-    store.setCategories({'a', 'b'});
+  test('replacement prunes selections and keeps surviving IDs', () async {
+    await store.setCategories({'a', 'b'});
     final data = fixture();
     (data['words'] as List).removeWhere((w) => w['category_id'] == 'b');
     content.snapshot.value = ContentSnapshot.fromJson(data, 'vi');
+    await store.pendingWrites;
     expect(store.setup.value.categoryIds, {'a'});
     content.snapshot.value = ContentSnapshot.fromJson({
       'categories': [],
       'words': [],
       'questions': [],
     }, 'vi');
+    await store.pendingWrites;
     expect(store.setup.value.categoryIds, isEmpty);
   });
 
   test(
-    'read failure blocks writes, retry restores; reset explicitly replaces',
+    'read failure blocks writes, retry restores; read failures never overwrite',
     () async {
       file.data = GameSetup.defaults().copyWith(family: true).toJson();
       file.failRead = true;
       await store.restore();
-      store.setPlayerCount(10);
+      await store.setPlayerCount(10);
       await store.save();
       expect(file.writes, 0);
       expect(store.editable, false);
@@ -192,9 +200,8 @@ void main() {
       expect(store.setup.value.family, true);
       file.failRead = true;
       await store.restore();
-      store.reset();
       await store.save();
-      expect(file.data!['mode'], 'classic');
+      expect(file.data!['mode'], 'family');
     },
   );
 
@@ -210,10 +217,10 @@ void main() {
 
   test('write failure keeps visible setup and retry saves it', () async {
     file.failWrite = true;
-    store.setPlayerCount(8);
+    await store.setPlayerCount(8);
     await store.save();
     expect(store.writeFailed.value, true);
-    expect(store.setup.value.players.length, 8);
+    expect(store.setup.value.players.length, 4);
     file.failWrite = false;
     await store.save();
     expect(store.writeFailed.value, false);

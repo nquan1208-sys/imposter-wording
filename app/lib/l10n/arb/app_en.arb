@@ -35,7 +35,7 @@
   "cacheWarning": "Content is available, but the offline cache could not be read or saved.",
   "selectionRemoved": "Unavailable categories were removed. An empty selection means All categories.",
   "settingsLoading": "Restoring setup…",
-  "settingsReadError": "Saved setup could not be read. Retry or reset to continue.",
+  "settingsReadError": "Saved setup could not be read. Retry to continue.",
   "settingsWriteError": "Setup could not be saved. Your changes are still here.",
   "resetSetup": "Reset setup",
   "resetSetupConfirm": "Replace the unreadable saved setup with defaults?",
@@ -176,7 +176,7 @@
   "commonQuestionHelp": "This is the common question. Next, read everyone’s answers and discuss who received a different question.",
   "startRound": "Start round",
   "findImposters": "Find the imposters",
-  "questionInstructions": "Open your private question and answer without showing anyone. Your role is not revealed. Unsent answers remain private until you reopen your card. After everyone submits, read the common question and discuss the answers. Reveal the imposters when ready; there is no scored vote.",
+  "questionInstructions": "Open your private question and answer without showing anyone. Your role is not revealed. Unsent answers remain private until you reopen your card. After everyone submits, read the common question and discuss the answers. Reveal the imposters when ready; there is no scored vote. With “Imposters know each other” enabled and multiple imposters, teammates are visible only inside a revealed private card.",
   "@questionCount": {
     "placeholders": {
       "count": {
@@ -200,5 +200,32 @@
         "type": "int"
       }
     }
-  }
+  },
+  "unsavedGame": "Unsaved game",
+  "unsavedGameHelp": "Play quickly with the current players",
+  "savedLists": "Saved lists",
+  "saveList": "Save as a list…",
+  "manageLists": "Manage lists",
+  "newList": "Save as a new list…",
+  "listName": "List name",
+  "listNameHint": "Enter a list name",
+  "invalidListName": "Use a non-empty name that is not already taken.",
+  "save": "Save",
+  "rename": "Rename",
+  "delete": "Delete",
+  "details": "Details",
+  "listActions": "List actions",
+  "usingList": "In use",
+  "emptyLists": "Return to the player editor to save your first list.",
+  "deleteListConfirm": "Delete this list? Current players and rules will be kept.",
+  "savedRules": "Saved rules",
+  "listAutosave": "Rules save when changed in setup. Players save only when you confirm the editor.",
+  "fixedCount": "Fixed",
+  "recommendedImposter": "1 imposter recommended",
+  "enabled": "On",
+  "disabled": "Off",
+  "chooseImposters": "Choose imposters",
+  "fixedCountHelp": "Choose the exact number of imposters",
+  "randomCountHelp": "A random number of imposters each game",
+  "moreImpostersNeedPlayers": "At least 5 players are needed to choose more than 1 imposter."
 }
