@@ -25,6 +25,15 @@ class ContentCategory {
   final String? description;
   final int sortOrder;
   final bool isFamilyFriendly;
+  const ContentCategory.local({
+    required this.id,
+    required this.name,
+    required this.contentLocale,
+    required this.isFamilyFriendly,
+  }) : gameType = 'word',
+       slug = id,
+       description = null,
+       sortOrder = 0;
   ContentCategory(JsonMap row, this.contentLocale)
     : id = requiredText(row, 'id'),
       gameType = requiredText(row, 'game_type'),
@@ -46,6 +55,13 @@ class ContentCategory {
 class WordPrompt {
   final String id, categoryId, difficulty, text, contentLocale;
   final String? imagePath;
+  const WordPrompt.local({
+    required this.id,
+    required this.categoryId,
+    required this.text,
+    required this.contentLocale,
+  }) : difficulty = 'easy',
+       imagePath = null;
   WordPrompt(JsonMap row, this.contentLocale)
     : id = requiredText(row, 'id'),
       categoryId = requiredText(row, 'category_id'),

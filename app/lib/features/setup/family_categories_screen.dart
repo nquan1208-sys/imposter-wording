@@ -13,6 +13,7 @@ class FamilyCategoriesScreen extends StatelessWidget {
     required this.saveFailed,
     required this.showWordImages,
     required this.onImagesChanged,
+    this.onCreateCustom,
   });
 
   final SetupStore store;
@@ -20,6 +21,7 @@ class FamilyCategoriesScreen extends StatelessWidget {
   final ValueChanged<Set<String>> onChanged;
   final bool selectionRemoved, saveFailed, showWordImages;
   final ValueChanged<bool> onImagesChanged;
+  final VoidCallback? onCreateCustom;
 
   @override
   Widget build(BuildContext context) => AllCategoriesScreen(
@@ -29,6 +31,7 @@ class FamilyCategoriesScreen extends StatelessWidget {
     selectionRemoved: selectionRemoved,
     saveFailed: saveFailed,
     family: true,
+    onCreateCustom: onCreateCustom,
     header: SwitchListTile(
       title: Text(AppLocalizations.of(context).showWordImages),
       value: showWordImages,

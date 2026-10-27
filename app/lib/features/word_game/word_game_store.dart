@@ -31,14 +31,14 @@ class WordGameSession {
     if (setup.gameType != 'word' || !GameAssignment.validSetup(setup)) {
       return null;
     }
-    final words = store.content.eligibleWords(
+    final words = store.eligibleWords(
       family: setup.family,
       categoryIds: setup.categoryIds,
     );
     if (words.isEmpty) return null;
     final rng = random ?? Random();
     final prompt = words[rng.nextInt(words.length)];
-    final category = store.content.snapshot.value!.categories.firstWhere(
+    final category = store.categories.firstWhere(
       (c) => c.id == prompt.categoryId,
     );
     final assignment = GameAssignment.create(setup, rng);

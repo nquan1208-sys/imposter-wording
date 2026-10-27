@@ -1,4 +1,6 @@
 import 'package:untitled/widgets/app_content.dart';
+import 'package:untitled/base/dependency/app_service.dart';
+import 'package:untitled/base/dependency/router/utils/route_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -38,7 +40,6 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
       family = nextFamily;
       final available = ref
           .read(setupStoreProvider)
-          .content
           .categoryCounts(family: family)
           .keys
           .map((c) => c.id)
@@ -50,6 +51,13 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
   }
 
   void updateSelection(Set<String> value) => setState(() => selected = value);
+
+  Future<void> createCustom() async {
+    final id = await ref
+        .read(AppService.router)
+        .push<String>(RouteInput.customWords(family: family));
+    if (mounted && id != null) setState(() => selected = {...selected, id});
+  }
 
   @override
   void dispose() {
@@ -63,7 +71,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
     final l = AppLocalizations.of(context);
     return SignalBuilder(
       builder: (context) {
-        final counts = store.content.categoryCounts(
+        final counts = store.categoryCounts(
           family: family,
           gameType: store.setup.value.gameType,
         );
@@ -75,6 +83,9 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
           onChanged: updateSelection,
           selectionRemoved: selectionRemoved,
           saveFailed: saveFailed,
+          onCreateCustom: store.setup.value.gameType == 'word'
+              ? createCustom
+              : null,
         );
         return Scaffold(
           appBar: AppBar(title: Text(l.categories)),
@@ -83,8 +94,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
             child: Padding(
               padding: AppEdgeInsets.all24,
               child: FilledButton(
-                onPressed:
-                    store.editable && store.content.snapshot.value != null
+                onPressed: store.editable
                     ? () async {
                         final saved = await store.setCategories(
                           valid,
@@ -134,6 +144,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
                               showWordImages: showWordImages,
                               onImagesChanged: (value) =>
                                   setState(() => showWordImages = value),
+                              onCreateCustom: createCustom,
                             ),
                           ],
                         ),

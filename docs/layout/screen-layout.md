@@ -221,11 +221,11 @@ Cho phép chọn một hoặc nhiều danh mục, hoặc dùng toàn bộ danh m
    - Có lựa chọn `Tất cả danh mục` ở đầu danh sách.
    - Đây là trạng thái mặc định.
    - Khi được chọn, các category cụ thể được bỏ chọn.
-   - App random trong toàn bộ content đã publish thuộc loại game và mode hiện tại.
+   - App random trong toàn bộ content remote đã publish và custom local hợp lệ thuộc loại game, locale và mode hiện tại; mỗi đề có cơ hội như nhau.
 
 5. **Danh mục tùy chỉnh**
-   - Có thẻ `Tạo tùy chỉnh` nếu tính năng content tùy chỉnh được bật.
-   - Danh mục tùy chỉnh chỉ được áp dụng cho ván hiện tại và lưu local.
+   - Phase 8 có ô `Tạo danh mục tùy chỉnh` ở cuối cùng lưới word, cùng chiều rộng/kiểu viền/khoảng cách với ô danh mục có sẵn; nền xanh nhạt và biểu tượng dấu cộng để phân biệt hành động tạo. Ô tạo không có checkbox chọn danh mục và chưa hiện cho question.
+   - **Phase 8:** word tùy chỉnh lưu cùng bộ thiết lập local, dùng qua các ván/replay và khởi động lại. Chỉ xóa sau khi xác nhận quay từ thiết lập về trang đầu; mở app ở trang đầu không tự xóa. Question tùy chỉnh thuộc Phase 9.
 
 ### Hành vi
 
@@ -245,7 +245,7 @@ Cho phép chọn một hoặc nhiều danh mục, hoặc dùng toàn bộ danh m
 
 ### Mục đích
 
-Cho phép người dùng tự tạo một danh mục từ riêng để sử dụng trong các ván chơi.
+Cho phép người dùng tự tạo một danh mục từ riêng để sử dụng trong các ván chơi. Phase 8 triển khai phần văn bản cho word; question thuộc Phase 9, mọi thao tác ảnh bên dưới thuộc Phase 10 và chưa hiển thị. Dùng theme/component hiện tại của app.
 
 ### Bố cục đề xuất
 
@@ -301,8 +301,12 @@ Cho phép người dùng tự tạo một danh mục từ riêng để sử dụ
 - Rời màn hình khi chưa lưu phải hỏi xác nhận nếu đã có thay đổi.
 - Tên danh mục không được để trống.
 - Mỗi từ được cắt khoảng trắng đầu/cuối trước khi lưu.
-- Nếu danh mục đã tồn tại, yêu cầu đổi tên thay vì ghi đè.
-- Lưu thành công sẽ quay về màn hình `Chọn danh mục`, tab `Cổ điển`, và chọn danh mục vừa tạo.
+- So sánh từ sau trim, không phân biệt hoa thường; dòng trống bỏ qua và từ trùng giữ cách viết đầu tiên. Nhập trùng toàn bộ báo cần ít nhất một từ mới.
+- Nếu tên trùng danh mục word remote hoặc custom ở locale hiện tại (kể cả danh mục ngoài tab Gia đình), yêu cầu đổi tên thay vì ghi đè; so sánh sau trim, không phân biệt hoa thường và kiểm tra lại lúc lưu.
+- Lưu thành công trở về `Chọn danh mục`, giữ nguyên tab hiện tại, thêm danh mục mới vào lựa chọn nháp và giữ các lựa chọn trước đó. `Xác nhận` picker mới áp dụng tab/danh mục/ảnh; Back picker chỉ hủy lựa chọn nháp, không xóa category đã lưu.
+- Tạo tại tab Gia đình bắt buộc checkbox xác nhận từ phù hợp chơi cùng gia đình. Category này hiện ở cả hai tab; tạo tại tab Tất cả không được coi là phù hợp Gia đình. Đổi tab/game chỉ ẩn mục không phù hợp, không xóa nội dung.
+- Lưu lỗi giữ nguyên tên/danh sách/checkbox và cho thử lại, không tạo category dở dang; trong khi lưu khóa chỉnh sửa và điều hướng. Ô nhập có label, lỗi gần field, thao tác xóa có nhãn; form cuộn và nút lưu nằm trên bàn phím.
+- Nội dung lưu local cùng setup, giữ qua restart và `Chơi lại`, không đi vào nhóm người chơi đã lưu hoặc backend. Back từ setup về trang đầu phải xác nhận xóa vĩnh viễn nội dung tùy chỉnh; chỉ rời sau khi xóa và bỏ selected IDs thành công. Ghi lỗi giữ nguyên setup cho thử lại.
 - Thẻ danh mục tùy chỉnh hiển thị tên danh mục, tổng số từ và trạng thái có ảnh minh họa.
 
 ## 6. Màn hình chọn người chơi

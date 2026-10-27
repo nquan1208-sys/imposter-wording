@@ -240,5 +240,26 @@
     }
   },
   "familyCategories": "Family mode",
-  "emptyFamilyCategories": "No family categories have content yet. Choose All categories or try again later."
+  "emptyFamilyCategories": "No family categories have content yet. Choose All categories or try again later.",
+  "createCustomCategory": "Create custom category",
+  "customCategoryName": "Category name",
+  "customCategoryNameHint": "Example: Office words",
+  "customCategoryNameExists": "This category name already exists. Choose another name.",
+  "customWordList": "Word list",
+  "customWordsEmpty": "No words yet.",
+  "customWord": "Word",
+  "addCustomWord": "Add word",
+  "importCustomWords": "Import words",
+  "customOneWordPerLine": "One word per line",
+  "customWordInvalid": "Enter at least one new word.",
+  "removeCustomWord": "Remove {word}",
+  "saveCustomCategory": "Save category",
+  "customSaving": "Saving…",
+  "customFamilyConfirmation": "I confirm these words are suitable for family play.",
+  "discardCustomDraft": "Discard unsaved changes?",
+  "customSaveError": "Could not save. Your words are still here. Try saving again.",
+  "clearCustomContentTitle": "Remove custom content and leave?",
+  "clearCustomContentHelp": "Returning to the home screen permanently removes custom categories and words for this setup.",
+  "clearCustomContentAction": "Remove and leave",
+  "@removeCustomWord": {"placeholders": {"word": {"type": "String"}}}
 }

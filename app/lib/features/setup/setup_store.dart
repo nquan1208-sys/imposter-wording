@@ -4,6 +4,8 @@ import 'package:untitled/base/store/store_base.dart';
 import 'package:untitled/data/content_repository.dart';
 import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/models/game_setup.dart';
+import 'package:untitled/models/content.dart';
+import 'package:untitled/models/custom_word_category.dart';
 
 class SetupStore extends StoreBase {
   final ContentRepository content;
@@ -18,12 +20,14 @@ class SetupStore extends StoreBase {
   Future<void>? _read;
   Future<void> get pendingWrites => _writes;
   bool get editable => !reading.value && !readFailed.value && !writing.value;
-
   final _availableCategories = <(String, bool), Set<String>>{};
+  ContentSnapshot? _remoteSnapshot;
 
   SetupStore({required this.content, required this.file}) {
     effect(() {
       final snapshot = content.snapshot.value;
+      _remoteSnapshot = snapshot;
+      _availableCategories.clear();
       if (snapshot != null) {
         for (final gameType in ['word', 'question']) {
           for (final family in [false, true]) {
@@ -277,9 +281,21 @@ class SetupStore extends StoreBase {
   );
 
   GameSetup _validatedCategories(GameSetup current) {
-    final available = _availableCategories[(current.gameType, current.family)];
-    if (available == null) return current;
-    final retained = current.categoryIds.intersection(available);
+    // Queued writes can finish after the content signals have been disposed.
+    final remote = _availableCategories[(current.gameType, current.family)];
+    final available = {
+      ...?remote,
+      if (current.gameType == 'word')
+        for (final c in _custom(current))
+          if (!current.family || c.isFamilyFriendly) c.id,
+    };
+    final retained = current.categoryIds
+        .where(
+          (id) =>
+              available.contains(id) ||
+              (remote == null && !id.startsWith('custom-word-')),
+        )
+        .toSet();
     if (retained.length == current.categoryIds.length) return current;
     if (!isDispose) selectionRemoved.value = true;
     return current.copyWith(categoryIds: retained);
@@ -287,6 +303,98 @@ class SetupStore extends StoreBase {
 
   Future<bool> revalidate() =>
       _mutate((current) => current, skipUnchanged: true, retryable: true);
+
+  List<CustomWordCategory> _custom(GameSetup current) => current
+      .customWordCategories
+      .where((c) => c.contentLocale == content.contentLocale)
+      .toList();
+
+  List<ContentCategory> get categories => [
+    ...?content.snapshot.value?.categories,
+    ..._custom(setup.value).map((c) => c.category),
+  ];
+
+  List<WordPrompt> eligibleWords({
+    required bool family,
+    Set<String> categoryIds = const {},
+  }) => [
+    ...content.eligibleWords(family: family, categoryIds: categoryIds),
+    for (final c in _custom(setup.value))
+      if ((!family || c.isFamilyFriendly) &&
+          (categoryIds.isEmpty || categoryIds.contains(c.id)))
+        ...c.prompts,
+  ];
+
+  Map<ContentCategory, int> categoryCounts({
+    required bool family,
+    String gameType = 'word',
+  }) => {
+    ...content.categoryCounts(family: family, gameType: gameType),
+    if (gameType == 'word')
+      for (final c in _custom(setup.value))
+        if (!family || c.isFamilyFriendly) c.category: c.words.length,
+  };
+
+  bool validCustomCategoryName(String name, {GameSetup? candidate}) {
+    final normalized = name.trim().toLowerCase();
+    return normalized.isNotEmpty &&
+        !(_remoteSnapshot?.categories ?? <ContentCategory>[]).any(
+          (c) =>
+              c.gameType == 'word' && c.name.trim().toLowerCase() == normalized,
+        ) &&
+        !_custom(
+          candidate ?? setup.value,
+        ).any((c) => c.name.toLowerCase() == normalized);
+  }
+
+  Future<String?> createCustomWordCategory(
+    String name,
+    List<String> words, {
+    required bool family,
+  }) async {
+    final entries = uniqueWords(words);
+    String? id;
+    final saved = await _mutate((current) {
+      if (current.gameType != 'word' ||
+          entries.isEmpty ||
+          !validCustomCategoryName(name, candidate: current)) {
+        throw const FormatException('Invalid custom category');
+      }
+      var next = current.nextCustomWordCategoryId;
+      do {
+        id = 'custom-word-${next++}';
+      } while (current.customWordCategories.any((c) => c.id == id) ||
+          (_remoteSnapshot?.categories ?? <ContentCategory>[]).any(
+            (c) => c.id == id,
+          ) ||
+          (_remoteSnapshot?.words ?? <WordPrompt>[]).any(
+            (w) => w.id.startsWith('$id-word-'),
+          ));
+      return current.copyWith(
+        nextCustomWordCategoryId: next,
+        customWordCategories: List.unmodifiable([
+          ...current.customWordCategories,
+          CustomWordCategory(
+            id: id!,
+            name: name.trim(),
+            contentLocale: content.contentLocale,
+            isFamilyFriendly: family,
+            words: entries,
+          ),
+        ]),
+      );
+    });
+    return saved ? id : null;
+  }
+
+  Future<bool> clearCustomWordCategories() => _mutate(
+    (current) => current.copyWith(
+      customWordCategories: const [],
+      categoryIds: current.categoryIds
+          .where((id) => !current.customWordCategories.any((c) => c.id == id))
+          .toSet(),
+    ),
+  );
 
   @override
   void dispose() {
