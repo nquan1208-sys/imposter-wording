@@ -38,6 +38,23 @@ class HowToPlayScreen extends StatelessWidget {
             ],
             const SizedBox(height: AppSpacing.sm),
             Card(
+              child: Padding(
+                padding: AppEdgeInsets.all24,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.questionGame,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(l10n.questionInstructions),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Card(
               key: const Key('proTipCard'),
               color: AppColors.tealSurface,
               elevation: 0,

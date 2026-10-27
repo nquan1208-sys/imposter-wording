@@ -1,3 +1,4 @@
+import 'package:untitled/features/question_game/question_game_store.dart';
 import 'package:untitled/widgets/app_content.dart';
 import 'package:untitled/features/word_game/word_game_store.dart';
 import 'package:flutter/material.dart';
@@ -24,8 +25,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Future<void> _start(SetupStore store) async {
     if (_openingGame) return;
-    final session = WordGameSession.create(store);
-    if (session == null) {
+    RouteInput? input;
+    if (store.setup.value.gameType == 'question') {
+      final session = QuestionGameSession.create(store);
+      if (session != null) input = RouteInput.questionGame(session);
+    } else {
+      final session = WordGameSession.create(store);
+      if (session != null) input = RouteInput.wordGame(session);
+    }
+    if (input == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).gameStartError)),
       );
@@ -33,7 +41,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     }
     setState(() => _openingGame = true);
     try {
-      await ref.read(AppService.router).push(RouteInput.wordGame(session));
+      await ref.read(AppService.router).push(input);
     } finally {
       if (mounted) setState(() => _openingGame = false);
     }
@@ -47,9 +55,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     return SignalBuilder(
       builder: (context) {
         final setup = store.setup.value;
-        final count = content
-            .eligibleWords(family: setup.family, categoryIds: setup.categoryIds)
-            .length;
+        final count = setup.gameType == 'question'
+            ? content
+                  .eligibleQuestions(
+                    family: setup.family,
+                    categoryIds: setup.categoryIds,
+                  )
+                  .length
+            : content
+                  .eligibleWords(
+                    family: setup.family,
+                    categoryIds: setup.categoryIds,
+                  )
+                  .length;
         final textTheme = Theme.of(context).textTheme;
         return Scaffold(
           appBar: AppBar(title: Text(l.setupTitle)),
@@ -129,7 +147,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                             value: '${setup.players.length}',
                             semantics: l.playerCount(setup.players.length),
                             onTap: store.editable
-                                ? () => _players(context, store)
+                                ? () => ref
+                                      .read(AppService.router)
+                                      .push(RouteInput.playerNames())
                                 : null,
                           ),
                         ),
@@ -138,8 +158,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                           child: _statCard(
                             context,
                             label: l.imposters,
-                            value: '1',
-                            semantics: '${l.imposters}: 1',
+                            value: setup.randomImposters
+                                ? l.randomCount
+                                : '${setup.imposters}',
+                            semantics:
+                                '${l.imposters}: ${setup.randomImposters ? l.randomCount : setup.imposters}',
+                            onTap: store.editable
+                                ? () => _imposters(context, store)
+                                : null,
                           ),
                         ),
                       ],
@@ -148,24 +174,21 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   const SizedBox(height: AppSpacing.xl),
                   Text(l.gameMode, style: textTheme.titleLarge),
                   const SizedBox(height: AppSpacing.md),
-                  Container(
-                    constraints: const BoxConstraints(minHeight: 80),
-                    padding: AppEdgeInsets.all16,
-                    decoration: BoxDecoration(
-                      color: AppColors.yellow,
-                      border: Border.all(color: AppColors.yellow, width: 2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        const Icon(
-                          Icons.font_download_outlined,
-                          color: AppColors.charcoal,
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      for (final type in ['word', 'question'])
+                        ChoiceChip(
+                          label: Text(
+                            type == 'word' ? l.wordGame : l.questionGame,
+                          ),
+                          selected: setup.gameType == type,
+                          onSelected: store.editable
+                              ? (_) => store.setGameType(type)
+                              : null,
                         ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(l.wordGame, style: textTheme.labelLarge),
-                      ],
-                    ),
+                    ],
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Wrap(
@@ -197,6 +220,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: ListTile(
+                      key: const Key('categoryPicker'),
                       contentPadding: AppEdgeInsets.all24,
                       leading: const CircleAvatar(
                         backgroundColor: AppColors.tealSurface,
@@ -223,10 +247,35 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   ContentNotices(content),
                   if (content.snapshot.value != null) ...[
                     Text(
-                      l.wordCount(count),
+                      setup.gameType == 'question'
+                          ? l.questionCount(count)
+                          : l.wordCount(count),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     if (count == 0) Text(l.emptyContent),
+                  ],
+                  SwitchListTile(
+                    title: Text(l.imposterNotFirst),
+                    value: setup.imposterNotFirst,
+                    onChanged: store.editable
+                        ? (v) => store.setRules(imposterNotFirst: v)
+                        : null,
+                  ),
+                  if (setup.gameType == 'word') ...[
+                    SwitchListTile(
+                      title: Text(l.showCategory),
+                      value: setup.showCategory,
+                      onChanged: store.editable
+                          ? (v) => store.setRules(showCategory: v)
+                          : null,
+                    ),
+                    SwitchListTile(
+                      title: Text(l.knowEachOther),
+                      value: setup.knowEachOther,
+                      onChanged: store.editable
+                          ? (v) => store.setRules(knowEachOther: v)
+                          : null,
+                    ),
                   ],
                   const SizedBox(height: AppSpacing.md),
                 ],
@@ -276,9 +325,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     ),
   );
 
-  void _players(BuildContext context, SetupStore store) {
+  void _imposters(BuildContext context, SetupStore store) {
     final l = AppLocalizations.of(context);
-    var count = store.setup.value.players.length;
+    final setup = store.setup.value;
+    var count = setup.imposters;
+    var random = setup.randomImposters;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -289,35 +340,40 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(l.players, style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: AppSpacing.xl),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    IconButton(
-                      tooltip: l.decreasePlayers,
-                      onPressed: count > 3
-                          ? () => setState(() => count--)
-                          : null,
-                      icon: const Icon(Icons.remove),
-                    ),
-                    Text(l.playerCount(count)),
-                    IconButton(
-                      tooltip: l.increasePlayers,
-                      onPressed: count < 100
-                          ? () => setState(() => count++)
-                          : null,
-                      icon: const Icon(Icons.add),
-                    ),
-                  ],
+                Text(
+                  l.imposters,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: AppSpacing.xl),
+                SwitchListTile(
+                  title: Text(l.randomCount),
+                  subtitle: Text(l.imposterRange(setup.maxImposters)),
+                  value: random,
+                  onChanged: (v) => setState(() => random = v),
+                ),
+                if (!random)
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      IconButton(
+                        tooltip: l.fewerImposters,
+                        onPressed: count > 1
+                            ? () => setState(() => count--)
+                            : null,
+                        icon: const Icon(Icons.remove),
+                      ),
+                      Text('$count'),
+                      IconButton(
+                        tooltip: l.moreImposters,
+                        onPressed: count < setup.maxImposters
+                            ? () => setState(() => count++)
+                            : null,
+                        icon: const Icon(Icons.add),
+                      ),
+                    ],
+                  ),
                 FilledButton(
                   onPressed: () {
-                    store.setPlayerCount(count);
+                    store.setRules(imposters: count, randomImposters: random);
                     Navigator.pop(context);
                   },
                   child: Text(l.confirm),

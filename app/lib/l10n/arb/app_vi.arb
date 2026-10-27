@@ -6,13 +6,13 @@
   "startUnavailable": "Sắp ra mắt",
   "howToPlay": "Cách chơi",
   "stepSetupTitle": "Thiết lập trò chơi",
-  "stepSetupBody": "Chọn danh sách người chơi và danh mục từ. Một người chơi sẽ được bí mật chọn làm kẻ mạo danh.",
+  "stepSetupBody": "Chọn người chơi, danh mục và số kẻ mạo danh cố định hoặc ngẫu nhiên. Người thường luôn chiếm đa số.",
   "stepRevealTitle": "Tiết lộ từ",
-  "stepRevealBody": "Mỗi người lần lượt xem thông tin của mình. Người chơi bình thường thấy từ bí mật; kẻ mạo danh chỉ thấy vai trò, và tên danh mục nếu bật hiển thị danh mục.",
+  "stepRevealBody": "Mỗi người mở thẻ riêng. Kẻ mạo danh thấy vai, danh mục nếu bật và tên đồng vai nếu bật; không được thấy từ bí mật.",
   "stepHintTitle": "Đưa ra gợi ý",
   "stepHintBody": "Người chơi lần lượt nói một từ liên quan đến từ bí mật. Gợi ý không nên quá rõ ràng để tránh lộ từ.",
   "stepFindTitle": "Tìm kẻ mạo danh",
-  "stepFindBody": "Cả nhóm thảo luận và bầu bằng lời. Chọn người bị bầu rồi xác nhận: đúng kẻ mạo danh thì nhóm thắng, sai thì kẻ mạo danh thắng. Nếu hòa, nhóm bầu lại.",
+  "stepFindBody": "Thảo luận và bầu bằng lời. Chọn số người bằng số kẻ mạo danh. Nhóm chỉ thắng khi chọn đúng toàn bộ; nếu sai, phe mạo danh thắng. Hòa thì bầu lại.",
   "proTipTitle": "Mẹo chuyên nghiệp",
   "proTipBody": "Kẻ mạo danh nên lắng nghe cẩn thận, hòa nhập và đưa ra gợi ý phù hợp với danh mục.",
   "notFound": "Không tìm thấy trang",
@@ -29,7 +29,7 @@
   "cancel": "Hủy",
   "retry": "Thử lại",
   "loadingContent": "Đang tải nội dung tiếng Việt…",
-  "emptyContent": "Chưa có từ phù hợp trong chế độ này.",
+  "emptyContent": "Chưa có nội dung phù hợp trong chế độ này.",
   "contentError": "Không thể tải nội dung mới. Vui lòng thử lại.",
   "cachedContent": "Đang dùng nội dung đã lưu.",
   "cacheWarning": "Nội dung vẫn dùng được nhưng không thể đọc hoặc lưu bộ nhớ ngoại tuyến.",
@@ -77,7 +77,7 @@
   "endGame": "Kết thúc ván",
   "endGameConfirm": "Kết thúc ván và quay về thiết lập? Tiến độ ván này sẽ bị mất.",
   "voteTitle": "Chọn người bị bầu",
-  "voteHelp": "Nhóm bầu bằng lời rồi chọn một người. Nếu hòa, hãy bầu lại trước khi xác nhận.",
+  "voteHelp": "Chọn đúng {count} người bị bầu. Nếu hòa, hãy bầu lại. Nhóm chỉ thắng khi chọn đúng toàn bộ kẻ mạo danh.",
   "gameStartError": "Không thể tạo ván. Hãy quay về thiết lập và kiểm tra nội dung phù hợp.",
   "discussionTitle": "Giai đoạn bầu chọn",
   "gameResult": "Kết quả",
@@ -94,7 +94,7 @@
       }
     }
   },
-  "discussionHelp": "Lần lượt theo chiều kim đồng hồ, mỗi người nói một từ liên quan đến từ bí mật. Có thể chơi nhiều vòng, sau đó thảo luận và bầu một người. Bầu đúng kẻ mạo danh thì nhóm thắng; bầu sai thì kẻ mạo danh thắng.",
+  "discussionHelp": "Lần lượt theo chiều kim đồng hồ đưa gợi ý kín đáo. Thảo luận và bầu bằng lời. Chọn số người bằng số kẻ mạo danh; nhóm chỉ thắng khi chọn đúng toàn bộ.",
   "groupWins": "Nhóm chiến thắng!",
   "imposterWins": "Kẻ mạo danh chiến thắng!",
   "actualImposter": "Kẻ mạo danh là: {name}",
@@ -115,5 +115,90 @@
   },
   "secretWord": "Từ bí mật",
   "announceResult": "Thông báo kết quả",
-  "playAgain": "Chơi lại"
+  "playAgain": "Chơi lại",
+  "editPlayers": "Chỉnh sửa người chơi",
+  "playerName": "Người chơi {count}",
+  "@playerName": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nameRequired": "Vui lòng nhập tên.",
+  "moveUp": "Di chuyển lên",
+  "moveDown": "Di chuyển xuống",
+  "removePlayer": "Xóa người chơi",
+  "addPlayer": "Thêm người chơi",
+  "discardRoster": "Bỏ thay đổi danh sách người chơi?",
+  "discard": "Bỏ thay đổi",
+  "randomCount": "Ngẫu nhiên",
+  "imposterRange": "1–{count} kẻ mạo danh, chọn ngẫu nhiên đều khi bắt đầu ván.",
+  "@imposterRange": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fewerImposters": "Giảm kẻ mạo danh",
+  "moreImposters": "Tăng kẻ mạo danh",
+  "imposterNotFirst": "Kẻ mạo danh không đi trước",
+  "showCategory": "Hiển thị danh mục cho kẻ mạo danh",
+  "knowEachOther": "Kẻ mạo danh biết nhau",
+  "fellowImposters": "Kẻ mạo danh cùng vai: {name}",
+  "@fellowImposters": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@voteHelp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerLimits": "3–100 người chơi",
+  "questionGame": "Trò chơi câu hỏi",
+  "questionCount": "{count} cặp câu hỏi phù hợp",
+  "questionFor": "Câu hỏi cho {name}",
+  "everyonesAnswers": "Câu trả lời của mọi người",
+  "questionDiscussion": "Giai đoạn thảo luận",
+  "questionPassPhone": "Mỗi người chơi mở câu hỏi và gửi câu trả lời riêng tư. Vai trò được giữ kín.",
+  "answersSubmitted": "{count} / {total} câu trả lời đã gửi",
+  "answerSent": "Đã gửi",
+  "yourAnswer": "Câu trả lời của bạn",
+  "answerHint": "Nhập câu trả lời của bạn ở đây…",
+  "submitAnswer": "Gửi câu trả lời",
+  "commonQuestionHelp": "Đây là câu hỏi chung. Tiếp theo, xem tất cả câu trả lời và thảo luận xem ai đã nhận câu hỏi khác.",
+  "startRound": "Bắt đầu vòng",
+  "findImposters": "Tìm kẻ giả mạo",
+  "questionInstructions": "Mở câu hỏi riêng và trả lời kín đáo. Không ai được báo vai. Câu trả lời chưa gửi được giữ riêng và chỉ hiện khi mở lại thẻ. Khi mọi người gửi xong, xem câu hỏi chung và thảo luận các câu trả lời. Công bố khi đã sẵn sàng; không ghi nhận phiếu hay tính bên thắng.",
+  "@questionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@questionFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@answersSubmitted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }

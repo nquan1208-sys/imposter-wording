@@ -7,14 +7,25 @@ class SetupPlayer {
 }
 
 class GameSetup {
+  final String gameType;
   final List<SetupPlayer> players;
   final int nextPlayerId;
   final bool family;
+  final int imposters;
+  final bool randomImposters, imposterNotFirst, showCategory, knowEachOther;
+  int get maxImposters => (players.length - 1) ~/ 2;
+  bool get validRules => imposters >= 1 && imposters <= maxImposters;
   final Set<String> categoryIds;
   const GameSetup({
+    this.gameType = 'word',
     required this.players,
     required this.nextPlayerId,
     this.family = false,
+    this.imposters = 1,
+    this.randomImposters = false,
+    this.imposterNotFirst = false,
+    this.showCategory = false,
+    this.knowEachOther = false,
     this.categoryIds = const {},
   });
   factory GameSetup.defaults() => GameSetup(
@@ -26,8 +37,7 @@ class GameSetup {
   );
   factory GameSetup.fromJson(JsonMap json) {
     if (json['contentLocale'] != 'vi' ||
-        json['gameType'] != 'word' ||
-        json['imposters'] != 1 ||
+        !const ['word', 'question'].contains(json['gameType'] ?? 'word') ||
         !const ['classic', 'family'].contains(json['mode'])) {
       throw const FormatException('Unsupported setup');
     }
@@ -57,22 +67,42 @@ class GameSetup {
         throw const FormatException('Invalid player ID');
       }
     }
-    return GameSetup(
+    final setup = GameSetup(
+      gameType: json['gameType'] as String? ?? 'word',
       players: players,
       nextPlayerId: next,
       family: json['mode'] == 'family',
       categoryIds: ids,
+      imposters: json['imposters'] as int,
+      randomImposters: json['randomImposters'] as bool? ?? false,
+      imposterNotFirst: json['imposterNotFirst'] as bool? ?? false,
+      showCategory: json['showCategory'] as bool? ?? false,
+      knowEachOther: json['knowEachOther'] as bool? ?? false,
     );
+    if (!setup.validRules) throw const FormatException('Invalid rules');
+    return setup;
   }
   GameSetup copyWith({
+    String? gameType,
     List<SetupPlayer>? players,
     int? nextPlayerId,
     bool? family,
+    int? imposters,
+    bool? randomImposters,
+    bool? imposterNotFirst,
+    bool? showCategory,
+    bool? knowEachOther,
     Set<String>? categoryIds,
   }) => GameSetup(
+    gameType: gameType ?? this.gameType,
     players: players ?? this.players,
     nextPlayerId: nextPlayerId ?? this.nextPlayerId,
     family: family ?? this.family,
+    imposters: imposters ?? this.imposters,
+    randomImposters: randomImposters ?? this.randomImposters,
+    imposterNotFirst: imposterNotFirst ?? this.imposterNotFirst,
+    showCategory: showCategory ?? this.showCategory,
+    knowEachOther: knowEachOther ?? this.knowEachOther,
     categoryIds: categoryIds ?? this.categoryIds,
   );
   JsonMap toJson() => {
@@ -81,7 +111,11 @@ class GameSetup {
     'mode': family ? 'family' : 'classic',
     'categoryIds': categoryIds.toList(),
     'contentLocale': 'vi',
-    'gameType': 'word',
-    'imposters': 1,
+    'gameType': gameType,
+    'imposters': imposters,
+    'randomImposters': randomImposters,
+    'imposterNotFirst': imposterNotFirst,
+    'showCategory': showCategory,
+    'knowEachOther': knowEachOther,
   };
 }

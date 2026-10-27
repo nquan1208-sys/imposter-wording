@@ -3,7 +3,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/base/store/auto_dispose_manager.dart';
 import 'package:untitled/base/store/store_base.dart';
-import 'package:untitled/data/scoped_json_file.dart';
+import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/models/content.dart';
 
 typedef FetchContentPage =
@@ -51,7 +51,7 @@ class SupabaseContentSource {
 
 class ContentRepository extends StoreBase {
   final FetchContentPage fetchPage;
-  final ScopedJsonFile cache;
+  final LocalJsonStore cache;
   final String contentLocale;
   final int pageSize;
   final _disposers = AutoDisposeManager();
@@ -74,7 +74,6 @@ class ContentRepository extends StoreBase {
     loading.value = true;
     loadFailed.value = false;
     if (!_readCache) {
-      _readCache = true;
       try {
         final data = await cache.read();
         if (isDispose) return;
@@ -82,6 +81,8 @@ class ContentRepository extends StoreBase {
           snapshot.value = ContentSnapshot.fromJson(data, contentLocale);
           cached.value = true;
         }
+        _readCache = true;
+        cacheWarning.value = false;
       } catch (_) {
         if (!isDispose) cacheWarning.value = true;
       }
@@ -153,10 +154,29 @@ class ContentRepository extends StoreBase {
         [];
   }
 
-  Map<ContentCategory, int> categoryCounts({required bool family}) {
+  List<QuestionPair> eligibleQuestions({
+    required bool family,
+    Set<String> categoryIds = const {},
+  }) =>
+      snapshot.value?.questions
+          .where(
+            (q) =>
+                (!family || q.isFamilyFriendly) &&
+                (categoryIds.isEmpty || categoryIds.contains(q.categoryId)),
+          )
+          .toList() ??
+      [];
+
+  Map<ContentCategory, int> categoryCounts({
+    required bool family,
+    String gameType = 'word',
+  }) {
     final counts = <String, int>{};
-    for (final word in eligibleWords(family: family)) {
-      counts.update(word.categoryId, (n) => n + 1, ifAbsent: () => 1);
+    final ids = gameType == 'question'
+        ? eligibleQuestions(family: family).map((q) => q.categoryId)
+        : eligibleWords(family: family).map((w) => w.categoryId);
+    for (final id in ids) {
+      counts.update(id, (n) => n + 1, ifAbsent: () => 1);
     }
     final categories =
         snapshot.value?.categories

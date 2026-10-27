@@ -4,19 +4,18 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/data/content_repository.dart';
-import 'package:untitled/data/scoped_json_file.dart';
 import 'package:untitled/models/content.dart';
 import 'fixtures.dart';
 
 void main() {
   ContentRepository repository(
     JsonMap data, {
-    MemoryFile? cache,
+    MemoryStorage? cache,
     int pageSize = 2,
   }) {
     final repo = ContentRepository(
       fetchPage: (t, l, f, e) => fixturePage(data, t, l, f, e),
-      cache: cache ?? MemoryFile(),
+      cache: cache ?? MemoryStorage(),
       pageSize: pageSize,
     );
     addTearDown(repo.dispose);
@@ -55,33 +54,13 @@ void main() {
   });
 
   test('conflicting duplicate IDs fail without replacing cache', () async {
-    final cache = MemoryFile(fixture());
+    final cache = MemoryStorage(fixture());
     final data = fixture();
     (data['words'] as List).add(word('1', 'b'));
     final repo = repository(data, cache: cache);
     await repo.load();
     expect(repo.loadFailed.value, true);
     expect(cache.writes, 0);
-  });
-
-  test('failed atomic write leaves previous complete file readable', () async {
-    final dir = await Directory.systemTemp.createTemp('atomic-cache');
-    addTearDown(() => dir.delete(recursive: true));
-    final file = ScopedJsonFile(
-      environment: 'local',
-      backendUrl: 'http://localhost',
-      locale: 'vi',
-      name: 'snapshot',
-      directory: () async => dir,
-    );
-    await file.write(fixture());
-    final target = await file.file;
-    await Directory('${target.path}.tmp').create();
-    await expectLater(
-      file.write({'categories': [], 'words': [], 'questions': []}),
-      throwsA(isA<FileSystemException>()),
-    );
-    expect((await file.read())!['words'], hasLength(3));
   });
 
   final mutations = <String, void Function(JsonMap)>{
@@ -103,7 +82,7 @@ void main() {
   };
   for (final mutation in mutations.entries) {
     test('${mutation.key} fails complete load and retains cache', () async {
-      final cache = MemoryFile(fixture());
+      final cache = MemoryStorage(fixture());
       final data = fixture();
       mutation.value(data);
       final repo = repository(data, cache: cache);
@@ -120,7 +99,7 @@ void main() {
     () async {
       final gate = Completer<List<JsonMap>>();
       var calls = 0;
-      final cache = MemoryFile(fixture());
+      final cache = MemoryStorage(fixture());
       final repo = ContentRepository(
         cache: cache,
         pageSize: 2,
@@ -146,7 +125,7 @@ void main() {
   );
 
   test('successful empty response replaces cached snapshot', () async {
-    final cache = MemoryFile(fixture());
+    final cache = MemoryStorage(fixture());
     final repo = repository({
       'categories': [],
       'words': [],
@@ -159,7 +138,7 @@ void main() {
   });
 
   test('cache write failure keeps downloaded content in memory', () async {
-    final cache = MemoryFile()..failWrite = true;
+    final cache = MemoryStorage()..failWrite = true;
     final repo = repository(fixture(), cache: cache);
     await repo.load();
     expect(repo.snapshot.value!.words.length, 3);
@@ -167,48 +146,31 @@ void main() {
     expect(repo.cacheWarning.value, true);
   });
 
+  test(
+    'offline retry reads cache again after a storage read failure',
+    () async {
+      final cache = MemoryStorage(fixture())..failRead = true;
+      final repo = ContentRepository(
+        cache: cache,
+        fetchPage: (t, l, f, e) async => throw const SocketException('offline'),
+      );
+      addTearDown(repo.dispose);
+      await repo.load();
+      expect(repo.snapshot.value, null);
+      expect(repo.cacheWarning.value, true);
+      cache.failRead = false;
+      await repo.load();
+      expect(repo.snapshot.value!.words, hasLength(3));
+      expect(repo.cached.value, true);
+    },
+  );
+
   test('malformed cache does not block successful download', () async {
-    final repo = repository(fixture(), cache: MemoryFile({'words': []}));
+    final repo = repository(fixture(), cache: MemoryStorage({'words': []}));
     await repo.load();
     expect(repo.snapshot.value!.words.length, 3);
     expect(repo.cacheWarning.value, false);
   });
-
-  test(
-    'real file restores across restart and isolates backend, environment, locale',
-    () async {
-      final dir = await Directory.systemTemp.createTemp('word-cache');
-      addTearDown(() => dir.delete(recursive: true));
-      ScopedJsonFile file({
-        String url = 'https://EXAMPLE.com/',
-        String env = 'local',
-        String locale = 'vi',
-      }) => ScopedJsonFile(
-        environment: env,
-        backendUrl: url,
-        locale: locale,
-        name: 'snapshot',
-        directory: () async => dir,
-      );
-      await file().write(fixture());
-      expect(
-        (await file(url: 'https://example.com').read())!['words'],
-        hasLength(3),
-      );
-      expect(await file(url: 'https://other.com').read(), null);
-      expect(await file(env: 'prod').read(), null);
-      expect(await file(locale: 'en').read(), null);
-      final target = await file().file;
-      await File('${target.path}.tmp').writeAsString('interrupted write');
-      expect((await file().read())!['words'], hasLength(3));
-      await file().write({'categories': [], 'words': [], 'questions': []});
-      expect((await file().read())!['words'], isEmpty);
-      expect(await File('${target.path}.tmp').exists(), false);
-      await target.writeAsString('broken');
-      await expectLater(file().read(), throwsFormatException);
-      expect(await target.readAsString(), 'broken');
-    },
-  );
 
   test(
     'Supabase requests use inner published locale joins, stable order and inclusive range',

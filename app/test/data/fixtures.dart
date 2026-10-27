@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:untitled/data/scoped_json_file.dart';
+import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/models/content.dart';
 
 JsonMap category(String id, {String type = 'word', String locale = 'vi'}) => {
@@ -83,17 +83,11 @@ Future<List<JsonMap>> fixturePage(
       .toList();
 }
 
-class MemoryFile extends ScopedJsonFile {
+class MemoryStorage implements LocalJsonStore {
   JsonMap? data;
   bool failRead = false, failWrite = false;
   int writes = 0;
-  MemoryFile([this.data])
-    : super(
-        environment: 'local',
-        backendUrl: 'http://localhost:54321',
-        locale: 'vi',
-        name: 'test',
-      );
+  MemoryStorage([this.data]);
   @override
   Future<JsonMap?> read() async {
     if (failRead) throw const FileSystemException('read');

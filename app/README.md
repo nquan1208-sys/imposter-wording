@@ -116,3 +116,14 @@ The integration smoke test requires the current Local Supabase dataset. It reads
 anonymously, checks counts and setup navigation, then recreates stores from real
 Application Support files with a simulated offline source. Its files use a
 temporary directory and do not replace the normal app settings.
+
+### Question game (Phase 5)
+
+Setup supports word/question and Classic/Family modes using the same content
+repository and cache. Question games keep roles secret: every player opens an
+identical hidden card, answers privately, then locks their answer on submission.
+Unsent drafts stay in memory by player ID and require reopening that player's
+card. Backgrounding hides both the question and answer field. After all answers,
+the civilian question and answers become public; reveal shows every imposter and
+the alternate question directly, without a scored vote. Replay returns to setup.
+Answers, drafts and sessions are never saved to disk or uploaded.

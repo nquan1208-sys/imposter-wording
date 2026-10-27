@@ -1,6 +1,6 @@
 # Kế hoạch triển khai ứng dụng
 
-> Nguồn yêu cầu: [Bố cục màn hình ứng dụng](layout/screen-layout.md). Đối chiếu code và migration trong repository ngày 24/10/2026, gồm schema nội dung đa ngôn ngữ mới. Trạng thái dưới đây dựa trên source; riêng phase 1 đã chạy analyze/test và smoke trên iOS Simulator như ghi bên dưới. Chưa xác minh backend đang chạy.
+> Nguồn yêu cầu: [Bố cục màn hình ứng dụng](layout/screen-layout.md). Đối chiếu code và migration trong repository ngày 24/10/2026, gồm schema nội dung đa ngôn ngữ mới. Trạng thái và bằng chứng kiểm tra được ghi riêng theo từng phase bên dưới; Phase 1–5 đã có analyze/test và smoke iOS Simulator. Chưa nghiệm thu backend Dev/Production.
 
 ## 1. Mục tiêu và cách chia PR
 
@@ -39,11 +39,11 @@ Các phương án dưới đây là **đề xuất triển khai**, không tự t
 
 | Điểm chưa rõ | Đề xuất nhỏ nhất | Cần chốt trước |
 | --- | --- | --- |
-| Mục 3 có `Hiển thị gợi ý`, nhưng mục 7 cấm lộ hint và backend đã bỏ hint | Chỉ giữ `Hiển thị danh mục cho kẻ mạo danh`; không dựng một nguồn hint mới. Nếu cần gợi ý khác danh mục, phải có đặc tả nội dung và dữ liệu riêng. | Phase 4 |
-| Phạm vi số kẻ mạo danh chưa có công thức; `1–4` chỉ là ví dụ | Với N người, dùng 1…floor((N−1)/2), bảo đảm phe thường chiếm đa số; random đều trong phạm vi đó. Với tùy chọn không đi trước, chọn người bắt đầu trước rồi loại người đó khỏi tập gán vai. | Phase 4; phase 3 chỉ dùng 1 kẻ mạo danh |
-| Layout vừa nói không đi trước theo người chơi đầu tiên, vừa nói chọn người bắt đầu | Dùng một `startingPlayerId` làm nguồn duy nhất cho luật gán vai và tên người bắt đầu trên màn thảo luận. | Phase 4 |
-| Chưa có UI ghi nhận người bị bầu, xử lý hòa hoặc luật thắng khi có nhiều kẻ mạo danh | Nhóm bầu bằng lời nói; nút công bố mở sheet chọn người bị nhóm bầu rồi xác nhận. Một imposter: chọn đúng thì nhóm thắng, sai thì imposter thắng. Nhiều imposter: đề xuất chọn đúng K người và nhóm chỉ thắng khi chọn đúng toàn bộ tập imposter. Nếu hòa, nhóm bầu lại trước khi xác nhận; chưa làm hệ thống thu từng phiếu. | Phase 3 đã chốt chọn một người, đúng thì nhóm thắng/sai thì imposter thắng; luật nhiều imposter còn chờ Phase 4 |
-| Game câu hỏi chưa rõ có báo vai cho người nhận câu hỏi khác hay không | Chỉ hiện câu hỏi riêng, không tự báo vai. Các công tắc tiết lộ danh mục/biết nhau chỉ áp dụng word trong bản đầu; question cần duyệt riêng nếu muốn dùng. | Phase 5 |
+| Mục 3 có `Hiển thị gợi ý`, nhưng mục 7 cấm lộ hint và backend đã bỏ hint | **Đã chốt Phase 4:** chỉ giữ `Hiển thị danh mục cho kẻ mạo danh`; không dựng một nguồn hint mới. Nếu cần gợi ý khác danh mục, phải có đặc tả nội dung và dữ liệu riêng. | Phase 4 |
+| Phạm vi số kẻ mạo danh chưa có công thức; `1–4` chỉ là ví dụ | **Đã chốt Phase 4:** với N người, dùng 1…floor((N−1)/2), bảo đảm phe thường chiếm đa số; random đều trong phạm vi đó. Với tùy chọn không đi trước, chọn người bắt đầu trước rồi loại người đó khỏi tập gán vai. | Phase 4; phase 3 chỉ dùng 1 kẻ mạo danh |
+| Layout vừa nói không đi trước theo người chơi đầu tiên, vừa nói chọn người bắt đầu | **Đã chốt Phase 4:** dùng một `startingPlayerId` làm nguồn duy nhất cho luật gán vai và tên người bắt đầu trên màn thảo luận. | Phase 4 |
+| Chưa có UI ghi nhận người bị bầu, xử lý hòa hoặc luật thắng khi có nhiều kẻ mạo danh | Nhóm bầu bằng lời nói; nút công bố mở sheet chọn người bị nhóm bầu rồi xác nhận. Một imposter: chọn đúng thì nhóm thắng, sai thì imposter thắng. **Đã chốt Phase 4:** nhiều imposter chọn đúng K người và nhóm chỉ thắng khi chọn đúng toàn bộ tập imposter. Nếu hòa, nhóm bầu lại trước khi xác nhận; chưa làm hệ thống thu từng phiếu. | Phase 3 đã chốt chọn một người, đúng thì nhóm thắng/sai thì imposter thắng; luật nhiều imposter đã chốt ở Phase 4 |
+| Game câu hỏi chưa rõ có báo vai cho người nhận câu hỏi khác hay không | **Đã chốt Phase 5:** chỉ hiện câu hỏi riêng, không báo vai; thẻ khóa giống nhau cho mọi người. Tiết lộ danh mục cho imposter/biết nhau chỉ áp dụng word; question giữ bản nháp riêng trong bộ nhớ và công bố trực tiếp, không ghi nhận bầu/tính bên thắng. | Phase 5 |
 | Tùy chỉnh chỉ dùng cho ván hiện tại nhưng cũng nói lưu local và các ván; sau lưu lại về tab `Cổ điển` không tồn tại ở màn danh mục | Giữ nội dung tùy chỉnh cho bộ thiết lập hiện tại và `Chơi lại`, không làm thư viện lâu dài. Sau lưu trở về picker theo đúng loại game/mode hiện tại. Không tự đổi từ Gia đình sang Cổ điển. | Phase 8 |
 | Một field `Câu hỏi` không đủ tạo game với hai nhóm nhận câu hỏi khác nhau | Form question tùy chỉnh phải nhập một cặp câu hỏi khác nhau. Nhập nhiều dùng hai ô nhiều dòng, ghép cặp theo dòng, kiểm tra số dòng bằng nhau. | Phase 9 |
 | Tùy chỉnh chưa có thuộc tính phù hợp gia đình | Khi tạo trong mode Gia đình, yêu cầu người tạo xác nhận nội dung phù hợp; không mặc định mọi nội dung tự nhập là phù hợp gia đình. | Phase 8–9 |
@@ -197,6 +197,45 @@ xác nhận. Nút bắt đầu ván vẫn chưa khả dụng cho tới phase 3.
 - **Nghiệm thu:** số lượng category và đề `vi` khớp bộ lọc trên backend đã có schema mới, kể cả dữ liệu vượt một trang; đổi mode không giữ ID không hợp lệ; nhớ thiết lập sau mở lại; mất mạng sau lần tải đầu vẫn cấu hình được. Nút bắt đầu ván ghi rõ chưa khả dụng cho tới phase 3; mọi thao tác cấu hình khác dùng được.
 - **Kiểm tra:** unit test loại/mode/status/category active, nhiều category, nhiều trang và tập rỗng. Fixture có cùng ID gốc với VI published/EN draft và ngược lại; category VI ẩn nhưng EN public; thiếu translation; không đếm trùng ID hoặc lọt EN vào tập VI. Payload lỗi/không tương thích và lỗi trang giữa không ghi đè cache; simulation HTTP cho lỗi mạng/không có cache; read-only check backend local/dev xác minh anon đọc cả bảng gốc lẫn translation đúng quyền. Widget test xác nhận/hủy picker, thử lại và khôi phục thiết lập.
 
+### Cập nhật lưu trữ local — Hive CE (25/10/2026)
+
+- Setup/người chơi và snapshot nội dung hiện lưu trong hai box `settings` và
+  `content_cache` tại `<ApplicationSupport>/hive/`. Mỗi bản ghi là chuỗi JSON
+  có `version: 1`, `scope`, `data`; key scope giữ môi trường + URL backend chuẩn
+  hóa + locale nội dung hiện tại (`vi`). Signals giữ state, Riverpod cấp một
+  `HiveLocalStorage` dùng chung; không thêm adapter, generator hoặc bước mở box
+  chặn `runApp`.
+- `SetupStore` và `ContentRepository` dùng `LocalJsonStore`. Storage mở box khi
+  cần, chia sẻ lần mở, cho thử lại sau lỗi, tuần tự hóa thao tác và chờ `put()`
+  hoàn tất. Khi Riverpod dispose, hàng đợi ghi setup được bàn giao cho storage;
+  storage chờ ghi xong rồi đóng box. Lỗi đọc cache có thể thử lại ngay khi offline.
+- Khi chưa có key Hive, đọc `content/<scope-base64>/setup.json` hoặc
+  `snapshot.json` cũ, kiểm tra version/scope và `GameSetup.fromJson` hoặc
+  `ContentSnapshot.fromJson`, rồi ghi Hive. Chỉ key đã ghi thành công mới xác
+  nhận migration; không tạo marker. Bản ghi Hive tồn tại luôn được ưu tiên;
+  Hive hỏng báo lỗi theo luồng hiện có, không fallback sang JSON. Lỗi đọc/ghi
+  không tự xóa/reset dữ liệu.
+- File JSON cũ được giữ nguyên để phục hồi thủ công và không cập nhật sau
+  migration. Rollback sang app chỉ đọc JSON sẽ thấy dữ liệu tại thời điểm
+  migration, không thấy thay đổi mới trong Hive. Không thêm nhiều danh sách
+  người chơi, lưu ván, UI locale, tài khoản, đồng bộ hoặc mã hóa.
+- Fake test đã chuyển thành `MemoryStorage` theo interface. Test Hive thật trong
+  thư mục tạm kiểm tra restart, scope, lỗi mở/thử lại, migration hợp lệ/thiếu/
+  sai version/scope/data/JSON, lỗi `put()` rồi restart, ưu tiên Hive mới hơn JSON,
+  Hive hỏng, đóng storage chờ ghi và lifecycle Riverpod.
+- Kiểm tra: `flutter analyze` sạch; **110/110 unit/widget test pass**. Smoke `word_game_smoke_test.dart` **2/2 pass** trên iPhone 17
+  Pro Simulator iOS 26.5: nhập cả hai JSON cũ, đóng/mở storage, khôi phục người
+  chơi/luật, chơi offline, vote/replay/back ở cấu hình thường và nâng cao.
+  Không có cảnh báo đọc signal sau dispose trong lần chạy cuối.
+- `setup_smoke_test.dart` đã đổi sang Hive, có migration setup và đóng/mở lại
+  trước khôi phục offline; chưa chạy lại smoke này vì chưa xác nhận fixture
+  backend local đúng yêu cầu của test (1 từ Classic, 0 Family, tên danh mục
+  cố định). Không seed hoặc sửa backend. Các bằng chứng JSON/smoke phase 2–4
+  bên dưới là lịch sử trước thay đổi Hive.
+- Giữ nguyên thay đổi gộp ô “Người chơi” đang có. Không chụp ảnh UI; chưa kiểm
+  tra thiết bị thật, Android runtime, release, kill/relaunch tiến trình hoặc
+  chế độ máy bay thật.
+
 ### Phase 3 — Ván word hoàn chỉnh đầu tiên
 
 **Trạng thái triển khai 24/10/2026:** đã nối setup → danh sách người chơi → thẻ
@@ -245,9 +284,39 @@ Không lưu session xuống đĩa; ảnh word vẫn thuộc Phase 7.
 
 ### Phase 4 — Tên người chơi và các luật cấu hình
 
+**Trạng thái triển khai 25/10/2026:** đã thêm editor danh sách hiện tại (tên/trim,
+thêm/xóa/sắp xếp bằng nút lên/xuống, draft và xác nhận bỏ thay đổi), ID ổn định,
+lưu thiết lập và tương thích dữ liệu Phase 2–3. Chưa mở danh sách đã lưu (Phase 6).
+
+**Quyết định đã chốt với người dùng:** không có hint riêng; fixed/random đều trong
+1…floor((N−1)/2); chọn người bắt đầu trước và loại khỏi tập vai khi bật không đi
+trước; nhóm chỉ thắng nếu chọn đủ và đúng toàn bộ K imposter. Tiết lộ danh mục và
+tên đồng vai chỉ sau khi imposter mở thẻ. Cách chơi VI/EN và layout đã cập nhật.
+
+**Bằng chứng kiểm tra Phase 4:**
+
+- `flutter gen-l10n`, `flutter analyze`: thành công, không có issue.
+- `flutter test`: **89 tests passed**. Có kiểm tra fixed/random ở biên 3/100,
+  giảm N, dữ liệu cũ/hỏng, tên trùng/trim/ID/thứ tự, draft hủy/xác nhận,
+  không đi trước, bầu thiếu/đúng/sai toàn tập và quyền riêng tư của tên đồng vai.
+- Widget test editor và sheet cấu hình trên 320×568, 844×390, 1024×768 với
+  text scale 2; hồi quy ván một imposter và chơi hết ván hai imposter.
+- `flutter test integration_test/word_game_smoke_test.dart -d <iPhone-17-Pro-simulator-id>
+  --dart-define=APP_ENV=local`: **2 tests passed**, iOS 26.5 Simulator.
+  Một imposter và hai imposter (không đi trước, hiển thị danh mục, biết nhau)
+  đều đi hết ván → bầu → kết quả → replay → tạo ván mới → kết thúc về setup.
+  Đọc cache JSON thật trong thư mục test với nguồn mạng giả lập offline;
+  không gọi backend, seed DB, kill/relaunch hoặc dùng chế độ máy bay thật.
+- Không chụp hoặc kiểm tra ảnh UI. Chưa kiểm tra thiết bị thật, Android runtime
+  hoặc bản release; Phase 4 không thay schema, plugin hoặc cấu hình native.
+- Sau khi gộp thao tác người chơi: `flutter analyze` không có issue,
+  `flutter test` **90 tests passed**; đã cập nhật integration test setup sang
+  màn chỉnh danh sách nhưng chưa chạy lại trên simulator.
+
 **PR đề xuất:** `feat(app): add roster editing and imposter options`
 
 - Phạm vi: màn 15 phần danh sách hiện tại và phần còn lại của màn 3/bottom sheet, chưa gồm danh sách đã lưu.
+- Ô **Người chơi** trên setup mở thẳng màn chỉnh danh sách hiện tại; bỏ nút **Chỉnh sửa người chơi** riêng và sheet tăng/giảm số lượng. Số hiển thị lấy từ danh sách đã xác nhận; hủy draft giữ nguyên số cũ. Khi giảm người, tự giới hạn lại số kẻ mạo danh theo N.
 - Đổi tên, thêm/xóa, sắp xếp người chơi; 3–100 người, trim tên, tên trống không được lưu. Dùng ID riêng để tên trùng không làm gán nhầm vai/câu trả lời; thêm người sinh tên mặc định theo danh sách hiện tại.
 - Fixed/random số kẻ mạo danh, validation theo N, cập nhật lại cấu hình khi giảm người chơi; tùy chọn không đi trước, hiển thị danh mục, biết nhau. `Biết nhau` chỉ hiện tên đồng vai sau khi mở thẻ và không lộ từ/ảnh.
 - Chốt xử lý công tắc hint và luật nhiều kẻ mạo danh trước khi bật UI; cập nhật Cách chơi cho đúng luật đã duyệt. Mở rộng sheet ghi nhận người bị bầu và kết quả theo số imposter; không bỏ tính thắng/thua của phase 3.
@@ -256,6 +325,43 @@ Không lưu session xuống đĩa; ảnh word vẫn thuộc Phase 7.
 - **Kiểm tra:** unit test biên 3/100 người, fixed/random, giảm N, tên trùng, thứ tự, không đi trước và tập người bị bầu đúng/sai/thiếu theo luật đã chốt; widget test thêm/xóa/sửa, hiển thị đồng vai đúng thời điểm.
 
 ### Phase 5 — Ván question hoàn chỉnh
+
+**Trạng thái triển khai 27/10/2026:** đã mở question trong setup/picker, dùng cặp
+câu hỏi từ repository/cache hiện có, giữ game type trong thiết lập Hive và chơi
+trọn luồng người chơi → câu hỏi riêng/trả lời → câu hỏi chung → thảo luận →
+công bố → chơi lại. Roster, số imposter cố định/ngẫu nhiên và không đi trước dùng
+chung luật Phase 4; word giữ luồng bầu/thắng hiện tại.
+
+**Quyết định đã chốt:** không báo vai hoặc đồng vai; thẻ khóa giống nhau cho tất
+cả. Back trước gửi giữ draft riêng theo ID trong RAM, chỉ hiện lại khi mở đúng
+thẻ; gửi trim/chặn rỗng và khóa người đã gửi. App ra nền che cả câu hỏi/ô nhập
+và bỏ focus. Question công bố trực tiếp mọi imposter và câu hỏi khác, không có
+sheet bầu hoặc tính bên thắng. Không gửi câu trả lời lên backend, không lưu
+session/draft xuống đĩa. Thiết lập word cũ được giữ nguyên; loại game mặc định
+là word.
+
+**Bằng chứng kiểm tra Phase 5:**
+
+- `flutter gen-l10n`, `flutter analyze`: thành công, không có issue.
+- `flutter test`: **118 tests passed**. Có kiểm tra loại game/thiết lập cũ,
+  filter/count/category theo loại và mode, gán vai fixed/random ở biên 3/100,
+  ID/tên trùng, snapshot, draft riêng, trim/chặn rỗng, gửi lặp và stage guards.
+- Widget test chơi hết question ở Cổ điển/Gia đình, UI VI/EN, theme sáng/tối,
+  màn 320×568 và 844×390 với text scale 2; kiểm tra keyboard inset, semantics,
+  pause/resume che cả câu hỏi/ô nhập, giữ draft đúng người, khóa sau gửi,
+  công bố nhiều imposter, back/hủy/kết thúc, replay và đổi về word.
+- iOS 26.5 Simulator (iPhone 17 Pro):
+  `flutter test integration_test/question_game_smoke_test.dart -d <simulator-id>
+  --dart-define=APP_ENV=local`: **2 tests passed**, cả hai mode từ cache Hive
+  thật qua đóng/mở storage, mạng giả lập offline → trả lời → thảo luận →
+  công bố → replay → tạo session mới → kết thúc về setup.
+- Hồi quy `integration_test/word_game_smoke_test.dart` trên cùng simulator:
+  **2 tests passed**, word một/nhiều imposter, bầu/thắng và replay giữ nguyên.
+- Không chụp hoặc kiểm tra ảnh UI; không đổi schema, plugin hoặc cấu hình native.
+  Chưa nghiệm thu backend Dev/Production, thiết bị thật, Android runtime hoặc
+  bản release. Mạng offline trong smoke là giả lập, không phải chế độ máy bay
+  hoặc kill/relaunch tiến trình thật. Cần dữ liệu question tiếng Việt published
+  trên backend đích để nghiệm thu nội dung thực tế.
 
 **PR đề xuất:** `feat(app): add private question game loop`
 
@@ -391,6 +497,6 @@ Không lưu session xuống đĩa; ảnh word vẫn thuộc Phase 7.
 
 Không tự thêm Premium, thanh toán, quảng cáo, đăng nhập người chơi, chơi online, đồng bộ danh sách nhiều thiết bị, bảng xếp hạng, timer, AI sinh nội dung, thư viện tùy chỉnh vĩnh viễn hoặc hệ thống thu từng phiếu/loại người nhiều vòng. Vẫn ghi nhận lựa chọn chung của nhóm và tính bên thắng trong game word. Nếu luật bầu chọn/thắng hoặc vòng đời nội dung được chốt khác đề xuất, điều chỉnh phase liên quan trước khi triển khai.
 
-Ngoài kết quả analyze/test và smoke iOS Simulator của phase 1 ghi ở trên, phần xác minh hiện tại là đọc repository và đối chiếu tài liệu. Chưa gọi API thật, xác minh dữ liệu Dev/Production hoặc kiểm tra thiết bị thật. Kế hoạch không đưa ước lượng ngày khi thiết kế và các quyết định ở mục 3 còn chưa chốt.
+Bằng chứng analyze/test, read-only backend local và smoke Simulator được ghi riêng tại từng phase đã triển khai ở trên. Chưa xác minh dữ liệu Dev/Production hoặc kiểm tra thiết bị thật; không coi fixture hay mô phỏng offline là nghiệm thu backend đích hoặc chế độ máy bay thật. Kế hoạch không đưa ước lượng ngày khi thiết kế và các quyết định ở mục 3 còn chưa chốt.
 
 Tham chiếu cho phase backend: quyền Data API cần cả grants và RLS theo [hướng dẫn bảo vệ API của Supabase](https://supabase.com/docs/guides/api/securing-your-api). Trước triển khai phase 2/7/12 và phát hành, kiểm tra lại [changelog](https://supabase.com/changelog) và khả năng kết nối trên các phiên bản hệ điều hành mục tiêu.

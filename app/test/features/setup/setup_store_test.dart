@@ -6,7 +6,7 @@ import 'package:untitled/models/content.dart';
 import 'package:untitled/models/game_setup.dart';
 import '../../data/fixtures.dart';
 
-class SlowFile extends MemoryFile {
+class SlowStorage extends MemoryStorage {
   final gate = Completer<void>();
   int active = 0, maxActive = 0;
   @override
@@ -22,14 +22,14 @@ class SlowFile extends MemoryFile {
 void main() {
   late ContentRepository content;
   late SetupStore store;
-  late MemoryFile file;
+  late MemoryStorage file;
   setUp(() async {
     final data = fixture();
     content = ContentRepository(
-      cache: MemoryFile(),
+      cache: MemoryStorage(),
       fetchPage: (t, l, f, e) => fixturePage(data, t, l, f, e),
     );
-    file = MemoryFile();
+    file = MemoryStorage();
     store = SetupStore(content: content, file: file);
     await content.load();
     await store.restore();
@@ -37,6 +37,98 @@ void main() {
   tearDown(() {
     store.dispose();
     content.dispose();
+  });
+
+  test(
+    'roster trims names, permits duplicates, retains IDs/order and clamps rules',
+    () async {
+      store.setPlayerCount(7);
+      store.setRules(
+        imposters: 3,
+        randomImposters: true,
+        imposterNotFirst: true,
+        showCategory: true,
+        knowEachOther: true,
+      );
+      final players = store.setup.value.players.reversed
+          .take(3)
+          .map((p) => SetupPlayer(p.id, '  Same  '))
+          .toList();
+      expect(store.setRoster(players, store.setup.value.nextPlayerId), true);
+      expect(
+        store.setup.value.players.map((p) => p.id),
+        players.map((p) => p.id),
+      );
+      expect(
+        store.setup.value.players.map((p) => p.name),
+        everyElement('Same'),
+      );
+      expect(store.setup.value.imposters, 1);
+      await store.save();
+      final restored = GameSetup.fromJson(file.data!);
+      expect(restored.toJson(), store.setup.value.toJson());
+      expect(restored.randomImposters, true);
+      expect(restored.imposterNotFirst, true);
+      expect(restored.showCategory, true);
+      expect(restored.knowEachOther, true);
+    },
+  );
+
+  test('rejects empty names, invalid IDs, invalid count and duplicate IDs', () {
+    final current = store.setup.value;
+    for (final players in [
+      current.players.take(2).toList(),
+      [const SetupPlayer('player-1', '  '), ...current.players.skip(1)],
+      [
+        current.players.first,
+        ...current.players.skip(1),
+        current.players.first,
+      ],
+      [const SetupPlayer('wrong', 'Name'), ...current.players.skip(1)],
+    ]) {
+      expect(store.setRoster(players, current.nextPlayerId), false);
+      expect(store.setup.value, same(current));
+    }
+    store.setRules(imposters: 0);
+    store.setRules(imposters: 2);
+    expect(store.setup.value, same(current));
+    store.setPlayerCount(100);
+    store.setRules(imposters: 49);
+    expect(store.setup.value.imposters, 49);
+    store.setRules(imposters: 50);
+    expect(store.setup.value.imposters, 49);
+    store.setPlayerCount(3);
+    expect(store.setup.value.imposters, 1);
+  });
+
+  test(
+    'legacy settings default new options; malformed rules preserve saved data',
+    () async {
+      final legacy = GameSetup.defaults().toJson()
+        ..remove('randomImposters')
+        ..remove('imposterNotFirst')
+        ..remove('showCategory')
+        ..remove('knowEachOther');
+      expect(GameSetup.fromJson(legacy).randomImposters, false);
+      expect(GameSetup.fromJson(legacy).showCategory, false);
+      legacy['imposters'] = 2;
+      file.data = legacy;
+      await store.restore();
+      expect(store.readFailed.value, true);
+      await store.save();
+      expect(file.data, same(legacy));
+    },
+  );
+
+  test('new default names use available numbers and unique IDs', () {
+    final current = store.setup.value;
+    store.setRoster(
+      current.players.map((p) => SetupPlayer(p.id, 'Guest')).toList(),
+      current.nextPlayerId,
+    );
+    store.setPlayerCount(5);
+    expect(store.setup.value.players.last.name, 'Player 1');
+    expect(store.setup.value.players.last.id, 'player-5');
   });
 
   test(
@@ -132,7 +224,7 @@ void main() {
   });
 
   test('writes serialize and last committed setup wins', () async {
-    final slow = SlowFile();
+    final slow = SlowStorage();
     final other = SetupStore(content: content, file: slow);
     addTearDown(other.dispose);
     await other.restore();
