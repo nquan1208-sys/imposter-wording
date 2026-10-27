@@ -9,6 +9,8 @@ import 'package:untitled/features/setup/category_screen.dart';
 import 'package:untitled/features/setup/setup_screen.dart';
 import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/features/word_game/word_game_screen.dart';
+import 'package:untitled/features/question_game/question_game_screen.dart';
+import 'package:flutter/services.dart';
 import 'package:untitled/main.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 import 'package:untitled/theme/app_theme.dart';
@@ -96,6 +98,203 @@ void main() {
     );
     await tap(tester, 'Confirm');
   }
+
+  Future<void> questionEntry(
+    WidgetTester tester,
+    String civilian,
+    String imposter, {
+    bool batch = false,
+    bool english = true,
+  }) async {
+    await tap(
+      tester,
+      batch
+          ? (english ? 'Import question pairs' : 'Nhập nhiều cặp câu hỏi')
+          : (english ? 'Add question pair' : 'Thêm cặp câu hỏi'),
+    );
+    final fields = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(fields.first, civilian);
+    await tester.enterText(fields.last, imposter);
+    await tap(tester, english ? 'Confirm' : 'Xác nhận');
+  }
+
+  for (final english in [true, false]) {
+    testWidgets('custom-only offline question game and replay ($english)', (
+      tester,
+    ) async {
+      await pump(tester, offline: true, english: english);
+      await store.setGameType('question');
+      await tester.pumpAndSettle();
+      await picker(tester);
+      await tap(
+        tester,
+        english ? 'Create custom category' : 'Tạo danh mục tùy chỉnh',
+      );
+      await tester.enterText(find.byType(TextField), 'Local questions');
+      await questionEntry(tester, 'Civilian?', 'Imposter?', english: english);
+      await tap(tester, english ? 'Save category' : 'Lưu danh mục');
+      expect(store.setup.value.categoryIds, isEmpty);
+      await tap(tester, english ? 'Confirm' : 'Xác nhận');
+      expect(store.setup.value.categoryIds, {'custom-question-1'});
+      await tap(tester, english ? 'Start game' : 'Bắt đầu ván chơi');
+      final session = tester
+          .widget<QuestionGameScreen>(find.byType(QuestionGameScreen))
+          .session;
+      final semantics = tester.ensureSemantics();
+      for (final player in session.setup.players) {
+        final target = find.byKey(ValueKey(player.id));
+        await tester.ensureVisible(target);
+        await tester.tap(target);
+        await tester.pumpAndSettle();
+        expect(find.text('Imposter?'), findsNothing);
+        expect(find.text('Civilian?'), findsNothing);
+        await tap(tester, english ? 'Tap to reveal' : 'Nhấn để hiển thị');
+        final imposter = session.imposterIds.contains(player.id);
+        expect(find.text(imposter ? 'Imposter?' : 'Civilian?'), findsOneWidget);
+        expect(
+          find.bySemanticsLabel(imposter ? 'Civilian?' : 'Imposter?'),
+          findsNothing,
+        );
+        await tester.enterText(
+          find.byKey(const Key('privateAnswer')),
+          'Answer',
+        );
+        await tap(tester, english ? 'Submit answer' : 'Gửi câu trả lời');
+      }
+      expect(find.text('Civilian?'), findsOneWidget);
+      expect(find.text('Imposter?'), findsNothing);
+      await tap(tester, english ? 'Start round' : 'Bắt đầu vòng');
+      expect(find.bySemanticsLabel('Imposter?'), findsNothing);
+      await tap(tester, english ? 'Find the imposters' : 'Tìm kẻ giả mạo');
+      expect(find.text('Imposter?'), findsOneWidget);
+      await tap(tester, english ? 'Play again' : 'Chơi lại');
+      expect(
+        store.setup.value.customQuestionCategories.single.name,
+        'Local questions',
+      );
+      await tap(tester, english ? 'Start game' : 'Bắt đầu ván chơi');
+      expect(
+        tester
+            .widget<QuestionGameScreen>(find.byType(QuestionGameScreen))
+            .session
+            .prompt
+            .imposterQuestion,
+        'Imposter?',
+      );
+      semantics.dispose();
+    });
+  }
+
+  testWidgets('question import errors, discard, failed save and picker draft', (
+    tester,
+  ) async {
+    await pump(tester, offline: true);
+    await store.setGameType('question');
+    await tester.pumpAndSettle();
+    await picker(tester);
+    await tap(tester, 'Create custom category');
+    await tester.enterText(find.byType(TextField), 'Draft');
+    await questionEntry(tester, 'A\n\nC', 'B\nD\nE', batch: true);
+    expect(find.textContaining('Check rows 2:'), findsOneWidget);
+    final fields = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(fields.first, 'A\nC');
+    await tester.enterText(fields.last, 'B\nD');
+    await tap(tester, 'Cancel');
+    await tap(tester, 'Cancel');
+    expect(find.text('A\nC'), findsOneWidget);
+    await tap(tester, 'Confirm');
+    await tester.tap(find.byTooltip('Remove pair 2'));
+    await tester.pumpAndSettle();
+    file.failWrite = true;
+    await tap(tester, 'Save category');
+    expect(
+      find.text(
+        'Could not save. Your question pairs are still here. Try saving again.',
+      ),
+      findsOneWidget,
+    );
+    expect(store.setup.value.nextCustomQuestionCategoryId, 1);
+    file.failWrite = false;
+    await tap(tester, 'Save category');
+    expect(store.setup.value.customQuestionCategories.single.pairs.length, 1);
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(store.setup.value.categoryIds, isEmpty);
+    await picker(tester);
+    await tap(tester, 'Create custom category');
+    await tester.enterText(find.byType(TextField), 'Unsaved');
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Discard');
+    expect(store.setup.value.customQuestionCategories.length, 1);
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    file.failWrite = true;
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Remove and leave');
+    expect(find.byType(SetupScreen), findsOneWidget);
+    expect(store.setup.value.customQuestionCategories.length, 1);
+    file.failWrite = false;
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Remove and leave');
+    expect(store.setup.value.hasCustomContent, false);
+  });
+
+  testWidgets(
+    'question form supports small screen, large text, keyboard and semantics',
+    (tester) async {
+      await pump(tester, offline: true);
+      await store.setGameType('question');
+      await tester.binding.setSurfaceSize(const Size(320, 568));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: AppTheme.dark,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: const TextScaler.linear(2),
+                viewInsets: const EdgeInsets.only(bottom: 200),
+              ),
+              child: child!,
+            ),
+            home: const CustomWordScreen(family: false, gameType: 'question'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Local');
+      await tap(tester, 'Add question pair');
+      expect(find.bySemanticsLabel('Civilian question'), findsOneWidget);
+      expect(find.bySemanticsLabel('Imposter question'), findsOneWidget);
+      final fields = find.byType(TextField);
+      await tester.enterText(fields.at(1), 'A?');
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.enterText(fields.last, 'B?');
+      await tap(tester, 'Confirm');
+      expect(
+        tester
+            .getRect(find.widgetWithText(FilledButton, 'Save category'))
+            .bottom,
+        lessThanOrEqualTo(368),
+      );
+      expect(tester.takeException(), isNull);
+      semantics.dispose();
+    },
+  );
 
   for (final english in [true, false]) {
     for (final dark in [false, true]) {

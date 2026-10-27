@@ -19,7 +19,7 @@ class RouteInput {
     : routeName = RouteName.questionGame,
       arguments = session;
   RouteInput.categories() : routeName = RouteName.categories;
-  RouteInput.customWords({required bool family})
+  RouteInput.customWords({required bool family, String gameType = 'word'})
     : routeName = RouteName.customWords,
-      arguments = family;
+      arguments = (family: family, gameType: gameType);
 }

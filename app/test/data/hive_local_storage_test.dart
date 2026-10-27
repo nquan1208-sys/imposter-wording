@@ -13,6 +13,7 @@ import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/data/scoped_json_file.dart';
 import 'package:untitled/models/game_setup.dart';
 import 'package:untitled/models/custom_word_category.dart';
+import 'package:untitled/models/custom_question_category.dart';
 import 'fixtures.dart';
 
 void main() {
@@ -44,6 +45,27 @@ void main() {
   tearDown(() async {
     await storage.close();
     await root.delete(recursive: true);
+  });
+
+  test('custom question pairs survive Hive close and reopen', () async {
+    final setup = GameSetup.defaults().copyWith(
+      gameType: 'question',
+      customQuestionCategories: [
+        CustomQuestionCategory(
+          id: 'custom-question-1',
+          name: 'Local',
+          contentLocale: 'vi',
+          pairs: [CustomQuestionEntry('A?', 'B?')],
+        ),
+      ],
+      nextCustomQuestionCategoryId: 2,
+      categoryIds: {'custom-question-1'},
+    );
+    await local('setup').write(setup.toJson());
+    await storage.close();
+    storage = HiveLocalStorage(directory: () async => root);
+    final restored = GameSetup.fromJson((await local('setup').read())!);
+    expect(restored.toJson(), setup.toJson());
   });
 
   test(

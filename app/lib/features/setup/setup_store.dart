@@ -6,6 +6,7 @@ import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/models/game_setup.dart';
 import 'package:untitled/models/content.dart';
 import 'package:untitled/models/custom_word_category.dart';
+import 'package:untitled/models/custom_question_category.dart';
 
 class SetupStore extends StoreBase {
   final ContentRepository content;
@@ -285,6 +286,8 @@ class SetupStore extends StoreBase {
     final remote = _availableCategories[(current.gameType, current.family)];
     final available = {
       ...?remote,
+      if (current.gameType == 'question')
+        for (final c in _customQuestions(current)) c.id,
       if (current.gameType == 'word')
         for (final c in _custom(current))
           if (!current.family || c.isFamilyFriendly) c.id,
@@ -293,7 +296,9 @@ class SetupStore extends StoreBase {
         .where(
           (id) =>
               available.contains(id) ||
-              (remote == null && !id.startsWith('custom-word-')),
+              (remote == null &&
+                  !id.startsWith('custom-word-') &&
+                  !id.startsWith('custom-question-')),
         )
         .toSet();
     if (retained.length == current.categoryIds.length) return current;
@@ -309,7 +314,20 @@ class SetupStore extends StoreBase {
       .where((c) => c.contentLocale == content.contentLocale)
       .toList();
 
+  List<CustomQuestionCategory> _customQuestions(GameSetup current) => current
+      .customQuestionCategories
+      .where((c) => c.contentLocale == content.contentLocale)
+      .toList();
+
+  List<QuestionPair> eligibleQuestions({Set<String> categoryIds = const {}}) =>
+      [
+        ...content.eligibleQuestions(categoryIds: categoryIds),
+        for (final c in _customQuestions(setup.value))
+          if (categoryIds.isEmpty || categoryIds.contains(c.id)) ...c.prompts,
+      ];
+
   List<ContentCategory> get categories => [
+    ..._customQuestions(setup.value).map((c) => c.category),
     ...?content.snapshot.value?.categories,
     ..._custom(setup.value).map((c) => c.category),
   ];
@@ -330,21 +348,73 @@ class SetupStore extends StoreBase {
     String gameType = 'word',
   }) => {
     ...content.categoryCounts(family: family, gameType: gameType),
+    if (gameType == 'question')
+      for (final c in _customQuestions(setup.value)) c.category: c.pairs.length,
     if (gameType == 'word')
       for (final c in _custom(setup.value))
         if (!family || c.isFamilyFriendly) c.category: c.words.length,
   };
 
-  bool validCustomCategoryName(String name, {GameSetup? candidate}) {
+  bool validCustomCategoryName(
+    String name, {
+    GameSetup? candidate,
+    String gameType = 'word',
+  }) {
     final normalized = name.trim().toLowerCase();
+    final current = candidate ?? setup.value;
+    final catalog = [
+      ...?_remoteSnapshot?.categories,
+      ..._custom(current).map((c) => c.category),
+      ..._customQuestions(current).map((c) => c.category),
+    ];
     return normalized.isNotEmpty &&
-        !(_remoteSnapshot?.categories ?? <ContentCategory>[]).any(
+        !catalog.any(
           (c) =>
-              c.gameType == 'word' && c.name.trim().toLowerCase() == normalized,
-        ) &&
-        !_custom(
-          candidate ?? setup.value,
-        ).any((c) => c.name.toLowerCase() == normalized);
+              c.gameType == gameType &&
+              c.contentLocale == content.contentLocale &&
+              c.name.trim().toLowerCase() == normalized,
+        );
+  }
+
+  Future<String?> createCustomQuestionCategory(
+    String name,
+    List<CustomQuestionEntry> pairs,
+  ) async {
+    final entries = List<CustomQuestionEntry>.of(pairs);
+    String? id;
+    final saved = await _mutate((current) {
+      if (current.gameType != 'question' ||
+          !validCustomCategoryName(
+            name,
+            candidate: current,
+            gameType: 'question',
+          )) {
+        throw const FormatException('Invalid custom category');
+      }
+      var next = current.nextCustomQuestionCategoryId;
+      do {
+        id = 'custom-question-${next++}';
+      } while (current.customQuestionCategories.any((c) => c.id == id) ||
+          (_remoteSnapshot?.categories ?? <ContentCategory>[]).any(
+            (c) => c.id == id,
+          ) ||
+          (_remoteSnapshot?.questions ?? <QuestionPair>[]).any(
+            (q) => q.id.startsWith('$id-pair-'),
+          ));
+      return current.copyWith(
+        nextCustomQuestionCategoryId: next,
+        customQuestionCategories: List.unmodifiable([
+          ...current.customQuestionCategories,
+          CustomQuestionCategory(
+            id: id!,
+            name: name.trim(),
+            contentLocale: content.contentLocale,
+            pairs: entries,
+          ),
+        ]),
+      );
+    });
+    return saved ? id : null;
   }
 
   Future<String?> createCustomWordCategory(
@@ -387,11 +457,16 @@ class SetupStore extends StoreBase {
     return saved ? id : null;
   }
 
-  Future<bool> clearCustomWordCategories() => _mutate(
+  Future<bool> clearCustomCategories() => _mutate(
     (current) => current.copyWith(
       customWordCategories: const [],
+      customQuestionCategories: const [],
       categoryIds: current.categoryIds
-          .where((id) => !current.customWordCategories.any((c) => c.id == id))
+          .where(
+            (id) =>
+                !current.customWordCategories.any((c) => c.id == id) &&
+                !current.customQuestionCategories.any((c) => c.id == id),
+          )
           .toSet(),
     ),
   );

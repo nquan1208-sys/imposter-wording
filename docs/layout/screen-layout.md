@@ -224,8 +224,8 @@ Cho phép chọn một hoặc nhiều danh mục, hoặc dùng toàn bộ danh m
    - App random trong toàn bộ content remote đã publish và custom local hợp lệ thuộc loại game, locale và mode hiện tại; mỗi đề có cơ hội như nhau.
 
 5. **Danh mục tùy chỉnh**
-   - Phase 8 có ô `Tạo danh mục tùy chỉnh` ở cuối cùng lưới word, cùng chiều rộng/kiểu viền/khoảng cách với ô danh mục có sẵn; nền xanh nhạt và biểu tượng dấu cộng để phân biệt hành động tạo. Ô tạo không có checkbox chọn danh mục và chưa hiện cho question.
-   - **Phase 8:** word tùy chỉnh lưu cùng bộ thiết lập local, dùng qua các ván/replay và khởi động lại. Chỉ xóa sau khi xác nhận quay từ thiết lập về trang đầu; mở app ở trang đầu không tự xóa. Question tùy chỉnh thuộc Phase 9.
+   - Phase 8 có ô `Tạo danh mục tùy chỉnh` ở cuối cùng lưới word, cùng chiều rộng/kiểu viền/khoảng cách với ô danh mục có sẵn; nền xanh nhạt và biểu tượng dấu cộng để phân biệt hành động tạo. Ô tạo không có checkbox chọn danh mục; Phase 9 cũng hiện trong picker question, kể cả offline.
+   - **Phase 8:** word tùy chỉnh lưu cùng bộ thiết lập local, dùng qua các ván/replay và khởi động lại. Chỉ xóa sau khi xác nhận quay từ thiết lập về trang đầu; mở app ở trang đầu không tự xóa. Phase 9 áp dụng cùng vòng đời cho cặp câu hỏi tùy chỉnh.
 
 ### Hành vi
 
@@ -245,7 +245,7 @@ Cho phép chọn một hoặc nhiều danh mục, hoặc dùng toàn bộ danh m
 
 ### Mục đích
 
-Cho phép người dùng tự tạo một danh mục từ riêng để sử dụng trong các ván chơi. Phase 8 triển khai phần văn bản cho word; question thuộc Phase 9, mọi thao tác ảnh bên dưới thuộc Phase 10 và chưa hiển thị. Dùng theme/component hiện tại của app.
+Cho phép người dùng tự tạo danh mục từ (Phase 8) hoặc cặp câu hỏi (Phase 9) để sử dụng trong các ván chơi. Mọi thao tác ảnh bên dưới thuộc Phase 10 và chưa hiển thị. Dùng theme/component hiện tại của app.
 
 ### Bố cục đề xuất
 
@@ -271,7 +271,7 @@ Cho phép người dùng tự tạo một danh mục từ riêng để sử dụ
    - Nút `Thêm từ` đặt ngay dưới danh sách.
    - Chạm vào sẽ mở form thêm từ gồm:
      - Field `Từ` — bắt buộc trong chế độ `Trò chơi từ ngữ`.
-     - Field `Câu hỏi` — bắt buộc trong chế độ `Trò chơi câu hỏi`.
+     - Hai field `Câu hỏi thường dân` và `Câu hỏi kẻ mạo danh` — bắt buộc trong chế độ `Trò chơi câu hỏi`.
      - Field `Ảnh` — tùy chọn, hiển thị vùng chọn ảnh hoặc ảnh xem trước.
      - Nút `Lưu từ`.
    - Cho phép thêm từng từ rồi tiếp tục thêm từ khác.
@@ -308,6 +308,16 @@ Cho phép người dùng tự tạo một danh mục từ riêng để sử dụ
 - Lưu lỗi giữ nguyên tên/danh sách/checkbox và cho thử lại, không tạo category dở dang; trong khi lưu khóa chỉnh sửa và điều hướng. Ô nhập có label, lỗi gần field, thao tác xóa có nhãn; form cuộn và nút lưu nằm trên bàn phím.
 - Nội dung lưu local cùng setup, giữ qua restart và `Chơi lại`, không đi vào nhóm người chơi đã lưu hoặc backend. Back từ setup về trang đầu phải xác nhận xóa vĩnh viễn nội dung tùy chỉnh; chỉ rời sau khi xóa và bỏ selected IDs thành công. Ghi lỗi giữ nguyên setup cho thử lại.
 - Thẻ danh mục tùy chỉnh hiển thị tên danh mục, tổng số từ và trạng thái có ảnh minh họa.
+
+### Question tùy chỉnh — Phase 9
+
+- Dùng chung màn tạo, tên danh mục, nút lưu, lỗi lưu và xác nhận bỏ thay đổi với word. Picker question giữ giao diện chuẩn; không có tab/checkbox Gia đình.
+- Nhóm `Danh sách cặp câu hỏi` hiển thị tổng số cặp; mỗi mục có nhãn thường dân/kẻ mạo danh và nút `Xóa cặp N` có semantics. Có hai hành động `Thêm cặp câu hỏi` và `Nhập nhiều cặp câu hỏi`.
+- Thêm một cặp bằng hai ô có label. Trim hai câu; cấm rỗng và cấm giống nhau không phân biệt hoa thường.
+- Nhập nhiều bằng hai ô nhiều dòng, ghép theo số dòng. Giữ dòng trống khi ghép; nhận LF/CRLF và một newline cuối. Số dòng lệch, câu trống/giống nhau hoặc cặp trùng báo các dòng cần sửa; không thêm một phần. Cặp trùng được so theo thứ tự thường dân/kẻ mạo danh sau trim/lowercase với cả batch và draft. Dùng lại một câu với câu đối ứng khác được phép.
+- Tên chỉ đối chiếu danh mục remote/local cùng loại game và locale; kiểm tra lại trong write queue. Lỗi ghi giữ nguyên draft và counter. Lưu thành công chỉ chọn trong picker draft; Back vẫn giữ danh mục đã lưu.
+- Catalog question kết hợp remote/local dùng chung cho số lượng, điều kiện bắt đầu, random và tên danh mục trong session. Nội dung `vi` và ID `custom-question-N` lưu trong setup; không vào preset/cache remote. Chơi offline, refresh, đổi game, restart và replay giữ nội dung; session chụp cặp/tên lúc bắt đầu.
+- Trước reveal chỉ người đang nhận điện thoại xem câu theo vai của mình; discussion chỉ công bố câu thường dân, kết quả mới công bố câu kẻ mạo danh. Rời setup về trang đầu yêu cầu xác nhận và xóa cả word/question cùng selected IDs trong một lần ghi; ghi lỗi giữ người dùng ở setup.
 
 ## 6. Màn hình chọn người chơi
 

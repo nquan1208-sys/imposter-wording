@@ -16,7 +16,12 @@ class RouteScreen {
   static PageRoute customWordsPageRoute(RouteSettings settings) =>
       MaterialPageRoute(
         settings: settings,
-        builder: (_) => CustomWordScreen(family: settings.arguments == true),
+        builder: (_) => CustomWordScreen(
+          family:
+              (settings.arguments as ({bool family, String gameType})).family,
+          gameType:
+              (settings.arguments as ({bool family, String gameType})).gameType,
+        ),
       );
   static PageRoute questionGamePageRoute(RouteSettings settings) =>
       MaterialPageRoute(
