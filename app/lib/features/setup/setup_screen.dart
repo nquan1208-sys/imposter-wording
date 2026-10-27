@@ -142,7 +142,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           child: AbsorbPointer(
             absorbing: _leaving,
             child: Scaffold(
-              appBar: AppBar(title: Text(l.setupTitle)),
+              appBar: AppBar(
+                title: Text(l.setupTitle),
+                actions: [
+                  IconButton(
+                    tooltip: l.settingsTitle,
+                    onPressed: () =>
+                        ref.read(AppService.router).push(RouteInput.settings()),
+                    icon: const Icon(Icons.settings_outlined),
+                  ),
+                ],
+              ),
               bottomNavigationBar: AppContent(
                 top: false,
                 child: Padding(
@@ -284,6 +294,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         if (store.selectionRemoved.value)
                           Text(l.selectionRemoved),
                         ContentNotices(content),
+                        Text(l.contentLanguageVietnamese),
                         if (content.snapshot.value != null ||
                             setup.hasCustomContent) ...[
                           Text(

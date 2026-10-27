@@ -4,10 +4,12 @@ import 'package:hive_ce/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/data/scoped_json_file.dart';
+import 'package:untitled/models/app_settings.dart';
 import 'package:untitled/models/content.dart';
 import 'package:untitled/models/game_setup.dart';
 
 class HiveLocalStorage {
+  static const _appSettingsBox = 'app_preferences';
   final Future<Directory> Function() directory;
   final _boxes = <String, Future<Box<String>>>{};
   Future<void> _operations = Future.value();
@@ -37,6 +39,26 @@ class HiveLocalStorage {
       ),
       locale,
     );
+  }
+
+  Future<AppSettings?> readAppSettings() => _run(() async {
+    final box = await _box(_appSettingsBox);
+    final encoded = box.get('settings');
+    if (encoded == null) return null;
+    final envelope = jsonDecode(encoded) as JsonMap;
+    if (envelope['version'] != 1 || envelope['scope'] != 'app') {
+      throw const FormatException('Invalid app settings envelope');
+    }
+    return AppSettings.fromJson(envelope['data'] as JsonMap);
+  });
+
+  Future<void> writeAppSettings(AppSettings settings) {
+    final data = AppSettings.fromJson(settings.toJson()).toJson();
+    final encoded = jsonEncode({'version': 1, 'scope': 'app', 'data': data});
+    return _run(() async {
+      final box = await _box(_appSettingsBox);
+      await box.put('settings', encoded);
+    });
   }
 
   /// Read all locales without importing or changing legacy records.

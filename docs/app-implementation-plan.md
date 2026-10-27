@@ -531,6 +531,21 @@ là word.
 
 **PR đề xuất:** `feat(app): add settings and support actions`
 
+**Đã triển khai 27/10/2026; link cửa hàng/kênh phản hồi còn chờ cấu hình thật:**
+
+- Settings mở từ setup; chọn/lưu/khôi phục VI/EN bằng `AppStore`, không đổi
+  content locale `vi`. Cách chơi dùng route hiện có và Back quay về đúng màn.
+- Locale UI và ID cài đặt ẩn danh dùng record versioned trong Hive box riêng;
+  lỗi đọc không ghi đè dữ liệu, lỗi ghi giữ giá trị và cho retry. ID 128-bit được
+  sinh local một lần, hiển thị rút gọn và sao chép đầy đủ. Version/build lấy từ
+  `package_info_plus`.
+- Vì chưa có URL/app ID/kênh phản hồi, hai mục hiện disabled kèm lý do; không có
+  URL giả hoặc link launcher. Kiểm tra mở link trên thiết bị chưa nghiệm thu.
+- `flutter gen-l10n`, `flutter analyze --no-pub`: thành công; `flutter test
+  --no-pub`: **256 passed**, 10 HTTP/live opt-in checks skipped. Android debug
+  APK và iOS Simulator debug build thành công. Không chạy backend, thiết bị
+  thật hoặc screenshot; build dùng env placeholder riêng trong worktree.
+
 - Phạm vi: màn 16 và màn chọn ngôn ngữ; mở từ setup, tái sử dụng Cách chơi từ cả landing/settings.
 - Cho chọn VI/EN từ `AppLocalizations.supportedLocales`, cập nhật `AppStore.locale`, MaterialApp và strings ngay, lưu/khôi phục lựa chọn local; không sửa generated l10n thủ công. Đây là `Ngôn ngữ giao diện`; nội dung game vẫn `vi` cho tới phase 12 và được ghi rõ ở setup. Không dùng locale UI làm filter API/cache.
 - Hiện phiên bản/build thực tế; tạo ID cài đặt ẩn danh local một lần, hiển thị rút gọn và copy toàn bộ. Không tạo tài khoản hay thu thập định danh thiết bị.

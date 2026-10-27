@@ -21,6 +21,7 @@ import 'package:untitled/main.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 import 'package:untitled/theme/app_theme.dart';
 import '../../data/fixtures.dart';
+import '../../data/memory_app_settings_storage.dart';
 
 class FakeImagePicker extends ImagePicker {
   XFile? selected = XFile('/library/photo.png');
@@ -120,14 +121,19 @@ void main() {
     await store.setPlayerCount(3);
     container = ProviderContainer(
       overrides: [
+        localStorageProvider.overrideWithValue(MemoryAppSettingsStorage()),
         localImageStoreProvider.overrideWithValue(images),
         imagePickerProvider.overrideWithValue(imagePicker),
         contentRepositoryProvider.overrideWithValue(content),
         setupStoreProvider.overrideWithValue(store),
       ],
     );
+    await container.read(StoreProvider.app).restore();
     if (english) {
-      container.read(StoreProvider.app).setLocale(const Locale('en'));
+      expect(
+        await container.read(StoreProvider.app).setLocale(const Locale('en')),
+        isTrue,
+      );
     }
     addTearDown(() {
       container.dispose();

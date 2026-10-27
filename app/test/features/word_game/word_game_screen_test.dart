@@ -20,6 +20,7 @@ import 'package:untitled/features/word_game/word_game_store.dart';
 import 'package:untitled/main.dart';
 import 'package:untitled/models/content.dart';
 import '../../data/fixtures.dart';
+import '../../data/memory_app_settings_storage.dart';
 
 class WidgetImageCache extends WordImageCache {
   File? currentFile;
@@ -123,12 +124,17 @@ void main() {
       overrides: [
         if (failNavigation)
           AppService.router.overrideWithValue(FailingGameRouter()),
+        localStorageProvider.overrideWithValue(MemoryAppSettingsStorage()),
         contentRepositoryProvider.overrideWithValue(content),
         setupStoreProvider.overrideWithValue(setup),
       ],
     );
+    await container.read(StoreProvider.app).restore();
     if (english) {
-      container.read(StoreProvider.app).setLocale(const Locale('en'));
+      expect(
+        await container.read(StoreProvider.app).setLocale(const Locale('en')),
+        isTrue,
+      );
     }
     addTearDown(() {
       container.dispose();
@@ -553,7 +559,10 @@ void main() {
       await tester.pump();
       expect(find.text('Nhấn để hiển thị'), findsOneWidget);
       content.snapshot.value = ContentSnapshot.fromJson(fixture(), 'vi');
-      container.read(StoreProvider.app).setLocale(const Locale('en'));
+      expect(
+        await container.read(StoreProvider.app).setLocale(const Locale('en')),
+        isTrue,
+      );
       await tester.pumpAndSettle();
       await tap(tester, 'Tap to reveal');
       expect(find.text(session.prompt.text), findsOneWidget);

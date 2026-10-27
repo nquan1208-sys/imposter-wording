@@ -5,6 +5,8 @@ class RouteName {
   static const playerPresets = 'player-presets';
   static const playerNames = 'player-names';
   static const setup = 'setup';
+  static const settings = 'settings';
+  static const settingsLanguage = 'settings-language';
   static const categories = 'categories';
   static const questionGame = 'question-game';
   static const wordGame = 'word-game';

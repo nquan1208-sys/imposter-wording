@@ -31,17 +31,18 @@ lib/
   config/                 # Environment config (AppConfig)
   constants/              # AppSpacing, AppEdgeInsets, ...
   data/                   # Supabase content, scoped atomic JSON files, global DI
-  models/                 # ContentSnapshot, categories/prompts, GameSetup/players
+  models/                 # ContentSnapshot, AppSettings, categories/prompts, GameSetup/players
   features/               # One folder per feature
     landing/              # Start screen (initial route)
     how_to_play/          # Rules screen
     setup/                # Setup/preset persistence, setup/category screens and content notices
+    settings/             # App settings and UI language picker
     player_presets/       # Saved-list management, details and name dialogs
     unknown/              # Fallback for unknown routes
   l10n/
     arb/                  # app_en.arb (template), app_vi.arb
     gen_l10n/             # Generated output (do not edit)
-  store/app_store.dart    # Global AppStore (locale)
+  store/app_store.dart    # Global AppStore (UI locale and app settings)
   theme/                  # AppColors tokens + AppTheme (light/dark)
 ```
 

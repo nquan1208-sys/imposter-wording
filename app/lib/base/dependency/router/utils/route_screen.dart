@@ -11,6 +11,8 @@ import 'package:untitled/features/unknown/unknown_screen.dart';
 import 'package:untitled/features/setup/setup_screen.dart';
 import 'package:untitled/features/setup/category_screen.dart';
 import 'package:untitled/features/custom_content/custom_word_screen.dart';
+import 'package:untitled/features/settings/settings_screen.dart';
+import 'package:untitled/features/settings/settings_language_screen.dart';
 
 class RouteScreen {
   static PageRoute customWordsPageRoute(RouteSettings settings) =>
@@ -53,6 +55,16 @@ class RouteScreen {
     settings: settings,
     builder: (_) => const SetupScreen(),
   );
+  static PageRoute settingsPageRoute(RouteSettings settings) =>
+      MaterialPageRoute(
+        settings: settings,
+        builder: (_) => const SettingsScreen(),
+      );
+  static PageRoute settingsLanguagePageRoute(RouteSettings settings) =>
+      MaterialPageRoute(
+        settings: settings,
+        builder: (_) => const SettingsLanguageScreen(),
+      );
   static PageRoute categoriesPageRoute(RouteSettings settings) =>
       MaterialPageRoute(
         settings: settings,

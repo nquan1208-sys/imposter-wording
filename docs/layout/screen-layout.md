@@ -631,27 +631,28 @@ Cho phép người dùng thay đổi ngôn ngữ, mở hướng dẫn, gửi đ�
    - Tiêu đề căn giữa: `Cài đặt`.
 
 2. **Nhóm tùy chọn chung**
-   - `Ngôn ngữ`: có biểu tượng, ngôn ngữ hiện tại và mũi tên mở màn hình chọn ngôn ngữ.
+    - `Ngôn ngữ giao diện`: có biểu tượng, ngôn ngữ hiện tại và mũi tên mở màn hình chọn ngôn ngữ giao diện. Nội dung game vẫn giữ tiếng Việt cho tới phase 12.
    - `Cách chơi`: có biểu tượng và mũi tên mở màn hình hướng dẫn.
    - Hai mục nằm trong cùng một thẻ và được ngăn cách bằng đường phân chia.
 
 3. **Nhóm đánh giá và phản hồi**
-   - `Đánh giá ứng dụng`: mở trang đánh giá ứng dụng trên cửa hàng tương ứng với nền tảng.
-   - `Gửi phản hồi`: mở kênh gửi phản hồi cho nhà phát triển.
+   - `Đánh giá ứng dụng`: mở trang đánh giá ứng dụng trên cửa hàng tương ứng với nền tảng khi đã cấu hình đích.
+   - `Gửi phản hồi`: mở kênh gửi phản hồi cho nhà phát triển khi đã cấu hình đích.
+   - Nếu chưa có URL/app ID hoặc kênh phản hồi, hai mục ở trạng thái chưa khả dụng và giải thích rõ; không gắn URL giả.
    - Hai mục nằm trong cùng một thẻ và được ngăn cách bằng đường phân chia.
 
 4. **Thông tin ứng dụng**
    - Tiêu đề nhóm: `Thông tin ứng dụng`.
    - `Phiên bản ứng dụng`: hiển thị phiên bản và build hiện tại, ví dụ `4.2.2 (158)`.
-   - `ID khách hàng`: hiển thị ID ẩn danh ở dạng rút gọn và có nút sao chép.
+    - `ID cài đặt`: hiển thị ID ẩn danh chỉ lưu trên thiết bị ở dạng rút gọn và có nút sao chép toàn bộ.
    - Hai mục nằm trong cùng một thẻ và được ngăn cách bằng đường phân chia.
 
 ### Hành vi
 
-- Chọn ngôn ngữ cập nhật nội dung hiển thị và được lưu trên thiết bị.
+- Chọn ngôn ngữ giao diện cập nhật nội dung hiển thị ngay và được lưu trên thiết bị; không đổi ngôn ngữ nội dung game.
 - Chạm `Cách chơi` mở màn hình hướng dẫn hiện có.
-- Chạm `Đánh giá ứng dụng` hoặc `Gửi phản hồi` chuyển sang ứng dụng phù hợp trên thiết bị.
-- Chạm nút sao chép lưu toàn bộ ID khách hàng vào clipboard dù giá trị trên màn hình đang được rút gọn.
+- Chạm `Đánh giá ứng dụng` hoặc `Gửi phản hồi` chuyển sang ứng dụng phù hợp trên thiết bị nếu đã cấu hình; nếu chưa, mục bị vô hiệu hóa và nêu lý do.
+- Chạm nút sao chép lưu toàn bộ ID cài đặt vào clipboard dù giá trị trên màn hình đang được rút gọn.
 - Nút quay lại đưa người dùng về màn hình trước đó.
 
 ## 17. Quy tắc bố cục dùng chung

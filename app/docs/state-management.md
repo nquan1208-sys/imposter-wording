@@ -49,7 +49,7 @@ SignalBuilder(builder: (context) => Text('${store.count.value}'));
 ## Lifetime
 
 - Feature stores: `static late Provider<FeatureStore> feature;` on `StoreProvider`, assigned with `createAutoDisposeStore` in the route builder, disposed when the route's scope is released.
-- Global store: `StoreProvider.app` (`AppStore`) is `static final` and lives for the app. It owns `locale` (default `vi`, `setLocale`). Persisting the locale is planned for phase 11.
+- Global store: `StoreProvider.app` (`AppStore`) lives for the app. It owns the UI `locale` (default `vi`), anonymous installation ID, and local-settings read/write state. Locale and ID share a versioned record in the separate `app_preferences` Hive box, independent of backend-scoped setup and content data. A read failure blocks writes until retry; a write failure keeps the in-memory choice and exposes retry.
 - `contentRepositoryProvider` and `setupStoreProvider` in `data/game_providers.dart`
   are app-lifetime providers. The repository owns content/loading/cache signals;
   the setup store owns committed setup and persistence errors. Its managed effect

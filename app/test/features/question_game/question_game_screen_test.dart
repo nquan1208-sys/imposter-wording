@@ -7,6 +7,7 @@ import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/features/question_game/question_game_screen.dart';
 import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/main.dart';
+import '../../data/memory_app_settings_storage.dart';
 import '../../data/fixtures.dart';
 import 'package:untitled/models/content.dart';
 
@@ -63,12 +64,17 @@ void main() {
     await setup.confirmDraft(setup.setup.value.presets.single.setup, presetId);
     container = ProviderContainer(
       overrides: [
+        localStorageProvider.overrideWithValue(MemoryAppSettingsStorage()),
         contentRepositoryProvider.overrideWithValue(content),
         setupStoreProvider.overrideWithValue(setup),
       ],
     );
+    await container.read(StoreProvider.app).restore();
     if (english) {
-      container.read(StoreProvider.app).setLocale(const Locale('en'));
+      expect(
+        await container.read(StoreProvider.app).setLocale(const Locale('en')),
+        isTrue,
+      );
     }
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox());
