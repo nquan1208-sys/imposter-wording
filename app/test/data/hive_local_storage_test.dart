@@ -12,6 +12,7 @@ import 'package:untitled/data/hive_local_storage.dart';
 import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/data/scoped_json_file.dart';
 import 'package:untitled/models/game_setup.dart';
+import 'package:untitled/models/custom_word_category.dart';
 import 'fixtures.dart';
 
 void main() {
@@ -104,6 +105,35 @@ void main() {
       expect(await local('snapshot', env: 'prod').read(), null);
       expect(await local('snapshot', url: 'https://other.com').read(), null);
       expect(await local('snapshot', locale: 'en').read(), null);
+    },
+  );
+
+  test(
+    'custom setup survives Hive close and reopen without entering snapshot cache',
+    () async {
+      final setup = GameSetup.defaults().copyWith(
+        customWordCategories: [
+          CustomWordCategory(
+            id: 'custom-word-1',
+            name: 'Local',
+            contentLocale: 'vi',
+            isFamilyFriendly: true,
+            words: ['Táo'],
+          ),
+        ],
+        nextCustomWordCategoryId: 2,
+        categoryIds: {'custom-word-1'},
+      );
+      await local('setup').write(setup.toJson());
+      await storage.close();
+      storage = HiveLocalStorage(directory: () async => root);
+      final restored = GameSetup.fromJson((await local('setup').read())!);
+      expect(restored.customWordCategories.single.words, ['Táo']);
+      expect(restored.customWordCategories.single.isFamilyFriendly, true);
+      expect(restored.categoryIds, {'custom-word-1'});
+      expect(restored.nextCustomWordCategoryId, 2);
+      expect(await local('snapshot').read(), isNull);
+      expect(await storage.imageReferences('https://example.com'), isEmpty);
     },
   );
 

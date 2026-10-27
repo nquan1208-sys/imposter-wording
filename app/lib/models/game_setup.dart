@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:untitled/models/content.dart';
+import 'package:untitled/models/custom_word_category.dart';
 
 class SetupPlayer {
   final String id, name;
@@ -36,6 +37,8 @@ class PlayerPreset {
 }
 
 class GameSetup {
+  final List<CustomWordCategory> customWordCategories;
+  final int nextCustomWordCategoryId;
   final List<PlayerPreset> presets;
   final String? activePresetId;
   final int nextPresetId;
@@ -49,6 +52,8 @@ class GameSetup {
   bool get validRules => imposters >= 1 && imposters <= maxImposters;
   final Set<String> categoryIds;
   const GameSetup({
+    this.customWordCategories = const [],
+    this.nextCustomWordCategoryId = 1,
     this.presets = const [],
     this.activePresetId,
     this.nextPresetId = 1,
@@ -125,6 +130,12 @@ class GameSetup {
       throw const FormatException('Invalid presets');
     }
     final setup = GameSetup(
+      customWordCategories: List.unmodifiable(
+        (json['customWordCategories'] as List? ?? []).map(
+          (c) => CustomWordCategory.fromJson(c as JsonMap),
+        ),
+      ),
+      nextCustomWordCategoryId: json['nextCustomWordCategoryId'] as int? ?? 1,
       presets: presets,
       activePresetId: activePresetId,
       nextPresetId: nextPresetId,
@@ -142,6 +153,21 @@ class GameSetup {
       knowEachOther: json['knowEachOther'] as bool? ?? false,
     );
     if (!setup.validRules) throw const FormatException('Invalid rules');
+    final custom = setup.customWordCategories;
+    if (setup.nextCustomWordCategoryId < 1 ||
+        custom.map((c) => c.id).toSet().length != custom.length ||
+        custom
+                .map((c) => (c.contentLocale, c.name.toLowerCase()))
+                .toSet()
+                .length !=
+            custom.length ||
+        custom.any(
+          (c) =>
+              int.parse(c.id.substring('custom-word-'.length)) >=
+              setup.nextCustomWordCategoryId,
+        )) {
+      throw const FormatException('Invalid custom categories');
+    }
     if (activePresetId != null &&
         jsonEncode(setup.rosterJson()) !=
             jsonEncode(
@@ -155,6 +181,8 @@ class GameSetup {
     return setup;
   }
   GameSetup copyWith({
+    List<CustomWordCategory>? customWordCategories,
+    int? nextCustomWordCategoryId,
     List<PlayerPreset>? presets,
     String? activePresetId,
     bool clearActivePreset = false,
@@ -171,6 +199,9 @@ class GameSetup {
     bool? knowEachOther,
     Set<String>? categoryIds,
   }) => GameSetup(
+    customWordCategories: customWordCategories ?? this.customWordCategories,
+    nextCustomWordCategoryId:
+        nextCustomWordCategoryId ?? this.nextCustomWordCategoryId,
     presets: presets ?? this.presets,
     activePresetId: clearActivePreset
         ? null
@@ -227,6 +258,10 @@ class GameSetup {
     'knowEachOther': knowEachOther,
   };
   JsonMap toJson() => {
+    'customWordCategories': customWordCategories
+        .map((c) => c.toJson())
+        .toList(),
+    'nextCustomWordCategoryId': nextCustomWordCategoryId,
     'presets': presets.map((p) => p.toJson()).toList(),
     'activePresetId': activePresetId,
     'nextPresetId': nextPresetId,

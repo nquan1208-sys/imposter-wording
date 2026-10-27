@@ -240,5 +240,26 @@
     }
   },
   "familyCategories": "Chế độ gia đình",
-  "emptyFamilyCategories": "Chưa có danh mục gia đình có nội dung. Vui lòng chọn Tất cả danh mục hoặc thử lại sau."
+  "emptyFamilyCategories": "Chưa có danh mục gia đình có nội dung. Vui lòng chọn Tất cả danh mục hoặc thử lại sau.",
+  "createCustomCategory": "Tạo danh mục tùy chỉnh",
+  "customCategoryName": "Tên danh mục",
+  "customCategoryNameHint": "Ví dụ: Từ ngữ công ty",
+  "customCategoryNameExists": "Tên danh mục đã tồn tại. Hãy chọn tên khác.",
+  "customWordList": "Danh sách từ",
+  "customWordsEmpty": "Chưa có từ nào.",
+  "customWord": "Từ",
+  "addCustomWord": "Thêm từ",
+  "importCustomWords": "Nhập nhiều từ",
+  "customOneWordPerLine": "Mỗi dòng một từ",
+  "customWordInvalid": "Nhập ít nhất một từ mới.",
+  "removeCustomWord": "Xóa từ {word}",
+  "saveCustomCategory": "Lưu danh mục",
+  "customSaving": "Đang lưu…",
+  "customFamilyConfirmation": "Tôi xác nhận các từ này phù hợp để chơi cùng gia đình.",
+  "discardCustomDraft": "Hủy thay đổi chưa lưu?",
+  "customSaveError": "Không thể lưu. Các từ vẫn được giữ lại. Hãy thử lưu lại.",
+  "clearCustomContentTitle": "Xóa nội dung tùy chỉnh và rời thiết lập?",
+  "clearCustomContentHelp": "Quay về trang đầu sẽ xóa vĩnh viễn danh mục và từ tùy chỉnh của bộ thiết lập này.",
+  "clearCustomContentAction": "Xóa và rời đi",
+  "@removeCustomWord": {"placeholders": {"word": {"type": "String"}}}
 }

@@ -10,8 +10,14 @@ import 'package:untitled/features/landing/landing_screen.dart';
 import 'package:untitled/features/unknown/unknown_screen.dart';
 import 'package:untitled/features/setup/setup_screen.dart';
 import 'package:untitled/features/setup/category_screen.dart';
+import 'package:untitled/features/custom_content/custom_word_screen.dart';
 
 class RouteScreen {
+  static PageRoute customWordsPageRoute(RouteSettings settings) =>
+      MaterialPageRoute(
+        settings: settings,
+        builder: (_) => CustomWordScreen(family: settings.arguments == true),
+      );
   static PageRoute questionGamePageRoute(RouteSettings settings) =>
       MaterialPageRoute(
         settings: settings,
