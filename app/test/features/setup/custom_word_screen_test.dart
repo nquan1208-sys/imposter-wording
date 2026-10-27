@@ -455,17 +455,16 @@ void main() {
     expect(store.setup.value.customQuestionCategories.length, 1);
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-    file.failWrite = true;
+    final saved = file.data;
+    final writes = file.writes;
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-    await tap(tester, 'Remove and leave');
-    expect(find.byType(SetupScreen), findsOneWidget);
-    expect(store.setup.value.customQuestionCategories.length, 1);
-    file.failWrite = false;
-    await tester.tap(find.byType(BackButton));
-    await tester.pumpAndSettle();
-    await tap(tester, 'Remove and leave');
-    expect(store.setup.value.hasCustomContent, false);
+    expect(find.byType(SetupScreen), findsNothing);
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(file.data, saved);
+    expect(file.writes, writes);
+    await tap(tester, 'Start');
+    expect(store.setup.value.customQuestionCategories.single.pairs.length, 1);
   });
 
   testWidgets(
@@ -790,30 +789,49 @@ void main() {
     );
   }
 
-  testWidgets(
-    'leaving setup confirms deletion, handles write errors, and preserves roster',
-    (tester) async {
-      await pump(tester);
-      await store.createCustomWordCategory('Office', ['x'], family: false);
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      expect(find.text('Remove custom content and leave?'), findsOneWidget);
-      await tap(tester, 'Cancel');
-      expect(store.setup.value.customWordCategories.length, 1);
-      file.failWrite = true;
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      await tap(tester, 'Remove and leave');
-      expect(find.byType(SetupScreen), findsOneWidget);
-      expect(store.setup.value.customWordCategories.length, 1);
-      file.failWrite = false;
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-      await tap(tester, 'Remove and leave');
-      expect(find.byType(SetupScreen), findsNothing);
-      expect(store.setup.value.customWordCategories, isEmpty);
-      expect(store.setup.value.players.length, 3);
-    },
-  );
+  for (final systemBack in [false, true]) {
+    testWidgets(
+      'leaving setup with systemBack=$systemBack preserves saved content',
+      (tester) async {
+        await pump(tester);
+        final imageId = '${'a' * 32}.img';
+        final id = await store.createCustomWordCategory(
+          'Office',
+          ['x'],
+          family: false,
+          imageIds: {'x': imageId},
+        );
+        await store.setCategories({id!});
+        await tester.pumpAndSettle();
+        final saved = file.data;
+        final writes = file.writes;
+        file.failWrite = true;
+        if (systemBack) {
+          await tester.binding.handlePopRoute();
+        } else {
+          await tester.tap(find.byType(BackButton));
+        }
+        await tester.pumpAndSettle();
+        expect(find.byType(SetupScreen), findsNothing);
+        expect(find.byType(AlertDialog), findsNothing);
+        expect(file.writes, writes);
+        expect(file.data, saved);
+        await tap(tester, 'Start');
+        expect(store.setup.value.customWordCategories.single.words, ['x']);
+        expect(store.setup.value.customWordCategories.single.imageIds, {
+          'x': imageId,
+        });
+        expect(store.setup.value.categoryIds, {id});
+        expect(store.setup.value.players.length, 3);
+        final restored = SetupStore(
+          content: content,
+          file: file,
+          images: images,
+        );
+        addTearDown(restored.dispose);
+        await restored.restore();
+        expect(restored.setup.value.toJson(), saved);
+      },
+    );
+  }
 }
