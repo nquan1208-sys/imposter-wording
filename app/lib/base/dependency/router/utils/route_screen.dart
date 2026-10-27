@@ -1,3 +1,4 @@
+import 'package:untitled/features/player_presets/player_presets_screen.dart';
 import 'package:untitled/features/question_game/question_game_screen.dart';
 import 'package:untitled/features/question_game/question_game_store.dart';
 import 'package:untitled/features/player_names/player_names_screen.dart';
@@ -26,6 +27,11 @@ class RouteScreen {
         builder: (_) => settings.arguments is WordGameSession
             ? WordGameScreen(session: settings.arguments as WordGameSession)
             : const SetupScreen(),
+      );
+  static PageRoute playerPresetsPageRoute(RouteSettings settings) =>
+      MaterialPageRoute(
+        settings: settings,
+        builder: (_) => const PlayerPresetsScreen(),
       );
   static PageRoute playerNamesPageRoute(RouteSettings settings) =>
       MaterialPageRoute(

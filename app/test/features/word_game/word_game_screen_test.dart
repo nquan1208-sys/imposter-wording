@@ -46,9 +46,9 @@ void main() {
     setup = SetupStore(content: content, file: MemoryStorage());
     await content.load();
     await setup.restore();
-    setup.setPlayerCount(advanced ? 5 : 3);
+    await setup.setPlayerCount(advanced ? 5 : 3);
     if (advanced) {
-      setup.setRules(
+      await setup.setRules(
         imposters: 2,
         showCategory: true,
         knowEachOther: true,
@@ -56,6 +56,8 @@ void main() {
       );
     }
     session = WordGameSession.create(setup, random: Random(3))!;
+    final presetId = await setup.createPreset('Word team', setup.setup.value);
+    await setup.confirmDraft(setup.setup.value.presets.single.setup, presetId);
     container = ProviderContainer(
       overrides: [
         contentRepositoryProvider.overrideWithValue(content),
@@ -338,7 +340,7 @@ void main() {
     addTearDown(tester.view.reset);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await pump(tester, direct: false, english: true);
-    setup.setPlayerCount(100);
+    await setup.setPlayerCount(100);
     await tap(tester, 'Start');
     await tap(tester, 'Start game');
     await tester.scrollUntilVisible(

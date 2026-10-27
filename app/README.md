@@ -71,7 +71,7 @@ debug and iOS Debug configuration; Release/Profile retain platform TLS protectio
 
 Start opens setup: 3–100 players (default four), one fixed imposter, Word,
 Classic/Family, and all or selected categories. Category selections commit on
-Confirm; back discards picker edits. Gameplay remains disabled until phase 3.
+Confirm; back discards picker edits. Both word and question games are playable.
 UI language does not change content: phase 2 always uses published Vietnamese
 translations and active categories. Family additionally requires family-friendly
 words; categories without eligible words are hidden.
@@ -82,11 +82,13 @@ all three tables (categories, words, question pairs) succeed. It restores cached
 content immediately while refreshing. Failed refreshes retain the previous cache;
 a successful empty load replaces it. Images retain their Storage paths only.
 
-Snapshots and committed setup use separate versioned JSON files in Application
-Support, scoped by environment, normalized backend URL, and content locale.
-Writes flush a temporary file and rename it. Setup writes serialize. Failed writes
-keep visible changes and offer retry; unreadable settings block changes until a
-successful retry or confirmed reset. Changing backend URLs creates a separate scope.
+Snapshots and committed setup use separate Hive CE boxes in Application Support,
+scoped by environment, normalized backend URL, and content locale. Existing
+versioned JSON files migrate after validation and are preserved. Setup writes
+serialize, compute against the latest commit and publish only after successful
+storage. Failed autosaves retain the attempted change for retry; dialogs/editors
+retain their input. Unreadable records block writes until a successful retry.
+Changing backend URLs creates a separate scope.
 
 No backend schema changes or seed data are needed. Current Local content contains
 one Classic word and zero Family words; populated Family and multi-page behavior
@@ -127,3 +129,26 @@ card. Backgrounding hides both the question and answer field. After all answers,
 the civilian question and answers become public; reveal shows every imposter and
 the alternate question directly, without a scored vote. Replay returns to setup.
 Answers, drafts and sessions are never saved to disk or uploaded.
+
+### Player presets and imposter options (Phase 6)
+
+The player editor can create, select and manage saved lists. Presets include only
+ordered players, their next ID counter and the five imposter rule fields; selecting
+one preserves game type, mode, categories and UI/content languages. Selection is a
+draft until Confirm. Creating a list saves it immediately, so it survives discarding
+the editor. Active lists autosave rule changes. Rename preserves identity; deletion
+keeps current players/rules and stale drafts cannot recreate a deleted list.
+
+Setup uses fixed/random imposter cards and a shared confirmation draft for count,
+mode and never-start. For 3–4 players, a warning card explains that at least five
+players are needed for multiple imposters. Both games offer “Imposters know each other” and “Show category
+to imposters”. In question games, only revealed imposter cards can show teammates,
+excluding the current player by ID; hiding the card removes that content from both
+widgets and semantics. Imposters see the category only when enabled. Sessions retain
+their original rule snapshot.
+
+Phase 6 verification: localization generation, static analysis and all 146 automated
+tests passed. Coverage includes real Hive close/reopen and legacy migration,
+serialized/failing writes, preset management, small layouts/text scale 2/keyboard,
+private question options and complete word/question games after preset loading.
+No screenshot verification, real-device smoke or backend integration test was run.

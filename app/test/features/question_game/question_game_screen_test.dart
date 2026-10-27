@@ -32,6 +32,10 @@ void main() {
     WidgetTester tester, {
     bool english = false,
     bool family = false,
+    bool showCategory = true,
+    bool knowEachOther = true,
+    bool random = false,
+    int imposters = 2,
   }) async {
     content = ContentRepository(
       cache: MemoryStorage(),
@@ -40,14 +44,20 @@ void main() {
     setup = SetupStore(content: content, file: MemoryStorage());
     await content.load();
     await setup.restore();
-    setup.setPlayerCount(5);
-    setup.setRules(
-      imposters: 2,
-      showCategory: true,
-      knowEachOther: true,
+    await setup.setPlayerCount(5);
+    await setup.setRules(
+      imposters: imposters,
+      showCategory: showCategory,
+      knowEachOther: knowEachOther,
+      randomImposters: random,
       imposterNotFirst: true,
     );
-    setup.setFamily(family);
+    await setup.setFamily(family);
+    final presetId = await setup.createPreset(
+      'Question team',
+      setup.setup.value,
+    );
+    await setup.confirmDraft(setup.setup.value.presets.single.setup, presetId);
     container = ProviderContainer(
       overrides: [
         contentRepositoryProvider.overrideWithValue(content),
@@ -82,13 +92,13 @@ void main() {
             ? 'Show category to imposters'
             : 'Hiển thị danh mục cho kẻ mạo danh',
       ),
-      findsNothing,
+      findsOneWidget,
     );
     expect(
       find.text(
         english ? 'Imposters know each other' : 'Kẻ mạo danh biết nhau',
       ),
-      findsNothing,
+      findsOneWidget,
     );
     await tap(tester, find.byKey(const Key('categoryPicker')));
     expect(find.text('Category a'), findsNothing);
@@ -105,6 +115,111 @@ void main() {
         english ? 'Start game' : 'Bắt đầu ván chơi',
       ),
     );
+  }
+
+  testWidgets(
+    'teammates leave widgets and semantics on conceal, back and submission',
+    (tester) async {
+      await pump(tester, english: true);
+      final session = tester
+          .widget<QuestionGameScreen>(find.byType(QuestionGameScreen))
+          .session;
+      final imposter = session.setup.players.firstWhere(
+        (p) => session.imposterIds.contains(p.id),
+      );
+      final other = session.setup.players.firstWhere(
+        (p) => p.id != imposter.id && session.imposterIds.contains(p.id),
+      );
+      final semantics = tester.ensureSemantics();
+      final teammates = find.byKey(const Key('questionTeammates'));
+      await tap(tester, find.byKey(ValueKey(imposter.id)));
+      expect(teammates, findsNothing);
+      expect(find.bySemanticsLabel(other.name), findsNothing);
+      await tap(tester, find.text('Tap to reveal'));
+      expect(
+        find.descendant(of: teammates, matching: find.text(other.name)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: teammates, matching: find.text(imposter.name)),
+        findsNothing,
+      );
+      expect(find.bySemanticsLabel(other.name), findsOneWidget);
+      await setup.setRules(knowEachOther: false, showCategory: false);
+      expect(
+        find.descendant(of: teammates, matching: find.text(other.name)),
+        findsOneWidget,
+      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pumpAndSettle();
+      expect(teammates, findsNothing);
+      expect(find.bySemanticsLabel(other.name), findsNothing);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(teammates, findsNothing);
+      await tap(tester, find.text('Tap to reveal'));
+      expect(teammates, findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(teammates, findsNothing);
+      await tap(tester, find.byKey(ValueKey(imposter.id)));
+      await tap(tester, find.text('Tap to reveal'));
+      await tester.enterText(find.byKey(const Key('privateAnswer')), 'answer');
+      await tap(tester, find.text('Submit answer'));
+      expect(teammates, findsNothing);
+      final civilian = session.setup.players.firstWhere(
+        (p) => !session.imposterIds.contains(p.id),
+      );
+      await tap(tester, find.byKey(ValueKey(civilian.id)));
+      await tap(tester, find.text('Tap to reveal'));
+      expect(teammates, findsNothing);
+      semantics.dispose();
+    },
+  );
+
+  for (final show in [false, true]) {
+    for (final know in [false, true]) {
+      for (final random in [false, true]) {
+        testWidgets(
+          'private options showCategory=$show know=$know random=$random',
+          (tester) async {
+            await pump(
+              tester,
+              english: true,
+              showCategory: show,
+              knowEachOther: know,
+              random: random,
+            );
+            final session = tester
+                .widget<QuestionGameScreen>(find.byType(QuestionGameScreen))
+                .session;
+            final id = session.imposterIds.first;
+            await tap(tester, find.byKey(ValueKey(id)));
+            expect(find.text(session.categoryName), findsNothing);
+            await tap(tester, find.text('Tap to reveal'));
+            expect(
+              find.text(session.categoryName),
+              show ? findsOneWidget : findsNothing,
+            );
+            expect(
+              find.byKey(const Key('questionTeammates')),
+              know && session.imposterIds.length > 1
+                  ? findsOneWidget
+                  : findsNothing,
+            );
+            await tester.binding.handlePopRoute();
+            await tester.pumpAndSettle();
+            final civilian = session.setup.players.firstWhere(
+              (p) => !session.imposterIds.contains(p.id),
+            );
+            await tap(tester, find.byKey(ValueKey(civilian.id)));
+            await tap(tester, find.text('Tap to reveal'));
+            expect(find.text(session.categoryName), findsOneWidget);
+            expect(find.byKey(const Key('questionTeammates')), findsNothing);
+          },
+        );
+      }
+    }
   }
 
   for (final english in [false, true]) {

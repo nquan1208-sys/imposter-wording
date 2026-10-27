@@ -207,8 +207,20 @@ class _QuestionGameScreenState extends State<QuestionGameScreen>
                                 ),
                               )
                             else ...[
-                              Text(session.categoryName),
+                              if (!session.imposterIds.contains(current.id) ||
+                                  session.setup.showCategory)
+                                Text(session.categoryName),
                               _questionCard(store.question),
+                              if (store.teammates.isNotEmpty)
+                                Column(
+                                  key: const Key('questionTeammates'),
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(l.knowEachOther),
+                                    for (final teammate in store.teammates)
+                                      Text(teammate.name),
+                                  ],
+                                ),
                               TextField(
                                 key: const Key('privateAnswer'),
                                 controller: answer,

@@ -26,7 +26,6 @@ class WordGameSession {
 
   static WordGameSession? create(SetupStore store, {Random? random}) {
     if (!store.editable) return null;
-    store.revalidate();
     final setup = store.setup.value;
     if (setup.gameType != 'word' || !GameAssignment.validSetup(setup)) {
       return null;

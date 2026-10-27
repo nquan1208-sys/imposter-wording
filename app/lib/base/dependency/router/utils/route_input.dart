@@ -9,6 +9,7 @@ class RouteInput {
   RouteInput({required this.routeName, this.arguments});
 
   RouteInput.howToPlay() : routeName = RouteName.howToPlay;
+  RouteInput.playerPresets() : routeName = RouteName.playerPresets;
   RouteInput.playerNames() : routeName = RouteName.playerNames;
   RouteInput.setup() : routeName = RouteName.setup;
   RouteInput.wordGame(WordGameSession session)

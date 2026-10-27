@@ -35,7 +35,7 @@
   "cacheWarning": "Nội dung vẫn dùng được nhưng không thể đọc hoặc lưu bộ nhớ ngoại tuyến.",
   "selectionRemoved": "Đã bỏ danh mục không còn phù hợp. Nếu không còn lựa chọn, tất cả danh mục sẽ được dùng.",
   "settingsLoading": "Đang khôi phục thiết lập…",
-  "settingsReadError": "Không thể đọc thiết lập đã lưu. Thử lại hoặc đặt lại để tiếp tục.",
+  "settingsReadError": "Không đọc được thiết lập đã lưu. Thử lại để tiếp tục.",
   "settingsWriteError": "Không thể lưu thiết lập. Các thay đổi vẫn được giữ trên màn hình.",
   "resetSetup": "Đặt lại thiết lập",
   "resetSetupConfirm": "Thay thiết lập không đọc được bằng thiết lập mặc định?",
@@ -176,7 +176,7 @@
   "commonQuestionHelp": "Đây là câu hỏi chung. Tiếp theo, xem tất cả câu trả lời và thảo luận xem ai đã nhận câu hỏi khác.",
   "startRound": "Bắt đầu vòng",
   "findImposters": "Tìm kẻ giả mạo",
-  "questionInstructions": "Mở câu hỏi riêng và trả lời kín đáo. Không ai được báo vai. Câu trả lời chưa gửi được giữ riêng và chỉ hiện khi mở lại thẻ. Khi mọi người gửi xong, xem câu hỏi chung và thảo luận các câu trả lời. Công bố khi đã sẵn sàng; không ghi nhận phiếu hay tính bên thắng.",
+  "questionInstructions": "Mở câu hỏi riêng và trả lời kín đáo. Không ai được báo vai. Câu trả lời chưa gửi được giữ riêng và chỉ hiện khi mở lại thẻ. Khi mọi người gửi xong, xem câu hỏi chung và thảo luận các câu trả lời. Công bố khi đã sẵn sàng; không ghi nhận phiếu hay tính bên thắng. Khi bật “Kẻ mạo danh biết nhau” và có nhiều kẻ mạo danh, họ thấy tên đồng vai chỉ trong thẻ riêng đã mở.",
   "@questionCount": {
     "placeholders": {
       "count": {
@@ -200,5 +200,32 @@
         "type": "int"
       }
     }
-  }
+  },
+  "unsavedGame": "Trò chơi chưa lưu",
+  "unsavedGameHelp": "Chơi nhanh với danh sách hiện tại",
+  "savedLists": "Danh sách đã lưu",
+  "saveList": "Lưu thành danh sách…",
+  "manageLists": "Quản lý danh sách",
+  "newList": "Lưu thành danh sách mới…",
+  "listName": "Tên danh sách",
+  "listNameHint": "Nhập tên danh sách",
+  "invalidListName": "Tên không được trống hoặc trùng danh sách khác.",
+  "save": "Lưu",
+  "rename": "Đổi tên",
+  "delete": "Xóa",
+  "details": "Chi tiết",
+  "listActions": "Tùy chọn danh sách",
+  "usingList": "Đang dùng",
+  "emptyLists": "Quay về chỉnh sửa người chơi và lưu nhóm đầu tiên.",
+  "deleteListConfirm": "Xóa danh sách này? Người chơi và luật hiện tại vẫn được giữ.",
+  "savedRules": "Luật đã lưu",
+  "listAutosave": "Luật tự lưu khi thay đổi ở thiết lập. Người chơi chỉ lưu sau khi xác nhận chỉnh sửa.",
+  "fixedCount": "Cố định",
+  "recommendedImposter": "1 kẻ mạo danh được đề xuất",
+  "enabled": "Bật",
+  "disabled": "Tắt",
+  "chooseImposters": "Chọn kẻ mạo danh",
+  "fixedCountHelp": "Chọn số kẻ mạo danh chính xác",
+  "randomCountHelp": "Số kẻ mạo danh ngẫu nhiên mỗi ván",
+  "moreImpostersNeedPlayers": "Cần ít nhất 5 người chơi để chọn nhiều hơn 1 kẻ mạo danh."
 }

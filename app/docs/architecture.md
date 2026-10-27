@@ -35,7 +35,8 @@ lib/
   features/               # One folder per feature
     landing/              # Start screen (initial route)
     how_to_play/          # Rules screen
-    setup/                # Setup store, setup/category screens and content notices
+    setup/                # Setup/preset persistence, setup/category screens and content notices
+    player_presets/       # Saved-list management, details and name dialogs
     unknown/              # Fallback for unknown routes
   l10n/
     arb/                  # app_en.arb (template), app_vi.arb

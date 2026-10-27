@@ -44,9 +44,9 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
               child: FilledButton(
                 onPressed:
                     store.editable && store.content.snapshot.value != null
-                    ? () {
-                        store.setCategories(selected);
-                        Navigator.pop(context);
+                    ? () async {
+                        final saved = await store.setCategories(selected);
+                        if (context.mounted && saved) Navigator.pop(context);
                       }
                     : null,
                 child: Text(l.confirm),
@@ -61,6 +61,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                   '${store.setup.value.gameType == 'question' ? l.questionGame : l.wordGame} · ${store.setup.value.family ? l.familyMode : l.classicMode}',
                 ),
                 ContentNotices(store.content),
+                if (store.writeFailed.value) Text(l.settingsWriteError),
                 if (selected.length != valid.length) Text(l.selectionRemoved),
                 if (counts.isEmpty) Text(l.emptyContent),
                 FilterChip(

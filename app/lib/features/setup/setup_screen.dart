@@ -25,6 +25,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   Future<void> _start(SetupStore store) async {
     if (_openingGame) return;
+    setState(() => _openingGame = true);
+    await store.pendingWrites;
+    await store.revalidate();
+    if (!mounted) return;
     RouteInput? input;
     if (store.setup.value.gameType == 'question') {
       final session = QuestionGameSession.create(store);
@@ -33,7 +37,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       final session = WordGameSession.create(store);
       if (session != null) input = RouteInput.wordGame(session);
     }
-    if (input == null) {
+    if (input == null || store.writeFailed.value) {
+      setState(() => _openingGame = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).gameStartError)),
       );
@@ -104,37 +109,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       onPressed: store.reading.value ? null : store.restore,
                       child: Text(l.retry),
                     ),
-                    TextButton(
-                      onPressed: store.reading.value
-                          ? null
-                          : () async {
-                              final reset = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text(l.resetSetup),
-                                  content: Text(l.resetSetupConfirm),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: Text(l.cancel),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: Text(l.resetSetup),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (reset == true) store.reset();
-                            },
-                      child: Text(l.resetSetup),
-                    ),
                   ],
                   if (store.writeFailed.value) ...[
                     Text(l.settingsWriteError),
-                    TextButton(onPressed: store.save, child: Text(l.retry)),
+                    TextButton(
+                      onPressed: store.editable ? store.save : null,
+                      child: Text(l.retry),
+                    ),
                   ],
                   IntrinsicHeight(
                     child: Row(
@@ -255,28 +236,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     if (count == 0) Text(l.emptyContent),
                   ],
                   SwitchListTile(
-                    title: Text(l.imposterNotFirst),
-                    value: setup.imposterNotFirst,
+                    title: Text(l.showCategory),
+                    value: setup.showCategory,
                     onChanged: store.editable
-                        ? (v) => store.setRules(imposterNotFirst: v)
+                        ? (v) => store.setRules(showCategory: v)
                         : null,
                   ),
-                  if (setup.gameType == 'word') ...[
-                    SwitchListTile(
-                      title: Text(l.showCategory),
-                      value: setup.showCategory,
-                      onChanged: store.editable
-                          ? (v) => store.setRules(showCategory: v)
-                          : null,
-                    ),
-                    SwitchListTile(
-                      title: Text(l.knowEachOther),
-                      value: setup.knowEachOther,
-                      onChanged: store.editable
-                          ? (v) => store.setRules(knowEachOther: v)
-                          : null,
-                    ),
-                  ],
+                  SwitchListTile(
+                    title: Text(l.knowEachOther),
+                    value: setup.knowEachOther,
+                    onChanged: store.editable
+                        ? (v) => store.setRules(knowEachOther: v)
+                        : null,
+                  ),
                   const SizedBox(height: AppSpacing.md),
                 ],
               ),
@@ -330,55 +302,144 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final setup = store.setup.value;
     var count = setup.imposters;
     var random = setup.randomImposters;
+    var notFirst = setup.imposterNotFirst;
+    var busy = false, failed = false;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => AppContent(
-        child: StatefulBuilder(
-          builder: (context, setState) => SingleChildScrollView(
-            padding: AppEdgeInsets.all24,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l.imposters,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                SwitchListTile(
-                  title: Text(l.randomCount),
-                  subtitle: Text(l.imposterRange(setup.maxImposters)),
-                  value: random,
-                  onChanged: (v) => setState(() => random = v),
-                ),
-                if (!random)
-                  Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      IconButton(
-                        tooltip: l.fewerImposters,
-                        onPressed: count > 1
-                            ? () => setState(() => count--)
-                            : null,
-                        icon: const Icon(Icons.remove),
+      useSafeArea: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, update) => PopScope(
+          canPop: !busy,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                24,
+                24,
+                24,
+                24 + MediaQuery.viewInsetsOf(context).bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Icon(Icons.tune),
+                  Text(
+                    l.chooseImposters,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  for (final value in [false, true])
+                    Card(
+                      child: ListTile(
+                        selected: random == value,
+                        leading: Icon(
+                          random == value
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_off,
+                        ),
+                        title: Text(value ? l.randomCount : l.fixedCount),
+                        subtitle: Text(
+                          value ? l.randomCountHelp : l.fixedCountHelp,
+                        ),
+                        onTap: busy ? null : () => update(() => random = value),
                       ),
-                      Text('$count'),
-                      IconButton(
-                        tooltip: l.moreImposters,
-                        onPressed: count < setup.maxImposters
-                            ? () => setState(() => count++)
-                            : null,
-                        icon: const Icon(Icons.add),
+                    ),
+                  if (!random)
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        IconButton(
+                          tooltip: l.fewerImposters,
+                          onPressed: !busy && count > 1
+                              ? () => update(() => count--)
+                              : null,
+                          icon: const Icon(Icons.remove),
+                        ),
+                        Text(
+                          '$count',
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
+                        IconButton(
+                          tooltip: l.moreImposters,
+                          onPressed: !busy && count < setup.maxImposters
+                              ? () => update(() => count++)
+                              : null,
+                          icon: const Icon(Icons.add),
+                        ),
+                      ],
+                    ),
+                  if (!random) Text(l.recommendedImposter),
+                  Text(l.imposterRange(setup.maxImposters)),
+                  if (setup.maxImposters == 1)
+                    Card(
+                      key: const Key('imposterLimitWarning'),
+                      color: AppColors.yellow,
+                      child: Padding(
+                        padding: AppEdgeInsets.all16,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const ExcludeSemantics(
+                              child: Icon(
+                                Icons.warning_amber_rounded,
+                                color: AppColors.charcoal,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Text(
+                                l.moreImpostersNeedPlayers,
+                                style: const TextStyle(
+                                  color: AppColors.charcoal,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  SwitchListTile(
+                    title: Text(l.imposterNotFirst),
+                    value: notFirst,
+                    onChanged: busy ? null : (v) => update(() => notFirst = v),
+                  ),
+                  if (failed) Text(l.settingsWriteError),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      TextButton(
+                        onPressed: busy ? null : () => Navigator.pop(context),
+                        child: Text(l.cancel),
+                      ),
+                      FilledButton(
+                        onPressed: busy
+                            ? null
+                            : () async {
+                                update(() {
+                                  busy = true;
+                                  failed = false;
+                                });
+                                final success = await store.setRules(
+                                  imposters: count,
+                                  randomImposters: random,
+                                  imposterNotFirst: notFirst,
+                                );
+                                if (!context.mounted) return;
+                                if (success) {
+                                  Navigator.pop(context);
+                                } else {
+                                  update(() {
+                                    busy = false;
+                                    failed = true;
+                                  });
+                                }
+                              },
+                        child: Text(l.confirm),
                       ),
                     ],
                   ),
-                FilledButton(
-                  onPressed: () {
-                    store.setRules(imposters: count, randomImposters: random);
-                    Navigator.pop(context);
-                  },
-                  child: Text(l.confirm),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

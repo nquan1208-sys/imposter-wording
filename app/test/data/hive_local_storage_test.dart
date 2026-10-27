@@ -1,3 +1,4 @@
+import 'package:untitled/features/setup/setup_store.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -59,6 +60,67 @@ void main() {
       expect(await local('snapshot', env: 'prod').read(), null);
       expect(await local('snapshot', url: 'https://other.com').read(), null);
       expect(await local('snapshot', locale: 'en').read(), null);
+    },
+  );
+
+  test(
+    'legacy setup migrates; preset library and association survive real close/reopen',
+    () async {
+      final old = GameSetup.defaults().toJson()
+        ..remove('presets')
+        ..remove('activePresetId')
+        ..remove('nextPresetId');
+      await legacy('setup').write(old);
+      final legacyBytes = await (await legacy('setup').file).readAsString();
+      final content = ContentRepository(
+        cache: MemoryStorage(),
+        fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
+      );
+      addTearDown(content.dispose);
+      final setup = SetupStore(content: content, file: local('setup'));
+      await setup.restore();
+      expect(setup.setup.value.presets, isEmpty);
+      final id = await setup.createPreset('Team', setup.setup.value);
+      await setup.confirmDraft(setup.setup.value.presets.single.setup, id);
+      await setup.setRules(
+        knowEachOther: true,
+        randomImposters: true,
+        showCategory: true,
+      );
+      await setup.renamePreset(id!, 'Friends');
+      final expected = setup.setup.value.toJson();
+      setup.dispose();
+      storage.waitBeforeClose(setup.pendingWrites);
+      await storage.close();
+      storage = HiveLocalStorage(directory: () async => root);
+      final reopened = SetupStore(content: content, file: local('setup'));
+      addTearDown(reopened.dispose);
+      await reopened.restore();
+      expect(reopened.setup.value.toJson(), expected);
+      expect(reopened.setup.value.presets.single.setup.knowEachOther, true);
+      expect(await (await legacy('setup').file).readAsString(), legacyBytes);
+      await reopened.deletePreset(id);
+      final afterDelete = reopened.setup.value.toJson();
+      await storage.close();
+      storage = HiveLocalStorage(directory: () async => root);
+      expect(await local('setup').read(), afterDelete);
+      expect(GameSetup.fromJson(afterDelete).activePresetId, null);
+    },
+  );
+
+  test(
+    'migration rejects a malformed preset without importing or altering JSON',
+    () async {
+      final malformed = GameSetup.defaults().toJson()
+        ..['presets'] = [
+          {'id': 'preset-1', 'name': 'Incomplete'},
+        ]
+        ..['nextPresetId'] = 2;
+      await legacy('setup').write(malformed);
+      final before = await (await legacy('setup').file).readAsString();
+      await expectLater(local('setup').read(), throwsA(anything));
+      expect(Hive.box<String>('settings').isEmpty, true);
+      expect(await (await legacy('setup').file).readAsString(), before);
     },
   );
 

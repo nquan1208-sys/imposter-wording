@@ -1,3 +1,4 @@
+import 'package:untitled/models/game_setup.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -11,6 +12,15 @@ import 'package:untitled/main.dart';
 import 'package:untitled/models/content.dart';
 import '../../data/fixtures.dart';
 
+class GatedMemoryStorage extends MemoryStorage {
+  Completer<void>? gate;
+  @override
+  Future<void> write(JsonMap data) async {
+    await gate?.future;
+    await super.write(data);
+  }
+}
+
 void main() {
   late ContentRepository content;
   late SetupStore store;
@@ -23,12 +33,13 @@ void main() {
     MemoryStorage? cache,
     bool load = true,
     bool english = false,
+    MemoryStorage? setupFile,
   }) async {
     content = ContentRepository(
       cache: cache ?? MemoryStorage(),
       fetchPage: fetch ?? (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
     );
-    file = MemoryStorage();
+    file = setupFile ?? MemoryStorage();
     store = SetupStore(content: content, file: file);
     addTearDown(content.dispose);
     addTearDown(store.dispose);
@@ -62,7 +73,7 @@ void main() {
       await tester.scrollUntilVisible(
         target,
         180,
-        scrollable: find.byType(Scrollable).last,
+        scrollable: find.byType(Scrollable).first,
       );
     }
     final finder = target.last;
@@ -72,12 +83,353 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets(
+    'create, discard, select, confirm, autosave, manage, rename and delete',
+    (tester) async {
+      await pump(tester, english: true);
+      await tap(tester, 'Players');
+      await tester.enterText(
+        find.byKey(const ValueKey('name-0-player-1')),
+        'Draft player',
+      );
+      await tap(tester, 'Unsaved game');
+      await tap(tester, 'Save as a list…');
+      await tester.enterText(find.byType(TextFormField).last, '  Friends  ');
+      await tap(tester, 'Save');
+      expect(store.setup.value.activePresetId, null);
+      expect(
+        store.setup.value.presets.single.setup.players.first.name,
+        'Draft player',
+      );
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tap(tester, 'Discard');
+      expect(store.setup.value.players.first.name, 'Player 1');
+      expect(store.setup.value.presets.single.name, 'Friends');
+      await tap(tester, 'Players');
+      await tap(tester, 'Unsaved game');
+      await tap(tester, 'Friends');
+      await tap(tester, 'Confirm');
+      expect(store.setup.value.players.first.name, 'Draft player');
+      expect(store.setup.value.activePresetId, 'preset-1');
+      await tap(tester, 'Imposters know each other');
+      expect(store.setup.value.presets.single.setup.knowEachOther, true);
+      await tap(tester, 'Players');
+      await tester.enterText(
+        find.byType(TextFormField).first,
+        'Keep this draft',
+      );
+      await tap(tester, 'Friends');
+      await tap(tester, 'Manage lists');
+      expect(
+        find.text('In use', findRichText: true),
+        findsNothing,
+      ); // association is part of the count subtitle
+      expect(find.textContaining('In use'), findsOneWidget);
+      await tap(tester, 'Friends');
+      expect(find.text('Saved rules'), findsOneWidget);
+      expect(store.setup.value.activePresetId, 'preset-1');
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('List actions'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Details');
+      expect(find.text('Saved rules'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('List actions'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Rename');
+      await tester.enterText(find.byType(TextFormField).last, 'Team');
+      await tap(tester, 'Save');
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Team'), findsOneWidget);
+      expect(find.text('Keep this draft'), findsOneWidget);
+      await tap(tester, 'Team');
+      await tap(tester, 'Manage lists');
+      await tester.tap(find.byTooltip('List actions'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Delete');
+      await tap(tester, 'Cancel');
+      expect(store.setup.value.presets, hasLength(1));
+      await tester.tap(find.byTooltip('List actions'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Delete');
+      await tap(tester, 'Delete');
+      expect(store.setup.value.presets, isEmpty);
+      expect(store.setup.value.activePresetId, null);
+      expect(
+        find.textContaining('Return to the player editor'),
+        findsOneWidget,
+      );
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Unsaved game'), findsOneWidget);
+      await tap(tester, 'Confirm');
+      expect(store.setup.value.players.first.name, 'Keep this draft');
+      expect(store.setup.value.presets, isEmpty);
+      expect(tester.takeException(), null);
+    },
+  );
+
+  testWidgets(
+    'preset and editor failures retain input; duplicate names and unsaved selection',
+    (tester) async {
+      await pump(tester, english: true);
+      await tap(tester, 'Players');
+      await tap(tester, 'Unsaved game');
+      await tap(tester, 'Save as a list…');
+      await tap(tester, 'Save');
+      expect(
+        find.text('Use a non-empty name that is not already taken.'),
+        findsOneWidget,
+      );
+      await tester.enterText(find.byType(TextFormField).last, 'Friends');
+      file.failWrite = true;
+      await tap(tester, 'Save');
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Friends'), findsOneWidget);
+      file.failWrite = false;
+      await tap(tester, 'Save');
+      await tap(tester, 'Friends');
+      await tap(tester, 'Save as a list…');
+      await tester.enterText(find.byType(TextFormField).last, ' friends ');
+      await tap(tester, 'Save');
+      expect(
+        find.text('Use a non-empty name that is not already taken.'),
+        findsOneWidget,
+      );
+      await tap(tester, 'Cancel');
+      await tap(tester, 'Friends');
+      await tap(tester, 'Unsaved game');
+      expect(store.setup.value.presets, hasLength(1));
+      file.failWrite = true;
+      await tap(tester, 'Confirm');
+      expect(find.text('Edit player names'), findsOneWidget);
+      file.failWrite = false;
+      await tap(tester, 'Confirm');
+      expect(store.setup.value.activePresetId, null);
+    },
+  );
+
+  testWidgets(
+    'small editor and preset dialogs handle keyboard and text scale two',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await pump(tester, english: true);
+      await tap(tester, 'Players');
+      await tap(tester, 'Unsaved game');
+      await tap(tester, 'Manage lists');
+      expect(
+        find.textContaining('Return to the player editor'),
+        findsOneWidget,
+      );
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tap(tester, 'Unsaved game');
+      await tap(tester, 'Save as a list…');
+      tester.view.viewInsets = const FakeViewPadding(bottom: 180);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField).last, 'Team');
+      await tap(tester, 'Save');
+      tester.view.resetViewInsets();
+      await tester.pumpAndSettle();
+      final semantics = tester.ensureSemantics();
+      expect(find.bySemanticsLabel('Team'), findsOneWidget);
+      semantics.dispose();
+      await tap(tester, 'Team');
+      await tap(tester, 'Manage lists');
+      await tester.tap(find.byTooltip('List actions'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Details');
+      await tap(tester, 'Saved rules');
+      expect(tester.takeException(), null);
+    },
+  );
+
+  testWidgets(
+    'pending writes block duplicate confirmation and conflicting actions',
+    (tester) async {
+      final disk = GatedMemoryStorage();
+      await pump(tester, english: true, setupFile: disk);
+      await tap(tester, 'Players');
+      await tap(tester, 'Unsaved game');
+      await tap(tester, 'Save as a list…');
+      await tester.enterText(find.byType(TextFormField).last, 'Team');
+      disk.gate = Completer<void>();
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.pump();
+      expect(
+        tester
+            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Save'))
+            .onPressed,
+        null,
+      );
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(store.setup.value.presets, isEmpty);
+      disk.gate!.complete();
+      await tester.pumpAndSettle();
+      expect(store.setup.value.presets, hasLength(1));
+      await tap(tester, 'Confirm');
+      await tap(tester, 'Imposters');
+      await tap(tester, 'Random');
+      disk.gate = Completer<void>();
+      await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
+      await tester.pump();
+      expect(
+        tester
+            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Confirm'))
+            .onPressed,
+        null,
+      );
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+      disk.gate!.complete();
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(store.setup.value.presets.single.setup.randomImposters, true);
+    },
+  );
+
+  testWidgets(
+    'selecting groups changes only draft; dismissal and unsaved preserve values',
+    (tester) async {
+      await pump(tester, english: true);
+      final original = store.setup.value;
+      final first = await store.createPreset('First', original);
+      final small = original.copyWith(
+        players: original.players
+            .take(3)
+            .map((p) => SetupPlayer(p.id, 'Guest'))
+            .toList(),
+        nextPlayerId: 4,
+        randomImposters: true,
+        showCategory: true,
+        knowEachOther: true,
+      );
+      await store.createPreset('Small', small);
+      await store.confirmDraft(original, first);
+      await tester.pumpAndSettle();
+      await tap(tester, 'Players');
+      await tap(tester, 'First');
+      await tap(tester, 'Small');
+      expect(find.byType(TextFormField), findsNWidgets(3));
+      expect(store.setup.value.activePresetId, first);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tap(tester, 'Discard');
+      expect(store.setup.value.players, hasLength(4));
+      await tap(tester, 'Players');
+      await tap(tester, 'First');
+      await tap(tester, 'Small');
+      await tap(tester, 'Small');
+      await tap(tester, 'Unsaved game');
+      await tap(tester, 'Confirm');
+      expect(store.setup.value.activePresetId, null);
+      expect(
+        store.setup.value.players.map((p) => p.name),
+        everyElement('Guest'),
+      );
+      expect(store.setup.value.nextPlayerId, 4);
+      expect(store.setup.value.randomImposters, true);
+      expect(
+        store.setup.value.presets.first.setup.rosterJson(),
+        original.rosterJson(),
+      );
+      await tap(tester, 'Players');
+      await tap(tester, 'Unsaved game');
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Unsaved game'), findsOneWidget);
+      await tap(tester, 'Confirm');
+      expect(store.setup.value.players, hasLength(3));
+    },
+  );
+
+  for (final type in ['word', 'question']) {
+    testWidgets(
+      'fixed imposter plus/minus boundaries and mode switching in $type',
+      (tester) async {
+        await pump(tester, english: true);
+        await store.setGameType(type);
+        for (final n in [3, 4, 5, 6, 7]) {
+          await store.setPlayerCount(n);
+          await tester.pumpAndSettle();
+          await tap(tester, 'Imposters');
+          final plus = find.byWidgetPredicate(
+            (w) => w is IconButton && w.tooltip == 'More imposters',
+          );
+          final minus = find.byWidgetPredicate(
+            (w) => w is IconButton && w.tooltip == 'Fewer imposters',
+          );
+          final max = (n - 1) ~/ 2;
+          expect(
+            find.byKey(const Key('imposterLimitWarning')),
+            max == 1 ? findsOneWidget : findsNothing,
+          );
+          expect(
+            find.text(
+              'At least 5 players are needed to choose more than 1 imposter.',
+            ),
+            max == 1 ? findsOneWidget : findsNothing,
+          );
+          expect(tester.widget<IconButton>(minus).onPressed, null);
+          for (var value = 1; value < max; value++) {
+            expect(tester.widget<IconButton>(plus).onPressed, isNotNull);
+            await tester.tap(plus);
+            await tester.pumpAndSettle();
+            expect(
+              find.descendant(
+                of: find.byType(BottomSheet),
+                matching: find.text('${value + 1}'),
+              ),
+              findsOneWidget,
+            );
+          }
+          expect(tester.widget<IconButton>(plus).onPressed, null);
+          await tap(tester, 'Random');
+          expect(plus, findsNothing);
+          await tap(tester, 'Fixed');
+          expect(
+            find.descendant(
+              of: find.byType(BottomSheet),
+              matching: find.text('$max'),
+            ),
+            findsOneWidget,
+          );
+          for (var value = max; value > 1; value--) {
+            await tester.tap(minus);
+            await tester.pumpAndSettle();
+            expect(
+              find.descendant(
+                of: find.byType(BottomSheet),
+                matching: find.text('${value - 1}'),
+              ),
+              findsOneWidget,
+            );
+          }
+          expect(tester.widget<IconButton>(minus).onPressed, null);
+          await tap(tester, 'Confirm');
+          expect(store.setup.value.imposters, 1);
+        }
+      },
+    );
+  }
+
   testWidgets('roster edits validate, reorder, cancel and persist', (
     tester,
   ) async {
     await pump(tester, english: true);
     await tap(tester, 'Players');
-    await tester.enterText(find.byKey(const ValueKey('name-player-1')), '  ');
+    await tester.enterText(find.byKey(const ValueKey('name-0-player-1')), '  ');
     await tester.pumpAndSettle();
     expect(find.text('Enter a name.'), findsOneWidget);
     expect(
@@ -87,7 +439,7 @@ void main() {
       null,
     );
     await tester.enterText(
-      find.byKey(const ValueKey('name-player-1')),
+      find.byKey(const ValueKey('name-0-player-1')),
       '  Alex  ',
     );
     await tester.tap(find.byTooltip('Move down').first);
@@ -125,7 +477,7 @@ void main() {
     tester,
   ) async {
     await pump(tester, english: true);
-    store.setPlayerCount(7);
+    await store.setPlayerCount(7);
     await tester.pumpAndSettle();
     await tap(tester, 'Imposters');
     await tester.tap(find.byTooltip('More imposters'));
@@ -142,8 +494,10 @@ void main() {
     await tap(tester, 'Random');
     await tap(tester, 'Confirm');
     expect(store.setup.value.randomImposters, true);
+    await tap(tester, 'Imposters');
+    await tap(tester, 'Imposters never start');
+    await tap(tester, 'Confirm');
     for (final label in [
-      'Imposters never start',
       'Show category to imposters',
       'Imposters know each other',
     ]) {
@@ -162,7 +516,7 @@ void main() {
       final semantics = tester.ensureSemantics();
       expect(find.bySemanticsLabel('4 người chơi'), findsOneWidget);
       semantics.dispose();
-      expect(find.byType(Switch), findsNWidgets(3));
+      expect(find.byType(Switch), findsNWidgets(2));
       expect(find.byIcon(Icons.settings), findsNothing);
       final player = tester.getRect(find.text('Người chơi'));
       final imposter = tester.getRect(find.text('Kẻ mạo danh'));
@@ -225,6 +579,7 @@ void main() {
     expect(find.bySemanticsLabel('3 players'), findsOneWidget);
 
     await tap(tester, 'Players');
+
     await tap(tester, 'Add player');
     await tap(tester, 'Confirm');
     expect(find.bySemanticsLabel('4 players'), findsOneWidget);
@@ -236,7 +591,7 @@ void main() {
     await tap(tester, 'Discard');
     expect(find.bySemanticsLabel('4 players'), findsOneWidget);
 
-    store.setPlayerCount(100);
+    await store.setPlayerCount(100);
     await tester.pumpAndSettle();
     await tap(tester, 'Players');
     await tester.scrollUntilVisible(
@@ -266,8 +621,8 @@ void main() {
     tester,
   ) async {
     await pump(tester, english: true);
-    store.setPlayerCount(5);
-    store.setRules(imposters: 2);
+    await store.setPlayerCount(5);
+    await store.setRules(imposters: 2);
     await tester.pumpAndSettle();
     await tap(tester, 'Players');
     await tester.tap(find.byTooltip('Remove player').first);
@@ -321,8 +676,7 @@ void main() {
     expect(find.text('Using saved content.'), findsOneWidget);
     file.failWrite = true;
     await tap(tester, 'Family');
-    expect(find.text('0 eligible words'), findsOneWidget);
-    expect(find.text('No eligible content in this mode.'), findsOneWidget);
+    expect(store.setup.value.family, false);
     expect(
       find.text('Setup could not be saved. Your changes are still here.'),
       findsOneWidget,
@@ -336,25 +690,21 @@ void main() {
     expect(file.data!['mode'], 'family');
   });
 
-  testWidgets('unreadable settings require retry or confirmed reset', (
-    tester,
-  ) async {
+  testWidgets('unreadable settings require retry', (tester) async {
     await pump(tester, english: true);
     file.failRead = true;
     await store.restore();
     await tester.pumpAndSettle();
     expect(
-      find.text('Saved setup could not be read. Retry or reset to continue.'),
+      find.text('Saved setup could not be read. Retry to continue.'),
       findsOneWidget,
     );
-    await tap(tester, 'Reset setup');
-    await tap(tester, 'Cancel');
+    expect(find.text('Reset setup'), findsNothing);
     expect(store.readFailed.value, true);
     expect(file.writes, 0);
-    await tap(tester, 'Reset setup');
-    await tap(tester, 'Reset setup');
+    file.failRead = false;
+    await tap(tester, 'Retry');
     expect(store.readFailed.value, false);
-    expect(file.writes, greaterThan(0));
   });
 
   testWidgets(
@@ -392,8 +742,13 @@ void main() {
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
         await pump(tester);
         await tap(tester, 'Người chơi');
+        await tester.scrollUntilVisible(
+          find.byKey(const ValueKey('name-0-player-1')),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
         await tester.enterText(
-          find.byKey(const ValueKey('name-player-1')),
+          find.byKey(const ValueKey('name-0-player-1')),
           '  An  ',
         );
         await tester.pumpAndSettle();
@@ -416,7 +771,7 @@ void main() {
         await tester.scrollUntilVisible(
           find.text('Bắt đầu ván chơi'),
           180,
-          scrollable: find.byType(Scrollable).last,
+          scrollable: find.byType(Scrollable).first,
         );
         await tester.pumpAndSettle();
         final buttonRect = tester.getRect(
