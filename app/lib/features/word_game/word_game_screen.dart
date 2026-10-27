@@ -1,4 +1,5 @@
 import 'package:untitled/widgets/app_content.dart';
+import 'package:untitled/features/word_game/word_image.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/constants/app_spacing.dart';
 import 'package:flutter/material.dart';
@@ -328,6 +329,11 @@ class _WordGameScreenState extends State<WordGameScreen>
                                           context,
                                         ).textTheme.headlineMedium,
                                       ),
+                                      if (session.showWordImages &&
+                                          !session.imposterIds.contains(
+                                            current,
+                                          ))
+                                        WordImage(session.prompt),
                                       if (!session.imposterIds.contains(
                                             current,
                                           ) ||
@@ -404,6 +410,8 @@ class _WordGameScreenState extends State<WordGameScreen>
                               session.prompt.text,
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
+                            if (session.showWordImages)
+                              WordImage(session.prompt),
                           ],
                         ],
                       ),

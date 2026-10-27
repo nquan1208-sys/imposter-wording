@@ -35,7 +35,7 @@ test('word editor refreshes clean cache, protects edits, and keeps save conflict
   const originalWindow = globalThis.window
   const queryClient = new QueryClient({ defaultOptions: { queries: { enabled: false, gcTime: Infinity } } })
   const id = '00000000-0000-4000-8000-000000000001'
-  const row = { id, text: 'Cached word', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi', image_path: '', status: 'draft', updated_at: '2026-10-13T10:00:00Z' }
+  const row = { id, text: 'Cached word', category_id: id, difficulty: 'medium', locale: 'vi', image_path: '', status: 'draft', updated_at: '2026-10-13T10:00:00Z' }
   const fresh = { ...row, text: 'Server word', updated_at: '2026-10-13T11:00:00Z' }
   let app: TestApp | undefined
   let supabase: ClientStub | undefined, originalFrom: ClientStub['from'] | undefined, originalGetUser: ClientStub['auth']['getUser'] | undefined
@@ -122,7 +122,7 @@ test('saved-word deletion preserves input on failure, blocks repeats/leave/logou
   const invalidations: (readonly unknown[] | undefined)[] = [], invalidateQueries = queryClient.invalidateQueries.bind(queryClient)
   queryClient.invalidateQueries = options => { invalidations.push((typeof options === 'function' ? options() : options)?.queryKey); return invalidateQueries(options) }
   const id = '00000000-0000-4000-8000-000000000001'
-  const row = { id, text: 'Saved apple', image_path: '', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi', status: 'published', updated_at: '2026-10-13T10:00:00Z', game_categories: { id, name: 'Saved category', locale: 'vi', is_active: false } }
+  const row = { id, text: 'Saved apple', image_path: '', category_id: id, difficulty: 'medium', locale: 'vi', status: 'published', updated_at: '2026-10-13T10:00:00Z', game_categories: { id, name: 'Saved category', locale: 'vi', is_active: false } }
   let supabase: ClientStub | undefined, originalRpc: ClientStub['rpc'] | undefined, originalFrom: ClientStub['from'] | undefined, originalGetUser: ClientStub['auth']['getUser'] | undefined, originalSignOut: ClientStub['auth']['signOut'] | undefined
   try {
     globalThis.window = testWindow({ addEventListener() {}, removeEventListener() {}, confirm: () => false })

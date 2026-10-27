@@ -56,20 +56,17 @@ void main() async {
         content
             .categoryCounts(family: true, gameType: 'question')
             .keys
-            .single
-            .id,
-        'q',
+            .map((c) => c.id)
+            .toSet(),
+        {'q', 'q-adult'},
       );
       await setup.setCategories({'q-adult'});
       expect(session().prompt.id, 'adult');
       await setup.setFamily(true);
-      expect(setup.setup.value.categoryIds, isEmpty);
-      expect(setup.selectionRemoved.value, true);
-      expect(session().prompt.id, '4');
-      expect(
-        content.eligibleQuestions(family: false, categoryIds: {'a'}),
-        isEmpty,
-      );
+      expect(setup.setup.value.family, false);
+      expect(setup.setup.value.categoryIds, {'q-adult'});
+      expect(session().prompt.id, 'adult');
+      expect(content.eligibleQuestions(categoryIds: {'a'}), isEmpty);
       await setup.save();
       expect(GameSetup.fromJson(file.data!).gameType, 'question');
       expect(

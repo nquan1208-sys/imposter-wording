@@ -14,7 +14,7 @@ begin
   perform pg_temp.save_question(v_prompt,v_category,'en','draft');
   perform pg_temp.expect_error(format('select public.delete_question_prompt(%L,%L)',v_prompt,version),'40001');
   perform pg_temp.assert_true((select to_jsonb(t) = translation from public.question_prompt_translations t where prompt_id = v_prompt and locale = 'vi'),'other translation untouched');
-  perform pg_temp.expect_error(format('select public.save_question_prompt(%L,%L,%L,false,%L,%L,%L,%L,%L)',v_prompt,v_category,'easy','vi','stale','other','draft',version),'40001');
+  perform pg_temp.expect_error(format('select public.save_question_prompt(%L,%L,%L,%L,%L,%L,%L,%L)',v_prompt,v_category,'easy','vi','stale','other','draft',version),'40001');
   select to_jsonb(q) into original from public.question_prompts q where id = v_prompt;
   perform pg_temp.expect_error(format('select pg_temp.save_question(%L,%L,%L,%L,%L,%L)',v_prompt,v_category,'en','draft',' SAME? ',chr(160)||'same?'||chr(65279)),'23514');
   perform pg_temp.expect_error(format('select pg_temp.save_question(%L,%L,%L,%L,%L,%L)',v_prompt,v_category,'en','draft',chr(160),'Other'),'23514');

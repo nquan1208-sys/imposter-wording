@@ -144,6 +144,7 @@
   "fewerImposters": "Fewer imposters",
   "moreImposters": "More imposters",
   "imposterNotFirst": "Imposters never start",
+  "showWordImages": "Show images",
   "showCategory": "Show category to imposters",
   "knowEachOther": "Imposters know each other",
   "fellowImposters": "Other imposters: {name}",
@@ -227,5 +228,17 @@
   "chooseImposters": "Choose imposters",
   "fixedCountHelp": "Choose the exact number of imposters",
   "randomCountHelp": "A random number of imposters each game",
-  "moreImpostersNeedPlayers": "At least 5 players are needed to choose more than 1 imposter."
+  "moreImpostersNeedPlayers": "At least 5 players are needed to choose more than 1 imposter.",
+  "refreshContent": "Refresh content",
+  "wordImageUnavailable": "Image unavailable",
+  "wordImage": "Image for {word}",
+  "@wordImage": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "familyCategories": "Family mode",
+  "emptyFamilyCategories": "No family categories have content yet. Choose All categories or try again later."
 }

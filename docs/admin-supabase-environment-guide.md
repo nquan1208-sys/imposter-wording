@@ -1,5 +1,6 @@
 # Hướng dẫn môi trường Admin và Supabase
 
+Hợp đồng Family Mode hiện hành và quy trình nâng cấp local: [Family Mode theo danh mục](family-mode.md).
 > Cập nhật 2026-10-24: local đã có schema bản gốc + bản dịch, dashboard và Storage private
 > `word-prompt-images`; Dev cloud INACTIVE, chưa cutover. Hợp đồng hiện tại xem
 > [schema và quyền API](./admin-supabase-new-device-guide.md#8-những-gì-migration-hiện-tại-tạo-ra),

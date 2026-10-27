@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/base/store/auto_dispose_manager.dart';
 import 'package:untitled/base/store/store_base.dart';
 import 'package:untitled/data/local_json_store.dart';
+import 'package:untitled/data/word_image_cache.dart';
 import 'package:untitled/models/content.dart';
 
 typedef FetchContentPage =
@@ -30,8 +31,8 @@ class SupabaseContentSource {
         ? 'word_prompt_translations'
         : 'question_prompt_translations';
     final columns = category
-        ? 'id,game_type,slug,sort_order,is_active,t:$translations!inner(category_id,locale,name,description,status)'
-        : 'id,category_id,difficulty,is_family_friendly,${table == 'word_prompts' ? 'image_path,' : ''}t:$translations!inner(prompt_id,locale,status,${table == 'word_prompts' ? 'text' : 'civilian_question,imposter_question'}),c:game_categories!inner(id,is_active,t:game_category_translations!inner(locale,status))';
+        ? 'id,game_type,slug,sort_order,is_active,is_family_friendly,t:$translations!inner(category_id,locale,name,description,status)'
+        : 'id,category_id,difficulty,${table == 'word_prompts' ? 'image_path,' : ''}t:$translations!inner(prompt_id,locale,status,${table == 'word_prompts' ? 'text' : 'civilian_question,imposter_question'}),c:game_categories!inner(id,is_active,t:game_category_translations!inner(locale,status))';
     var query = client
         .from(table)
         .select(columns)
@@ -54,6 +55,8 @@ class ContentRepository extends StoreBase {
   final LocalJsonStore cache;
   final String contentLocale;
   final int pageSize;
+  final Duration requestTimeout;
+  final WordImageCache? images;
   final _disposers = AutoDisposeManager();
   late final snapshot = signal<ContentSnapshot?>(null).manageBy(_disposers);
   late final loading = signal(false).manageBy(_disposers);
@@ -67,19 +70,32 @@ class ContentRepository extends StoreBase {
     required this.cache,
     this.contentLocale = 'vi',
     this.pageSize = 500,
+    this.requestTimeout = const Duration(seconds: 15),
+    this.images,
   });
   Future<void> load() =>
       _pending ??= _load().whenComplete(() => _pending = null);
   Future<void> _load() async {
+    var imagesStarted = false;
+    void refreshImages() {
+      final current = snapshot.value;
+      if (current != null) {
+        images?.refresh(current, retryFailures: !imagesStarted);
+        imagesStarted = true;
+      }
+    }
+
+    refreshImages();
     loading.value = true;
     loadFailed.value = false;
-    if (!_readCache) {
+    if (!_readCache && snapshot.value == null) {
       try {
         final data = await cache.read();
         if (isDispose) return;
         if (data != null) {
           snapshot.value = ContentSnapshot.fromJson(data, contentLocale);
           cached.value = true;
+          refreshImages();
         }
         _readCache = true;
         cacheWarning.value = false;
@@ -101,7 +117,8 @@ class ContentRepository extends StoreBase {
             contentLocale,
             from,
             from + pageSize - 1,
-          );
+          ).timeout(requestTimeout);
+          if (isDispose) return;
           for (final row in page) {
             final id = requiredText(row, 'id');
             // Validate repeated rows too; malformed duplicates must fail the load.
@@ -126,6 +143,7 @@ class ContentRepository extends StoreBase {
       final complete = ContentSnapshot.fromJson(data, contentLocale);
       if (isDispose) return;
       snapshot.value = complete;
+      refreshImages();
       cached.value = false;
       try {
         await cache.write(data);
@@ -134,9 +152,15 @@ class ContentRepository extends StoreBase {
         if (!isDispose) cacheWarning.value = true;
       }
     } catch (_) {
-      if (!isDispose) loadFailed.value = true;
+      if (!isDispose) {
+        loadFailed.value = true;
+        cached.value = snapshot.value != null;
+      }
     } finally {
-      if (!isDispose) loading.value = false;
+      if (!isDispose) {
+        loading.value = false;
+        refreshImages();
+      }
     }
   }
 
@@ -144,25 +168,26 @@ class ContentRepository extends StoreBase {
     required bool family,
     Set<String> categoryIds = const {},
   }) {
+    final familyCategories =
+        snapshot.value?.categories
+            .where((c) => c.isFamilyFriendly)
+            .map((c) => c.id)
+            .toSet() ??
+        <String>{};
     return snapshot.value?.words
             .where(
               (w) =>
-                  (!family || w.isFamilyFriendly) &&
+                  (!family || familyCategories.contains(w.categoryId)) &&
                   (categoryIds.isEmpty || categoryIds.contains(w.categoryId)),
             )
             .toList() ??
         [];
   }
 
-  List<QuestionPair> eligibleQuestions({
-    required bool family,
-    Set<String> categoryIds = const {},
-  }) =>
+  List<QuestionPair> eligibleQuestions({Set<String> categoryIds = const {}}) =>
       snapshot.value?.questions
           .where(
-            (q) =>
-                (!family || q.isFamilyFriendly) &&
-                (categoryIds.isEmpty || categoryIds.contains(q.categoryId)),
+            (q) => (categoryIds.isEmpty || categoryIds.contains(q.categoryId)),
           )
           .toList() ??
       [];
@@ -173,7 +198,7 @@ class ContentRepository extends StoreBase {
   }) {
     final counts = <String, int>{};
     final ids = gameType == 'question'
-        ? eligibleQuestions(family: family).map((q) => q.categoryId)
+        ? eligibleQuestions().map((q) => q.categoryId)
         : eligibleWords(family: family).map((w) => w.categoryId);
     for (final id in ids) {
       counts.update(id, (n) => n + 1, ifAbsent: () => 1);

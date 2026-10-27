@@ -1,9 +1,18 @@
+import 'dart:io';
+import 'package:untitled/base/dependency/app_service.dart';
+import 'package:untitled/base/dependency/router/router_service.dart';
+import 'package:untitled/base/dependency/router/router_provider.dart';
+import 'package:untitled/base/dependency/router/utils/route_input.dart';
+import 'package:untitled/base/dependency/router/utils/route_name.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled/base/store/store_provider.dart';
 import 'package:untitled/data/content_repository.dart';
+import 'package:untitled/data/word_image_cache.dart';
+import 'package:untitled/features/word_game/word_image.dart';
+import '../../data/image_fixture.dart';
 import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/features/word_game/word_game_screen.dart';
@@ -12,11 +21,55 @@ import 'package:untitled/main.dart';
 import 'package:untitled/models/content.dart';
 import '../../data/fixtures.dart';
 
+class WidgetImageCache extends WordImageCache {
+  File? currentFile;
+  int pins = 0;
+  @override
+  VoidCallback pin(String? path) {
+    pins++;
+    final release = super.pin(path);
+    return () {
+      pins--;
+      release();
+    };
+  }
+
+  WidgetImageCache()
+    : super(
+        backendUrl: 'https://test.example',
+        signedUrl: (_) async => throw StateError('unused'),
+        inventory: () async => {},
+      );
+  @override
+  void refresh(ContentSnapshot snapshot, {bool retryFailures = true}) {}
+  @override
+  File? file(String path) => currentFile;
+  void arrive(File file) {
+    currentFile = file;
+    notifyListeners();
+  }
+}
+
+class FailingGameRouter extends RouterService {
+  FailingGameRouter() : super(routerProvider: RouterProvider());
+  @override
+  Future<T?> push<T extends Object>(
+    RouteInput routeInput, {
+    BuildContext? context,
+  }) {
+    if (routeInput.routeName == RouteName.wordGame) {
+      throw StateError('Navigation failed');
+    }
+    return super.push<T>(routeInput, context: context);
+  }
+}
+
 void main() {
   late ContentRepository content;
   late SetupStore setup;
   late ProviderContainer container;
   late WordGameSession session;
+  late JsonMap fetchData;
 
   Future<void> tap(WidgetTester tester, String text) async {
     final target = find.text(text);
@@ -38,14 +91,22 @@ void main() {
     bool english = false,
     bool direct = true,
     bool advanced = false,
+    bool family = false,
+    bool showWordImages = false,
+    WordImageCache? images,
+    bool failNavigation = false,
   }) async {
+    fetchData = fixture();
     content = ContentRepository(
+      images: images,
       cache: MemoryStorage(),
-      fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
+      fetchPage: (t, l, f, e) => fixturePage(fetchData, t, l, f, e),
     );
     setup = SetupStore(content: content, file: MemoryStorage());
     await content.load();
     await setup.restore();
+    await setup.setFamily(family);
+    await setup.setShowWordImages(showWordImages);
     await setup.setPlayerCount(advanced ? 5 : 3);
     if (advanced) {
       await setup.setRules(
@@ -60,6 +121,8 @@ void main() {
     await setup.confirmDraft(setup.setup.value.presets.single.setup, presetId);
     container = ProviderContainer(
       overrides: [
+        if (failNavigation)
+          AppService.router.overrideWithValue(FailingGameRouter()),
         contentRepositoryProvider.overrideWithValue(content),
         setupStoreProvider.overrideWithValue(setup),
       ],
@@ -108,8 +171,10 @@ void main() {
       await tester.tap(find.byKey(ValueKey(p.id)));
       await tester.pumpAndSettle();
       expect(find.text(session.prompt.text), findsNothing);
+      expect(find.byType(WordImage), findsNothing);
       await tap(tester, english ? 'Tap to reveal' : 'Nhấn để hiển thị');
       if (session.imposterIds.contains(p.id)) {
+        expect(find.byType(WordImage), findsNothing);
         expect(find.text(session.prompt.text), findsNothing);
         expect(
           find.text(session.categoryName),
@@ -117,6 +182,10 @@ void main() {
         );
       } else {
         expect(find.text(session.prompt.text), findsOneWidget);
+        expect(
+          find.byType(WordImage),
+          session.showWordImages ? findsOneWidget : findsNothing,
+        );
       }
       await tap(tester, english ? 'Got it!' : 'Hiểu rồi!');
       if (p != session.setup.players.last) {
@@ -136,6 +205,220 @@ void main() {
         );
       }
     }
+  }
+
+  for (final (family, showImages) in [
+    (false, false),
+    (false, true),
+    (true, false),
+  ]) {
+    testWidgets(
+      'text only through result (family=$family, images=$showImages)',
+      (tester) async {
+        final images = WidgetImageCache();
+        addTearDown(images.dispose);
+        await pump(
+          tester,
+          english: true,
+          direct: false,
+          images: images,
+          family: family,
+          showWordImages: showImages,
+        );
+        await tap(tester, 'Start');
+        await tap(tester, 'Start game');
+        expect(images.pins, 0);
+        session = tester
+            .widget<WordGameScreen>(find.byType(WordGameScreen))
+            .session;
+        await finish(tester, english: true);
+        expect(find.byType(WordImage), findsNothing);
+        await tap(tester, 'Announce results');
+        final imposter = session.setup.players.firstWhere(
+          (p) => session.imposterIds.contains(p.id),
+        );
+        await tap(tester, imposter.name);
+        await tap(tester, 'Confirm');
+        expect(find.text(session.prompt.text), findsOneWidget);
+        expect(find.byType(WordImage), findsNothing);
+      },
+    );
+  }
+
+  testWidgets('prompts without image paths stay text-only', (tester) async {
+    await pump(
+      tester,
+      english: true,
+      direct: false,
+      family: true,
+      showWordImages: true,
+    );
+    for (final row in fetchData['words'] as List) {
+      row['image_path'] = null;
+    }
+    await content.load();
+    await tap(tester, 'Start');
+    await tap(tester, 'Start game');
+    final active = tester
+        .widget<WordGameScreen>(find.byType(WordGameScreen))
+        .session;
+    final civilian = active.setup.players.firstWhere(
+      (p) => !active.imposterIds.contains(p.id),
+    );
+    await tap(tester, civilian.name);
+    await tap(tester, 'Tap to reveal');
+    expect(find.text(active.prompt.text), findsOneWidget);
+    expect(find.byType(Image), findsNothing);
+    expect(find.text('Image unavailable'), findsNothing);
+  });
+
+  for (final failure in [false, true]) {
+    testWidgets(
+      'session image pin releases after navigation (failure=$failure)',
+      (tester) async {
+        final images = WidgetImageCache();
+        addTearDown(images.dispose);
+        await pump(
+          tester,
+          english: true,
+          direct: false,
+          images: images,
+          family: true,
+          showWordImages: true,
+          failNavigation: failure,
+        );
+        await tap(tester, 'Start');
+        await tap(tester, 'Start game');
+        if (failure) {
+          expect(images.pins, 0);
+          expect(find.byType(WordGameScreen), findsNothing);
+          expect(
+            find.textContaining('Could not start a game.'),
+            findsOneWidget,
+          );
+        } else {
+          expect(images.pins, 1);
+          await tester.binding.handlePopRoute();
+          await tester.pumpAndSettle();
+          await tap(tester, 'End game');
+          expect(images.pins, 0);
+        }
+        expect(tester.takeException(), null);
+      },
+    );
+  }
+
+  for (final dark in [false, true]) {
+    testWidgets(
+      'image arrival, file/decode failure and concealment (dark=$dark)',
+      (tester) async {
+        tester.platformDispatcher.platformBrightnessTestValue = dark
+            ? Brightness.dark
+            : Brightness.light;
+        addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+        tester.view.physicalSize = const Size(320, 568);
+        tester.view.devicePixelRatio = 1;
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.view.reset);
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final images = WidgetImageCache();
+        addTearDown(images.dispose);
+        await pump(
+          tester,
+          english: true,
+          images: images,
+          family: true,
+          showWordImages: true,
+        );
+        final semantics = tester.ensureSemantics();
+
+        final civilian = session.setup.players.firstWhere(
+          (p) => !session.imposterIds.contains(p.id),
+        );
+        await tap(tester, civilian.name);
+        expect(find.byType(WordImage), findsNothing);
+        await tap(tester, 'Tap to reveal');
+        await tester.ensureVisible(find.byType(WordImage));
+        await tester.pumpAndSettle();
+        expect(
+          find.bySemanticsLabel(RegExp('Image unavailable')),
+          findsOneWidget,
+        );
+        final root = await tester.runAsync(
+          () => Directory.systemTemp.createTemp('word-widget-'),
+        );
+        addTearDown(() async => root!.delete(recursive: true));
+        final file = File('${root!.path}/image.png');
+        await tester.runAsync(() => file.writeAsBytes(imageFixture()));
+        images.arrive(file);
+        await tester.pump();
+        expect(
+          find.bySemanticsLabel(RegExp('Image unavailable')),
+          findsOneWidget,
+        );
+        for (var frame = 0; frame < 10; frame++) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)),
+          );
+          await tester.pump();
+        }
+        await tester.pumpAndSettle();
+        expect(
+          find.bySemanticsLabel(RegExp('Image for ${session.prompt.text}')),
+          findsOneWidget,
+        );
+        expect(
+          tester.widget<WordGameScreen>(find.byType(WordGameScreen)).session,
+          same(session),
+        );
+        fetchData = {'categories': [], 'words': [], 'questions': []};
+        await content.load();
+        await tester.pumpAndSettle();
+        expect(find.text(session.prompt.text), findsOneWidget);
+        final broken = File('${root.path}/broken.png');
+        await tester.runAsync(() => broken.writeAsString('invalid'));
+        images.arrive(broken);
+        await tester.pump();
+        for (var frame = 0; frame < 10; frame++) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)),
+          );
+          await tester.pump();
+        }
+        await tester.pumpAndSettle();
+        expect(
+          find.bySemanticsLabel(RegExp('Image unavailable')),
+          findsOneWidget,
+        );
+        images.arrive(File('${root.path}/missing.png'));
+        await tester.pump();
+        for (var frame = 0; frame < 10; frame++) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)),
+          );
+          await tester.pump();
+        }
+        await tester.pumpAndSettle();
+        expect(
+          find.bySemanticsLabel(RegExp('Image unavailable')),
+          findsOneWidget,
+        );
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.inactive,
+        );
+        await tester.pump();
+        expect(find.byType(WordImage), findsNothing);
+        expect(
+          find.bySemanticsLabel(RegExp('Image unavailable')),
+          findsNothing,
+        );
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        expect(tester.takeException(), null);
+        semantics.dispose();
+      },
+    );
   }
 
   testWidgets(
@@ -199,9 +482,10 @@ void main() {
   testWidgets('complete round, cancel vote, confirm winner and replay', (
     tester,
   ) async {
-    await pump(tester);
+    await pump(tester, family: true, showWordImages: true);
     await finish(tester);
     expect(find.text('Giai đoạn bầu chọn'), findsOneWidget);
+    expect(find.byType(WordImage), findsNothing);
     await tap(tester, 'Thông báo kết quả');
     expect(
       tester
@@ -218,6 +502,7 @@ void main() {
     await tap(tester, imposter.name);
     await tap(tester, 'Xác nhận');
     expect(find.text('Nhóm chiến thắng!'), findsOneWidget);
+    expect(find.byType(WordImage), findsOneWidget);
     expect(find.text(session.prompt.text), findsOneWidget);
     final previousSetup = setup.setup.value.toJson();
     await tap(tester, 'Chơi lại');

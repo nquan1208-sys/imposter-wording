@@ -62,12 +62,12 @@ Hợp đồng đọc theo schema mới, áp dụng ngay từ phase 2 dù lúc đ
 | Nguồn | Trường dùng cho app | Quy tắc |
 | --- | --- | --- |
 | `content_languages` | `code`, `display_name`, `sort_order` | Danh mục ngôn ngữ nội dung; có mã ngôn ngữ không đồng nghĩa đã có đề published. Phase 12 dùng cho picker. |
-| `game_categories` + `game_category_translations` | Gốc: `id`, `game_type`, `sort_order`, `is_active`; bản dịch: `category_id`, `locale`, `name`, `description`, `status` | Ghép theo `category_id = id`; chỉ nhận bản dịch published đúng content locale và category active. `slug` unique theo `(game_type, slug)`, không phải theo locale; chọn/lưu bằng ID. |
-| `word_prompts` + `word_prompt_translations` | Gốc: `id`, `category_id`, `difficulty`, `is_family_friendly`, `image_path`; bản dịch: `prompt_id`, `locale`, `text`, `status` | Một bản dịch cho mỗi `(prompt_id, locale)`; ảnh thuộc đề gốc, dùng chung giữa các locale. |
-| `question_prompts` + `question_prompt_translations` | Gốc: `id`, `category_id`, `difficulty`, `is_family_friendly`; bản dịch: `prompt_id`, `locale`, `civilian_question`, `imposter_question`, `status` | Hai câu hỏi phải lấy từ cùng một hàng bản dịch; không ghép hai locale hoặc tự tạo câu còn thiếu. |
+| `game_categories` + `game_category_translations` | Gốc: `id`, `game_type`, `sort_order`, `is_active`, `is_family_friendly`; bản dịch: `category_id`, `locale`, `name`, `description`, `status` | Ghép theo `category_id = id`; chỉ nhận bản dịch published đúng content locale và category active. `slug` unique theo `(game_type, slug)`, không phải theo locale; chọn/lưu bằng ID. |
+| `word_prompts` + `word_prompt_translations` | Gốc: `id`, `category_id`, `difficulty`, `image_path`; bản dịch: `prompt_id`, `locale`, `text`, `status` | Một bản dịch cho mỗi `(prompt_id, locale)`; ảnh thuộc đề gốc, dùng chung giữa các locale. |
+| `question_prompts` + `question_prompt_translations` | Gốc: `id`, `category_id`, `difficulty`; bản dịch: `prompt_id`, `locale`, `civilian_question`, `imposter_question`, `status` | Hai câu hỏi phải lấy từ cùng một hàng bản dịch; không ghép hai locale hoặc tự tạo câu còn thiếu. |
 
 - Dùng một repository nội dung cho cả picker, số lượng content và random; model sau ghép phải giữ ID gốc và `contentLocale`. Giao diện không tự lọc lại bằng một bộ luật khác.
-- Content hợp lệ phải đúng loại game, có **bản dịch prompt và bản dịch category cùng locale đều `status = published`**, category `is_active = true`; Gia đình thêm `is_family_friendly = true`. Cổ điển lấy cả content phù hợp và không phù hợp gia đình. Không còn `locale`/`status` trên bảng prompt gốc hay các cột hint từ schema lịch sử.
+- Content hợp lệ phải đúng loại game, có **bản dịch prompt và bản dịch category cùng locale đều `status = published`**, category `is_active = true`; Gia đình chỉ áp dụng cho từ ngữ và yêu cầu `game_categories.is_family_friendly = true`; lấy toàn bộ từ hợp lệ trong danh mục. Cổ điển lấy cả content phù hợp và không phù hợp gia đình. Không còn `locale`/`status` trên bảng prompt gốc hay các cột hint từ schema lịch sử.
 - RLS cho phép đọc hàng gốc nếu có ít nhất một locale công khai; đọc được hàng gốc không chứng minh locale đang chọn có nội dung. Query translation phải lọc locale/status rõ ràng, ghép đủ cha/con; nested select phải loại hàng thiếu bản dịch, không biến left join thành content hợp lệ.
 - Không chọn category nghĩa là tất cả content hợp lệ; chọn nhiều category là hợp của chúng. Mỗi prompt có cơ hội được chọn như nhau trong tập hợp đó; không random category trước khiến category ít đề được ưu tiên.
 - Picker chỉ hiện category có content hợp lệ và hiển thị số lượng từ cùng tập dữ liệu dùng để bắt đầu ván. Lấy đủ các trang của dữ liệu cần dùng theo thứ tự ổn định ngay từ phase 2; không tính count/random trên trang đầu hoặc đếm mọi bản dịch thành nhiều đề.
@@ -156,7 +156,7 @@ Thứ tự mặc định là 1 → 13. Giữ số phase 1–11; phase 12 mới d
 ### Phase 2 — Thiết lập word và danh mục từ backend
 
 **Trạng thái triển khai 24/10/2026:** đã có setup Word, chọn 3–100 người,
-Classic/Family, picker hai cột với bản chọn tạm, load content nền dùng chung,
+hai tab Tất cả danh mục/Chế độ gia đình trong picker từ ngữ với bản chọn tạm, load content nền dùng chung,
 snapshot và thiết lập JSON riêng trong Application Support theo backend/locale.
 Lỗi refresh không thay cache; lỗi đọc thiết lập chặn ghi cho tới retry/reset có
 xác nhận. Nút bắt đầu ván vẫn chưa khả dụng cho tới phase 3.
@@ -447,6 +447,17 @@ là word.
 ### Phase 7 — Hoàn thiện đồng bộ content và ảnh
 
 **PR đề xuất:** `feat(app): harden content sync and word images`
+
+**Triển khai và bằng chứng 27/10/2026 (`app-phase-7`):**
+
+- Đã thêm refresh setup dùng chung `load()`, timeout 15 giây/trang, giữ snapshot khi lỗi và đánh dấu stale kể cả sau lần tải thành công. Kết quả rỗng hợp lệ thay cache; lỗi ghi cache chỉ cảnh báo persistence. Cache đọc lại không được thay nội dung memory mới hơn khi lần download tiếp theo thất bại.
+- `WordImageCache` dùng Application Support, key backend chuẩn hóa + path, không phụ thuộc locale/không lưu URL ký. Phục hồi ảnh có sẵn trước queue tải thiếu; ký URL 300 giây, timeout, giới hạn 5 MiB, kiểm tra MIME/decode, ghi tạm + rename, renew một lần khi hết hạn/unauthorized. Lỗi ảnh độc lập và đợi startup/refresh sau.
+- Hive có inventory read-only cho mọi snapshot cùng backend, kể cả legacy JSON. Cleanup serialize với download, kiểm tra lại inventory/current snapshot/session pin trước khi xóa; inventory lỗi thì không prune. Pin trước navigation và release cả khi route lỗi. Không thay setup/presets/migration/RLS/schema.
+- Người thường mở thẻ và kết quả word hiện ảnh local dưới từ; placeholder ổn định khi thiếu/lỗi, prompt không ảnh chỉ hiện chữ. Không có ảnh/semantics ở thẻ che/imposter, chọn người chơi hoặc thảo luận. Refresh không đổi prompt, locale, category, vai hoặc tiến độ của hai game.
+- `flutter gen-l10n` thành công, `flutter analyze` không có issue, `flutter test` **175 test qua**, 10 check HTTP/live opt-in được skip trong suite mặc định. Test bao phủ phân trang/lỗi giữa/late response/cache hỏng-rỗng/lỗi ghi/recovery, phân tách backend/chia sẻ locale/restart/cleanup/pin, ảnh đến sau/file-decode lỗi/concealment, route thất bại, refresh/category removal, hai theme và màn nhỏ/text scale 2.
+- Postman local HTTP simulation: **8/8 case qua, 57 request được ghi nhận** ở lần chạy cuối. REST nhiều trang (offset 0/2), JSON 500, HTML 502, malformed payload, timeout/late response, ký ảnh 300 giây, GET token expired → ký lại → GET 200 và Storage GET 500 đều đi qua client thật. Mã và hướng dẫn chạy: `postman/simulations/phase-7.context.md`; URL đọc từ `SUPABASE_SIMULATION_URL` trong env, không hardcode địa chỉ backend trong test.
+- Anonymous local read-only: **14 category, 52 word, 52 question pair**; snapshot `vi` hợp lệ, các translation anonymous trả về đều published, ký path không tồn tại bị từ chối. Không có image path trong dữ liệu hiện tại nên chưa xác minh tải ảnh hợp lệ hoặc ảnh chỉ eligible qua locale khác trên backend thật. **Dev không truy cập được/bị từ chối**, ghi nhận là chưa kiểm chứng; không ghi dữ liệu lên backend.
+- Giới hạn còn lại: chưa chạy thiết bị thật/Release hoặc screenshot. Quyền tải ảnh hợp lệ và tình huống locale khác cần dataset/backend khả dụng. Content offline có thể cũ tới khi sync thành công.
 
 - Phạm vi: hoàn thiện repository API/cache có từ phase 2; không thay UI hoặc luật của hai game. Chỉ lấy trường cần cho game, không lấy thông tin người tạo/quản trị.
 - Giữ hợp đồng gốc + translation published cùng content locale ở phase 2; kiểm tra hồi quy phân trang đầy đủ trước khi tính số lượng/random. Đồng bộ lại không được khôi phục query theo schema cũ hoặc lấy thêm locale ngoài yêu cầu.

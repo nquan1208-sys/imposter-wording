@@ -1,12 +1,11 @@
 import 'package:untitled/widgets/app_content.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
-import 'package:untitled/constants/app_spacing.dart';
 import 'package:untitled/data/game_providers.dart';
-import 'package:untitled/features/setup/content_notices.dart';
+import 'package:untitled/features/setup/all_categories_screen.dart';
+import 'package:untitled/features/setup/family_categories_screen.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 
 class CategoryScreen extends ConsumerStatefulWidget {
@@ -15,12 +14,47 @@ class CategoryScreen extends ConsumerStatefulWidget {
   ConsumerState<CategoryScreen> createState() => _CategoryScreenState();
 }
 
-class _CategoryScreenState extends ConsumerState<CategoryScreen> {
+class _CategoryScreenState extends ConsumerState<CategoryScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController tabs;
   late Set<String> selected;
+  late bool family, showWordImages;
+  bool selectionRemoved = false, saveFailed = false;
   @override
   void initState() {
     super.initState();
-    selected = Set.of(ref.read(setupStoreProvider).setup.value.categoryIds);
+    final setup = ref.read(setupStoreProvider).setup.value;
+    selected = Set.of(setup.categoryIds);
+    family = setup.gameType == 'word' && setup.family;
+    showWordImages = setup.showWordImages;
+    tabs = TabController(length: 2, initialIndex: family ? 1 : 0, vsync: this)
+      ..addListener(changeTab);
+  }
+
+  void changeTab() {
+    final nextFamily = tabs.index == 1;
+    if (nextFamily == family) return;
+    setState(() {
+      family = nextFamily;
+      final available = ref
+          .read(setupStoreProvider)
+          .content
+          .categoryCounts(family: family)
+          .keys
+          .map((c) => c.id)
+          .toSet();
+      final retained = selected.intersection(available);
+      selectionRemoved = selected.length != retained.length;
+      selected = retained;
+    });
+  }
+
+  void updateSelection(Set<String> value) => setState(() => selected = value);
+
+  @override
+  void dispose() {
+    tabs.dispose();
+    super.dispose();
   }
 
   @override
@@ -30,11 +64,18 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
     return SignalBuilder(
       builder: (context) {
         final counts = store.content.categoryCounts(
-          family: store.setup.value.family,
+          family: family,
           gameType: store.setup.value.gameType,
         );
         final available = counts.keys.map((c) => c.id).toSet();
         final valid = selected.intersection(available);
+        final allCategories = AllCategoriesScreen(
+          store: store,
+          selected: selected,
+          onChanged: updateSelection,
+          selectionRemoved: selectionRemoved,
+          saveFailed: saveFailed,
+        );
         return Scaffold(
           appBar: AppBar(title: Text(l.categories)),
           bottomNavigationBar: AppContent(
@@ -45,7 +86,14 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                 onPressed:
                     store.editable && store.content.snapshot.value != null
                     ? () async {
-                        final saved = await store.setCategories(selected);
+                        final saved = await store.setCategories(
+                          valid,
+                          family: family,
+                          showWordImages: showWordImages,
+                        );
+                        if (mounted && !saved) {
+                          setState(() => saveFailed = true);
+                        }
                         if (context.mounted && saved) Navigator.pop(context);
                       }
                     : null,
@@ -54,96 +102,45 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
             ),
           ),
           body: AppContent(
-            child: ListView(
-              padding: AppEdgeInsets.all24,
-              children: [
-                Text(
-                  '${store.setup.value.gameType == 'question' ? l.questionGame : l.wordGame} · ${store.setup.value.family ? l.familyMode : l.classicMode}',
-                ),
-                ContentNotices(store.content),
-                if (store.writeFailed.value) Text(l.settingsWriteError),
-                if (selected.length != valid.length) Text(l.selectionRemoved),
-                if (counts.isEmpty) Text(l.emptyContent),
-                FilterChip(
-                  label: Text(l.allCategories),
-                  selected: valid.isEmpty,
-                  onSelected: (_) => setState(() => selected.clear()),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                LayoutBuilder(
-                  builder: (context, constraints) => Wrap(
-                    spacing: AppSpacing.md,
-                    runSpacing: AppSpacing.md,
+            child: store.setup.value.gameType == 'word'
+                ? Column(
                     children: [
-                      for (final entry in counts.entries)
-                        SizedBox(
-                          width:
-                              constraints.maxWidth < 360 ||
-                                  MediaQuery.textScalerOf(context).scale(16) >
-                                      24
-                              ? constraints.maxWidth
-                              : (constraints.maxWidth - AppSpacing.md) / 2,
-                          child: Semantics(
-                            selected: valid.contains(entry.key.id),
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: valid.contains(entry.key.id)
-                                    ? Theme.of(
-                                        context,
-                                      ).colorScheme.primaryContainer
-                                    : AppColors.white,
-                                side: BorderSide(
-                                  color: valid.contains(entry.key.id)
-                                      ? AppColors.charcoal
-                                      : AppColors.border,
-                                  width: valid.contains(entry.key.id) ? 2 : 1,
-                                ),
-                              ),
-                              onPressed: () => setState(() {
-                                selected = Set.of(valid);
-                                if (!selected.add(entry.key.id)) {
-                                  selected.remove(entry.key.id);
-                                }
-                              }),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.lg,
-                                ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      valid.contains(entry.key.id)
-                                          ? Icons.check_circle_outline
-                                          : Icons.category_outlined,
-                                      color: AppColors.charcoal,
-                                    ),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    Text(
-                                      entry.key.name,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    Text(
-                                      store.setup.value.gameType == 'question'
-                                          ? l.questionCount(entry.value)
-                                          : l.wordCount(entry.value),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(color: AppColors.gray),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+                      IgnorePointer(
+                        ignoring: !store.editable,
+                        child: TabBar(
+                          controller: tabs,
+                          isScrollable: true,
+                          tabAlignment: TabAlignment.center,
+                          tabs: [
+                            Tab(text: l.allCategories),
+                            Tab(text: l.familyCategories),
+                          ],
                         ),
+                      ),
+                      Expanded(
+                        child: TabBarView(
+                          controller: tabs,
+                          physics: store.editable
+                              ? null
+                              : const NeverScrollableScrollPhysics(),
+                          children: [
+                            allCategories,
+                            FamilyCategoriesScreen(
+                              store: store,
+                              selected: selected,
+                              onChanged: updateSelection,
+                              selectionRemoved: selectionRemoved,
+                              saveFailed: saveFailed,
+                              showWordImages: showWordImages,
+                              onImagesChanged: (value) =>
+                                  setState(() => showWordImages = value),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-              ],
-            ),
+                  )
+                : allCategories,
           ),
         );
       },

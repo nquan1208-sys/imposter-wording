@@ -144,6 +144,7 @@
   "fewerImposters": "Giảm kẻ mạo danh",
   "moreImposters": "Tăng kẻ mạo danh",
   "imposterNotFirst": "Kẻ mạo danh không đi trước",
+  "showWordImages": "Hiển thị ảnh",
   "showCategory": "Hiển thị danh mục cho kẻ mạo danh",
   "knowEachOther": "Kẻ mạo danh biết nhau",
   "fellowImposters": "Kẻ mạo danh cùng vai: {name}",
@@ -227,5 +228,17 @@
   "chooseImposters": "Chọn kẻ mạo danh",
   "fixedCountHelp": "Chọn số kẻ mạo danh chính xác",
   "randomCountHelp": "Số kẻ mạo danh ngẫu nhiên mỗi ván",
-  "moreImpostersNeedPlayers": "Cần ít nhất 5 người chơi để chọn nhiều hơn 1 kẻ mạo danh."
+  "moreImpostersNeedPlayers": "Cần ít nhất 5 người chơi để chọn nhiều hơn 1 kẻ mạo danh.",
+  "refreshContent": "Làm mới nội dung",
+  "wordImageUnavailable": "Ảnh chưa khả dụng",
+  "wordImage": "Ảnh cho từ {word}",
+  "@wordImage": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "familyCategories": "Chế độ gia đình",
+  "emptyFamilyCategories": "Chưa có danh mục gia đình có nội dung. Vui lòng chọn Tất cả danh mục hoặc thử lại sau."
 }

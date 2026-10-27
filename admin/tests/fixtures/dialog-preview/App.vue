@@ -6,8 +6,8 @@ const params = new URLSearchParams(location.search)
 const word = params.has('word')
 const mobile = params.has('mobile')
 const previewPath = location.pathname
-const category: Category = { id: 'preview', slug: 'do-an', game_type: 'word', is_active: true, sort_order: 0, created_by: null, created_at: '2026-10-21T00:00:00Z', updated_at: '2026-10-21T00:00:00Z' }
-const prompt = { id: 'preview', text: 'Quả táo', category_id: 'preview', translations: [], game_categories: { slug: 'food', locale: 'vi', id: category.id, name: 'Đồ ăn và thức uống', is_active: true }, status: 'published' as const, difficulty: 'medium' as const, is_family_friendly: true, locale: 'vi', image_path: null, created_by: null, created_at: category.created_at, updated_at: category.updated_at }
+const category: Category = { id: 'preview', slug: 'do-an', game_type: 'word', is_family_friendly: false, is_active: true, sort_order: 0, created_by: null, created_at: '2026-10-21T00:00:00Z', updated_at: '2026-10-21T00:00:00Z' }
+const prompt = { id: 'preview', text: 'Quả táo', category_id: 'preview', translations: [], game_categories: { slug: 'food', locale: 'vi', id: category.id, name: 'Đồ ăn và thức uống', is_active: true }, status: 'published' as const, difficulty: 'medium' as const, locale: 'vi', image_path: null, created_by: null, created_at: category.created_at, updated_at: category.updated_at }
 </script>
 <template>
 <div v-if="mobile" style="padding:16px;background:#ddd;min-height:100vh"><iframe :src="`${previewPath}?${word ? 'word' : ''}`" style="width:390px;height:844px;border:0" /></div>

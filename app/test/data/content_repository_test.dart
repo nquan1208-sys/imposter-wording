@@ -8,6 +8,29 @@ import 'package:untitled/models/content.dart';
 import 'fixtures.dart';
 
 void main() {
+  test(
+    'legacy offline cache defaults categories to non-family and ignores prompt flags',
+    () async {
+      final data = fixture();
+      for (final c in data['categories'] as List) {
+        c.remove('is_family_friendly');
+      }
+      for (final w in data['words'] as List) {
+        w['is_family_friendly'] = true;
+      }
+      final repo = ContentRepository(
+        fetchPage: (t, l, f, e) async => throw const SocketException('offline'),
+        cache: MemoryStorage(data),
+      );
+      addTearDown(repo.dispose);
+      await repo.load();
+      expect(repo.cached.value, true);
+      expect(repo.eligibleWords(family: false), hasLength(3));
+      expect(repo.eligibleWords(family: true), isEmpty);
+      expect(repo.eligibleQuestions(), hasLength(1));
+    },
+  );
+
   ContentRepository repository(
     JsonMap data, {
     MemoryStorage? cache,
@@ -32,7 +55,7 @@ void main() {
       expect(repo.snapshot.value!.words.first.imagePath, '1/image.png');
       expect(repo.snapshot.value!.contentLocale, 'vi');
       expect(repo.categoryCounts(family: false).values, [2, 1]);
-      expect(repo.categoryCounts(family: true).values, [1]);
+      expect(repo.categoryCounts(family: true).values, [2]);
       expect(
         repo.eligibleWords(family: false, categoryIds: {'a', 'b'}).length,
         3,
@@ -45,9 +68,67 @@ void main() {
     },
   );
 
+  test(
+    'timeout retains downloaded content; late response cannot overwrite recovery',
+    () async {
+      final gate = Completer<List<JsonMap>>();
+      var mode = 'ok';
+      final cache = MemoryStorage();
+      final repo = ContentRepository(
+        cache: cache,
+        requestTimeout: const Duration(milliseconds: 20),
+        fetchPage: (t, l, f, e) => mode == 'hang'
+            ? gate.future
+            : fixturePage(
+                mode == 'empty'
+                    ? {'categories': [], 'words': [], 'questions': []}
+                    : fixture(),
+                t,
+                l,
+                f,
+                e,
+              ),
+      );
+      addTearDown(repo.dispose);
+      await repo.load();
+      final original = repo.snapshot.value;
+      mode = 'hang';
+      await repo.load();
+      expect(repo.snapshot.value, same(original));
+      expect(repo.cached.value, true);
+      expect(repo.loadFailed.value, true);
+      expect(cache.writes, 1);
+      mode = 'empty';
+      await repo.load();
+      gate.complete([category('late')]);
+      await Future<void>.delayed(Duration.zero);
+      expect(repo.snapshot.value!.categories, isEmpty);
+      expect(repo.loadFailed.value, false);
+      expect(repo.cached.value, false);
+      expect(cache.writes, 2);
+    },
+  );
+
+  test('missing or corrupt cache remains retryable offline', () async {
+    for (final data in [
+      null,
+      <String, dynamic>{'words': []},
+    ]) {
+      final repo = ContentRepository(
+        cache: MemoryStorage(data),
+        fetchPage: (t, l, f, e) async => throw const SocketException('offline'),
+      );
+      await repo.load();
+      expect(repo.snapshot.value, null);
+      expect(repo.loadFailed.value, true);
+      expect(repo.cached.value, false);
+      repo.dispose();
+    }
+  });
+
   test('deduplicates original IDs across pages', () async {
     final data = fixture();
-    (data['words'] as List).insert(2, word('2', 'a', family: true));
+    (data['words'] as List).insert(2, word('2', 'a'));
     final repo = repository(data);
     await repo.load();
     expect(repo.eligibleWords(family: false).length, 3);
@@ -79,6 +160,10 @@ void main() {
     'mismatched translation ID': (d) =>
         d['words'][0]['t'][0]['prompt_id'] = 'other',
     'invalid difficulty': (d) => d['words'][0]['difficulty'] = 'unknown',
+    'signed URL instead of image path': (d) =>
+        d['words'][0]['image_path'] = 'https://example.com/image?token=secret',
+    'empty image path': (d) => d['words'][0]['image_path'] = '',
+    'traversal image path': (d) => d['words'][0]['image_path'] = '../image.png',
   };
   for (final mutation in mutations.entries) {
     test('${mutation.key} fails complete load and retains cache', () async {
@@ -165,6 +250,35 @@ void main() {
     },
   );
 
+  test(
+    'storage recovery cannot replace newer playable memory with an older cache',
+    () async {
+      final cache = MemoryStorage(fixture())
+        ..failRead = true
+        ..failWrite = true;
+      final newer = fixture();
+      newer['words'][0]['t'][0]['text'] = 'New downloaded word';
+      var offline = false;
+      final repo = ContentRepository(
+        cache: cache,
+        fetchPage: (t, l, f, e) async {
+          if (offline) throw const SocketException('offline');
+          return fixturePage(newer, t, l, f, e);
+        },
+      );
+      addTearDown(repo.dispose);
+      await repo.load();
+      final playable = repo.snapshot.value;
+      expect(playable!.words.first.text, 'New downloaded word');
+      cache.failRead = false;
+      offline = true;
+      await repo.load();
+      expect(repo.snapshot.value, same(playable));
+      expect(repo.cached.value, true);
+      expect(repo.cacheWarning.value, true);
+    },
+  );
+
   test('malformed cache does not block successful download', () async {
     final repo = repository(fixture(), cache: MemoryStorage({'words': []}));
     await repo.load();
@@ -184,7 +298,12 @@ void main() {
         await request.response.close();
       });
       final client = SupabaseClient(
-        'http://127.0.0.1:${server.port}',
+        Uri(
+          scheme: 'http',
+          host:
+              Platform.environment['TEST_HTTP_HOST'] ?? server.address.address,
+          port: server.port,
+        ).toString(),
         'sb_publishable_test',
       );
       addTearDown(() async {

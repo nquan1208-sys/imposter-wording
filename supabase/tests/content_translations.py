@@ -89,6 +89,14 @@ class TranslationMigrationTests(unittest.TestCase):
         return self.execute(MIGRATION.read_text())
 
     def suites(self):
+        if self.execute("select exists(select 1 from information_schema.columns where table_schema='public' and table_name='game_categories' and column_name='is_family_friendly');").stdout.strip() != 't':
+            for filename, signature in [
+                ('20261024053232_admin_category_translations.sql', 'public.admin_list_categories(text,text,public.game_type,boolean,text,integer)'),
+                ('20261024055441_admin_prompt_translations.sql', 'public.admin_list_word_prompts(text,text,uuid,public.difficulty_level,boolean,public.content_status,text,integer)'),
+            ]:
+                if self.execute(f"select to_regprocedure('{signature}') is null;").stdout.strip() == 't':
+                    self.execute((ROOT / 'supabase/migrations' / filename).read_text())
+            self.execute((ROOT / 'supabase/migrations/20261027050239_category_family_mode.sql').read_text())
         helper = (ROOT / 'supabase/tests/content_test_helpers.sql').read_text()
         for name in ['category_management','word_prompt_management','question_prompt_management','admin_dashboard','content_translations']:
             with self.subTest(suite=name):
@@ -125,8 +133,31 @@ class TranslationMigrationTests(unittest.TestCase):
                         self.execute(migration.read_text())
                 self.suites()
                 helper = (ROOT / 'supabase/tests/content_test_helpers.sql').read_text()
-                for suite in ['admin_category_translations', 'admin_prompt_translations', 'admin_content_conflicts']:
+                for suite in ['admin_category_translations', 'admin_prompt_translations', 'admin_content_conflicts', 'category_family_mode']:
                     self.execute((ROOT / f'supabase/tests/{suite}.sql').read_text().replace('\\ir content_test_helpers.sql', helper))
+
+    def test_family_migration_preserves_content_and_defaults_every_category_off(self):
+        self.fresh_legacy()
+        self.seed_legacy()
+        self.migrate()
+        family = ROOT / 'supabase/migrations/20261027050239_category_family_mode.sql'
+        for migration in sorted((ROOT / 'supabase/migrations').glob('*.sql')):
+            if MIGRATION.name < migration.name < family.name:
+                self.execute(migration.read_text())
+        self.execute('update public.word_prompts set is_family_friendly = true; update public.question_prompts set is_family_friendly = true;')
+        before = self.inventory()
+        self.execute(family.read_text())
+        after = self.inventory()
+        self.assertEqual(before['objects'], after['objects'])
+        for old, new in zip(before['categories'], after['categories']):
+            self.assertFalse(new.pop('is_family_friendly'))
+            self.assertEqual(old, new)
+        for kind in ['words', 'questions']:
+            for old, new in zip(before[kind], after[kind]):
+                old.pop('is_family_friendly')
+                self.assertEqual(old, new)
+        helper = (ROOT / 'supabase/tests/content_test_helpers.sql').read_text()
+        self.execute((ROOT / 'supabase/tests/category_family_mode.sql').read_text().replace('\\ir content_test_helpers.sql', helper))
 
     def test_backfill_metadata_locales_statuses_and_slug_mapping(self):
         self.fresh_legacy()

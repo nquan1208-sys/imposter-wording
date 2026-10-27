@@ -15,6 +15,7 @@ class WordGameSession {
   final String categoryName, startingPlayerId;
   final Set<String> imposterIds;
   String get contentLocale => prompt.contentLocale;
+  bool get showWordImages => setup.family && setup.showWordImages;
 
   WordGameSession._(
     this.setup,

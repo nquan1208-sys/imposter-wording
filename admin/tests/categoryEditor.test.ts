@@ -35,7 +35,7 @@ test('category tabs retain drafts, save only the selected translation and requir
   const originalWindow = globalThis.window
   const cache = new QueryClient({ defaultOptions: { queries: { enabled: false, refetchOnMount: false, gcTime: Infinity } } })
   const id = '00000000-0000-4000-8000-000000000001'
-  const original = { id, slug: 'food', game_type: 'word', sort_order: 0, is_active: true, updated_at: '2026-10-24T01:00:00Z' }
+  const original = { id, slug: 'food', game_type: 'word', is_family_friendly: false, sort_order: 0, is_active: true, updated_at: '2026-10-24T01:00:00Z' }
   const translation = { category_id: id, locale: 'vi', name: 'Đồ ăn', description: null, status: 'published' }
   let latest = { ...original, translations: [translation] }
   let app: TestApp | undefined
@@ -77,16 +77,18 @@ test('category tabs retain drafts, save only the selected translation and requir
     editor.update('name', 'Việt chưa lưu')
     editor.selectLocale('en'); await tick()
     assert.equal(editor.form.name, ''); assert.equal(editor.form.status, 'draft'); assert.equal(calls.length, 0)
+    editor.update('is_family_friendly', true)
     editor.update('name', 'Food'); editor.update('slug', 'shared-food')
     i18n.global.locale.value = 'en'; await tick()
     assert.equal(editor.form.locale, 'en')
     editor.update('status', 'published'); assert.equal(calls.length, 0)
     editor.submit(); editor.submit(); await tick()
+    assert.equal(calls[0]!.p_is_family_friendly, true)
     assert.equal(calls[0]!.p_status, 'published')
     assert.equal(calls.length, 1); assert.equal(calls[0]!.p_locale, 'en'); assert.equal(calls[0]!.p_name, 'Food')
     assert.equal(calls[0]!.p_expected_updated_at, original.updated_at); assert.equal(editor.canLeave(), false)
     editor.selectLocale('vi'); assert.equal(editor.form.locale, 'en', 'busy tab switch blocked')
-    finish({ data: { original: { ...original, slug: 'shared-food', updated_at: 'version-2' }, translation: { ...translation, locale: 'en', name: 'Food' } } }); await tick()
+    finish({ data: { original: { ...original, slug: 'shared-food', is_family_friendly: true, updated_at: 'version-2' }, translation: { ...translation, locale: 'en', name: 'Food' } } }); await tick()
     for (const prefix of ['dashboard', 'categories', 'word-prompts', 'question-prompts']) {
       for (const locale of ['vi', 'en', 'fr']) assert.equal(cache.getQueryState([prefix, 'list', locale])!.isInvalidated, true, `${prefix}/${locale} refreshed after save`)
     }

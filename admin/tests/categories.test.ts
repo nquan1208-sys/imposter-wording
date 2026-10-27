@@ -19,7 +19,7 @@ test('Vietnamese slug normalization', () => {
   assert.equal(slugFromName('!!!'), '')
 })
 test('payload trims and excludes protected fields', () => {
-  assert.deepEqual(categoryPayload(form), { name: 'Đồ ăn', slug: 'do-an', description: 'Món ngon', sort_order: 2, is_active: true, game_type: 'word', locale: 'en', status: 'draft' })
+  assert.deepEqual(categoryPayload(form), { name: 'Đồ ăn', slug: 'do-an', description: 'Món ngon', sort_order: 2, is_active: true, is_family_friendly: false, game_type: 'word', locale: 'en', status: 'draft' })
   for (const key of ['created_by', 'id']) assert.equal(key in categoryPayload(form), false)
 })
 test('reject invalid names, slugs, types, and sort orders', () => {
@@ -31,21 +31,21 @@ test('quoted search escapes wildcards, quotes and filter delimiters', () => {
   assert.equal(searchPattern('%_'), '"%\\\\%\\\\_%"')
 })
 test('URL filters reject invalid page and sort values', () => {
-  assert.deepEqual(listFilters({ page: '-1', type: 'bad', active: 'yes', sort: 'injected' }), { locale: 'vi', page: 1, search: '', gameType: '', active: '', sort: 'sort_order' })
+  assert.deepEqual(listFilters({ page: '-1', type: 'bad', active: 'yes', sort: 'injected' }), { locale: 'vi', page: 1, search: '', gameType: '', active: '', family: '', sort: 'sort_order' })
   assert.equal(listFilters({ page: '2' }).page, 2)
 })
 test('backend receives language, filters, sort and page together', async () => {
   const client = mockClient({ data: { rows: [{ id: '1' }], total: 24 } })
-  const result = await listCategories(asClient(client), { search: '  food,drink ', gameType: 'word', active: 'false', sort: 'updated_at', page: 2, locale: 'en' })
+  const result = await listCategories(asClient(client), { search: '  food,drink ', gameType: 'word', active: 'false', family: 'true', sort: 'updated_at', page: 2, locale: 'en' })
   assert.equal(result.total, 24)
-  assert.deepEqual(client.calls, [['rpc', 'admin_list_categories', { p_locale: 'en', p_search: 'food,drink', p_game_type: 'word', p_is_active: false, p_sort: 'updated_at', p_page: 2 }]])
+  assert.deepEqual(client.calls, [['rpc', 'admin_list_categories', { p_locale: 'en', p_search: 'food,drink', p_game_type: 'word', p_is_active: false, p_is_family_friendly: true, p_sort: 'updated_at', p_page: 2 }]])
 })
 test('save uses one transactional RPC, selected locale and original version', async () => {
   const client = mockClient({ data: { original: { id: 'new' }, translation: { locale: 'en' } } })
   await saveCategory(asClient(client), form, 'new')
   assert.deepEqual(client.calls[0], ['rpc', 'save_category', {
     p_id: 'new', p_expected_updated_at: null, p_game_type: 'word', p_slug: 'do-an', p_sort_order: 2,
-    p_is_active: true, p_locale: 'en', p_name: 'Đồ ăn', p_description: 'Món ngon', p_status: 'draft',
+    p_is_active: true, p_is_family_friendly: false, p_locale: 'en', p_name: 'Đồ ăn', p_description: 'Món ngon', p_status: 'draft',
   }])
   await saveCategory(asClient(client), { ...form, description: '' }, 'new', 'server-version')
   const args = client.calls[1]![2] as Record<string, unknown>
@@ -86,4 +86,9 @@ test('mutation exposes pending, failure, and successful retry', async () => {
 
 test('category conflicts support current HTTP and legacy SQL codes', () => {
   for (const code of ['PT409', '40001']) assert.equal(categoryError({ code }), 'categories.errors.conflict')
+})
+
+test('family category payload is shared and question categories clear the flag', () => {
+  assert.equal(categoryPayload({ ...form, is_family_friendly: true }).is_family_friendly, true)
+  assert.equal(categoryPayload({ ...form, game_type: 'question', is_family_friendly: true }).is_family_friendly, false)
 })

@@ -11,8 +11,8 @@ Hoàn thiện danh sách, tạo/sửa, preview và quản lý trạng thái câu
 ## Giao diện và luồng thao tác
 
 - Giữ cùng shell, khoảng cách, typography, card, bộ lọc, bảng, nút và cách responsive của Word Prompts; tái sử dụng CSS phù hợp, không đổi thiết kế màn từ ngữ.
-- Danh sách hiển thị hai câu hỏi, danh mục, độ khó, Family Mode, trạng thái và ngày cập nhật. Nội dung dài được rút gọn; mở form để xem đầy đủ.
-- Tìm kiếm backend trên cả hai câu hỏi, debounce 300 ms; lọc danh mục, độ khó, Family Mode, ngôn ngữ và trạng thái. Phân trang 20 dòng; sắp xếp theo ngày cập nhật giảm dần hoặc câu hỏi civilian tăng dần, có thứ tự phụ theo ID. Giữ bộ lọc trong URL khi tạo/sửa và quay lại.
+- Danh sách hiển thị hai câu hỏi, danh mục, độ khó, trạng thái và ngày cập nhật. Nội dung dài được rút gọn; mở form để xem đầy đủ.
+- Tìm kiếm backend trên cả hai câu hỏi, debounce 300 ms; lọc danh mục, độ khó, ngôn ngữ và trạng thái. Phân trang 20 dòng; sắp xếp theo ngày cập nhật giảm dần hoặc câu hỏi civilian tăng dần, có thứ tự phụ theo ID. Giữ bộ lọc trong URL khi tạo/sửa và quay lại.
 - Thêm route `/question-prompts/new` và `/question-prompts/:id/edit`.
 - Form dùng hai textarea cạnh nhau trên desktop, xếp dọc trên màn nhỏ. Phần phân loại và thanh hành động theo Word Prompts.
 - Preview hai card civilian/imposter hiển thị câu hỏi tương ứng. Không có trường hint hay cấu hình hint được lưu vào đề.
@@ -22,7 +22,7 @@ Hoàn thiện danh sách, tạo/sửa, preview và quản lý trạng thái câu
 ## API và database
 
 - Tách API, validation và component theo cấu trúc Word Prompts; dùng Vue Query và hệ thống dịch hiện có, không thêm dependency.
-- Payload gồm `civilian_question`, `imposter_question`, `category_id`, `difficulty`, `is_family_friendly`, `locale` và `status`. Mặc định đề mới: `vi`, `medium`, Family Mode tắt, trạng thái `draft`.
+- Payload gồm `civilian_question`, `imposter_question`, `category_id`, `difficulty`, `locale` và `status`. Mặc định đề mới: `vi`, `medium`, trạng thái `draft`.
 - Trim trước khi lưu; cả hai câu hỏi bắt buộc và phải khác nhau sau khi trim, không phân biệt hoa/thường. Áp dụng cùng quy tắc tại frontend và backend cho mọi trạng thái. Không kiểm tra trùng giữa các đề khác nhau.
 - Backend kiểm tra danh mục thuộc loại `question`, cùng locale; publish yêu cầu danh mục đang hoạt động. Đề cũ thuộc danh mục đã tắt vẫn mở được để sửa hoặc archive. Form giữ lựa chọn danh mục cũ khi danh mục đó không còn trong danh sách đang hoạt động.
 - Dùng `updated_at` để phát hiện sửa đồng thời; báo xung đột và yêu cầu tải lại, không ghi đè âm thầm. Khi tải lại mà form có thay đổi, xác nhận bỏ thay đổi trước.

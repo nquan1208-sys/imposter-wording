@@ -46,6 +46,50 @@ void main() {
   });
 
   test(
+    'inventory retains all backend locales and legacy references without importing',
+    () async {
+      await local('snapshot').write(fixture());
+      final english = {
+        'categories': [category('en', locale: 'en')],
+        'words': [word('english', 'en', locale: 'en')],
+        'questions': <dynamic>[],
+      };
+      await legacy('snapshot', locale: 'en').write(english);
+      await local('snapshot', url: 'https://other.com').write({
+        'categories': [category('other')],
+        'words': [word('other', 'other')],
+        'questions': <dynamic>[],
+      });
+      expect(await storage.imageReferences('https://EXAMPLE.com/'), {
+        '1/image.png',
+        '2/image.png',
+        '3/image.png',
+        'english/image.png',
+      });
+      expect(Hive.box<String>('content_cache').length, 2);
+    },
+  );
+
+  test('inventory refuses corrupt Hive and legacy snapshots', () async {
+    await local('snapshot').write(fixture());
+    final box = Hive.box<String>('content_cache');
+    final scope = legacy('snapshot').scope;
+    final original = box.get(scope)!;
+    await box.put(scope, 'broken');
+    await expectLater(
+      storage.imageReferences('https://example.com'),
+      throwsA(anything),
+    );
+    await box.put(scope, original);
+    await legacy('snapshot', locale: 'en').write({'words': []});
+    await expectLater(
+      storage.imageReferences('https://example.com'),
+      throwsA(anything),
+    );
+    expect(box.length, 1);
+  });
+
+  test(
     'write, close and reopen; isolates boxes, environment, backend and locale',
     () async {
       await local('snapshot').write(fixture());

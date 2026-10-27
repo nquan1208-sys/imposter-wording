@@ -39,6 +39,46 @@ class HiveLocalStorage {
     );
   }
 
+  /// Read all locales without importing or changing legacy records.
+  /// A corrupt inventory throws so callers cannot prune potentially used images.
+  Future<Set<String>> imageReferences(String backendUrl) => _run(() async {
+    final backend = ScopedJsonFile.normalizeUrl(backendUrl);
+    final paths = <String>{};
+    void collect(String scope, JsonMap envelope) {
+      final parts = jsonDecode(scope) as List;
+      if (parts.length != 3 || parts.any((p) => p is! String)) {
+        throw const FormatException('Invalid snapshot scope');
+      }
+      if (parts[1] != backend) return;
+      if (envelope['version'] != 1 || envelope['scope'] != scope) {
+        throw const FormatException('Invalid snapshot envelope');
+      }
+      final snapshot = ContentSnapshot.fromJson(
+        envelope['data'] as JsonMap,
+        parts[2] as String,
+      );
+      paths.addAll(snapshot.words.map((w) => w.imagePath).whereType<String>());
+    }
+
+    final box = await _box('content_cache');
+    for (final key in box.keys) {
+      collect(key as String, jsonDecode(box.get(key)!) as JsonMap);
+    }
+    final legacyRoot = Directory('${(await directory()).path}/content');
+    if (await legacyRoot.exists()) {
+      await for (final entry in legacyRoot.list(
+        recursive: true,
+        followLinks: false,
+      )) {
+        if (entry is File && entry.uri.pathSegments.last == 'snapshot.json') {
+          final envelope = jsonDecode(await entry.readAsString()) as JsonMap;
+          collect(envelope['scope'] as String, envelope);
+        }
+      }
+    }
+    return paths;
+  });
+
   Future<Box<String>> _box(String name) => _boxes.putIfAbsent(name, () async {
     try {
       final root = await directory();

@@ -138,13 +138,6 @@ function retry() { return summary.refetch() }
           <li>
             <RouterLink :to="{ name: 'question-prompts', query: { locale: contentLocale } }">{{ t('dashboard.warnings.duplicateQuestions', { count: n(summary.data.value.warnings.duplicate_questions) }) }}</RouterLink>
           </li>
-          <li>
-            <span>{{ t('dashboard.warnings.nonFamilyEasyPrompts', { count: n(summary.data.value.warnings.non_family_easy_prompts) }) }}</span>
-            <span class="dashboard-warning-links">
-              <RouterLink :to="{ name: 'word-prompts', query: { locale: contentLocale, difficulty: 'easy', family: 'false' } }">{{ t('dashboard.warnings.wordPrompts') }}</RouterLink>
-              <RouterLink :to="{ name: 'question-prompts', query: { locale: contentLocale, difficulty: 'easy', family: 'false' } }">{{ t('dashboard.warnings.questionPrompts') }}</RouterLink>
-            </span>
-          </li>
         </ul>
         <p v-else class="dashboard-empty">{{ t('dashboard.warnings.empty') }}</p>
       </section>

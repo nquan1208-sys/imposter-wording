@@ -87,7 +87,7 @@ for (const [kind, cap, field, other] of [['word', 'Word', 'text', null], ['quest
    assert.equal(calls.length, 1); assert.equal(calls[0]!.p_locale, 'en'); assert.equal(calls[0]!.p_expected_updated_at, null)
    editor.selectLocale('vi'); assert.equal(editor.form.locale, 'en', 'busy switch blocked')
    editor.updateStatus('draft'); assert.equal(editor.currentStatus, 'published', 'busy status changes blocked')
-   const original = { id: calls[0]!.p_id, category_id: category, difficulty: 'medium', is_family_friendly: false, image_path: null, updated_at: 'version-1' }
+   const original = { id: calls[0]!.p_id, category_id: category, difficulty: 'medium', image_path: null, updated_at: 'version-1' }
    const translation = { prompt_id: original.id, locale: 'en', [field]: 'English', ...(other ? { [other]: 'Other English' } : {}), status: 'published' }
    latest = { ...original, translations: [translation], game_categories: null }
    finish({ data: { original, translation } }); await tick()

@@ -8,11 +8,11 @@ type Functions = Database['public']['Functions']
 export type AdminDatabase = Omit<Database, 'public'> & { public: Omit<Database['public'], 'Functions'> & { Functions: Omit<Functions, 'delete_category' | 'save_category' | 'admin_list_categories' | 'save_word_prompt' | 'save_question_prompt' | 'admin_list_word_prompts' | 'admin_list_question_prompts'> & {
   delete_category: { Args: { p_id: string; p_mode: string; p_target_id?: string | null; p_expected_version?: string | null }; Returns: undefined }
   save_category: { Args: Omit<Functions['save_category']['Args'], 'p_description' | 'p_expected_updated_at'> & { p_description: string | null; p_expected_updated_at: string | null }; Returns: Functions['save_category']['Returns'] }
-  admin_list_categories: { Args: Omit<Functions['admin_list_categories']['Args'], 'p_game_type' | 'p_is_active'> & { p_game_type: Category['game_type'] | null; p_is_active: boolean | null }; Returns: Functions['admin_list_categories']['Returns'] }
+  admin_list_categories: { Args: Omit<Functions['admin_list_categories']['Args'], 'p_game_type' | 'p_is_active' | 'p_is_family_friendly'> & { p_game_type: Category['game_type'] | null; p_is_active: boolean | null; p_is_family_friendly: boolean | null }; Returns: Functions['admin_list_categories']['Returns'] }
   save_word_prompt: { Args: Omit<Functions['save_word_prompt']['Args'], 'p_expected_updated_at' | 'p_image_path'> & { p_expected_updated_at: string | null; p_image_path: string | null }; Returns: Functions['save_word_prompt']['Returns'] }
-  admin_list_word_prompts: { Args: Omit<Functions['admin_list_word_prompts']['Args'], 'p_category_id' | 'p_difficulty' | 'p_is_family_friendly' | 'p_status'> & { p_category_id: string | null; p_difficulty: Database['public']['Enums']['difficulty_level'] | null; p_is_family_friendly: boolean | null; p_status: PromptStatus | null }; Returns: Functions['admin_list_word_prompts']['Returns'] }
+  admin_list_word_prompts: { Args: Omit<Functions['admin_list_word_prompts']['Args'], 'p_category_id' | 'p_difficulty' | 'p_status'> & { p_category_id: string | null; p_difficulty: Database['public']['Enums']['difficulty_level'] | null; p_status: PromptStatus | null }; Returns: Functions['admin_list_word_prompts']['Returns'] }
   save_question_prompt: { Args: Omit<Functions['save_question_prompt']['Args'], 'p_expected_updated_at'> & { p_expected_updated_at: string | null }; Returns: Functions['save_question_prompt']['Returns'] }
-  admin_list_question_prompts: { Args: Omit<Functions['admin_list_question_prompts']['Args'], 'p_category_id' | 'p_difficulty' | 'p_is_family_friendly' | 'p_status'> & { p_category_id: string | null; p_difficulty: Database['public']['Enums']['difficulty_level'] | null; p_is_family_friendly: boolean | null; p_status: PromptStatus | null }; Returns: Functions['admin_list_question_prompts']['Returns'] }
+  admin_list_question_prompts: { Args: Omit<Functions['admin_list_question_prompts']['Args'], 'p_category_id' | 'p_difficulty' | 'p_status'> & { p_category_id: string | null; p_difficulty: Database['public']['Enums']['difficulty_level'] | null; p_status: PromptStatus | null }; Returns: Functions['admin_list_question_prompts']['Returns'] }
 } } }
 export type AdminClient = SupabaseClient<AdminDatabase>
 export type Category = Database['public']['Tables']['game_categories']['Row']
@@ -22,7 +22,7 @@ export type CategoryDetail = Category & { translations: CategoryTranslation[] }
 export type CategoryRow = CategoryDetail & { name: string | null; word_count: number; question_count: number }
 export type CategoryOption = Pick<Category, 'id' | 'is_active'> & { name: string; locale: string }
 export type CategoryTarget = Pick<Category, 'id' | 'slug'> & { name: string | null }
-export type CategoryForm = Pick<Category, 'slug' | 'game_type' | 'is_active'> & { name: string; description: string; locale: string; status: Database['public']['Enums']['content_status']; sort_order: string | number }
+export type CategoryForm = Pick<Category, 'slug' | 'game_type' | 'is_active' | 'is_family_friendly'> & { name: string; description: string; locale: string; status: Database['public']['Enums']['content_status']; sort_order: string | number }
 export type SavedCategory = { original: Category; translation: CategoryTranslation }
 export type PromptStatus = Database['public']['Enums']['content_status']
 export type WordForm = z.input<typeof wordPromptSchema>

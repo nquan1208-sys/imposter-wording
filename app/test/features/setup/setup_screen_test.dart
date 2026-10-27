@@ -83,6 +83,101 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('word categories swipe both ways and save the active tab', (
+    tester,
+  ) async {
+    await pump(tester, english: true);
+    await store.setCategories({'b'});
+    await tap(tester, 'Categories');
+    final pages = find.byType(TabBarView);
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 0);
+    await tester.drag(pages, const Offset(-500, 0));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 1);
+    expect(find.text('Category b'), findsNothing);
+    expect(
+      find.textContaining('Unavailable categories were removed.'),
+      findsOneWidget,
+    );
+    expect(store.setup.value.categoryIds, {'b'});
+    expect(store.setup.value.family, false);
+    await tap(tester, 'Category a');
+    await tap(tester, 'Show images');
+    await tester.drag(pages, const Offset(500, 0));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 0);
+    expect(find.text('Category b'), findsOneWidget);
+    expect(find.widgetWithText(SwitchListTile, 'Show images'), findsNothing);
+    await tester.drag(pages, const Offset(-500, 0));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      true,
+    );
+    await tap(tester, 'Confirm');
+    expect(store.setup.value.family, true);
+    expect(store.setup.value.categoryIds, {'a'});
+    expect(store.setup.value.showWordImages, true);
+    await tap(tester, 'Categories');
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 1);
+    await tester.drag(pages, const Offset(500, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(store.setup.value.family, true);
+    expect(store.setup.value.categoryIds, {'a'});
+  });
+
+  for (final english in [false, true]) {
+    testWidgets(
+      'image switch is Family word only and remembers choice (english=$english)',
+      (tester) async {
+        final disk = GatedMemoryStorage();
+        await pump(tester, english: english, setupFile: disk);
+        final label = english ? 'Show images' : 'Hiển thị ảnh';
+        final toggle = find.widgetWithText(SwitchListTile, label);
+        expect(toggle, findsNothing);
+        await tap(tester, english ? 'Categories' : 'Danh mục');
+        await tap(tester, english ? 'Family mode' : 'Chế độ gia đình');
+        expect(tester.widget<SwitchListTile>(toggle).value, false);
+        await tap(tester, label);
+        expect(tester.widget<SwitchListTile>(toggle).value, true);
+        expect(store.setup.value.family, false);
+        expect(store.setup.value.showWordImages, false);
+        final before = disk.writes;
+        disk.gate = Completer<void>();
+        await tester.tap(
+          find.widgetWithText(FilledButton, english ? 'Confirm' : 'Xác nhận'),
+        );
+        await tester.pump();
+        expect(tester.widget<SwitchListTile>(toggle).onChanged, null);
+        disk.gate!.complete();
+        await store.pendingWrites;
+        await tester.pumpAndSettle();
+        expect(disk.writes, before + 1);
+        expect(store.setup.value.family, true);
+        expect(store.setup.value.showWordImages, true);
+        expect(toggle, findsNothing);
+        await store.setGameType('question');
+        await tester.pumpAndSettle();
+        expect(store.setup.value.family, false);
+        await tap(tester, english ? 'Categories' : 'Danh mục');
+        expect(find.byType(TabBar), findsNothing);
+        expect(find.byType(TabBarView), findsNothing);
+        expect(toggle, findsNothing);
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        await store.setGameType('word');
+        await tap(tester, english ? 'Categories' : 'Danh mục');
+        await tap(tester, english ? 'Family mode' : 'Chế độ gia đình');
+        expect(tester.widget<SwitchListTile>(toggle).value, true);
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(store.setup.value.family, false);
+      },
+    );
+  }
+
   testWidgets(
     'create, discard, select, confirm, autosave, manage, rename and delete',
     (tester) async {
@@ -541,11 +636,14 @@ void main() {
       await tap(tester, 'Xác nhận');
       expect(store.setup.value.categoryIds, {'b'});
       expect(find.text('1 từ phù hợp'), findsOneWidget);
-      await tap(tester, 'Gia đình');
-      expect(store.setup.value.categoryIds, isEmpty);
-      expect(find.text('Tất cả danh mục'), findsOneWidget);
+      await tap(tester, 'Danh mục');
+      await tap(tester, 'Chế độ gia đình');
+      expect(store.setup.value.categoryIds, {'b'});
       expect(find.textContaining('Đã bỏ danh mục'), findsOneWidget);
-      expect(find.text('1 từ phù hợp'), findsOneWidget);
+      expect(find.text('Category b'), findsNothing);
+      await tap(tester, 'Xác nhận');
+      expect(store.setup.value.categoryIds, isEmpty);
+      expect(find.text('2 từ phù hợp'), findsOneWidget);
       await tap(tester, 'Danh mục');
       expect(find.text('Category b'), findsNothing);
       await tap(tester, 'Category a');
@@ -633,6 +731,94 @@ void main() {
     expect(store.setup.value.imposters, 1);
   });
 
+  testWidgets(
+    'pull to refresh shows progress, keeps offline play and revalidates categories',
+    (tester) async {
+      var data = fixture();
+      Completer<List<JsonMap>>? gate;
+      await pump(
+        tester,
+        english: true,
+        fetch: (t, l, f, e) async {
+          if (gate != null) return gate.future;
+          return fixturePage(data, t, l, f, e);
+        },
+      );
+      await store.setCategories({'b'});
+      gate = Completer<List<JsonMap>>();
+      expect(find.byIcon(Icons.refresh), findsNothing);
+      expect(
+        tester
+            .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+            .semanticsLabel,
+        'Refresh content',
+      );
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, 500),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(content.loading.value, true);
+      expect(find.byType(RefreshProgressIndicator), findsOneWidget);
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Start game'),
+            )
+            .onPressed,
+        isNotNull,
+      );
+      gate.completeError(const SocketException('offline'));
+      await content.load();
+      await tester.pumpAndSettle();
+      expect(find.byType(RefreshProgressIndicator), findsNothing);
+      expect(content.cached.value, true);
+      expect(content.loadFailed.value, true);
+      gate = null;
+      data = fixture();
+      (data['words'] as List).removeWhere((w) => w['category_id'] == 'b');
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, 500),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await content.load();
+      await store.pendingWrites;
+      await tester.pumpAndSettle();
+      expect(store.setup.value.categoryIds, isEmpty);
+      expect(content.cached.value, false);
+      expect(content.loadFailed.value, false);
+      expect(find.byType(RefreshProgressIndicator), findsNothing);
+      expect(content.loading.value, false);
+    },
+  );
+
+  testWidgets('pull to refresh works when content fits the viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1024, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var requests = 0;
+    await pump(
+      tester,
+      english: true,
+      fetch: (t, l, f, e) async {
+        requests++;
+        return fixturePage(fixture(), t, l, f, e);
+      },
+    );
+    final scrollable = tester.state<ScrollableState>(find.byType(Scrollable));
+    expect(scrollable.position.maxScrollExtent, 0);
+    final before = requests;
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, 700));
+    await tester.pumpAndSettle();
+    expect(requests, greaterThan(before));
+    expect(content.loading.value, false);
+  });
+
   testWidgets('loading, error and retry without cache', (tester) async {
     var offline = true;
     final gate = Completer<List<JsonMap>>();
@@ -664,8 +850,8 @@ void main() {
     tester,
   ) async {
     final data = fixture();
-    for (final w in data['words'] as List) {
-      w['is_family_friendly'] = false;
+    for (final c in data['categories'] as List) {
+      c.remove('is_family_friendly');
     }
     await pump(
       tester,
@@ -675,19 +861,30 @@ void main() {
     );
     expect(find.text('Using saved content.'), findsOneWidget);
     file.failWrite = true;
-    await tap(tester, 'Family');
+    await tap(tester, 'Categories');
+    await tap(tester, 'Family mode');
+    expect(
+      find.text(
+        'No family categories have content yet. Choose All categories or try again later.',
+      ),
+      findsOneWidget,
+    );
+    await tap(tester, 'Confirm');
     expect(store.setup.value.family, false);
     expect(
       find.text('Setup could not be saved. Your changes are still here.'),
       findsOneWidget,
     );
     file.failWrite = false;
-    // Settings retry is the first retry; content retry remains below it.
-    await tester.ensureVisible(find.text('Retry').first);
-    await tester.tap(find.text('Retry').first);
-    await tester.pumpAndSettle();
+    await tap(tester, 'Confirm');
     expect(store.writeFailed.value, false);
     expect(file.data!['mode'], 'family');
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Start game'))
+          .onPressed,
+      null,
+    );
   });
 
   testWidgets('unreadable settings require retry', (tester) async {

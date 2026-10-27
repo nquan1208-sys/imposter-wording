@@ -1,0 +1,10 @@
+version: 1
+name: phase-7-supabase
+slug: phase-7-supabase
+protocol: http
+port: 4500
+interceptRequests: true
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true

@@ -5,7 +5,7 @@ function dataOrThrow<T>(result: { data: T; error?: unknown }) { if (result.error
 export async function listWordPrompts(client: AdminClient, filters: ReturnType<typeof wordPromptFilters>) {
   return dataOrThrow(await client.rpc('admin_list_word_prompts', {
     p_locale: filters.locale, p_search: filters.search.trim(), p_category_id: filters.category || null,
-    p_difficulty: filters.difficulty || null, p_is_family_friendly: filters.family ? filters.family === 'true' : null,
+    p_difficulty: filters.difficulty || null,
     p_status: filters.status || null, p_sort: filters.sort, p_page: filters.page,
   })) as { rows: WordRow[]; total: number }
 }
@@ -50,7 +50,7 @@ export async function saveWordPrompt(client: AdminClient, form: unknown, { id, s
       onUpload?.('uploaded')
     }
     return dataOrThrow(await client.rpc('save_word_prompt', { p_id: id, p_expected_updated_at: updatedAt ?? null, p_category_id: payload.category_id,
-      p_difficulty: payload.difficulty, p_is_family_friendly: payload.is_family_friendly,
+      p_difficulty: payload.difficulty,
       p_locale: payload.locale, p_status: payload.status, p_text: payload.text, p_image_path: payload.image_path })) as SavedWord
   } catch (error) {
     // Preserve the save error even if cleanup is offline or the file is already referenced.

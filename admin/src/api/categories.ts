@@ -14,6 +14,7 @@ export async function listContentLanguages(client: AdminClient) {
 export async function listCategories(client: AdminClient, filters: ReturnType<typeof listFilters>) {
   return resultOrThrow(await client.rpc('admin_list_categories', {
     p_locale: filters.locale, p_search: filters.search.trim(), p_game_type: filters.gameType || null,
+    p_is_family_friendly: filters.family ? filters.family === 'true' : null,
     p_is_active: filters.active ? filters.active === 'true' : null, p_sort: filters.sort, p_page: filters.page,
   })) as { rows: CategoryRow[]; total: number }
 }
@@ -28,7 +29,7 @@ export async function saveCategory(client: AdminClient, form: unknown, id: strin
   const payload = categoryPayload(form)
   return resultOrThrow(await client.rpc('save_category', {
     p_id: id, p_expected_updated_at: updatedAt ?? null, p_game_type: payload.game_type,
-    p_slug: payload.slug, p_sort_order: payload.sort_order, p_is_active: payload.is_active,
+    p_slug: payload.slug, p_sort_order: payload.sort_order, p_is_active: payload.is_active, p_is_family_friendly: payload.is_family_friendly,
     p_locale: payload.locale, p_name: payload.name, p_description: payload.description, p_status: payload.status,
   })) as SavedCategory
 }
