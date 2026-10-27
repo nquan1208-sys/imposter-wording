@@ -1,3 +1,5 @@
+import 'package:untitled/data/local_image_store.dart';
+import 'package:untitled/features/custom_content/image_attachment.dart';
 import 'dart:convert';
 import 'package:untitled/models/custom_question_category.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +14,8 @@ Future<bool> _discard(BuildContext context) async {
   return await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
+          scrollable: true,
+          insetPadding: const EdgeInsets.all(16),
           title: Text(l.discardCustomDraft),
           actions: [
             TextButton(
@@ -44,6 +48,14 @@ class CustomWordScreen extends ConsumerStatefulWidget {
 class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
   final name = TextEditingController();
   final words = <String>[];
+  final imageIds = <String, String>{};
+  final imageOwner = Object();
+  late final LocalImageStore images;
+  void retainImages() => images.retain(imageOwner, {
+    ...imageIds.values,
+    for (final p in pairs)
+      if (p.imageId != null) p.imageId!,
+  });
   final pairs = <CustomQuestionEntry>[];
   bool get question => widget.gameType == 'question';
   bool get needsFamily => !question && widget.family;
@@ -56,7 +68,14 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
   bool get dirty => name.text.isNotEmpty || hasEntries || suitable;
 
   @override
+  void initState() {
+    super.initState();
+    images = ref.read(localImageStoreProvider);
+  }
+
+  @override
   void dispose() {
+    images.release(imageOwner);
     name.dispose();
     super.dispose();
   }
@@ -81,7 +100,18 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
       final entries = await showDialog<List<CustomQuestionEntry>>(
         context: context,
         barrierDismissible: false,
-        builder: (_) => _QuestionEntryDialog(batch: batch, existing: pairs),
+        builder: (_) => _QuestionEntryDialog(
+          batch: batch,
+          existing: pairs,
+          onImage: (id) {
+            images.retain(imageOwner, {
+              ...imageIds.values,
+              for (final p in pairs)
+                if (p.imageId != null) p.imageId!,
+              ?id,
+            });
+          },
+        ),
       );
       if (mounted && entries != null) setState(() => pairs.addAll(entries));
       return;
@@ -89,7 +119,14 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
     final entries = await showDialog<List<String>>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => _WordEntryDialog(batch: batch, existing: words),
+      builder: (_) => _WordEntryDialog(
+        batch: batch,
+        existing: words,
+        onImage: (word, id) {
+          if (id != null) imageIds[word] = id;
+          retainImages();
+        },
+      ),
     );
     if (mounted && entries != null) setState(() => words.addAll(entries));
   }
@@ -114,6 +151,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
             name.text,
             words,
             family: widget.family && suitable,
+            imageIds: imageIds,
           );
     if (!mounted) return;
     if (id != null) {
@@ -170,6 +208,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
               padding: const EdgeInsets.all(24),
               children: [
                 TextField(
+                  enabled: !busy,
                   controller: name,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
@@ -200,12 +239,36 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                       title: Text(
                         '${l.customCivilianQuestion}: ${pairs[i].civilianQuestion}',
                       ),
-                      subtitle: Text(
-                        '${l.customImposterQuestion}: ${pairs[i].imposterQuestion}',
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${l.customImposterQuestion}: ${pairs[i].imposterQuestion}',
+                          ),
+                          ImageAttachment(
+                            key: ValueKey(i),
+                            imageId: pairs[i].imageId,
+                            onBusy: (value) => setState(() => busy = value),
+                            onChanged: (id) => setState(() {
+                              final p = pairs[i];
+                              pairs[i] = CustomQuestionEntry(
+                                p.civilianQuestion,
+                                p.imposterQuestion,
+                                imageId: id,
+                              );
+                              retainImages();
+                              images.cleanup();
+                            }),
+                          ),
+                        ],
                       ),
                       trailing: IconButton(
                         tooltip: l.removeCustomQuestion(i + 1),
-                        onPressed: () => setState(() => pairs.removeAt(i)),
+                        onPressed: () => setState(() {
+                          pairs.removeAt(i);
+                          retainImages();
+                          images.cleanup();
+                        }),
                         icon: const Icon(Icons.delete_outline),
                       ),
                     ),
@@ -214,9 +277,27 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(words[i]),
+                      subtitle: ImageAttachment(
+                        key: ValueKey(words[i]),
+                        imageId: imageIds[words[i]],
+                        onBusy: (value) => setState(() => busy = value),
+                        onChanged: (id) => setState(() {
+                          if (id == null) {
+                            imageIds.remove(words[i]);
+                          } else {
+                            imageIds[words[i]] = id;
+                          }
+                          retainImages();
+                          images.cleanup();
+                        }),
+                      ),
                       trailing: IconButton(
                         tooltip: l.removeCustomWord(words[i]),
-                        onPressed: () => setState(() => words.removeAt(i)),
+                        onPressed: () => setState(() {
+                          imageIds.remove(words.removeAt(i));
+                          retainImages();
+                          images.cleanup();
+                        }),
                         icon: const Icon(Icons.delete_outline),
                       ),
                     ),
@@ -266,7 +347,12 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
 class _WordEntryDialog extends StatefulWidget {
   final bool batch;
   final List<String> existing;
-  const _WordEntryDialog({required this.batch, required this.existing});
+  final void Function(String, String?) onImage;
+  const _WordEntryDialog({
+    required this.batch,
+    required this.existing,
+    required this.onImage,
+  });
 
   @override
   State<_WordEntryDialog> createState() => _WordEntryDialogState();
@@ -274,6 +360,8 @@ class _WordEntryDialog extends StatefulWidget {
 
 class _WordEntryDialogState extends State<_WordEntryDialog> {
   final text = TextEditingController();
+  String? imageId;
+  bool busy = false;
   bool invalid = false, exiting = false, asking = false;
 
   @override
@@ -283,9 +371,10 @@ class _WordEntryDialogState extends State<_WordEntryDialog> {
   }
 
   Future<void> leave() async {
-    if (asking || exiting) return;
+    if (busy || asking || exiting) return;
     asking = true;
-    final discard = text.text.isEmpty || await _discard(context);
+    final discard =
+        (text.text.isEmpty && imageId == null) || await _discard(context);
     asking = false;
     if (mounted && discard) close();
   }
@@ -306,39 +395,58 @@ class _WordEntryDialogState extends State<_WordEntryDialog> {
         if (!didPop) leave();
       },
       child: AlertDialog(
+        insetPadding: const EdgeInsets.all(16),
         title: Text(widget.batch ? l.importCustomWords : l.addCustomWord),
         scrollable: true,
-        content: TextField(
-          controller: text,
-          autofocus: true,
-          minLines: widget.batch ? 4 : 1,
-          maxLines: widget.batch ? 8 : 1,
-          decoration: InputDecoration(
-            labelText: widget.batch ? l.customOneWordPerLine : l.customWord,
-            errorText: invalid ? l.customWordInvalid : null,
-          ),
-          onChanged: (_) {
-            if (invalid) setState(() => invalid = false);
-          },
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              enabled: !busy,
+              controller: text,
+              autofocus: true,
+              minLines: widget.batch ? 4 : 1,
+              maxLines: widget.batch ? 8 : 1,
+              decoration: InputDecoration(
+                labelText: widget.batch ? l.customOneWordPerLine : l.customWord,
+                errorText: invalid ? l.customWordInvalid : null,
+              ),
+              onChanged: (_) {
+                if (invalid) setState(() => invalid = false);
+              },
+            ),
+            if (!widget.batch)
+              ImageAttachment(
+                imageId: imageId,
+                onChanged: (id) => setState(() => imageId = id),
+                onBusy: (value) => setState(() => busy = value),
+              ),
+          ],
         ),
         actions: [
-          TextButton(onPressed: leave, child: Text(l.cancel)),
+          TextButton(onPressed: busy ? null : leave, child: Text(l.cancel)),
           FilledButton(
-            onPressed: () {
-              final existing = widget.existing
-                  .map((w) => w.toLowerCase())
-                  .toSet();
-              final entries = uniqueWords(
-                widget.batch
-                    ? const LineSplitter().convert(text.text)
-                    : [text.text],
-              ).where((w) => !existing.contains(w.toLowerCase())).toList();
-              if (entries.isEmpty) {
-                setState(() => invalid = true);
-                return;
-              }
-              close(entries);
-            },
+            onPressed: busy
+                ? null
+                : () {
+                    final existing = widget.existing
+                        .map((w) => w.toLowerCase())
+                        .toSet();
+                    final entries =
+                        uniqueWords(
+                              widget.batch
+                                  ? const LineSplitter().convert(text.text)
+                                  : [text.text],
+                            )
+                            .where((w) => !existing.contains(w.toLowerCase()))
+                            .toList();
+                    if (entries.isEmpty) {
+                      setState(() => invalid = true);
+                      return;
+                    }
+                    if (!widget.batch) widget.onImage(entries.single, imageId);
+                    close(entries);
+                  },
             child: Text(l.confirm),
           ),
         ],
@@ -350,7 +458,12 @@ class _WordEntryDialogState extends State<_WordEntryDialog> {
 class _QuestionEntryDialog extends StatefulWidget {
   final bool batch;
   final List<CustomQuestionEntry> existing;
-  const _QuestionEntryDialog({required this.batch, required this.existing});
+  final ValueChanged<String?> onImage;
+  const _QuestionEntryDialog({
+    required this.batch,
+    required this.existing,
+    required this.onImage,
+  });
   @override
   State<_QuestionEntryDialog> createState() => _QuestionEntryDialogState();
 }
@@ -358,6 +471,8 @@ class _QuestionEntryDialog extends StatefulWidget {
 class _QuestionEntryDialogState extends State<_QuestionEntryDialog> {
   final civilian = TextEditingController(), imposter = TextEditingController();
   QuestionImportException? error;
+  String? imageId;
+  bool busy = false;
   bool exiting = false, asking = false;
   @override
   void dispose() {
@@ -367,10 +482,10 @@ class _QuestionEntryDialogState extends State<_QuestionEntryDialog> {
   }
 
   Future<void> leave() async {
-    if (asking || exiting) return;
+    if (busy || asking || exiting) return;
     asking = true;
     final discard =
-        (civilian.text.isEmpty && imposter.text.isEmpty) ||
+        (civilian.text.isEmpty && imposter.text.isEmpty && imageId == null) ||
         await _discard(context);
     asking = false;
     if (mounted && discard) close();
@@ -392,6 +507,7 @@ class _QuestionEntryDialogState extends State<_QuestionEntryDialog> {
         if (!didPop) leave();
       },
       child: AlertDialog(
+        insetPadding: const EdgeInsets.all(16),
         scrollable: true,
         title: Text(
           widget.batch ? l.importCustomQuestions : l.addCustomQuestion,
@@ -408,6 +524,7 @@ class _QuestionEntryDialogState extends State<_QuestionEntryDialog> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: TextField(
+                  enabled: !busy,
                   controller: field.$1,
                   autofocus: field.$1 == civilian,
                   minLines: widget.batch ? 3 : 1,
@@ -415,6 +532,12 @@ class _QuestionEntryDialogState extends State<_QuestionEntryDialog> {
                   decoration: InputDecoration(labelText: field.$2),
                   onChanged: (_) => setState(() => error = null),
                 ),
+              ),
+            if (!widget.batch)
+              ImageAttachment(
+                imageId: imageId,
+                onChanged: (id) => setState(() => imageId = id),
+                onBusy: (value) => setState(() => busy = value),
               ),
             if (error != null)
               Semantics(
@@ -428,22 +551,35 @@ class _QuestionEntryDialogState extends State<_QuestionEntryDialog> {
           ],
         ),
         actions: [
-          TextButton(onPressed: leave, child: Text(l.cancel)),
+          TextButton(onPressed: busy ? null : leave, child: Text(l.cancel)),
           FilledButton(
-            onPressed: () {
-              try {
-                close(
-                  parseQuestionPairs(
-                    civilian.text,
-                    imposter.text,
-                    batch: widget.batch,
-                    existing: widget.existing,
-                  ),
-                );
-              } on QuestionImportException catch (e) {
-                setState(() => error = e);
-              }
-            },
+            onPressed: busy
+                ? null
+                : () {
+                    try {
+                      final entries = parseQuestionPairs(
+                        civilian.text,
+                        imposter.text,
+                        batch: widget.batch,
+                        existing: widget.existing,
+                      );
+                      if (!widget.batch) {
+                        widget.onImage(imageId);
+                        final p = entries.single;
+                        close([
+                          CustomQuestionEntry(
+                            p.civilianQuestion,
+                            p.imposterQuestion,
+                            imageId: imageId,
+                          ),
+                        ]);
+                      } else {
+                        close(entries);
+                      }
+                    } on QuestionImportException catch (e) {
+                      setState(() => error = e);
+                    }
+                  },
             child: Text(l.confirm),
           ),
         ],

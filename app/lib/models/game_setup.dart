@@ -38,6 +38,12 @@ class PlayerPreset {
 }
 
 class GameSetup {
+  Set<String> get localImageIds => {
+    for (final category in customWordCategories) ...category.imageIds.values,
+    for (final category in customQuestionCategories)
+      for (final pair in category.pairs)
+        if (pair.imageId != null) pair.imageId!,
+  };
   final List<CustomQuestionCategory> customQuestionCategories;
   final int nextCustomQuestionCategoryId;
   bool get hasCustomContent =>

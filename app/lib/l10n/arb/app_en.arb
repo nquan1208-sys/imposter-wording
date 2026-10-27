@@ -275,5 +275,20 @@
   "customQuestionCountError": "The two fields must have the same number of rows. Check rows {rows}.",
   "@removeCustomQuestion": {"placeholders": {"row": {"type": "int"}}},
   "@customQuestionRowsError": {"placeholders": {"rows": {"type": "String"}}},
-  "@customQuestionCountError": {"placeholders": {"rows": {"type": "String"}}}
+  "@customQuestionCountError": {"placeholders": {"rows": {"type": "String"}}},
+  "addLocalImage": "Add image",
+  "replaceLocalImage": "Replace image",
+  "removeLocalImage": "Remove image",
+  "imageLibrary": "Photo library",
+  "imageCamera": "Camera",
+  "questionImage": "Question image",
+  "hasLocalImages": "Includes images",
+  "localImageUnavailable": "Image unavailable",
+  "localImageInvalid": "Cannot read this image. Choose another image.",
+  "localImageOversized": "Choose an image no larger than 5 MiB.",
+  "localImageDiskError": "Could not store the image. Free up device storage and try again.",
+  "localImagePermission": "Access denied or restricted. Allow Photos or Camera access for this app in system Settings.",
+  "localImageCameraUnavailable": "Camera unavailable. Choose an image from your library.",
+  "localImageDraftLost": "The app restarted while choosing an image. Your unsaved draft was lost. Please create it again.",
+  "localImagePreview": "Attached image"
 }

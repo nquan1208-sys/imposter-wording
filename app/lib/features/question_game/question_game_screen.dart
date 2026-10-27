@@ -1,3 +1,6 @@
+import 'package:untitled/features/word_game/local_prompt_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:untitled/data/game_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
@@ -6,23 +9,27 @@ import 'package:untitled/features/question_game/question_game_store.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 import 'package:untitled/widgets/app_content.dart';
 
-class QuestionGameScreen extends StatefulWidget {
+class QuestionGameScreen extends ConsumerStatefulWidget {
   final QuestionGameSession session;
   const QuestionGameScreen({super.key, required this.session});
 
   @override
-  State<QuestionGameScreen> createState() => _QuestionGameScreenState();
+  ConsumerState<QuestionGameScreen> createState() => _QuestionGameScreenState();
 }
 
-class _QuestionGameScreenState extends State<QuestionGameScreen>
+class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
     with WidgetsBindingObserver {
   late final store = QuestionGameStore(widget.session);
   final answer = TextEditingController();
+  final imageOwner = Object();
+  late final localImages = ref.read(localImageStoreProvider);
   bool _exiting = false, _dialogOpen = false;
 
   @override
   void initState() {
     super.initState();
+    final id = widget.session.prompt.localImageId;
+    if (id != null) localImages.retain(imageOwner, {id});
     WidgetsBinding.instance.addObserver(this);
     answer.addListener(_saveDraft);
   }
@@ -41,6 +48,9 @@ class _QuestionGameScreenState extends State<QuestionGameScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     answer.dispose();
+    if (widget.session.prompt.localImageId != null) {
+      localImages.release(imageOwner);
+    }
     store.dispose();
     super.dispose();
   }
@@ -211,6 +221,11 @@ class _QuestionGameScreenState extends State<QuestionGameScreen>
                                   session.setup.showCategory)
                                 Text(session.categoryName),
                               _questionCard(store.question),
+                              if (session.prompt.localImageId != null)
+                                LocalPromptImage(
+                                  session.prompt.localImageId!,
+                                  label: l.questionImage,
+                                ),
                               if (store.teammates.isNotEmpty)
                                 Column(
                                   key: const Key('questionTeammates'),
@@ -245,6 +260,12 @@ class _QuestionGameScreenState extends State<QuestionGameScreen>
                             ),
                           ] else ...[
                             _questionCard(session.prompt.civilianQuestion),
+                            if (stage == QuestionGameStage.result &&
+                                session.prompt.localImageId != null)
+                              LocalPromptImage(
+                                session.prompt.localImageId!,
+                                label: l.questionImage,
+                              ),
                             if (stage == QuestionGameStage.commonQuestion)
                               Text(l.commonQuestionHelp)
                             else ...[

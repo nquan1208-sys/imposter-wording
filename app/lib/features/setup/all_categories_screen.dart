@@ -102,6 +102,8 @@ class AllCategoriesScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: AppSpacing.sm),
                               Text(entry.key.name, textAlign: TextAlign.center),
+                              if (store.categoryHasImages(entry.key.id))
+                                Text(l.hasLocalImages),
                               Text(
                                 store.setup.value.gameType == 'question'
                                     ? l.questionCount(entry.value)

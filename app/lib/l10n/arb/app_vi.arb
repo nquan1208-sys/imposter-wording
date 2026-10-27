@@ -275,5 +275,20 @@
   "customQuestionCountError": "Hai ô phải có cùng số dòng. Kiểm tra dòng {rows}.",
   "@removeCustomQuestion": {"placeholders": {"row": {"type": "int"}}},
   "@customQuestionRowsError": {"placeholders": {"rows": {"type": "String"}}},
-  "@customQuestionCountError": {"placeholders": {"rows": {"type": "String"}}}
+  "@customQuestionCountError": {"placeholders": {"rows": {"type": "String"}}},
+  "addLocalImage": "Thêm ảnh",
+  "replaceLocalImage": "Thay ảnh",
+  "removeLocalImage": "Xóa ảnh",
+  "imageLibrary": "Thư viện ảnh",
+  "imageCamera": "Máy ảnh",
+  "questionImage": "Ảnh câu hỏi",
+  "hasLocalImages": "Có hình ảnh",
+  "localImageUnavailable": "Không thể hiển thị ảnh",
+  "localImageInvalid": "Không thể đọc ảnh này. Vui lòng chọn ảnh khác.",
+  "localImageOversized": "Chọn ảnh có dung lượng tối đa 5 MiB.",
+  "localImageDiskError": "Không thể lưu ảnh. Hãy giải phóng bộ nhớ thiết bị và thử lại.",
+  "localImagePermission": "Quyền truy cập bị từ chối hoặc hạn chế. Hãy cho phép ứng dụng truy cập Ảnh hoặc Máy ảnh trong Cài đặt hệ thống.",
+  "localImageCameraUnavailable": "Máy ảnh không khả dụng. Hãy chọn ảnh từ thư viện.",
+  "localImageDraftLost": "Ứng dụng đã khởi động lại khi chọn ảnh. Bản nháp chưa lưu đã mất. Vui lòng tạo lại.",
+  "localImagePreview": "Ảnh đính kèm"
 }

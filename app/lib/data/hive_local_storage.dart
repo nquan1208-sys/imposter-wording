@@ -79,6 +79,39 @@ class HiveLocalStorage {
     return paths;
   });
 
+  Future<Set<String>> localImageReferences() => _run(() async {
+    final ids = <String>{};
+    void collect(String scope, JsonMap envelope) {
+      final parts = jsonDecode(scope) as List;
+      if (parts.length != 3 ||
+          parts.any((p) => p is! String) ||
+          envelope['version'] != 1 ||
+          envelope['scope'] != scope) {
+        throw const FormatException('Invalid setup inventory');
+      }
+      ids.addAll(GameSetup.fromJson(envelope['data'] as JsonMap).localImageIds);
+    }
+
+    final box = await _box('settings');
+    for (final key in box.keys) {
+      collect(key as String, jsonDecode(box.get(key)!) as JsonMap);
+    }
+    final legacyRoot = Directory('${(await directory()).path}/content');
+    if (await legacyRoot.exists()) {
+      await for (final entry in legacyRoot.list(
+        recursive: true,
+        followLinks: false,
+      )) {
+        if (entry is File && entry.uri.pathSegments.last == 'setup.json') {
+          final envelope = jsonDecode(await entry.readAsString()) as JsonMap;
+          final scope = envelope['scope'] as String;
+          if (!box.containsKey(scope)) collect(scope, envelope);
+        }
+      }
+    }
+    return ids;
+  });
+
   Future<Box<String>> _box(String name) => _boxes.putIfAbsent(name, () async {
     try {
       final root = await directory();

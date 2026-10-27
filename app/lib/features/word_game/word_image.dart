@@ -1,3 +1,4 @@
+import 'package:untitled/features/word_game/local_prompt_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/constants/app_spacing.dart';
@@ -11,6 +12,12 @@ class WordImage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (prompt.localImageId != null) {
+      return LocalPromptImage(
+        prompt.localImageId!,
+        label: AppLocalizations.of(context).wordImage(prompt.text),
+      );
+    }
     final path = prompt.imagePath;
     if (path == null) return const SizedBox.shrink();
     final cache = ref.watch(contentRepositoryProvider).images;

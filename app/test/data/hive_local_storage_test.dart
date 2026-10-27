@@ -47,6 +47,47 @@ void main() {
     await root.delete(recursive: true);
   });
 
+  test(
+    'local inventory spans scopes/locales and ignores superseded legacy records',
+    () async {
+      const a = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.img';
+      const b = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.img';
+      GameSetup withImage(String id) => GameSetup.defaults().copyWith(
+        customWordCategories: [
+          CustomWordCategory(
+            id: 'custom-word-1',
+            name: 'Local',
+            contentLocale: 'vi',
+            isFamilyFriendly: true,
+            words: ['A'],
+            imageIds: {'A': id},
+          ),
+        ],
+        nextCustomWordCategoryId: 2,
+      );
+      await local('setup').write(withImage(a).toJson());
+      await legacy('setup', locale: 'en').write(withImage(b).toJson());
+      await local(
+        'setup',
+        env: 'prod',
+        url: 'https://other.com',
+      ).write(withImage(b).toJson());
+      expect(await storage.localImageReferences(), {a, b});
+      await local('setup', locale: 'en').read();
+      await local('setup', locale: 'en').write(GameSetup.defaults().toJson());
+      await local(
+        'setup',
+        env: 'prod',
+        url: 'https://other.com',
+      ).write(GameSetup.defaults().toJson());
+      expect(await storage.localImageReferences(), {a});
+      final box = Hive.box<String>('settings');
+      final scope = legacy('setup').scope;
+      await box.put(scope, 'broken');
+      await expectLater(storage.localImageReferences(), throwsA(anything));
+    },
+  );
+
   test('custom question pairs survive Hive close and reopen', () async {
     final setup = GameSetup.defaults().copyWith(
       gameType: 'question',
@@ -55,7 +96,13 @@ void main() {
           id: 'custom-question-1',
           name: 'Local',
           contentLocale: 'vi',
-          pairs: [CustomQuestionEntry('A?', 'B?')],
+          pairs: [
+            CustomQuestionEntry(
+              'A?',
+              'B?',
+              imageId: '0123456789abcdef0123456789abcdef.img',
+            ),
+          ],
         ),
       ],
       nextCustomQuestionCategoryId: 2,
@@ -141,6 +188,7 @@ void main() {
             contentLocale: 'vi',
             isFamilyFriendly: true,
             words: ['Táo'],
+            imageIds: {'Táo': '0123456789abcdef0123456789abcdef.img'},
           ),
         ],
         nextCustomWordCategoryId: 2,

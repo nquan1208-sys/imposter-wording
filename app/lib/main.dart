@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,17 +29,52 @@ Future<void> main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context, ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  final messenger = GlobalKey<ScaffoldMessengerState>();
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isAndroid) recoverPicker();
+  }
+
+  Future<void> recoverPicker() async {
+    bool lost;
+    try {
+      lost = !(await ref.read(imagePickerProvider).retrieveLostData()).isEmpty;
+    } catch (_) {
+      lost = true;
+    }
+    if (!mounted || !lost) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = messenger.currentState;
+      if (mounted && state != null) {
+        state.showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(state.context).localImageDraftLost,
+            ),
+          ),
+        );
+      }
+    });
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final routerService = ref.watch(AppService.router);
     final appStore = ref.watch(StoreProvider.app);
     ref.watch(setupStoreProvider);
     return SignalBuilder(
       builder: (context) => MaterialApp(
+        scaffoldMessengerKey: messenger,
         debugShowCheckedModeBanner: false,
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         locale: appStore.locale.value,
