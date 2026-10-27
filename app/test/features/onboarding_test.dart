@@ -6,6 +6,7 @@ import 'package:untitled/main.dart';
 import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/data/content_repository.dart';
 import 'package:untitled/features/setup/setup_store.dart';
+import '../data/memory_app_settings_storage.dart';
 import '../data/fixtures.dart';
 
 Future<ProviderContainer> pumpApp(WidgetTester tester) async {
@@ -20,11 +21,13 @@ Future<ProviderContainer> pumpApp(WidgetTester tester) async {
   addTearDown(content.dispose);
   final container = ProviderContainer(
     overrides: [
+      localStorageProvider.overrideWithValue(MemoryAppSettingsStorage()),
       contentRepositoryProvider.overrideWithValue(content),
       setupStoreProvider.overrideWithValue(store),
     ],
   );
   addTearDown(container.dispose);
+  await container.read(StoreProvider.app).restore();
   await tester.pumpWidget(
     UncontrolledProviderScope(container: container, child: const MyApp()),
   );
@@ -144,7 +147,10 @@ void main() {
   ) async {
     final container = await pumpApp(tester);
 
-    container.read(StoreProvider.app).setLocale(const Locale('en'));
+    expect(
+      await container.read(StoreProvider.app).setLocale(const Locale('en')),
+      isTrue,
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Imposter'), findsOneWidget);

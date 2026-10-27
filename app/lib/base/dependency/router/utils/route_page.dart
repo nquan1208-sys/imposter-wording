@@ -22,6 +22,10 @@ class RoutePage {
         return RouteScreen.playerNamesPageRoute(settings);
       case RouteName.setup:
         return RouteScreen.setupPageRoute(settings);
+      case RouteName.settings:
+        return RouteScreen.settingsPageRoute(settings);
+      case RouteName.settingsLanguage:
+        return RouteScreen.settingsLanguagePageRoute(settings);
       case RouteName.categories:
         return RouteScreen.categoriesPageRoute(settings);
     }

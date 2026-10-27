@@ -17,7 +17,7 @@ base/dependency/router/
     route_screen.dart      # PageRoute builders per screen
 ```
 
-Current routes: `RouteName.landing` (initial), `RouteName.howToPlay`, `RouteName.setup`, `RouteName.categories`, `RouteName.playerNames`, `RouteName.playerPresets`, `RouteName.wordGame`, `RouteName.questionGame`, and `RouteName.unknown`. Game routes accept a typed session via `RouteInput.wordGame(session)` or `RouteInput.questionGame(session)`; the route owns one store across all game stages.
+Current routes: `RouteName.landing` (initial), `RouteName.howToPlay`, `RouteName.setup`, `RouteName.settings`, `RouteName.settingsLanguage`, `RouteName.categories`, `RouteName.playerNames`, `RouteName.playerPresets`, `RouteName.wordGame`, `RouteName.questionGame`, and `RouteName.unknown`. Game routes accept a typed session via `RouteInput.wordGame(session)` or `RouteInput.questionGame(session)`; the route owns one store across all game stages. Settings pushes language selection and the existing how-to-play route, so Back returns to Settings and then to setup.
 
 ---
 

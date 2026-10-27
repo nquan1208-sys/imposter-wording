@@ -10,6 +10,7 @@ import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/main.dart';
 import 'package:untitled/models/content.dart';
+import '../../data/memory_app_settings_storage.dart';
 import '../../data/fixtures.dart';
 
 class GatedMemoryStorage extends MemoryStorage {
@@ -47,13 +48,18 @@ void main() {
     if (load) await content.load();
     container = ProviderContainer(
       overrides: [
+        localStorageProvider.overrideWithValue(MemoryAppSettingsStorage()),
         contentRepositoryProvider.overrideWithValue(content),
         setupStoreProvider.overrideWithValue(store),
       ],
     );
+    await container.read(StoreProvider.app).restore();
     addTearDown(container.dispose);
     if (english) {
-      container.read(StoreProvider.app).setLocale(const Locale('en'));
+      expect(
+        await container.read(StoreProvider.app).setLocale(const Locale('en')),
+        isTrue,
+      );
     }
     await tester.pumpWidget(
       UncontrolledProviderScope(container: container, child: const MyApp()),

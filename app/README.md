@@ -212,3 +212,12 @@ All eight Postman HTTP cases passed separately, with 57 requests confirmed in it
 Local anonymous reads passed; valid image downloads and cross-locale-only images were
 unavailable in that dataset, and Dev was unreachable/rejected. Physical-device and
 Release behavior remain unverified. No screenshot capture was performed.
+
+### App settings (Phase 11)
+
+Settings is available from setup. UI language (Vietnamese/English) and the
+anonymous installation ID live in a versioned `app_preferences` Hive record,
+independent of the backend/content cache. Game content remains Vietnamese until
+Phase 12. Version/build comes from platform package metadata; the full local ID
+is copied only when the user asks. Store review and feedback actions stay visibly
+unavailable until real destinations are configured.
