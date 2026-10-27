@@ -75,12 +75,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       builder: (context) {
         final setup = store.setup.value;
         final count = setup.gameType == 'question'
-            ? content
-                  .eligibleQuestions(
-                    family: setup.family,
-                    categoryIds: setup.categoryIds,
-                  )
-                  .length
+            ? content.eligibleQuestions(categoryIds: setup.categoryIds).length
             : content
                   .eligibleWords(
                     family: setup.family,
@@ -194,35 +189,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children: [
-                      ChoiceChip(
-                        label: Text(l.classicMode),
-                        selected: !setup.family,
-                        onSelected: store.editable
-                            ? (_) => store.setFamily(false)
-                            : null,
-                      ),
-                      ChoiceChip(
-                        label: Text(l.familyMode),
-                        selected: setup.family,
-                        onSelected: store.editable
-                            ? (_) => store.setFamily(true)
-                            : null,
-                      ),
-                    ],
-                  ),
-                  if (setup.family && setup.gameType == 'word')
-                    SwitchListTile(
-                      title: Text(l.showWordImages),
-                      value: setup.showWordImages,
-                      onChanged: store.editable
-                          ? store.setShowWordImages
-                          : null,
-                    ),
                   const SizedBox(height: AppSpacing.xl),
                   Text(l.categories, style: textTheme.titleLarge),
                   const SizedBox(height: AppSpacing.md),

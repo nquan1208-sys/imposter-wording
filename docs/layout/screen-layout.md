@@ -121,12 +121,10 @@ Cho phép người chơi cấu hình ván chơi trước khi bắt đầu.
      - `Trò chơi câu hỏi` — tìm người nhận câu hỏi khác.
    - Một thẻ luôn ở trạng thái được chọn.
 
-4. **Khu vực chọn mode**
-   - Chỉ hiển thị sau khi đã chọn loại trò chơi.
-   - Hai lựa chọn:
-     - `Cổ điển` — sử dụng toàn bộ content cổ điển.
-     - `Gia đình` — chỉ sử dụng content có `is_family_friendly = true`.
-   - Một mode luôn ở trạng thái được chọn.
+4. **Chế độ chơi**
+   - Chọn chế độ tại màn danh mục từ ngữ bằng hai tab `Tất cả danh mục` và `Chế độ gia đình`.
+   - Switch `Hiển thị ảnh` chỉ xuất hiện trong tab gia đình; màn thiết lập không có chọn mode hoặc switch ảnh.
+   - Trò câu hỏi luôn là chế độ thường.
 
 5. **Khu vực danh mục**
    - Tiêu đề nhóm: `Danh mục`.
@@ -236,7 +234,11 @@ Cho phép chọn một hoặc nhiều danh mục, hoặc dùng toàn bộ danh m
 - Nút `Xác nhận` quay về màn hình cài đặt trò chơi và hiển thị số category đã chọn.
 - Nếu không chọn danh mục cụ thể, giữ giá trị `Tất cả danh mục`.
 - Danh sách và số lượng content được lọc theo loại game và mode đã chọn.
-- Với mode `Gia đình`, chỉ hiển thị category có ít nhất một content `is_family_friendly = true`.
+- Tab `Tất cả danh mục` gồm cả danh mục thường và gia đình; tab `Chế độ gia đình` chỉ gồm danh mục `game_categories.is_family_friendly = true` có từ hợp lệ.
+- Tab, danh mục và ảnh là bản nháp. `Xác nhận` ghi cả ba trong một lần; quay lại hủy thay đổi. Lưu lỗi giữ màn hình để thử lại.
+- Đổi tab giữ danh mục còn hợp lệ, loại mục không thuộc tab và thông báo. Không chọn mục cụ thể là tất cả trong tab.
+- Tab gia đình rỗng có thông báo; xác nhận được nhưng không thể bắt đầu ván khi không có từ.
+- Nhớ lựa chọn ảnh; chỉ hiển thị khi chơi từ ngữ ở chế độ gia đình. Cache cũ thiếu cờ danh mục mặc định false, bỏ qua cờ prompt cũ.
 - Không mô tả hoặc triển khai các danh mục Premium trong phạm vi bản nháp này.
 
 ## 5. Màn hình tạo tùy chỉnh

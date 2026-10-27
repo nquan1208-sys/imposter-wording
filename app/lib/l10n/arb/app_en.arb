@@ -238,5 +238,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "familyCategories": "Family mode",
+  "emptyFamilyCategories": "No family categories have content yet. Choose All categories or try again later."
 }

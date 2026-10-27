@@ -3,113 +3,116 @@ export type Json = string | number | boolean | null | {
     [key: string]: Json | undefined;
 } | Json[];
 export type Database = {
-    "public": {
+    public: {
         Tables: {
-            "admin_users": {
+            admin_users: {
                 Row: {
-                    "created_at": string;
-                    "is_active": boolean;
-                    "role": Database["public"]['Enums']["admin_role"];
-                    "user_id": string;
+                    created_at: string;
+                    is_active: boolean;
+                    role: Database["public"]["Enums"]["admin_role"];
+                    user_id: string;
                 };
                 Insert: {
-                    "created_at"?: string;
-                    "is_active"?: boolean;
-                    "role"?: Database["public"]['Enums']["admin_role"];
-                    "user_id": string;
+                    created_at?: string;
+                    is_active?: boolean;
+                    role?: Database["public"]["Enums"]["admin_role"];
+                    user_id: string;
                 };
                 Update: {
-                    "created_at"?: string;
-                    "is_active"?: boolean;
-                    "role"?: Database["public"]['Enums']["admin_role"];
-                    "user_id"?: string;
+                    created_at?: string;
+                    is_active?: boolean;
+                    role?: Database["public"]["Enums"]["admin_role"];
+                    user_id?: string;
                 };
                 Relationships: [
                 ];
             };
-            "content_languages": {
+            content_languages: {
                 Row: {
-                    "code": string;
-                    "display_name": string;
-                    "sort_order": number;
+                    code: string;
+                    display_name: string;
+                    sort_order: number;
                 };
                 Insert: {
-                    "code": string;
-                    "display_name": string;
-                    "sort_order"?: number;
+                    code: string;
+                    display_name: string;
+                    sort_order?: number;
                 };
                 Update: {
-                    "code"?: string;
-                    "display_name"?: string;
-                    "sort_order"?: number;
+                    code?: string;
+                    display_name?: string;
+                    sort_order?: number;
                 };
                 Relationships: [
                 ];
             };
-            "game_categories": {
+            game_categories: {
                 Row: {
-                    "created_at": string;
-                    "created_by": string | null;
-                    "game_type": Database["public"]['Enums']["game_type"];
-                    "id": string;
-                    "is_active": boolean;
-                    "slug": string;
-                    "sort_order": number;
-                    "updated_at": string;
+                    created_at: string;
+                    created_by: string | null;
+                    game_type: Database["public"]["Enums"]["game_type"];
+                    id: string;
+                    is_active: boolean;
+                    is_family_friendly: boolean;
+                    slug: string;
+                    sort_order: number;
+                    updated_at: string;
                 };
                 Insert: {
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "game_type": Database["public"]['Enums']["game_type"];
-                    "id"?: string;
-                    "is_active"?: boolean;
-                    "slug": string;
-                    "sort_order"?: number;
-                    "updated_at"?: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    game_type: Database["public"]["Enums"]["game_type"];
+                    id?: string;
+                    is_active?: boolean;
+                    is_family_friendly?: boolean;
+                    slug: string;
+                    sort_order?: number;
+                    updated_at?: string;
                 };
                 Update: {
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "game_type"?: Database["public"]['Enums']["game_type"];
-                    "id"?: string;
-                    "is_active"?: boolean;
-                    "slug"?: string;
-                    "sort_order"?: number;
-                    "updated_at"?: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    game_type?: Database["public"]["Enums"]["game_type"];
+                    id?: string;
+                    is_active?: boolean;
+                    is_family_friendly?: boolean;
+                    slug?: string;
+                    sort_order?: number;
+                    updated_at?: string;
                 };
                 Relationships: [
                 ];
             };
-            "game_category_translations": {
+            game_category_translations: {
                 Row: {
-                    "category_id": string;
-                    "created_at": string;
-                    "created_by": string | null;
-                    "description": string | null;
-                    "locale": string;
-                    "name": string;
-                    "status": Database["public"]['Enums']["content_status"];
-                    "updated_at": string;
+                    category_id: string;
+                    created_at: string;
+                    created_by: string | null;
+                    description: string | null;
+                    locale: string;
+                    name: string;
+                    status: Database["public"]["Enums"]["content_status"];
+                    updated_at: string;
                 };
                 Insert: {
-                    "category_id": string;
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "description"?: string | null;
-                    "locale": string;
-                    "name": string;
-                    "status"?: Database["public"]['Enums']["content_status"];
-                    "updated_at"?: string;
+                    category_id: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    description?: string | null;
+                    locale: string;
+                    name: string;
+                    status?: Database["public"]["Enums"]["content_status"];
+                    updated_at?: string;
                 };
                 Update: {
-                    "category_id"?: string;
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "description"?: string | null;
-                    "locale"?: string;
-                    "name"?: string;
-                    "status"?: Database["public"]['Enums']["content_status"];
-                    "updated_at"?: string;
+                    category_id?: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    description?: string | null;
+                    locale?: string;
+                    name?: string;
+                    status?: Database["public"]["Enums"]["content_status"];
+                    updated_at?: string;
                 };
                 Relationships: [
                     {
@@ -136,36 +139,36 @@ export type Database = {
                     }
                 ];
             };
-            "question_prompt_translations": {
+            question_prompt_translations: {
                 Row: {
-                    "civilian_question": string;
-                    "created_at": string;
-                    "created_by": string | null;
-                    "imposter_question": string;
-                    "locale": string;
-                    "prompt_id": string;
-                    "status": Database["public"]['Enums']["content_status"];
-                    "updated_at": string;
+                    civilian_question: string;
+                    created_at: string;
+                    created_by: string | null;
+                    imposter_question: string;
+                    locale: string;
+                    prompt_id: string;
+                    status: Database["public"]["Enums"]["content_status"];
+                    updated_at: string;
                 };
                 Insert: {
-                    "civilian_question": string;
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "imposter_question": string;
-                    "locale": string;
-                    "prompt_id": string;
-                    "status"?: Database["public"]['Enums']["content_status"];
-                    "updated_at"?: string;
+                    civilian_question: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    imposter_question: string;
+                    locale: string;
+                    prompt_id: string;
+                    status?: Database["public"]["Enums"]["content_status"];
+                    updated_at?: string;
                 };
                 Update: {
-                    "civilian_question"?: string;
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "imposter_question"?: string;
-                    "locale"?: string;
-                    "prompt_id"?: string;
-                    "status"?: Database["public"]['Enums']["content_status"];
-                    "updated_at"?: string;
+                    civilian_question?: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    imposter_question?: string;
+                    locale?: string;
+                    prompt_id?: string;
+                    status?: Database["public"]["Enums"]["content_status"];
+                    updated_at?: string;
                 };
                 Relationships: [
                     {
@@ -192,33 +195,30 @@ export type Database = {
                     }
                 ];
             };
-            "question_prompts": {
+            question_prompts: {
                 Row: {
-                    "category_id": string;
-                    "created_at": string;
-                    "created_by": string | null;
-                    "difficulty": Database["public"]['Enums']["difficulty_level"];
-                    "id": string;
-                    "is_family_friendly": boolean;
-                    "updated_at": string;
+                    category_id: string;
+                    created_at: string;
+                    created_by: string | null;
+                    difficulty: Database["public"]["Enums"]["difficulty_level"];
+                    id: string;
+                    updated_at: string;
                 };
                 Insert: {
-                    "category_id": string;
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "difficulty"?: Database["public"]['Enums']["difficulty_level"];
-                    "id"?: string;
-                    "is_family_friendly"?: boolean;
-                    "updated_at"?: string;
+                    category_id: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    difficulty?: Database["public"]["Enums"]["difficulty_level"];
+                    id?: string;
+                    updated_at?: string;
                 };
                 Update: {
-                    "category_id"?: string;
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "difficulty"?: Database["public"]['Enums']["difficulty_level"];
-                    "id"?: string;
-                    "is_family_friendly"?: boolean;
-                    "updated_at"?: string;
+                    category_id?: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    difficulty?: Database["public"]["Enums"]["difficulty_level"];
+                    id?: string;
+                    updated_at?: string;
                 };
                 Relationships: [
                     {
@@ -234,33 +234,33 @@ export type Database = {
                     }
                 ];
             };
-            "word_prompt_translations": {
+            word_prompt_translations: {
                 Row: {
-                    "created_at": string;
-                    "created_by": string | null;
-                    "locale": string;
-                    "prompt_id": string;
-                    "status": Database["public"]['Enums']["content_status"];
-                    "text": string;
-                    "updated_at": string;
+                    created_at: string;
+                    created_by: string | null;
+                    locale: string;
+                    prompt_id: string;
+                    status: Database["public"]["Enums"]["content_status"];
+                    text: string;
+                    updated_at: string;
                 };
                 Insert: {
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "locale": string;
-                    "prompt_id": string;
-                    "status"?: Database["public"]['Enums']["content_status"];
-                    "text": string;
-                    "updated_at"?: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    locale: string;
+                    prompt_id: string;
+                    status?: Database["public"]["Enums"]["content_status"];
+                    text: string;
+                    updated_at?: string;
                 };
                 Update: {
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "locale"?: string;
-                    "prompt_id"?: string;
-                    "status"?: Database["public"]['Enums']["content_status"];
-                    "text"?: string;
-                    "updated_at"?: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    locale?: string;
+                    prompt_id?: string;
+                    status?: Database["public"]["Enums"]["content_status"];
+                    text?: string;
+                    updated_at?: string;
                 };
                 Relationships: [
                     {
@@ -287,36 +287,33 @@ export type Database = {
                     }
                 ];
             };
-            "word_prompts": {
+            word_prompts: {
                 Row: {
-                    "category_id": string;
-                    "created_at": string;
-                    "created_by": string | null;
-                    "difficulty": Database["public"]['Enums']["difficulty_level"];
-                    "id": string;
-                    "image_path": string | null;
-                    "is_family_friendly": boolean;
-                    "updated_at": string;
+                    category_id: string;
+                    created_at: string;
+                    created_by: string | null;
+                    difficulty: Database["public"]["Enums"]["difficulty_level"];
+                    id: string;
+                    image_path: string | null;
+                    updated_at: string;
                 };
                 Insert: {
-                    "category_id": string;
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "difficulty"?: Database["public"]['Enums']["difficulty_level"];
-                    "id"?: string;
-                    "image_path"?: string | null;
-                    "is_family_friendly"?: boolean;
-                    "updated_at"?: string;
+                    category_id: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    difficulty?: Database["public"]["Enums"]["difficulty_level"];
+                    id?: string;
+                    image_path?: string | null;
+                    updated_at?: string;
                 };
                 Update: {
-                    "category_id"?: string;
-                    "created_at"?: string;
-                    "created_by"?: string | null;
-                    "difficulty"?: Database["public"]['Enums']["difficulty_level"];
-                    "id"?: string;
-                    "image_path"?: string | null;
-                    "is_family_friendly"?: boolean;
-                    "updated_at"?: string;
+                    category_id?: string;
+                    created_at?: string;
+                    created_by?: string | null;
+                    difficulty?: Database["public"]["Enums"]["difficulty_level"];
+                    id?: string;
+                    image_path?: string | null;
+                    updated_at?: string;
                 };
                 Relationships: [
                     {
@@ -337,147 +334,146 @@ export type Database = {
             [_ in never]: never;
         };
         Functions: {
-            "admin_category_transfer_targets": {
+            admin_category_transfer_targets: {
                 Args: {
-                    "p_locale": string;
-                    "p_source_id": string;
+                    p_locale: string;
+                    p_source_id: string;
                 };
                 Returns: {
-                    "id": string;
-                    "name": string;
-                    "slug": string;
+                    id: string;
+                    name: string;
+                    slug: string;
                 }[];
             };
-            "admin_dashboard_summary": {
+            admin_dashboard_summary: {
                 Args: {
-                    "p_locale"?: string;
+                    p_locale?: string;
                 };
                 Returns: Json;
             };
-            "admin_list_categories": {
+            admin_list_categories: {
                 Args: {
-                    "p_game_type": Database["public"]['Enums']["game_type"];
-                    "p_is_active": boolean;
-                    "p_locale": string;
-                    "p_page": number;
-                    "p_search": string;
-                    "p_sort": string;
+                    p_game_type: Database["public"]["Enums"]["game_type"];
+                    p_is_active: boolean;
+                    p_is_family_friendly: boolean;
+                    p_locale: string;
+                    p_page: number;
+                    p_search: string;
+                    p_sort: string;
                 };
                 Returns: Json;
             };
-            "admin_list_question_prompts": {
+            admin_list_question_prompts: {
                 Args: {
-                    "p_category_id": string;
-                    "p_difficulty": Database["public"]['Enums']["difficulty_level"];
-                    "p_is_family_friendly": boolean;
-                    "p_locale": string;
-                    "p_page": number;
-                    "p_search": string;
-                    "p_sort": string;
-                    "p_status": Database["public"]['Enums']["content_status"];
+                    p_category_id: string;
+                    p_difficulty: Database["public"]["Enums"]["difficulty_level"];
+                    p_locale: string;
+                    p_page: number;
+                    p_search: string;
+                    p_sort: string;
+                    p_status: Database["public"]["Enums"]["content_status"];
                 };
                 Returns: Json;
             };
-            "admin_list_word_prompts": {
+            admin_list_word_prompts: {
                 Args: {
-                    "p_category_id": string;
-                    "p_difficulty": Database["public"]['Enums']["difficulty_level"];
-                    "p_is_family_friendly": boolean;
-                    "p_locale": string;
-                    "p_page": number;
-                    "p_search": string;
-                    "p_sort": string;
-                    "p_status": Database["public"]['Enums']["content_status"];
+                    p_category_id: string;
+                    p_difficulty: Database["public"]["Enums"]["difficulty_level"];
+                    p_locale: string;
+                    p_page: number;
+                    p_search: string;
+                    p_sort: string;
+                    p_status: Database["public"]["Enums"]["content_status"];
                 };
                 Returns: Json;
             };
-            "delete_category": {
+            delete_category: {
                 Args: {
-                    "p_expected_version"?: string;
-                    "p_id": string;
-                    "p_mode": string;
-                    "p_target_id"?: string;
+                    p_expected_version?: string;
+                    p_id: string;
+                    p_mode: string;
+                    p_target_id?: string;
                 };
                 Returns: undefined;
             };
-            "delete_question_prompt": {
+            delete_question_prompt: {
                 Args: {
-                    "p_expected_updated_at": string;
-                    "p_id": string;
+                    p_expected_updated_at: string;
+                    p_id: string;
                 };
                 Returns: undefined;
             };
-            "delete_word_prompt": {
+            delete_word_prompt: {
                 Args: {
-                    "p_expected_updated_at": string;
-                    "p_id": string;
+                    p_expected_updated_at: string;
+                    p_id: string;
                 };
                 Returns: undefined;
             };
-            "preview_category_delete": {
+            preview_category_delete: {
                 Args: {
-                    "p_id": string;
+                    p_id: string;
                 };
                 Returns: Json;
             };
-            "save_category": {
+            save_category: {
                 Args: {
-                    "p_description": string;
-                    "p_expected_updated_at": string;
-                    "p_game_type": Database["public"]['Enums']["game_type"];
-                    "p_id": string;
-                    "p_is_active": boolean;
-                    "p_locale": string;
-                    "p_name": string;
-                    "p_slug": string;
-                    "p_sort_order": number;
-                    "p_status": Database["public"]['Enums']["content_status"];
+                    p_description: string;
+                    p_expected_updated_at: string;
+                    p_game_type: Database["public"]["Enums"]["game_type"];
+                    p_id: string;
+                    p_is_active: boolean;
+                    p_is_family_friendly: boolean;
+                    p_locale: string;
+                    p_name: string;
+                    p_slug: string;
+                    p_sort_order: number;
+                    p_status: Database["public"]["Enums"]["content_status"];
                 };
                 Returns: Json;
             };
-            "save_question_prompt": {
+            save_question_prompt: {
                 Args: {
-                    "p_category_id": string;
-                    "p_civilian_question": string;
-                    "p_difficulty": Database["public"]['Enums']["difficulty_level"];
-                    "p_expected_updated_at": string;
-                    "p_id": string;
-                    "p_imposter_question": string;
-                    "p_is_family_friendly": boolean;
-                    "p_locale": string;
-                    "p_status": Database["public"]['Enums']["content_status"];
+                    p_category_id: string;
+                    p_civilian_question: string;
+                    p_difficulty: Database["public"]["Enums"]["difficulty_level"];
+                    p_expected_updated_at: string;
+                    p_id: string;
+                    p_imposter_question: string;
+                    p_locale: string;
+                    p_status: Database["public"]["Enums"]["content_status"];
                 };
                 Returns: Json;
             };
-            "save_word_prompt": {
+            save_word_prompt: {
                 Args: {
-                    "p_category_id": string;
-                    "p_difficulty": Database["public"]['Enums']["difficulty_level"];
-                    "p_expected_updated_at": string;
-                    "p_id": string;
-                    "p_image_path": string;
-                    "p_is_family_friendly": boolean;
-                    "p_locale": string;
-                    "p_status": Database["public"]['Enums']["content_status"];
-                    "p_text": string;
+                    p_category_id: string;
+                    p_difficulty: Database["public"]["Enums"]["difficulty_level"];
+                    p_expected_updated_at: string;
+                    p_id: string;
+                    p_image_path: string;
+                    p_locale: string;
+                    p_status: Database["public"]["Enums"]["content_status"];
+                    p_text: string;
                 };
                 Returns: Json;
             };
-            "set_category_active": {
+            set_category_active: {
                 Args: {
-                    "p_expected_updated_at": string;
-                    "p_id": string;
-                    "p_is_active": boolean;
+                    p_expected_updated_at: string;
+                    p_id: string;
+                    p_is_active: boolean;
                 };
                 Returns: {
-                    "created_at": string;
-                    "created_by": string | null;
-                    "game_type": Database["public"]['Enums']["game_type"];
-                    "id": string;
-                    "is_active": boolean;
-                    "slug": string;
-                    "sort_order": number;
-                    "updated_at": string;
+                    created_at: string;
+                    created_by: string | null;
+                    game_type: Database["public"]["Enums"]["game_type"];
+                    id: string;
+                    is_active: boolean;
+                    is_family_friendly: boolean;
+                    slug: string;
+                    sort_order: number;
+                    updated_at: string;
                 };
                 SetofOptions: {
                     from: "*";
@@ -488,23 +484,23 @@ export type Database = {
             };
         };
         Enums: {
-            "admin_role": "admin";
-            "content_status": "draft" | "published" | "archived";
-            "difficulty_level": "easy" | "medium" | "hard";
-            "game_type": "word" | "question";
+            admin_role: "admin";
+            content_status: "draft" | "published" | "archived";
+            difficulty_level: "easy" | "medium" | "hard";
+            game_type: "word" | "question";
         };
         CompositeTypes: {
             [_ in never]: never;
         };
     };
 };
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>;
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
 export type Tables<DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"]) | {
     schema: keyof DatabaseWithoutInternals;
-}, TableName extends DefaultSchemaTableNameOrOptions extends {
+}, TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
-} ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] & DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"]) : never = never> = DefaultSchemaTableNameOrOptions extends {
+} ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] & DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"]) : never) = never> = DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
 } ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] & DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
     Row: infer R;
@@ -513,9 +509,9 @@ export type Tables<DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema[
 } ? R : never : never;
 export type TablesInsert<DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"] | {
     schema: keyof DatabaseWithoutInternals;
-}, TableName extends DefaultSchemaTableNameOrOptions extends {
+}, TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
-} ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] : never = never> = DefaultSchemaTableNameOrOptions extends {
+} ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] : never) = never> = DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
 } ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
     Insert: infer I;
@@ -524,9 +520,9 @@ export type TablesInsert<DefaultSchemaTableNameOrOptions extends keyof DefaultSc
 } ? I : never : never;
 export type TablesUpdate<DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"] | {
     schema: keyof DatabaseWithoutInternals;
-}, TableName extends DefaultSchemaTableNameOrOptions extends {
+}, TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
-} ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] : never = never> = DefaultSchemaTableNameOrOptions extends {
+} ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] : never) = never> = DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
 } ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
     Update: infer U;
@@ -535,22 +531,25 @@ export type TablesUpdate<DefaultSchemaTableNameOrOptions extends keyof DefaultSc
 } ? U : never : never;
 export type Enums<DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"] | {
     schema: keyof DatabaseWithoutInternals;
-}, EnumName extends DefaultSchemaEnumNameOrOptions extends {
+}, EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
-} ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"] : never = never> = DefaultSchemaEnumNameOrOptions extends {
+} ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"] : never) = never> = DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
 } ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName] : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"] ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions] : never;
 export type CompositeTypes<PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"] | {
     schema: keyof DatabaseWithoutInternals;
-}, CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+}, CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
-} ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"] : never = never> = PublicCompositeTypeNameOrOptions extends {
+} ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"] : never) = never> = PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
 } ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName] : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"] ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions] : never;
 export const Constants = {
-    "public": {
+    public: {
         Enums: {
-            "admin_role": ["admin"], "content_status": ["draft", "published", "archived"], "difficulty_level": ["easy", "medium", "hard"], "game_type": ["word", "question"]
-        }
-    }
+            admin_role: ["admin"],
+            content_status: ["draft", "published", "archived"],
+            difficulty_level: ["easy", "medium", "hard"],
+            game_type: ["word", "question"],
+        },
+    },
 } as const;

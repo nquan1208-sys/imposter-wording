@@ -107,7 +107,7 @@ void main() async {
       await setup.setFamily(true);
       final first = session();
       final second = session();
-      expect(first.prompt.id, '2');
+      expect(first.prompt.id, '1');
       expect(first.imposterIds.single, second.imposterIds.single);
       expect(first.startingPlayerId, second.startingPlayerId);
       expect(
@@ -121,7 +121,7 @@ void main() async {
       await setup.setPlayerCount(4);
       content.snapshot.value = ContentSnapshot.fromJson(fixture(), 'vi');
       expect(first.setup.players, hasLength(count));
-      expect(first.prompt.text, 'Word 2');
+      expect(first.prompt.text, 'Word 1');
       expect(first.categoryName, 'Category a');
       expect(first.contentLocale, 'vi');
       expect(() => first.setup.players.clear(), throwsUnsupportedError);

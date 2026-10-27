@@ -21,9 +21,9 @@ begin
   perform pg_temp.expect_error(format('select public.delete_word_prompt(%L,%L)',v_prompt,version),'40001');
   perform pg_temp.assert_true((select count(*) = 2 from public.word_prompt_translations where prompt_id = v_prompt),'translation does not duplicate original');
   perform pg_temp.assert_true((select to_jsonb(t) = before_translation from public.word_prompt_translations t where prompt_id = v_prompt and locale = 'vi'),'saving English preserves Vietnamese metadata and content');
-  perform pg_temp.expect_error(format('select public.save_word_prompt(%L,%L,%L,true,%L,%L,%L,%L,%L)',v_prompt,category_id,'easy',image,'vi','stale','published',version),'40001');
+  perform pg_temp.expect_error(format('select public.save_word_prompt(%L,%L,%L,%L,%L,%L,%L,%L)',v_prompt,category_id,'easy',image,'vi','stale','published',version),'40001');
   select to_jsonb(w),updated_at into before_original,version from public.word_prompts w where id = v_prompt;
-  perform pg_temp.expect_error(format('select public.save_word_prompt(%L,%L,%L,false,%L,%L,%L,%L,%L)',v_prompt,category_id,'hard',image,'en',chr(160)||chr(65279),'draft',version),'23514');
+  perform pg_temp.expect_error(format('select public.save_word_prompt(%L,%L,%L,%L,%L,%L,%L,%L)',v_prompt,category_id,'hard',image,'en',chr(160)||chr(65279),'draft',version),'23514');
   perform pg_temp.assert_true((select to_jsonb(w) = before_original from public.word_prompts w where id = v_prompt),'failed translation rolls back shared fields and version');
   perform pg_temp.expect_error(format('select pg_temp.save_word(%L,%L,%L,%L)',failed_id,category_id,'unknown','draft'),'23503');
   perform pg_temp.assert_true(not exists(select 1 from public.word_prompts where id = failed_id),'unknown-language creation is atomic');

@@ -125,7 +125,7 @@ void main() {
       expect(s.nextPlayerId, 4);
       expect(s.activePresetId, id);
       expect(s.gameType, 'question');
-      expect(s.family, true);
+      expect(s.family, false);
       expect(s.showWordImages, true);
       expect(s.categoryIds, {'q'});
       expect(GameSetup.fromJson(file.data!).toJson(), s.toJson());

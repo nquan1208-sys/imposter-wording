@@ -238,5 +238,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "familyCategories": "Chế độ gia đình",
+  "emptyFamilyCategories": "Chưa có danh mục gia đình có nội dung. Vui lòng chọn Tất cả danh mục hoặc thử lại sau."
 }

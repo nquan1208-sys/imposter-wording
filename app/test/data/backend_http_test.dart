@@ -72,6 +72,12 @@ void main() {
             'three',
           ]);
           expect(cache.writes, 1);
+          expect(repo.categoryCounts(family: true).values, [3]);
+          expect(repo.eligibleWords(family: true).map((w) => w.id), [
+            'one',
+            'two',
+            'three',
+          ]);
         } else {
           expect(repo.loadFailed.value, true);
           expect(repo.cached.value, true);

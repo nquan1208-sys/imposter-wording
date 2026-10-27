@@ -36,7 +36,7 @@ try {
   console.log('Storage: uploading image')
   const path = `${prompt}/${crypto.randomUUID()}.png`; paths.push(path)
   data(await admin.storage.from(bucket).upload(path, png, { contentType: 'image/png', upsert: false }))
-  const form = { category_id: category, text: 'Storage test', imposter_text: 'Ignored legacy word', imposter_hint: 'Ignored legacy hint', image_path: path, difficulty: 'medium', is_family_friendly: false, locale: 'vi' }
+  const form = { category_id: category, text: 'Storage test', imposter_text: 'Ignored legacy word', imposter_hint: 'Ignored legacy hint', image_path: path, difficulty: 'medium', locale: 'vi' }
   console.log('Storage: saving draft')
   let result = await saveWordPrompt(admin, form, { id: prompt, status: 'draft' })
   let row = { ...result.translation, ...result.original }

@@ -10,7 +10,7 @@ export const wordPromptSchema = z.object({
   text: z.string().trim().min(1, 'wordPrompts.errors.textRequired'),
   image_path: optionalText,
   category_id: z.uuid({ error: 'wordPrompts.errors.categoryRequired' }),
-  difficulty: z.enum(difficulties), is_family_friendly: z.boolean(),
+  difficulty: z.enum(difficulties),
   locale: z.string().trim().min(1, 'wordPrompts.errors.localeRequired'),
 })
 export function wordPromptPayload(form: unknown, status: unknown) {
@@ -26,7 +26,6 @@ export function wordPromptFilters(query: LocationQuery) {
     search: typeof query.search === 'string' ? query.search : '',
     category: z.uuid().safeParse(query.category).success ? String(query.category) : '',
     difficulty: z.enum(difficulties).safeParse(query.difficulty).success ? query.difficulty as typeof difficulties[number] : '' as const,
-    family: typeof query.family === 'string' && ['true', 'false'].includes(query.family) ? query.family : '',
     locale: typeof query.locale === 'string' && query.locale ? query.locale : 'vi',
     status: z.enum(statuses).safeParse(query.status).success ? query.status as typeof statuses[number] : '' as const,
     sort: typeof query.sort === 'string' && ['text', 'civilian_text'].includes(query.sort) ? 'text' : 'updated_at',

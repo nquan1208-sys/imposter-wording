@@ -5,7 +5,7 @@ function dataOrThrow<T>(result: { data: T; error?: unknown }) { if (result.error
 export async function listQuestionPrompts(client: AdminClient, filters: ReturnType<typeof questionPromptFilters>) {
   return dataOrThrow(await client.rpc('admin_list_question_prompts', {
     p_locale: filters.locale, p_search: filters.search.trim(), p_category_id: filters.category || null,
-    p_difficulty: filters.difficulty || null, p_is_family_friendly: filters.family ? filters.family === 'true' : null,
+    p_difficulty: filters.difficulty || null,
     p_status: filters.status || null, p_sort: filters.sort, p_page: filters.page,
   })) as { rows: QuestionRow[]; total: number }
 }
@@ -31,6 +31,6 @@ export async function questionCategories(client: AdminClient, locale = 'vi') {
 export async function saveQuestionPrompt(client: AdminClient, form: unknown, { id, status, updatedAt }: SavePrompt) {
   const payload = questionPromptPayload(form, status)
   return dataOrThrow(await client.rpc('save_question_prompt', { p_id: id, p_expected_updated_at: updatedAt ?? null, p_category_id: payload.category_id,
-      p_difficulty: payload.difficulty, p_is_family_friendly: payload.is_family_friendly,
+      p_difficulty: payload.difficulty,
       p_locale: payload.locale, p_status: payload.status, p_civilian_question: payload.civilian_question, p_imposter_question: payload.imposter_question })) as SavedQuestion
 }

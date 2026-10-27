@@ -23,6 +23,53 @@ void main() async {
   late ContentRepository content;
   late SetupStore store;
   late MemoryStorage file;
+  test(
+    'category confirmation commits one write; failed draft cannot be retried after cancel',
+    () async {
+      final before = file.writes;
+      file.failWrite = true;
+      expect(
+        await store.setCategories({'a'}, family: true, showWordImages: true),
+        false,
+      );
+      expect(store.setup.value.family, false);
+      expect(store.setup.value.categoryIds, isEmpty);
+      expect(store.setup.value.showWordImages, false);
+      file.failWrite = false;
+      await store.save();
+      expect(store.setup.value.family, false);
+      expect(
+        file.writes,
+        before + 1,
+        reason: 'cancelled category draft is never queued for retry',
+      );
+      expect(
+        await store.setCategories({'a'}, family: true, showWordImages: true),
+        true,
+      );
+      expect(file.writes, before + 2);
+      expect(store.setup.value.family, true);
+      expect(store.setup.value.categoryIds, {'a'});
+      expect(store.setup.value.showWordImages, true);
+    },
+  );
+
+  test(
+    'legacy question family setup restores in regular mode while remembering images',
+    () async {
+      file.data = {
+        ...GameSetup.defaults().toJson(),
+        'gameType': 'question',
+        'mode': 'family',
+        'showWordImages': true,
+      };
+      await store.restore();
+      expect(store.setup.value.family, false);
+      expect(store.setup.value.showWordImages, true);
+      await store.setGameType('word');
+      expect(store.setup.value.family, false);
+    },
+  );
   setUp(() async {
     final data = fixture();
     content = ContentRepository(

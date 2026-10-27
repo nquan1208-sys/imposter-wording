@@ -14,6 +14,7 @@ const categoryFields = z.object({
     .transform(Number),
   locale: z.string().trim().min(1, 'categories.errors.invalidData'),
   status: z.enum(['draft', 'published', 'archived'], { error: 'categories.errors.invalidData' }),
+  is_family_friendly: z.boolean().default(false),
   is_active: z.boolean({ error: 'categories.errors.invalidData' }).default(false),
 })
 const newCategorySchema = categoryFields.extend({
@@ -30,7 +31,7 @@ export function slugFromName(name: string) {
 export function categoryPayload(form: unknown) {
   const result = categorySchema().safeParse(form)
   if (!result.success) throw new Error(result.error.issues[0].message)
-  return result.data
+  return { ...result.data, is_family_friendly: result.data.game_type === 'word' && result.data.is_family_friendly }
 }
 
 // Escape PostgREST quoted values and LIKE wildcards: search is literal substring matching.
@@ -59,12 +60,13 @@ export function categoryError(cause: unknown) {
   return errorKeys[error?.code] || 'common.errors.operationFailed'
 }
 
-export function listFilters(query: LocationQuery): { search: string; gameType: '' | 'word' | 'question'; active: string; sort: string; page: number; locale: string } {
+export function listFilters(query: LocationQuery): { search: string; gameType: '' | 'word' | 'question'; active: string; family: string; sort: string; page: number; locale: string } {
   const page = Number(query.page)
   return {
     locale: typeof query.locale === 'string' ? query.locale : 'vi',
     search: typeof query.search === 'string' ? query.search : '',
     gameType: query.type === 'word' || query.type === 'question' ? query.type : '',
+    family: typeof query.family === 'string' && ['true', 'false'].includes(query.family) ? query.family : '',
     active: typeof query.active === 'string' && ['true', 'false'].includes(query.active) ? query.active : '',
     sort: typeof query.sort === 'string' && ['name', 'updated_at'].includes(query.sort) ? query.sort : 'sort_order',
     page: Number.isSafeInteger(page) && page > 0 ? page : 1,

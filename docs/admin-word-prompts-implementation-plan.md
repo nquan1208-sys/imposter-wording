@@ -29,8 +29,8 @@ Hoàn thành luồng **danh sách → tạo nháp → sửa → gắn danh mục
 
 ### Danh sách
 
-- Thay placeholder bằng danh sách có thumbnail, từ civilian, danh mục, độ khó, Family Mode, trạng thái và ngày cập nhật.
-- Tìm kiếm từ civilian; lọc danh mục, độ khó, Family Mode, locale và trạng thái.
+- Thay placeholder bằng danh sách có thumbnail, từ civilian, danh mục, độ khó, trạng thái và ngày cập nhật.
+- Tìm kiếm từ civilian; lọc danh mục, độ khó, locale và trạng thái.
 - Phân trang 20 dòng; mặc định cập nhật mới nhất, thêm `id` để thứ tự ổn định. Cho phép sắp xếp theo từ civilian hoặc ngày cập nhật.
 - Giữ bộ lọc trong URL khi đi vào form và quay lại.
 - Có trạng thái loading, danh sách rỗng, lỗi và thử lại.
@@ -38,8 +38,8 @@ Hoàn thành luồng **danh sách → tạo nháp → sửa → gắn danh mục
 ### Form tạo/sửa
 
 - Thêm routes `/word-prompts/new` và `/word-prompts/:id/edit`.
-- Form sử dụng các trường hiện có: `text`, `category_id`, `difficulty`, `is_family_friendly`, `locale`, `image_path`.
-- Tạo mới mặc định `locale=vi`, độ khó `medium`, Family Mode tắt.
+- Form sử dụng các trường hiện có: `text`, `category_id`, `difficulty`, `locale`, `image_path`.
+- Tạo mới mặc định `locale=vi`, độ khó `medium`.
 - Chọn danh mục `word` đang hoạt động, cùng locale.
 - Đề cũ thuộc danh mục đã tắt vẫn hiển thị danh mục hiện tại để sửa/lưu; muốn publish phải chọn danh mục hoạt động.
 - Locale mặc định `vi`; khi thay locale phải chọn lại danh mục tương ứng. Không tự đổi locale của danh mục.
@@ -126,7 +126,7 @@ Sau xóa đề, không còn bản ghi published tham chiếu ảnh nên anon/use
 App không có dữ liệu dự phòng trong bản build; mọi content đến từ API Supabase.
 
 - App dùng role `anon` với publishable key; không đăng nhập admin, không nhúng `service_role`. Quyền đọc dựa trên RLS hiện có: `game_categories` đang hoạt động và `word_prompts` có `status = 'published'`. Không cần migration mới cho app.
-- Chỉ select trường game cần: `id`, `category_id`, `text`, `image_path`, `difficulty`, `is_family_friendly`, `locale` và tên/locale/loại của danh mục.
+- Chỉ select trường game cần: `id`, `category_id`, `text`, `image_path`, `difficulty`, `locale` và tên/locale/loại của danh mục.
 - Ảnh: app xin signed URL hoặc tải qua policy đọc ảnh published, rồi lưu file trên máy theo `image_path` để dùng offline. Ảnh của đề draft/archived/đã xóa không lấy được mới; file đã tải trên máy chỉ bị xóa ở lần đồng bộ kế tiếp. Vì app dựa vào `image_path` làm khóa, thay ảnh phải luôn tạo path mới (giữ đúng quy tắc ở mục 3).
 - Publish, archive, sửa hoặc xóa trên admin có hiệu lực từ lần app tải content kế tiếp; ván đang chơi giữ nguyên đề đã chọn.
 - App lưu cache lần tải thành công gần nhất. Mất mạng thì dùng cache, có thể cũ tới lần đồng bộ thành công; lần mở đầu tiên không có mạng thì báo lỗi và cho thử lại.

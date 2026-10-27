@@ -1,5 +1,6 @@
 # Thiết lập Supabase local thủ công trên máy mới
 
+Hợp đồng Family Mode hiện hành và quy trình nâng cấp local: [Family Mode theo danh mục](family-mode.md).
 Hướng dẫn cho macOS, chạy Supabase và Vue Admin của repository
 `imposter-wording`. Mọi lệnh Supabase chạy tại **thư mục gốc repository**;
 lệnh Yarn chạy trong **`admin/`**.

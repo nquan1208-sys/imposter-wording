@@ -99,13 +99,13 @@ test('sidebar navigation renders only the current page and retains form leave gu
     }
     await router.push('/question-prompts'); await nextTick()
     assert.match(text(root), /Đang tải đề/)
-    const questionFilters = { search: '', category: '', difficulty: '', family: '', locale: 'vi', status: '', sort: 'updated_at', page: 1 }
+    const questionFilters = { search: '', category: '', difficulty: '', locale: 'vi', status: '', sort: 'updated_at', page: 1 }
     const questionKey = ['question-prompts', 'list', questionFilters]
     queryClient.setQueryData(questionKey, { rows: [], total: 0 }); await nextTick()
     assert.match(text(root), /Không có đề phù hợp/)
     queryClient.getQueryCache().find({ queryKey: questionKey })!.setState({ status: 'error', error: new Error('offline') }); await nextTick()
     assert.match(text(root), /Thử lại/)
-    queryClient.setQueryData(questionKey, { rows: [{ id: 'question-id', translations: [{ locale: 'vi', status: 'draft' }], civilian_question: 'Favourite food?', imposter_question: 'Worst food?', game_categories: { name: 'Food' }, status: 'draft', difficulty: 'medium', is_family_friendly: false, updated_at: '2026-10-21T10:00:00Z' }], total: 1 }); await nextTick()
+    queryClient.setQueryData(questionKey, { rows: [{ id: 'question-id', translations: [{ locale: 'vi', status: 'draft' }], civilian_question: 'Favourite food?', imposter_question: 'Worst food?', game_categories: { name: 'Food' }, status: 'draft', difficulty: 'medium', updated_at: '2026-10-21T10:00:00Z' }], total: 1 }); await nextTick()
     assert.match(text(root), /Favourite food/); assert.match(text(root), /Worst food/)
     const search = nodes(root).find(element => element.props.modelValue === '' && element.props['onUpdate:modelValue'])
     assert.ok(search)
@@ -242,7 +242,7 @@ test('sidebar navigation renders only the current page and retains form leave gu
         query.then = resolve => resolve({ data: promptDetail }); return query
       }
       supabase.rpc = async (_, input) => {
-        const original = { id: input.p_id, category_id: input.p_category_id, difficulty: input.p_difficulty, is_family_friendly: input.p_is_family_friendly, image_path: null, updated_at: 'prompt-version' }
+        const original = { id: input.p_id, category_id: input.p_category_id, difficulty: input.p_difficulty, image_path: null, updated_at: 'prompt-version' }
         const translation = { prompt_id: input.p_id, locale: input.p_locale, status: input.p_status, ...(kind === 'word' ? { text: input.p_text } : { civilian_question: input.p_civilian_question, imposter_question: input.p_imposter_question }) }
         promptDetail = { ...original, translations: [translation], game_categories: null }
         return { data: { original, translation } }

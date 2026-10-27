@@ -35,7 +35,7 @@ test('question editor refreshes clean cache, protects edits, and keeps save conf
   const originalWindow = globalThis.window
   const queryClient = new QueryClient({ defaultOptions: { queries: { enabled: false, gcTime: Infinity } } })
   const id = '00000000-0000-4000-8000-000000000001'
-  const row = { id, civilian_question: 'Cached word', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi', imposter_question: 'Other question', status: 'draft', updated_at: '2026-10-13T10:00:00Z' }
+  const row = { id, civilian_question: 'Cached word', category_id: id, difficulty: 'medium', locale: 'vi', imposter_question: 'Other question', status: 'draft', updated_at: '2026-10-13T10:00:00Z' }
   const fresh = { ...row, civilian_question: 'Server word', updated_at: '2026-10-13T11:00:00Z' }
   let app: TestApp | undefined
   let supabase: ClientStub | undefined, originalFrom: ClientStub['from'] | undefined, originalGetUser: ClientStub['auth']['getUser'] | undefined
@@ -117,7 +117,7 @@ test('saved-question deletion preserves input on failure, blocks repeats/leave/l
   const invalidations: (readonly unknown[] | undefined)[] = [], invalidateQueries = queryClient.invalidateQueries.bind(queryClient)
   queryClient.invalidateQueries = options => { invalidations.push((typeof options === 'function' ? options() : options)?.queryKey); return invalidateQueries(options) }
   const id = '00000000-0000-4000-8000-000000000001'
-  const row = { id, civilian_question: 'Saved apple', imposter_question: 'Other question', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi', status: 'published', updated_at: '2026-10-13T10:00:00Z', game_categories: { id, name: 'Saved category', locale: 'vi', is_active: false } }
+  const row = { id, civilian_question: 'Saved apple', imposter_question: 'Other question', category_id: id, difficulty: 'medium', locale: 'vi', status: 'published', updated_at: '2026-10-13T10:00:00Z', game_categories: { id, name: 'Saved category', locale: 'vi', is_active: false } }
   let supabase: ClientStub | undefined, originalRpc: ClientStub['rpc'] | undefined, originalFrom: ClientStub['from'] | undefined, originalGetUser: ClientStub['auth']['getUser'] | undefined, originalSignOut: ClientStub['auth']['signOut'] | undefined
   try {
     globalThis.window = testWindow({ addEventListener() {}, removeEventListener() {}, confirm: () => false })
@@ -262,7 +262,7 @@ test('new question saves retain failures, block duplicate submits and support ev
     supabase.from = () => {
       const query = {} as QueryStub
       for (const name of ['select', 'eq', 'single', 'order', 'range']) query[name] = () => query
-      query.then = resolve => resolve({ data: promptDetail({ id: String(submitted.p_id), category_id: id, difficulty: 'medium', is_family_friendly: false, civilian_question: String(submitted.p_civilian_question).trim(), imposter_question: String(submitted.p_imposter_question).trim(), locale: 'vi', status: String(submitted.p_status), updated_at: 'latest' }) })
+      query.then = resolve => resolve({ data: promptDetail({ id: String(submitted.p_id), category_id: id, difficulty: 'medium', civilian_question: String(submitted.p_civilian_question).trim(), imposter_question: String(submitted.p_imposter_question).trim(), locale: 'vi', status: String(submitted.p_status), updated_at: 'latest' }) })
       return query
     }
 
@@ -272,7 +272,7 @@ test('new question saves retain failures, block duplicate submits and support ev
       .use(router).use(VueQueryPlugin, { queryClient }).use(createI18n({ legacy: false, locale: 'vi', messages: { vi: vn } }))
     app.provide(ssrContextKey, {}); app.provide(matchedRouteKey, computed(() => router.currentRoute.value.matched[0]))
     const editor = setupState(app.mount(node()).$.subTree.component)
-    assert.equal(editor.form.locale, 'vi'); assert.equal(editor.form.difficulty, 'medium'); assert.equal(editor.form.is_family_friendly, false)
+    assert.equal(editor.form.locale, 'vi'); assert.equal(editor.form.difficulty, 'medium'); assert.equal('is_family_friendly' in editor.form, false)
     editor.submit('draft'); assert.equal(writes, 0); assert.ok(editor.localError)
     editor.update('civilian_question', ' Favourite food? '); editor.update('imposter_question', ' Worst food? '); editor.update('category_id', id)
     editor.submit('draft'); editor.submit('published')
@@ -286,7 +286,7 @@ test('new question saves retain failures, block duplicate submits and support ev
       await new Promise(resolve => setTimeout(resolve, 0))
       assert.equal(submitted.p_status, status)
       assert.equal('imposter_hint' in submitted, false)
-      resolveWrite({ data: { original: { id: submitted.p_id, category_id: submitted.p_category_id, difficulty: submitted.p_difficulty, is_family_friendly: submitted.p_is_family_friendly, updated_at: new Date().toISOString() }, translation: { prompt_id: submitted.p_id, locale: submitted.p_locale, status: submitted.p_status, civilian_question: String(submitted.p_civilian_question).trim(), imposter_question: String(submitted.p_imposter_question).trim() } } })
+      resolveWrite({ data: { original: { id: submitted.p_id, category_id: submitted.p_category_id, difficulty: submitted.p_difficulty, updated_at: new Date().toISOString() }, translation: { prompt_id: submitted.p_id, locale: submitted.p_locale, status: submitted.p_status, civilian_question: String(submitted.p_civilian_question).trim(), imposter_question: String(submitted.p_imposter_question).trim() } } })
       await new Promise(resolve => setTimeout(resolve, 10))
       assert.equal(editor.activeTranslation.status, status); assert.equal(editor.unsaved.dirty, false); assert.equal(editor.unsaved.busy, false)
       assert.equal(router.currentRoute.value.name, 'question-prompt-edit')

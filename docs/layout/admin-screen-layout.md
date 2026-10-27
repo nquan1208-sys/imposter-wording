@@ -49,7 +49,6 @@ Cho admin biết nhanh tình trạng content và các việc cần xử lý.
 - Khu vực cảnh báo:
   - Danh mục không có content.
   - Question civilian và imposter bị trùng.
-  - Content chưa được gắn Family Mode nhưng có difficulty `easy`.
 
 ## Màn hình Danh mục
 
@@ -78,6 +77,7 @@ Cho admin biết nhanh tình trạng content và các việc cần xử lý.
 - Ngôn ngữ.
 - Thứ tự hiển thị.
 - Active/inactive.
+- Checkbox Family Mode trong thông tin chung của danh mục từ ngữ; ẩn và đặt false cho loại câu hỏi. Danh sách danh mục có cột và bộ lọc Family Mode.
 
 Loại game và ngôn ngữ được cố định khi sửa. Nếu cần đổi loại, admin phải tạo danh mục mới.
 
@@ -97,7 +97,6 @@ Loại game và ngôn ngữ được cố định khi sửa. Nếu cần đổi 
 - Bộ lọc:
   - Danh mục.
   - Độ khó.
-  - Family Mode.
   - Ngôn ngữ.
   - Trạng thái: `Draft`, `Published`, `Archived`.
 - Bảng gồm:
@@ -105,7 +104,6 @@ Loại game và ngôn ngữ được cố định khi sửa. Nếu cần đổi 
   - Từ của civilian.
   - Danh mục.
   - Độ khó.
-  - Family Mode.
   - Trạng thái.
   - Ngày cập nhật.
 
@@ -142,7 +140,6 @@ Nút cuối form:
   - Câu hỏi imposter.
   - Danh mục.
   - Độ khó.
-  - Family Mode.
   - Trạng thái.
   - Ngày cập nhật.
 
@@ -183,7 +180,7 @@ Validation:
 - Các bảng hỗ trợ phân trang, tìm kiếm và sắp xếp.
 - Tên/nội dung chính và tên danh mục dài trong bảng được xuống dòng; click vào tên để mở màn sửa. Ngày, trạng thái và nhóm thao tác giữ trên một hàng.
 - Upload ảnh hiển thị tiến trình, preview và lỗi định dạng/kích thước.
-- Family Mode là một thuộc tính độc lập với độ khó; app chỉ lấy content có `is_family_friendly = true` khi chế độ gia đình được bật.
+- Family Mode là thuộc tính dùng chung của danh mục từ ngữ (`game_categories.is_family_friendly`), độc lập với độ khó và ngôn ngữ. Trò câu hỏi không có Family Mode.
 - Nút `Đăng xuất` nằm cố định ở cuối sidebar, tách biệt với các mục content.
 - Khi nhấn `Đăng xuất`, hiển thị trạng thái loading ngắn rồi chuyển về màn hình đăng nhập admin.
 - Nếu admin chưa lưu thay đổi trong form, hiển thị cảnh báo trước khi đăng xuất.

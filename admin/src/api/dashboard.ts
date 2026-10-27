@@ -22,7 +22,6 @@ export type DashboardSummary = {
   warnings: {
     empty_categories: number
     duplicate_questions: number
-    non_family_easy_prompts: number
   }
 }
 

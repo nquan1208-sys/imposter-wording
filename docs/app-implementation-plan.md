@@ -62,12 +62,12 @@ Hợp đồng đọc theo schema mới, áp dụng ngay từ phase 2 dù lúc đ
 | Nguồn | Trường dùng cho app | Quy tắc |
 | --- | --- | --- |
 | `content_languages` | `code`, `display_name`, `sort_order` | Danh mục ngôn ngữ nội dung; có mã ngôn ngữ không đồng nghĩa đã có đề published. Phase 12 dùng cho picker. |
-| `game_categories` + `game_category_translations` | Gốc: `id`, `game_type`, `sort_order`, `is_active`; bản dịch: `category_id`, `locale`, `name`, `description`, `status` | Ghép theo `category_id = id`; chỉ nhận bản dịch published đúng content locale và category active. `slug` unique theo `(game_type, slug)`, không phải theo locale; chọn/lưu bằng ID. |
-| `word_prompts` + `word_prompt_translations` | Gốc: `id`, `category_id`, `difficulty`, `is_family_friendly`, `image_path`; bản dịch: `prompt_id`, `locale`, `text`, `status` | Một bản dịch cho mỗi `(prompt_id, locale)`; ảnh thuộc đề gốc, dùng chung giữa các locale. |
-| `question_prompts` + `question_prompt_translations` | Gốc: `id`, `category_id`, `difficulty`, `is_family_friendly`; bản dịch: `prompt_id`, `locale`, `civilian_question`, `imposter_question`, `status` | Hai câu hỏi phải lấy từ cùng một hàng bản dịch; không ghép hai locale hoặc tự tạo câu còn thiếu. |
+| `game_categories` + `game_category_translations` | Gốc: `id`, `game_type`, `sort_order`, `is_active`, `is_family_friendly`; bản dịch: `category_id`, `locale`, `name`, `description`, `status` | Ghép theo `category_id = id`; chỉ nhận bản dịch published đúng content locale và category active. `slug` unique theo `(game_type, slug)`, không phải theo locale; chọn/lưu bằng ID. |
+| `word_prompts` + `word_prompt_translations` | Gốc: `id`, `category_id`, `difficulty`, `image_path`; bản dịch: `prompt_id`, `locale`, `text`, `status` | Một bản dịch cho mỗi `(prompt_id, locale)`; ảnh thuộc đề gốc, dùng chung giữa các locale. |
+| `question_prompts` + `question_prompt_translations` | Gốc: `id`, `category_id`, `difficulty`; bản dịch: `prompt_id`, `locale`, `civilian_question`, `imposter_question`, `status` | Hai câu hỏi phải lấy từ cùng một hàng bản dịch; không ghép hai locale hoặc tự tạo câu còn thiếu. |
 
 - Dùng một repository nội dung cho cả picker, số lượng content và random; model sau ghép phải giữ ID gốc và `contentLocale`. Giao diện không tự lọc lại bằng một bộ luật khác.
-- Content hợp lệ phải đúng loại game, có **bản dịch prompt và bản dịch category cùng locale đều `status = published`**, category `is_active = true`; Gia đình thêm `is_family_friendly = true`. Cổ điển lấy cả content phù hợp và không phù hợp gia đình. Không còn `locale`/`status` trên bảng prompt gốc hay các cột hint từ schema lịch sử.
+- Content hợp lệ phải đúng loại game, có **bản dịch prompt và bản dịch category cùng locale đều `status = published`**, category `is_active = true`; Gia đình chỉ áp dụng cho từ ngữ và yêu cầu `game_categories.is_family_friendly = true`; lấy toàn bộ từ hợp lệ trong danh mục. Cổ điển lấy cả content phù hợp và không phù hợp gia đình. Không còn `locale`/`status` trên bảng prompt gốc hay các cột hint từ schema lịch sử.
 - RLS cho phép đọc hàng gốc nếu có ít nhất một locale công khai; đọc được hàng gốc không chứng minh locale đang chọn có nội dung. Query translation phải lọc locale/status rõ ràng, ghép đủ cha/con; nested select phải loại hàng thiếu bản dịch, không biến left join thành content hợp lệ.
 - Không chọn category nghĩa là tất cả content hợp lệ; chọn nhiều category là hợp của chúng. Mỗi prompt có cơ hội được chọn như nhau trong tập hợp đó; không random category trước khiến category ít đề được ưu tiên.
 - Picker chỉ hiện category có content hợp lệ và hiển thị số lượng từ cùng tập dữ liệu dùng để bắt đầu ván. Lấy đủ các trang của dữ liệu cần dùng theo thứ tự ổn định ngay từ phase 2; không tính count/random trên trang đầu hoặc đếm mọi bản dịch thành nhiều đề.
@@ -156,7 +156,7 @@ Thứ tự mặc định là 1 → 13. Giữ số phase 1–11; phase 12 mới d
 ### Phase 2 — Thiết lập word và danh mục từ backend
 
 **Trạng thái triển khai 24/10/2026:** đã có setup Word, chọn 3–100 người,
-Classic/Family, picker hai cột với bản chọn tạm, load content nền dùng chung,
+hai tab Tất cả danh mục/Chế độ gia đình trong picker từ ngữ với bản chọn tạm, load content nền dùng chung,
 snapshot và thiết lập JSON riêng trong Application Support theo backend/locale.
 Lỗi refresh không thay cache; lỗi đọc thiết lập chặn ghi cho tới retry/reset có
 xác nhận. Nút bắt đầu ván vẫn chưa khả dụng cho tới phase 3.

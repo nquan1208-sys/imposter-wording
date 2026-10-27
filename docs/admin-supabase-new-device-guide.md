@@ -1,5 +1,6 @@
 # Guide chạy dự án trên thiết bị mới
 
+Hợp đồng Family Mode hiện hành và quy trình nâng cấp local: [Family Mode theo danh mục](family-mode.md).
 Tài liệu này hướng dẫn thiết lập repository `imposter-wording` trên một máy
 mới, bao gồm:
 

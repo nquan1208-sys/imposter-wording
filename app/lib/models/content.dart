@@ -24,14 +24,17 @@ class ContentCategory {
   final String id, gameType, name, slug, contentLocale;
   final String? description;
   final int sortOrder;
+  final bool isFamilyFriendly;
   ContentCategory(JsonMap row, this.contentLocale)
     : id = requiredText(row, 'id'),
       gameType = requiredText(row, 'game_type'),
       slug = requiredText(row, 'slug'),
       sortOrder = row['sort_order'] as int,
+      isFamilyFriendly = row['is_family_friendly'] as bool? ?? false,
       name = requiredText(translation(row, contentLocale), 'name'),
       description = translation(row, contentLocale)['description'] as String? {
-    if (!const ['word', 'question'].contains(gameType) ||
+    if ((isFamilyFriendly && gameType != 'word') ||
+        !const ['word', 'question'].contains(gameType) ||
         row['is_active'] != true ||
         sortOrder < 0 ||
         translation(row, contentLocale)['category_id'] != id) {
@@ -42,13 +45,11 @@ class ContentCategory {
 
 class WordPrompt {
   final String id, categoryId, difficulty, text, contentLocale;
-  final bool isFamilyFriendly;
   final String? imagePath;
   WordPrompt(JsonMap row, this.contentLocale)
     : id = requiredText(row, 'id'),
       categoryId = requiredText(row, 'category_id'),
       difficulty = requiredText(row, 'difficulty'),
-      isFamilyFriendly = row['is_family_friendly'] as bool,
       imagePath = row['image_path'] as String?,
       text = requiredText(translation(row, contentLocale), 'text') {
     validatePrompt(row, contentLocale, id, difficulty);
@@ -71,12 +72,10 @@ class QuestionPair {
       civilianQuestion,
       imposterQuestion,
       contentLocale;
-  final bool isFamilyFriendly;
   QuestionPair(JsonMap row, this.contentLocale)
     : id = requiredText(row, 'id'),
       categoryId = requiredText(row, 'category_id'),
       difficulty = requiredText(row, 'difficulty'),
-      isFamilyFriendly = row['is_family_friendly'] as bool,
       civilianQuestion = requiredText(
         translation(row, contentLocale),
         'civilian_question',

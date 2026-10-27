@@ -15,7 +15,7 @@ const id = computed(() => typeof route.params.id === 'string' ? route.params.id 
 const identifier = ref(crypto.randomUUID() as string)
 const saved = ref<Category | null>(null)
 const editing = computed(() => Boolean(id.value || saved.value))
-const shared = reactive({ slug: '', game_type: 'word' as Category['game_type'], sort_order: 0 as string | number, is_active: true })
+const shared = reactive({ slug: '', game_type: 'word' as Category['game_type'], sort_order: 0 as string | number, is_active: true, is_family_friendly: false })
 type Draft = { name: string; description: string; status: PromptStatus }
 const drafts = reactive<Record<string, Draft>>({})
 const baselines = reactive<Record<string, string>>({})
@@ -46,7 +46,7 @@ function selectLocale(locale: string) {
   router.replace({ query: { ...route.query, locale } })
 }
 function load(data: CategoryDetail) {
-  Object.assign(shared, { slug: data.slug, game_type: data.game_type, sort_order: data.sort_order, is_active: data.is_active })
+  Object.assign(shared, { slug: data.slug, game_type: data.game_type, sort_order: data.sort_order, is_active: data.is_active, is_family_friendly: data.is_family_friendly })
   saved.value = data; identifier.value = data.id; persisted.value = data.translations
   for (const key of Object.keys(drafts)) { delete drafts[key]; delete baselines[key] }
   for (const translation of data.translations) {
@@ -59,7 +59,7 @@ function load(data: CategoryDetail) {
 watch(id, next => {
   if (next && next === saved.value?.id) return
   saved.value = null; persisted.value = []; identifier.value = crypto.randomUUID()
-  Object.assign(shared, { slug: '', game_type: 'word', sort_order: 0, is_active: true })
+  Object.assign(shared, { slug: '', game_type: 'word', sort_order: 0, is_active: true, is_family_friendly: false })
   for (const key of Object.keys(drafts)) { delete drafts[key]; delete baselines[key] }
   ensureDraft(selectedLocale.value); sharedBaseline.value = JSON.stringify(shared)
   slugEdited.value = false; conflict.value = false; message.value = ''; mutation.reset()
@@ -72,6 +72,7 @@ function update(key: keyof CategoryFormState, value: string | number | boolean) 
   if (unsaved.busy || reloading.value) return
   if (key === 'name' || key === 'description' || key === 'status') Object.assign(drafts[selectedLocale.value]!, { [key]: value })
   else if (key !== 'locale') Object.assign(shared, { [key]: value })
+  if (key === 'game_type' && value === 'question') shared.is_family_friendly = false
   if (key === 'slug') slugEdited.value = true
   if (key === 'name' && !editing.value && !slugEdited.value) shared.slug = slugFromName(String(value))
   if (!conflict.value) mutation.reset()
@@ -84,7 +85,7 @@ const mutation = useMutation({
   mutationFn: (input: CategoryFormState) => saveCategory(supabase, input, identifier.value, saved.value?.updated_at), retry: false,
   onSuccess: async (result) => {
     saved.value = result.original
-    Object.assign(shared, { slug: result.original.slug, game_type: result.original.game_type, sort_order: result.original.sort_order, is_active: result.original.is_active })
+    Object.assign(shared, { slug: result.original.slug, game_type: result.original.game_type, sort_order: result.original.sort_order, is_active: result.original.is_active, is_family_friendly: result.original.is_family_friendly })
     sharedBaseline.value = JSON.stringify(shared)
     const translation = result.translation
     drafts[translation.locale] = { name: translation.name, description: translation.description ?? '', status: translation.status }

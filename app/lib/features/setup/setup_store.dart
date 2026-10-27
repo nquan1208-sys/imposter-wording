@@ -203,9 +203,20 @@ class SetupStore extends StoreBase {
       _mutate((s) => s.copyWith(showWordImages: show), retryable: true);
   Future<bool> setGameType(String type) =>
       _mutate((s) => s.copyWith(gameType: type), retryable: true);
-  Future<bool> setCategories(Set<String> ids) {
+  Future<bool> setCategories(
+    Set<String> ids, {
+    bool? family,
+    bool? showWordImages,
+  }) {
     final selected = Set<String>.of(ids);
-    return _mutate((s) => s.copyWith(categoryIds: selected), retryable: true);
+    // Retry stays in the picker so leaving it discards a failed draft.
+    return _mutate(
+      (s) => s.copyWith(
+        categoryIds: selected,
+        family: family,
+        showWordImages: showWordImages,
+      ),
+    );
   }
 
   bool validPresetName(String name, {String? exceptId}) =>

@@ -92,33 +92,42 @@ void main() {
         final label = english ? 'Show images' : 'Hiển thị ảnh';
         final toggle = find.widgetWithText(SwitchListTile, label);
         expect(toggle, findsNothing);
-        await tap(tester, english ? 'Family' : 'Gia đình');
-        await tester.ensureVisible(toggle);
+        await tap(tester, english ? 'Categories' : 'Danh mục');
+        await tap(tester, english ? 'Family mode' : 'Chế độ gia đình');
         expect(tester.widget<SwitchListTile>(toggle).value, false);
         await tap(tester, label);
         expect(tester.widget<SwitchListTile>(toggle).value, true);
-        await store.setFamily(false);
-        await tester.pumpAndSettle();
-        expect(toggle, findsNothing);
-        await store.setFamily(true);
-        await store.setGameType('question');
-        await tester.pumpAndSettle();
-        expect(toggle, findsNothing);
-        await store.setGameType('word');
-        await tester.pumpAndSettle();
-        expect(tester.widget<SwitchListTile>(toggle).value, true);
+        expect(store.setup.value.family, false);
+        expect(store.setup.value.showWordImages, false);
+        final before = disk.writes;
         disk.gate = Completer<void>();
-        final pending = store.setShowWordImages(false);
+        await tester.tap(
+          find.widgetWithText(FilledButton, english ? 'Confirm' : 'Xác nhận'),
+        );
         await tester.pump();
         expect(tester.widget<SwitchListTile>(toggle).onChanged, null);
         disk.gate!.complete();
-        await pending;
+        await store.pendingWrites;
         await tester.pumpAndSettle();
-        expect(tester.widget<SwitchListTile>(toggle).value, false);
-        disk.failRead = true;
-        await store.restore();
+        expect(disk.writes, before + 1);
+        expect(store.setup.value.family, true);
+        expect(store.setup.value.showWordImages, true);
+        expect(toggle, findsNothing);
+        await store.setGameType('question');
         await tester.pumpAndSettle();
-        expect(tester.widget<SwitchListTile>(toggle).onChanged, null);
+        expect(store.setup.value.family, false);
+        await tap(tester, english ? 'Categories' : 'Danh mục');
+        expect(find.byType(SegmentedButton<bool>), findsNothing);
+        expect(toggle, findsNothing);
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        await store.setGameType('word');
+        await tap(tester, english ? 'Categories' : 'Danh mục');
+        await tap(tester, english ? 'Family mode' : 'Chế độ gia đình');
+        expect(tester.widget<SwitchListTile>(toggle).value, true);
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+        expect(store.setup.value.family, false);
       },
     );
   }
@@ -581,11 +590,14 @@ void main() {
       await tap(tester, 'Xác nhận');
       expect(store.setup.value.categoryIds, {'b'});
       expect(find.text('1 từ phù hợp'), findsOneWidget);
-      await tap(tester, 'Gia đình');
-      expect(store.setup.value.categoryIds, isEmpty);
-      expect(find.text('Tất cả danh mục'), findsOneWidget);
+      await tap(tester, 'Danh mục');
+      await tap(tester, 'Chế độ gia đình');
+      expect(store.setup.value.categoryIds, {'b'});
       expect(find.textContaining('Đã bỏ danh mục'), findsOneWidget);
-      expect(find.text('1 từ phù hợp'), findsOneWidget);
+      expect(find.text('Category b'), findsNothing);
+      await tap(tester, 'Xác nhận');
+      expect(store.setup.value.categoryIds, isEmpty);
+      expect(find.text('2 từ phù hợp'), findsOneWidget);
       await tap(tester, 'Danh mục');
       expect(find.text('Category b'), findsNothing);
       await tap(tester, 'Category a');
@@ -759,8 +771,8 @@ void main() {
     tester,
   ) async {
     final data = fixture();
-    for (final w in data['words'] as List) {
-      w['is_family_friendly'] = false;
+    for (final c in data['categories'] as List) {
+      c.remove('is_family_friendly');
     }
     await pump(
       tester,
@@ -770,19 +782,30 @@ void main() {
     );
     expect(find.text('Using saved content.'), findsOneWidget);
     file.failWrite = true;
-    await tap(tester, 'Family');
+    await tap(tester, 'Categories');
+    await tap(tester, 'Family mode');
+    expect(
+      find.text(
+        'No family categories have content yet. Choose All categories or try again later.',
+      ),
+      findsOneWidget,
+    );
+    await tap(tester, 'Confirm');
     expect(store.setup.value.family, false);
     expect(
       find.text('Setup could not be saved. Your changes are still here.'),
       findsOneWidget,
     );
     file.failWrite = false;
-    // Settings retry is the first retry; content retry remains below it.
-    await tester.ensureVisible(find.text('Retry').first);
-    await tester.tap(find.text('Retry').first);
-    await tester.pumpAndSettle();
+    await tap(tester, 'Confirm');
     expect(store.writeFailed.value, false);
     expect(file.data!['mode'], 'family');
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Start game'))
+          .onPressed,
+      null,
+    );
   });
 
   testWidgets('unreadable settings require retry', (tester) async {

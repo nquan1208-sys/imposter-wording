@@ -6,7 +6,7 @@ import { getDashboardSummary } from '../src/api/dashboard.ts'
 const summary = {
   stats: { published_word_prompts: 2, published_question_prompts: 3, active_categories: 4, drafts: 5 },
   recent: [], drafts: [],
-  warnings: { empty_categories: 0, duplicate_questions: 1, non_family_easy_prompts: 2 },
+  warnings: { empty_categories: 0, duplicate_questions: 1 },
 }
 
 test('dashboard summary calls the RPC and returns its payload unchanged', async () => {

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { deleteWordPrompt, saveWordPrompt, listWordPrompts, wordCategories } from '../src/api/wordPrompts.ts'
 import { wordPromptPayload, wordPromptFilters, wordPromptError, validateImage } from '../src/utils/wordPrompts.ts'
 const id = '00000000-0000-4000-8000-000000000001'
-const form = { text: '  Apple  ', image_path: '', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi' }
+const form = { text: '  Apple  ', image_path: '', category_id: id, difficulty: 'medium', locale: 'vi' }
 test('word payload trims optional fields and validates all states', () => {
   for (const status of ['draft', 'published', 'archived']) {
     assert.deepEqual(wordPromptPayload(form, status), { ...form, text: 'Apple', image_path: null, status })
@@ -35,7 +35,7 @@ test('word list passes selected language, filters and pagination to one RPC', as
  const calls: Calls = []
  const client = asClient({ rpc: async (...args: unknown[]) => { calls.push(args); return { data: { rows: [], total: 21 } } } })
  assert.deepEqual(await listWordPrompts(client, filters), { rows: [], total: 21 })
- assert.deepEqual(calls, [['admin_list_word_prompts', { p_locale: 'vi', p_search: 'a,b %_', p_category_id: id, p_difficulty: 'hard', p_is_family_friendly: false, p_status: 'archived', p_sort: 'text', p_page: 2 }]])
+ assert.deepEqual(calls, [['admin_list_word_prompts', { p_locale: 'vi', p_search: 'a,b %_', p_category_id: id, p_difficulty: 'hard', p_status: 'archived', p_sort: 'text', p_page: 2 }]])
  assert.equal(wordPromptFilters({ page: '-1', locale: '' }).page, 1)
  assert.equal(wordPromptFilters({}).locale, 'vi')
 })

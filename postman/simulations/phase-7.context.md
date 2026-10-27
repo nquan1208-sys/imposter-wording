@@ -42,6 +42,10 @@ events in the simulation's NDJSON output; stop its terminal with Ctrl-C.
 ## Observations
 
 <!-- begin:observations -->
+2026-10-27 (category Family migration): Eight HTTP cases passed again, with 57
+requests served by the only member `supabase`; none stayed silent. REST queries
+requested the family flag on categories and omitted it on prompts; family counts
+included all three words despite the responses omitting prompt family flags.
 2026-10-27: All eight HTTP cases passed. The only member, `supabase`, served every
 mode; none stayed silent. Logs confirmed REST offsets, five-minute signing POSTs,
 expired-token GETs followed by successful renewed GETs, and isolated Storage 500s.

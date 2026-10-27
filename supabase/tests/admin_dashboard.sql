@@ -54,10 +54,10 @@ begin
   perform pg_temp.assert_true(public.admin_dashboard_summary('vi')->'stats' = baseline->'stats'
     and public.admin_dashboard_summary('vi')->'warnings' = baseline->'warnings', 'other language totals stay unchanged');
   select updated_at into original_version from public.word_prompts where id = word_id;
-  perform public.save_word_prompt(word_id,word_category,'easy',false,null,'phase5','Phase 5 word','published',original_version);
+  perform public.save_word_prompt(word_id,word_category,'easy',null,'phase5','Phase 5 word','published',original_version);
   summary := public.admin_dashboard_summary('phase5');
-  perform pg_temp.assert_true(summary#>>'{warnings,non_family_easy_prompts}' = '1'
-    and summary#>>'{stats,published_word_prompts}' = '1', 'shared prompt fields affect selected-language warnings');
+  perform pg_temp.assert_true(not (summary->'warnings' ? 'non_family_easy_prompts')
+    and summary#>>'{stats,published_word_prompts}' = '1', 'obsolete family warning removed');
   perform pg_temp.save_category(word_category, 'word', 'phase5', 'archived', false);
   summary := public.admin_dashboard_summary('phase5');
   perform pg_temp.assert_true(summary#>>'{stats,active_categories}' = '1'

@@ -17,10 +17,15 @@ class CategoryScreen extends ConsumerStatefulWidget {
 
 class _CategoryScreenState extends ConsumerState<CategoryScreen> {
   late Set<String> selected;
+  late bool family, showWordImages;
+  bool selectionRemoved = false, saveFailed = false;
   @override
   void initState() {
     super.initState();
-    selected = Set.of(ref.read(setupStoreProvider).setup.value.categoryIds);
+    final setup = ref.read(setupStoreProvider).setup.value;
+    selected = Set.of(setup.categoryIds);
+    family = setup.gameType == 'word' && setup.family;
+    showWordImages = setup.showWordImages;
   }
 
   @override
@@ -30,7 +35,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
     return SignalBuilder(
       builder: (context) {
         final counts = store.content.categoryCounts(
-          family: store.setup.value.family,
+          family: family,
           gameType: store.setup.value.gameType,
         );
         final available = counts.keys.map((c) => c.id).toSet();
@@ -45,7 +50,14 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                 onPressed:
                     store.editable && store.content.snapshot.value != null
                     ? () async {
-                        final saved = await store.setCategories(selected);
+                        final saved = await store.setCategories(
+                          valid,
+                          family: family,
+                          showWordImages: showWordImages,
+                        );
+                        if (mounted && !saved) {
+                          setState(() => saveFailed = true);
+                        }
                         if (context.mounted && saved) Navigator.pop(context);
                       }
                     : null,
@@ -57,17 +69,57 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
             child: ListView(
               padding: AppEdgeInsets.all24,
               children: [
-                Text(
-                  '${store.setup.value.gameType == 'question' ? l.questionGame : l.wordGame} · ${store.setup.value.family ? l.familyMode : l.classicMode}',
-                ),
+                if (store.setup.value.gameType == 'word') ...[
+                  SegmentedButton<bool>(
+                    direction:
+                        MediaQuery.sizeOf(context).width < 360 ||
+                            MediaQuery.textScalerOf(context).scale(16) > 24
+                        ? Axis.vertical
+                        : Axis.horizontal,
+                    segments: [
+                      ButtonSegment(value: false, label: Text(l.allCategories)),
+                      ButtonSegment(
+                        value: true,
+                        label: Text(l.familyCategories),
+                      ),
+                    ],
+                    selected: {family},
+                    onSelectionChanged: store.editable
+                        ? (values) => setState(() {
+                            family = values.single;
+                            final available = store.content
+                                .categoryCounts(family: family)
+                                .keys
+                                .map((c) => c.id)
+                                .toSet();
+                            final retained = selected.intersection(available);
+                            selectionRemoved =
+                                selected.length != retained.length;
+                            selected = retained;
+                          })
+                        : null,
+                  ),
+                  if (family)
+                    SwitchListTile(
+                      title: Text(l.showWordImages),
+                      value: showWordImages,
+                      onChanged: store.editable
+                          ? (value) => setState(() => showWordImages = value)
+                          : null,
+                    ),
+                ],
                 ContentNotices(store.content),
-                if (store.writeFailed.value) Text(l.settingsWriteError),
-                if (selected.length != valid.length) Text(l.selectionRemoved),
-                if (counts.isEmpty) Text(l.emptyContent),
+                if (saveFailed) Text(l.settingsWriteError),
+                if (selectionRemoved || selected.length != valid.length)
+                  Text(l.selectionRemoved),
+                if (counts.isEmpty)
+                  Text(family ? l.emptyFamilyCategories : l.emptyContent),
                 FilterChip(
                   label: Text(l.allCategories),
                   selected: valid.isEmpty,
-                  onSelected: (_) => setState(() => selected.clear()),
+                  onSelected: store.editable
+                      ? (_) => setState(() => selected.clear())
+                      : null,
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 LayoutBuilder(
@@ -99,12 +151,14 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                   width: valid.contains(entry.key.id) ? 2 : 1,
                                 ),
                               ),
-                              onPressed: () => setState(() {
-                                selected = Set.of(valid);
-                                if (!selected.add(entry.key.id)) {
-                                  selected.remove(entry.key.id);
-                                }
-                              }),
+                              onPressed: store.editable
+                                  ? () => setState(() {
+                                      selected = Set.of(valid);
+                                      if (!selected.add(entry.key.id)) {
+                                        selected.remove(entry.key.id);
+                                      }
+                                    })
+                                  : null,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: AppSpacing.lg,

@@ -16,7 +16,7 @@ Xây dựng Admin Vue để:
 - Quản lý danh mục.
 - Quản lý content trò chơi từ ngữ.
 - Quản lý content trò chơi câu hỏi.
-- Publish, archive và lọc content theo Family Mode.
+- Publish, archive và phân loại danh mục từ ngữ theo Family Mode.
 - Upload ảnh cho content từ ngữ.
 - Sử dụng Supabase Data REST API thông qua `@supabase/supabase-js`.
 
@@ -165,9 +165,9 @@ migration thứ hai chứa RLS và policies.
 
 - `admin_users`: user Auth, role và `is_active`.
 - `content_languages`: `code`, `display_name`, `sort_order`.
-- `game_categories`: `game_type`, slug duy nhất theo loại trò chơi, `sort_order`, `is_active`.
-- `word_prompts`: `category_id`, `image_path`, `difficulty`, `is_family_friendly`.
-- `question_prompts`: `category_id`, `difficulty`, `is_family_friendly`.
+- `game_categories`: `game_type`, slug duy nhất theo loại trò chơi, `sort_order`, `is_active`, `is_family_friendly` (chỉ danh mục từ ngữ).
+- `word_prompts`: `category_id`, `image_path`, `difficulty`.
+- `question_prompts`: `category_id`, `difficulty`.
 - `game_category_translations`: `category_id`, `locale`, `name`, `description`, `status`.
 - `word_prompt_translations`: `prompt_id`, `locale`, `text`, `status`.
 - `question_prompt_translations`: `prompt_id`, `locale`, `civilian_question`, `imposter_question`, `status`.
@@ -421,7 +421,7 @@ Bảo vệ các route:
 ### Word prompts
 
 - [ ] Danh sách word prompts.
-- [ ] Lọc theo category, difficulty, status, Family Mode.
+- [ ] Lọc theo category, difficulty, status. Family Mode chỉ lọc trong danh sách danh mục.
 - [ ] Tạo/sửa prompt.
 - [ ] Upload ảnh.
 - [ ] Preview ảnh.
@@ -432,7 +432,7 @@ Bảo vệ các route:
 ### Question prompts
 
 - [ ] Danh sách question prompts.
-- [ ] Lọc theo category, difficulty, status, Family Mode.
+- [ ] Lọc theo category, difficulty, status. Family Mode chỉ lọc trong danh sách danh mục.
 - [ ] Nhập civilian question.
 - [ ] Nhập imposter question.
 - [ ] Validate hai câu hỏi không giống nhau.
@@ -472,7 +472,7 @@ Với query bản dịch ở trên, bộ lọc phần chung phải dùng tên qu
 Family Mode:
 
 ```js
-query = query.eq('word_prompts.is_family_friendly', true)
+query = query.eq('game_categories.is_family_friendly', true)
 ```
 
 Category filter:
@@ -483,7 +483,7 @@ query = query.in('word_prompts.category_id', selectedCategoryIds)
 
 - [ ] Không chọn category → random trong toàn bộ content hợp lệ.
 - [ ] Có chọn category → chỉ random trong category đã chọn.
-- [ ] Family Mode → thêm `is_family_friendly = true`.
+- [ ] Family Mode từ ngữ → lọc `game_categories.is_family_friendly = true`.
 - [ ] App chỉ nhận content published.
 
 ---
@@ -501,7 +501,7 @@ query = query.in('word_prompts.category_id', selectedCategoryIds)
 - [ ] Admin tạo question prompt thành công.
 - [ ] Draft không xuất hiện trong app người chơi.
 - [ ] Archive không xuất hiện trong app người chơi.
-- [ ] Family Mode chỉ lấy content có `is_family_friendly = true`.
+- [ ] Family Mode chỉ lấy từ trong danh mục có `game_categories.is_family_friendly = true`.
 - [ ] Chọn nhiều category lọc đúng content.
 - [ ] Không chọn category random đúng toàn bộ tập content.
 - [ ] `service_role` không xuất hiện trong frontend hoặc Git.

@@ -8,6 +8,29 @@ import 'package:untitled/models/content.dart';
 import 'fixtures.dart';
 
 void main() {
+  test(
+    'legacy offline cache defaults categories to non-family and ignores prompt flags',
+    () async {
+      final data = fixture();
+      for (final c in data['categories'] as List) {
+        c.remove('is_family_friendly');
+      }
+      for (final w in data['words'] as List) {
+        w['is_family_friendly'] = true;
+      }
+      final repo = ContentRepository(
+        fetchPage: (t, l, f, e) async => throw const SocketException('offline'),
+        cache: MemoryStorage(data),
+      );
+      addTearDown(repo.dispose);
+      await repo.load();
+      expect(repo.cached.value, true);
+      expect(repo.eligibleWords(family: false), hasLength(3));
+      expect(repo.eligibleWords(family: true), isEmpty);
+      expect(repo.eligibleQuestions(), hasLength(1));
+    },
+  );
+
   ContentRepository repository(
     JsonMap data, {
     MemoryStorage? cache,
@@ -32,7 +55,7 @@ void main() {
       expect(repo.snapshot.value!.words.first.imagePath, '1/image.png');
       expect(repo.snapshot.value!.contentLocale, 'vi');
       expect(repo.categoryCounts(family: false).values, [2, 1]);
-      expect(repo.categoryCounts(family: true).values, [1]);
+      expect(repo.categoryCounts(family: true).values, [2]);
       expect(
         repo.eligibleWords(family: false, categoryIds: {'a', 'b'}).length,
         3,
@@ -105,7 +128,7 @@ void main() {
 
   test('deduplicates original IDs across pages', () async {
     final data = fixture();
-    (data['words'] as List).insert(2, word('2', 'a', family: true));
+    (data['words'] as List).insert(2, word('2', 'a'));
     final repo = repository(data);
     await repo.load();
     expect(repo.eligibleWords(family: false).length, 3);

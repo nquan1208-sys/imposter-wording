@@ -1,11 +1,11 @@
 const http = require('http');
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==', 'base64');
 function category(id) {
-  return {id, game_type: 'word', slug: id, sort_order: 0, is_active: true,
+  return {id, game_type: 'word', slug: id, sort_order: 0, is_active: true, is_family_friendly: true,
     t: [{category_id: id, locale: 'vi', name: id, description: null, status: 'published'}]};
 }
 function word(id) {
-  return {id, category_id: 'a', difficulty: 'easy', is_family_friendly: true,
+  return {id, category_id: 'a', difficulty: 'easy',
     image_path: id + '/image.png',
     t: [{prompt_id: id, locale: 'vi', text: id, status: 'published'}]};
 }

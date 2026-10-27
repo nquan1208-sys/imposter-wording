@@ -27,7 +27,6 @@ class QuestionGameSession {
       return null;
     }
     final pairs = store.content.eligibleQuestions(
-      family: setup.family,
       categoryIds: setup.categoryIds,
     );
     if (pairs.isEmpty) return null;

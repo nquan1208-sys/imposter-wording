@@ -40,11 +40,11 @@ const summary = {
     { locale: 'vi', id: 'word-draft', game_type: 'word', title: 'Draft word', category_name: 'Food', status: 'draft', updated_at: '2026-10-20T10:00:00Z' },
     { locale: 'vi', id: 'question-draft', game_type: 'question', title: 'Draft question', category_name: 'Travel', status: 'draft', updated_at: '2026-10-20T09:00:00Z' },
   ],
-  warnings: { empty_categories: 1, duplicate_questions: 2, non_family_easy_prompts: 3 },
+  warnings: { empty_categories: 1, duplicate_questions: 2 },
 }
 const emptySummary = {
   stats: { published_word_prompts: 0, published_question_prompts: 0, active_categories: 0, drafts: 0 },
-  recent: [], drafts: [], warnings: { empty_categories: 0, duplicate_questions: 0, non_family_easy_prompts: 0 },
+  recent: [], drafts: [], warnings: { empty_categories: 0, duplicate_questions: 0 },
 }
 const routeStub = { render: () => null }
 
@@ -110,13 +110,12 @@ test('dashboard renders statistics, prompt links and warning destinations', asyn
     for (const value of ['11', '22', '33', '44', 'Recent word', 'Recent question', 'Draft word', 'Draft question', 'Food', 'Travel']) assert.ok(html.includes(value), `missing ${value}`)
     for (const value of ['aria-label="Xem tất cả từ ngữ"', 'aria-label="Xem tất cả câu hỏi"', 'aria-label="Xem bản nháp từ ngữ"', 'aria-label="Xem bản nháp câu hỏi"', '>Tất cả từ ngữ</a>', '>Tất cả câu hỏi</a>', '>Nháp · Từ ngữ</a>', '>Nháp · Câu hỏi</a>']) assert.ok(html.includes(value), `missing ${value}`)
     assert.doesNotMatch(html, /Tối đa 5 (nội dung|bản nháp)/)
-    for (const warning of ['Danh mục không có nội dung: 1', 'Cặp câu hỏi dân thường và kẻ mạo danh bị trùng: 2', 'Nội dung mức dễ chưa được đánh dấu phù hợp với chế độ gia đình: 3']) assert.ok(html.includes(warning), `missing ${warning}`)
+    for (const warning of ['Danh mục không có nội dung: 1', 'Cặp câu hỏi dân thường và kẻ mạo danh bị trùng: 2']) assert.ok(html.includes(warning), `missing ${warning}`)
     for (const href of [
       '/word-prompts/word-recent/edit?locale=vi', '/question-prompts/question-recent/edit?locale=vi',
       '/word-prompts/word-draft/edit?locale=vi', '/question-prompts/question-draft/edit?locale=vi',
       '/word-prompts?locale=vi', '/question-prompts?locale=vi', '/word-prompts?locale=vi&status=draft', '/question-prompts?locale=vi&status=draft',
       '/categories?locale=vi',
-      '/word-prompts?locale=vi&difficulty=easy&family=false', '/question-prompts?locale=vi&difficulty=easy&family=false',
     ]) assert.ok(html.includes(`href="${href}"`), `missing link ${href}`)
     assert.deepEqual(harness.queryClient.getQueryCache().getAll().map(query => query.queryKey), [['content-languages'], ['dashboard', 'summary', 'vi']])
   } finally { await harness.close() }
@@ -202,7 +201,7 @@ test('dashboard uses each item locale, accepts nullable category names and keeps
     assert.ok(html.includes('href="/word-prompts/word-draft/edit?locale=en"'))
     assert.ok(html.includes('href="/question-prompts?locale=fr&status=draft"'))
     assert.ok(html.includes('href="/categories?locale=fr"'))
-    assert.ok(html.includes('href="/word-prompts?locale=fr&difficulty=easy&family=false"'))
+    assert.doesNotMatch(html, /family=false|chế độ gia đình/)
     assert.doesNotMatch(html, />null</)
   } finally { await harness.close() }
 })

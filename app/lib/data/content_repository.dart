@@ -31,8 +31,8 @@ class SupabaseContentSource {
         ? 'word_prompt_translations'
         : 'question_prompt_translations';
     final columns = category
-        ? 'id,game_type,slug,sort_order,is_active,t:$translations!inner(category_id,locale,name,description,status)'
-        : 'id,category_id,difficulty,is_family_friendly,${table == 'word_prompts' ? 'image_path,' : ''}t:$translations!inner(prompt_id,locale,status,${table == 'word_prompts' ? 'text' : 'civilian_question,imposter_question'}),c:game_categories!inner(id,is_active,t:game_category_translations!inner(locale,status))';
+        ? 'id,game_type,slug,sort_order,is_active,is_family_friendly,t:$translations!inner(category_id,locale,name,description,status)'
+        : 'id,category_id,difficulty,${table == 'word_prompts' ? 'image_path,' : ''}t:$translations!inner(prompt_id,locale,status,${table == 'word_prompts' ? 'text' : 'civilian_question,imposter_question'}),c:game_categories!inner(id,is_active,t:game_category_translations!inner(locale,status))';
     var query = client
         .from(table)
         .select(columns)
@@ -168,25 +168,26 @@ class ContentRepository extends StoreBase {
     required bool family,
     Set<String> categoryIds = const {},
   }) {
+    final familyCategories =
+        snapshot.value?.categories
+            .where((c) => c.isFamilyFriendly)
+            .map((c) => c.id)
+            .toSet() ??
+        <String>{};
     return snapshot.value?.words
             .where(
               (w) =>
-                  (!family || w.isFamilyFriendly) &&
+                  (!family || familyCategories.contains(w.categoryId)) &&
                   (categoryIds.isEmpty || categoryIds.contains(w.categoryId)),
             )
             .toList() ??
         [];
   }
 
-  List<QuestionPair> eligibleQuestions({
-    required bool family,
-    Set<String> categoryIds = const {},
-  }) =>
+  List<QuestionPair> eligibleQuestions({Set<String> categoryIds = const {}}) =>
       snapshot.value?.questions
           .where(
-            (q) =>
-                (!family || q.isFamilyFriendly) &&
-                (categoryIds.isEmpty || categoryIds.contains(q.categoryId)),
+            (q) => (categoryIds.isEmpty || categoryIds.contains(q.categoryId)),
           )
           .toList() ??
       [];
@@ -197,7 +198,7 @@ class ContentRepository extends StoreBase {
   }) {
     final counts = <String, int>{};
     final ids = gameType == 'question'
-        ? eligibleQuestions(family: family).map((q) => q.categoryId)
+        ? eligibleQuestions().map((q) => q.categoryId)
         : eligibleWords(family: family).map((w) => w.categoryId);
     for (final id in ids) {
       counts.update(id, (n) => n + 1, ifAbsent: () => 1);

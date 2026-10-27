@@ -2,9 +2,15 @@ import 'dart:io';
 import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/models/content.dart';
 
-JsonMap category(String id, {String type = 'word', String locale = 'vi'}) => {
+JsonMap category(
+  String id, {
+  String type = 'word',
+  String locale = 'vi',
+  bool family = false,
+}) => {
   'id': id,
   'game_type': type,
+  'is_family_friendly': family,
   'slug': id,
   'sort_order': 0,
   'is_active': true,
@@ -18,16 +24,10 @@ JsonMap category(String id, {String type = 'word', String locale = 'vi'}) => {
     },
   ],
 };
-JsonMap word(
-  String id,
-  String categoryId, {
-  bool family = false,
-  String locale = 'vi',
-}) => {
+JsonMap word(String id, String categoryId, {String locale = 'vi'}) => {
   'id': id,
   'category_id': categoryId,
   'difficulty': 'easy',
-  'is_family_friendly': family,
   'image_path': '$id/image.png',
   't': [
     {
@@ -42,7 +42,6 @@ JsonMap question(String id, String categoryId) => {
   'id': id,
   'category_id': categoryId,
   'difficulty': 'hard',
-  'is_family_friendly': true,
   't': [
     {
       'prompt_id': id,
@@ -55,12 +54,12 @@ JsonMap question(String id, String categoryId) => {
 };
 JsonMap fixture() => {
   'categories': [
-    category('a'),
+    category('a', family: true),
     category('b'),
     category('empty'),
     category('q', type: 'question'),
   ],
-  'words': [word('1', 'a'), word('2', 'a', family: true), word('3', 'b')],
+  'words': [word('1', 'a'), word('2', 'a'), word('3', 'b')],
   'questions': [question('4', 'q')],
 };
 

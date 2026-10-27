@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { deleteQuestionPrompt, saveQuestionPrompt, listQuestionPrompts, questionCategories } from '../src/api/questionPrompts.ts'
 import { questionPromptPayload, questionPromptFilters, questionPromptError } from '../src/utils/questionPrompts.ts'
 const id = '00000000-0000-4000-8000-000000000001'
-const form = { civilian_question: '  Favourite food?  ', imposter_question: ' Worst food? ', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi' }
+const form = { civilian_question: '  Favourite food?  ', imposter_question: ' Worst food? ', category_id: id, difficulty: 'medium', locale: 'vi' }
 test('question payload trims, requires distinct questions in every state and excludes hint', () => {
   for (const status of ['draft', 'published', 'archived']) {
     assert.deepEqual(questionPromptPayload({ ...form, imposter_hint: 'ignored' }, status), { ...form, civilian_question: 'Favourite food?', imposter_question: 'Worst food?', status })
@@ -30,7 +30,7 @@ test('question list passes selected language, filters and pagination to one RPC'
  const calls: Calls = []
  const client = asClient({ rpc: async (...args: unknown[]) => { calls.push(args); return { data: { rows: [], total: 21 } } } })
  assert.deepEqual(await listQuestionPrompts(client, filters), { rows: [], total: 21 })
- assert.deepEqual(calls, [['admin_list_question_prompts', { p_locale: 'vi', p_search: 'a,b %_', p_category_id: id, p_difficulty: 'hard', p_is_family_friendly: false, p_status: 'archived', p_sort: 'civilian_question', p_page: 2 }]])
+ assert.deepEqual(calls, [['admin_list_question_prompts', { p_locale: 'vi', p_search: 'a,b %_', p_category_id: id, p_difficulty: 'hard', p_status: 'archived', p_sort: 'civilian_question', p_page: 2 }]])
  assert.equal(questionPromptFilters({ page: '-1', locale: '' }).page, 1)
  assert.equal(questionPromptFilters({}).locale, 'vi')
 })
