@@ -83,6 +83,51 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('word categories swipe both ways and save the active tab', (
+    tester,
+  ) async {
+    await pump(tester, english: true);
+    await store.setCategories({'b'});
+    await tap(tester, 'Categories');
+    final pages = find.byType(TabBarView);
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 0);
+    await tester.drag(pages, const Offset(-500, 0));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 1);
+    expect(find.text('Category b'), findsNothing);
+    expect(
+      find.textContaining('Unavailable categories were removed.'),
+      findsOneWidget,
+    );
+    expect(store.setup.value.categoryIds, {'b'});
+    expect(store.setup.value.family, false);
+    await tap(tester, 'Category a');
+    await tap(tester, 'Show images');
+    await tester.drag(pages, const Offset(500, 0));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 0);
+    expect(find.text('Category b'), findsOneWidget);
+    expect(find.widgetWithText(SwitchListTile, 'Show images'), findsNothing);
+    await tester.drag(pages, const Offset(-500, 0));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      true,
+    );
+    await tap(tester, 'Confirm');
+    expect(store.setup.value.family, true);
+    expect(store.setup.value.categoryIds, {'a'});
+    expect(store.setup.value.showWordImages, true);
+    await tap(tester, 'Categories');
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 1);
+    await tester.drag(pages, const Offset(500, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(store.setup.value.family, true);
+    expect(store.setup.value.categoryIds, {'a'});
+  });
+
   for (final english in [false, true]) {
     testWidgets(
       'image switch is Family word only and remembers choice (english=$english)',
@@ -117,7 +162,8 @@ void main() {
         await tester.pumpAndSettle();
         expect(store.setup.value.family, false);
         await tap(tester, english ? 'Categories' : 'Danh mục');
-        expect(find.byType(SegmentedButton<bool>), findsNothing);
+        expect(find.byType(TabBar), findsNothing);
+        expect(find.byType(TabBarView), findsNothing);
         expect(toggle, findsNothing);
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();

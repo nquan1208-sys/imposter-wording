@@ -1,12 +1,11 @@
 import 'package:untitled/widgets/app_content.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
-import 'package:untitled/constants/app_spacing.dart';
 import 'package:untitled/data/game_providers.dart';
-import 'package:untitled/features/setup/content_notices.dart';
+import 'package:untitled/features/setup/all_categories_screen.dart';
+import 'package:untitled/features/setup/family_categories_screen.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 
 class CategoryScreen extends ConsumerStatefulWidget {
@@ -15,7 +14,9 @@ class CategoryScreen extends ConsumerStatefulWidget {
   ConsumerState<CategoryScreen> createState() => _CategoryScreenState();
 }
 
-class _CategoryScreenState extends ConsumerState<CategoryScreen> {
+class _CategoryScreenState extends ConsumerState<CategoryScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController tabs;
   late Set<String> selected;
   late bool family, showWordImages;
   bool selectionRemoved = false, saveFailed = false;
@@ -26,6 +27,34 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
     selected = Set.of(setup.categoryIds);
     family = setup.gameType == 'word' && setup.family;
     showWordImages = setup.showWordImages;
+    tabs = TabController(length: 2, initialIndex: family ? 1 : 0, vsync: this)
+      ..addListener(changeTab);
+  }
+
+  void changeTab() {
+    final nextFamily = tabs.index == 1;
+    if (nextFamily == family) return;
+    setState(() {
+      family = nextFamily;
+      final available = ref
+          .read(setupStoreProvider)
+          .content
+          .categoryCounts(family: family)
+          .keys
+          .map((c) => c.id)
+          .toSet();
+      final retained = selected.intersection(available);
+      selectionRemoved = selected.length != retained.length;
+      selected = retained;
+    });
+  }
+
+  void updateSelection(Set<String> value) => setState(() => selected = value);
+
+  @override
+  void dispose() {
+    tabs.dispose();
+    super.dispose();
   }
 
   @override
@@ -40,6 +69,13 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
         );
         final available = counts.keys.map((c) => c.id).toSet();
         final valid = selected.intersection(available);
+        final allCategories = AllCategoriesScreen(
+          store: store,
+          selected: selected,
+          onChanged: updateSelection,
+          selectionRemoved: selectionRemoved,
+          saveFailed: saveFailed,
+        );
         return Scaffold(
           appBar: AppBar(title: Text(l.categories)),
           bottomNavigationBar: AppContent(
@@ -66,138 +102,45 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
             ),
           ),
           body: AppContent(
-            child: ListView(
-              padding: AppEdgeInsets.all24,
-              children: [
-                if (store.setup.value.gameType == 'word') ...[
-                  SegmentedButton<bool>(
-                    direction:
-                        MediaQuery.sizeOf(context).width < 360 ||
-                            MediaQuery.textScalerOf(context).scale(16) > 24
-                        ? Axis.vertical
-                        : Axis.horizontal,
-                    segments: [
-                      ButtonSegment(value: false, label: Text(l.allCategories)),
-                      ButtonSegment(
-                        value: true,
-                        label: Text(l.familyCategories),
+            child: store.setup.value.gameType == 'word'
+                ? Column(
+                    children: [
+                      IgnorePointer(
+                        ignoring: !store.editable,
+                        child: TabBar(
+                          controller: tabs,
+                          isScrollable: true,
+                          tabAlignment: TabAlignment.center,
+                          tabs: [
+                            Tab(text: l.allCategories),
+                            Tab(text: l.familyCategories),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: TabBarView(
+                          controller: tabs,
+                          physics: store.editable
+                              ? null
+                              : const NeverScrollableScrollPhysics(),
+                          children: [
+                            allCategories,
+                            FamilyCategoriesScreen(
+                              store: store,
+                              selected: selected,
+                              onChanged: updateSelection,
+                              selectionRemoved: selectionRemoved,
+                              saveFailed: saveFailed,
+                              showWordImages: showWordImages,
+                              onImagesChanged: (value) =>
+                                  setState(() => showWordImages = value),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
-                    selected: {family},
-                    onSelectionChanged: store.editable
-                        ? (values) => setState(() {
-                            family = values.single;
-                            final available = store.content
-                                .categoryCounts(family: family)
-                                .keys
-                                .map((c) => c.id)
-                                .toSet();
-                            final retained = selected.intersection(available);
-                            selectionRemoved =
-                                selected.length != retained.length;
-                            selected = retained;
-                          })
-                        : null,
-                  ),
-                  if (family)
-                    SwitchListTile(
-                      title: Text(l.showWordImages),
-                      value: showWordImages,
-                      onChanged: store.editable
-                          ? (value) => setState(() => showWordImages = value)
-                          : null,
-                    ),
-                ],
-                ContentNotices(store.content),
-                if (saveFailed) Text(l.settingsWriteError),
-                if (selectionRemoved || selected.length != valid.length)
-                  Text(l.selectionRemoved),
-                if (counts.isEmpty)
-                  Text(family ? l.emptyFamilyCategories : l.emptyContent),
-                FilterChip(
-                  label: Text(l.allCategories),
-                  selected: valid.isEmpty,
-                  onSelected: store.editable
-                      ? (_) => setState(() => selected.clear())
-                      : null,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                LayoutBuilder(
-                  builder: (context, constraints) => Wrap(
-                    spacing: AppSpacing.md,
-                    runSpacing: AppSpacing.md,
-                    children: [
-                      for (final entry in counts.entries)
-                        SizedBox(
-                          width:
-                              constraints.maxWidth < 360 ||
-                                  MediaQuery.textScalerOf(context).scale(16) >
-                                      24
-                              ? constraints.maxWidth
-                              : (constraints.maxWidth - AppSpacing.md) / 2,
-                          child: Semantics(
-                            selected: valid.contains(entry.key.id),
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: valid.contains(entry.key.id)
-                                    ? Theme.of(
-                                        context,
-                                      ).colorScheme.primaryContainer
-                                    : AppColors.white,
-                                side: BorderSide(
-                                  color: valid.contains(entry.key.id)
-                                      ? AppColors.charcoal
-                                      : AppColors.border,
-                                  width: valid.contains(entry.key.id) ? 2 : 1,
-                                ),
-                              ),
-                              onPressed: store.editable
-                                  ? () => setState(() {
-                                      selected = Set.of(valid);
-                                      if (!selected.add(entry.key.id)) {
-                                        selected.remove(entry.key.id);
-                                      }
-                                    })
-                                  : null,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.lg,
-                                ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      valid.contains(entry.key.id)
-                                          ? Icons.check_circle_outline
-                                          : Icons.category_outlined,
-                                      color: AppColors.charcoal,
-                                    ),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    Text(
-                                      entry.key.name,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    Text(
-                                      store.setup.value.gameType == 'question'
-                                          ? l.questionCount(entry.value)
-                                          : l.wordCount(entry.value),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(color: AppColors.gray),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-              ],
-            ),
+                  )
+                : allCategories,
           ),
         );
       },
