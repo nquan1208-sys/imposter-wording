@@ -139,11 +139,11 @@ Cho phép người chơi cấu hình ván chơi trước khi bắt đầu.
 
 6. **Các tùy chọn trong ván chơi**
    - `Hiển thị danh mục cho kẻ mạo danh`.
-   - `Kẻ giả mạo biết nhau`.
+   - `Kẻ mạo danh biết nhau`.
    - Mỗi tùy chọn gồm biểu tượng, nhãn và công tắc bật/tắt.
    - Danh sách tùy chọn nằm trong cùng một thẻ và được ngăn cách bằng các đường phân chia.
-   - Word chỉ có tiết lộ danh mục, không có công tắc hoặc dữ liệu hint riêng. Các tùy chọn tiết lộ danh mục/biết nhau hiện chỉ áp dụng word.
-   - Chế độ `Trò chơi câu hỏi` không hiển thị tùy chọn gợi ý này.
+   - Word chỉ có tiết lộ danh mục, không có công tắc hoặc dữ liệu hint riêng; `Hiển thị danh mục cho kẻ mạo danh` tiếp tục chỉ áp dụng word.
+   - **Bổ sung theo kế hoạch Phase 6, chưa triển khai:** `Kẻ mạo danh biết nhau` hiện cho cả word/question và cả Cổ điển/Gia đình, dùng chung giá trị đã lưu khi đổi loại game, nạp nhóm và chơi lại. Khi bật và có ít nhất hai imposter, chỉ imposter đã mở thẻ riêng thấy tên đồng vai; thẻ khóa/người thường không thấy.
 
 7. **Nút bắt đầu**
    - Nút cố định gần cuối màn hình: `Bắt đầu trò chơi`.
@@ -171,16 +171,17 @@ Cho phép người chơi cấu hình ván chơi trước khi bắt đầu.
 
 ### Bảng chọn kẻ mạo danh
 
-- Chạm vào thẻ số lượng kẻ mạo danh sẽ mở một bảng chọn dạng bottom sheet.
-- Tiêu đề bảng: `Chọn kẻ mạo danh`.
-- Công tắc `Ngẫu nhiên` chuyển giữa hai cách chọn:
+- Chạm vào thẻ số lượng kẻ mạo danh ở word hoặc question sẽ mở một bảng chọn dạng bottom sheet; tiêu đề `Chọn kẻ mạo danh`.
+- **Bố cục bổ sung Phase 6, chưa triển khai:** theo cấu trúc ảnh `IMG_2987.PNG`, có nền phía sau làm mờ tối, phần đầu có biểu tượng/tiêu đề; hai thẻ `Cố định` và `Ngẫu nhiên` có radio, chỉ một thẻ được chọn. Dùng theme/component hiện có của app.
+- **Style theo rules của app:** ảnh chỉ tham khảo bố cục/tương tác; màu sắc, typography, spacing, bo góc, biểu tượng, trạng thái chọn, lớp phủ modal và theme sáng/tối dùng `AppTheme`/`AppColors`, constants và component hiện có, không tạo bộ style riêng theo ảnh.
+- Hai cách chọn:
   - `Cố định`: chọn chính xác số kẻ mạo danh cho mỗi ván.
     - Có nút `−` và `+` để điều chỉnh số lượng.
-    - Hiển thị giá trị hiện tại ở giữa.
+    - Hiển thị giá trị lớn ở giữa và dòng phạm vi; số `1` có nhãn `Được khuyến nghị`. Khóa nút tăng/giảm khi tới biên.
     - Phạm vi hợp lệ là 1…floor((N−1)/2), với N từ 3 đến 100. Giảm N tự hạ số cố định về giới hạn mới.
-  - `Ngẫu nhiên`: chọn đều số lượng trong cùng phạm vi hợp lệ, một lần khi bắt đầu ván.
-- Công tắc `Kẻ mạo danh không đi trước` nằm ở setup. Chọn `startingPlayerId` trước; khi bật, loại ID này khỏi tập gán vai. Tên hiển thị ở thảo luận dùng cùng ID.
-- Back bảng chọn hủy thay đổi; `Xác nhận` mới áp dụng.
+  - `Ngẫu nhiên`: chọn đều số lượng trong cùng phạm vi hợp lệ, một lần khi bắt đầu ván. Thu phần tăng/giảm và giữ số cố định trong draft để quay lại.
+- Phase 4 đặt công tắc `Kẻ mạo danh không đi trước` ở setup; **Phase 6 chuyển vào cuối modal**, nhãn `Kẻ mạo danh không bao giờ đi trước`, không hiện trùng ở setup. Chọn `startingPlayerId` trước; khi bật, loại ID này khỏi tập gán vai. Tên hiển thị ở thảo luận dùng cùng ID.
+- Số lượng, chế độ và không đi trước dùng chung draft. Back/kéo đóng/chạm ngoài hủy thay đổi; `Xác nhận` mới áp dụng và lưu, gồm tự cập nhật nhóm đang dùng. Lỗi ghi giữ draft và cho thử lại. Sheet cuộn được trên màn nhỏ/chữ lớn, giữ SafeArea và nhãn truy cập.
 
 ## 4. Màn hình chọn danh mục
 
@@ -421,10 +422,11 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 
 ### Trạng thái câu hỏi bí mật
 
-- Tất cả người chơi có cùng thẻ khóa; không báo vai hoặc tên đồng vai trong game câu hỏi.
+- Tất cả người chơi có cùng thẻ khóa. Phase 5 không báo vai hoặc tên đồng vai; **Phase 6 bổ sung** hiển thị tên các imposter khác khi bật `Kẻ mạo danh biết nhau`, có ít nhất hai imposter và chính imposter đã mở thẻ riêng. Không đưa chính mình vào danh sách, lọc bằng ID khi tên trùng. Khi tắt hoặc chỉ có một imposter, giữ hành vi không báo vai/đồng vai.
 - Hiển thị biểu tượng khóa và dòng `Nhấn để hiển thị`.
 - Sau khi chạm, câu hỏi mới được hiển thị để người chơi trả lời.
-- Câu hỏi, danh mục và ô trả lời chỉ hiện sau khi mở thẻ, chỉ dành cho người chơi hiện tại. App ra nền che câu hỏi/ô nhập, bỏ focus bàn phím và yêu cầu mở lại khi trở về.
+- Câu hỏi, danh mục và ô trả lời chỉ hiện sau khi mở thẻ, chỉ dành cho người chơi hiện tại. Danh sách đồng vai cũng chỉ hiện trong thẻ riêng đủ điều kiện; không lộ trên thẻ khóa, danh sách chuyển máy hoặc thảo luận. Không tiết lộ câu hỏi của phe còn lại hoặc câu trả lời riêng của người khác.
+- App ra nền che câu hỏi/ô nhập và danh sách đồng vai, bỏ focus bàn phím và yêu cầu mở lại khi trở về. Back, gửi hoặc chuyển người cũng che danh sách đồng vai. Giá trị `knowEachOther` lấy từ snapshot khi bắt đầu ván.
 
 ### Hành vi
 
@@ -484,16 +486,19 @@ Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tấ
 
 Cho phép nhập, sắp xếp và quản lý danh sách người chơi trước khi chơi.
 
+Editor danh sách hiện tại thuộc Phase 4; thư viện nhóm đã lưu thuộc Phase 6. Phase 6 phụ thuộc Phase 4–5 do bổ sung tùy chọn biết nhau cho question. Đặc tả Phase 6 được chốt ngày 27/10/2026, chưa phải trạng thái triển khai. Ảnh tham khảo dùng cho bố cục/tương tác; giao diện tiếp tục theo theme, component và rules hiện tại của app.
+
 ### Bố cục chính
 
 1. **Thanh tiêu đề**
    - Nút quay lại ở bên trái.
-   - Tiêu đề căn giữa: `Tên người chơi`.
+   - Tiêu đề: `Chỉnh sửa người chơi`, dùng cách căn chỉnh của AppBar hiện tại.
 
 2. **Thẻ danh sách đang chọn**
    - Hiển thị biểu tượng thư mục.
-   - Hiển thị tên danh sách, ví dụ `Ban Văn Thể`.
-   - Có nút mở danh sách đã lưu.
+   - Đặt trên cùng nội dung, trước thông tin số người và roster.
+   - Hiển thị tên nhóm đang chọn trong draft, ví dụ `Ban Văn Thể`; không chọn nhóm thì hiện `Trò chơi chưa lưu`.
+   - Cả thẻ có thể chạm, có dấu hiệu mở bottom sheet `Danh sách đã lưu`.
 
 3. **Thông tin số người chơi**
    - Hiển thị số lượng hiện tại, ví dụ `4 người chơi` hoặc `5 người chơi`.
@@ -505,61 +510,89 @@ Cho phép nhập, sắp xếp và quản lý danh sách người chơi trước 
    - Khi thêm người chơi vượt quá danh sách tên có sẵn, dùng tên mặc định như `Người chơi 5`.
 
 5. **Thanh hành động cuối màn hình**
-   - `Xóa`: xóa người chơi hoặc thao tác xóa theo ngữ cảnh hiện tại.
-   - `Thêm`: thêm một người chơi mới vào danh sách.
+   - Giữ nút `Thêm` và nút xóa trên từng người; không thêm thao tác xóa hàng loạt.
+   - Giữ nút `Xác nhận` cuối màn hình để áp dụng draft theo editor hiện tại.
 
 ### Hành vi danh sách hiện tại (Phase 4)
 
-- Mở bằng `Chỉnh sửa người chơi` tại setup; chưa mở thư viện danh sách đã lưu (Phase 6).
+- Mở từ ô `Người chơi` tại setup. Phase 4 chỉ chỉnh danh sách hiện tại; Phase 6 bổ sung thẻ chọn nhóm và thư viện bên dưới.
 - Nhập tên, trim khi xác nhận, chặn tên trống. Cho phép trùng tên vì vai được gắn bằng ID riêng ổn định.
 - Thêm/xóa trong giới hạn 3–100; dùng số tên mặc định còn trống trong danh sách hiện tại, ID mới không tái sử dụng.
 - Nút lên/xuống sắp xếp từng người, dùng được với screen reader; không cần kéo thả.
 - Thao tác nằm trong draft; `Xác nhận` mới áp dụng/lưu. Back có thay đổi hỏi bỏ draft; hủy giữ nguyên form.
-- Lỗi lưu giữ roster trong bộ nhớ và hiện cảnh báo/thử lại tại setup.
+- Phase 4 báo lỗi lưu tại setup; khi triển khai Phase 6, xác nhận editor phải chờ ghi xong. Lỗi giữ draft, báo chưa lưu và cho thử lại ngay tại editor.
 
 ### Danh sách đã lưu
 
-- Mở từ nút chọn danh sách ở thẻ danh sách đang chọn.
+- Mở bằng cách chạm thẻ nhóm trên cùng editor.
 - Hiển thị dưới dạng bottom sheet có tiêu đề `Danh sách đã lưu`.
-- Có mục `Trò chơi chưa lưu` để chơi nhanh không lưu.
-- Các danh sách đã lưu hiển thị tên, số người chơi và dấu chọn cho danh sách đang dùng.
+- Có mục `Trò chơi chưa lưu`, mô tả `Chơi nhanh không cần lưu`.
+- Các nhóm đã lưu hiển thị biểu tượng thư mục, tên, số người chơi và dấu chọn theo lựa chọn trong draft.
 - Có hai hành động ở cuối:
-  - `Lưu thành danh sách...` để lưu cấu hình hiện tại thành danh sách mới.
+  - `Lưu thành danh sách…` để lưu roster và luật trong draft thành nhóm mới.
   - `Quản lý danh sách` để mở màn hình quản lý.
+- Chọn nhóm nạp roster/luật vào draft rồi đóng sheet; chưa đổi setup. Chọn `Trò chơi chưa lưu` giữ roster/luật trong draft và bỏ liên kết nhóm. Đóng sheet không chọn giữ nguyên draft.
+- Hai hành động cuối xuống hàng khi thiếu chiều rộng; sheet cuộn được khi có nhiều nhóm hoặc chữ lớn.
 
 ### Lưu thành danh sách mới
 
-- Hiển thị hộp thoại/modal `Lưu thành danh sách mới...`.
+- Đóng sheet chọn trước khi mở dialog `Lưu thành danh sách mới…`.
 - Có trường nhập `Tên danh sách` với placeholder `Nhập tên danh sách`.
 - Có hai hành động: `Hủy` và `Lưu`.
 - Khi trường nhập được chọn, bàn phím hệ thống xuất hiện.
+- Tên nhóm được trim, chặn rỗng và trùng sau trim/không phân biệt hoa thường. Roster phải hợp lệ, gồm 3–100 người và không có tên trống; tên người chơi có thể trùng vì dùng ID riêng.
+- `Lưu` tạo nhóm từ roster/luật trong draft. Sau khi ghi thành công, đóng dialog và chọn nhóm mới trong editor; setup chỉ đổi sau `Xác nhận`.
+- Hủy dialog giữ nguyên draft và thư viện. Nếu đã tạo nhóm thành công rồi bỏ draft editor, nhóm mới vẫn tồn tại, setup giữ lựa chọn đã xác nhận trước đó.
+- Đang lưu chặn gửi lặp; lỗi giữ nội dung nhập, hiển thị thông báo và cho thử lại. Không đóng dialog hoặc báo thành công trước khi ghi xong.
 
 ### Quản lý danh sách
 
-- Thanh tiêu đề: nút quay lại và tiêu đề `Quản lý danh sách`.
-- Danh sách các bộ người chơi đã lưu hiển thị thành từng thẻ.
-- Mỗi thẻ có menu thao tác:
+- Đóng sheet chọn trước khi mở màn riêng; thanh tiêu đề có nút quay lại và tiêu đề `Quản lý danh sách`. Back trở về editor, giữ draft.
+- Mỗi nhóm là một card có biểu tượng thư mục, tên, số người chơi, nhãn `Đang dùng` nếu là nhóm đã xác nhận ở setup và nút ba chấm dọc.
+- Chạm card mở chi tiết, không chuyển nhóm. Nút ba chấm mở popover neo tại nút, không đồng thời kích hoạt card, gồm:
   - `Chi tiết`.
   - `Đổi tên danh sách`.
   - `Xóa`.
+- Ngăn cách thao tác xóa bằng divider, dùng màu lỗi từ theme. Đóng menu trước khi mở sheet/dialog tiếp theo.
+- Khi chưa có nhóm, hiển thị hướng dẫn quay lại editor để dùng `Lưu thành danh sách…`. Loading/lỗi đọc có trạng thái rõ và nút thử lại; không coi lỗi đọc là thư viện rỗng.
+
+### Đổi tên và xóa nhóm
+
+- `Đổi tên danh sách` mở dialog điền sẵn tên, có `Hủy`/`Lưu`; validation giống tạo nhóm và bỏ qua chính nhóm đang đổi khi kiểm tra trùng. Đổi tên giữ ID, roster và luật; cập nhật tên ở mọi nơi khi ghi thành công.
+- `Xóa` mở dialog xác nhận có tên nhóm, nút hủy và nút xóa. Hủy giữ dữ liệu; thành công chỉ xóa nhóm đó.
+- Xóa nhóm đang dùng giữ nguyên roster/luật của setup và chuyển sang `Trò chơi chưa lưu`. Draft đang mở giữ nội dung nhưng bỏ liên kết nếu nhóm được chọn đã bị xóa; xác nhận sau đó không được tạo lại nhóm đã xóa.
+- Lỗi ghi giữ dialog và nội dung để thử lại; không đóng hoặc báo thành công trước khi ghi xong. Chặn thao tác gửi lặp trong lúc ghi.
 
 ### Chi tiết danh sách
 
-- Mở dưới dạng bottom sheet.
+- Chạm card hoặc chọn `Chi tiết` mở cùng một bottom sheet chỉ đọc; không chọn/nạp nhóm vào setup hoặc draft.
 - Hiển thị thẻ tổng quan gồm tên danh sách và số người chơi.
-- Phần `Tên người chơi` hiển thị các tên dưới dạng chip/thẻ nhỏ.
+- Phần `Tên người chơi` hiển thị các tên dưới dạng chip/thẻ nhỏ theo đúng thứ tự đã lưu, tự xuống dòng.
 - Phần `Cài đặt trò chơi` hiển thị:
-  - Số lượng kẻ mạo danh.
-  - Trạng thái hiển thị số kẻ mạo danh.
+  - Số lượng kẻ mạo danh cố định hoặc chế độ `Ngẫu nhiên`; không hiển thị số đã random của ván.
   - Trạng thái tùy chọn `Kẻ mạo danh không bao giờ đi trước`.
-- Có ghi chú rằng thay đổi sẽ được lưu tự động khi sử dụng danh sách.
+  - Trạng thái `Hiển thị danh mục cho kẻ mạo danh`.
+  - Trạng thái `Kẻ mạo danh biết nhau`.
+- Bỏ dòng `Hiển thị số kẻ mạo danh` vì app chưa có setting này; không thêm luật mới để khớp ảnh.
+- Ghi chú: sửa người chơi được lưu khi `Xác nhận`; sửa luật ở setup tự lưu vào nhóm đang dùng. Các luật chỉ áp dụng với loại game đang hỗ trợ chúng.
 
-### Hành vi
+### Dữ liệu, bản nháp và lưu trữ
 
-- Thay đổi số người chơi cập nhật danh sách thẻ ngay lập tức.
-- Có thể xóa từng người chơi bằng nút xóa trên thẻ.
-- Có thể thêm người chơi bằng nút `Thêm`.
-- Chọn một danh sách đã lưu sẽ nạp lại tên người chơi và cấu hình liên quan.
+- Nhóm lưu ID/tên nhóm, roster có ID/tên/thứ tự, bộ đếm ID tiếp theo và các luật imposter hiện có: số lượng, cố định/ngẫu nhiên, không đi trước, hiển thị danh mục và biết nhau.
+- Không lưu loại game, mode, danh mục nội dung, UI/content locale, nội dung tùy chỉnh hoặc session vào nhóm. Chọn nhóm giữ nguyên các lựa chọn này của setup.
+- Editor giữ draft riêng cho roster, luật và ID nhóm. Thêm/xóa/sửa/sắp xếp và chuyển nhóm chỉ thay draft. `Xác nhận` mới áp dụng vào setup và cập nhật nhóm được chọn nếu còn tồn tại; back có thay đổi hỏi bỏ draft. Bỏ draft không cập nhật nhóm cũ, không xóa nhóm mới đã lưu.
+- Chọn `Trò chơi chưa lưu` chỉ bỏ liên kết nhóm sau `Xác nhận`, không xóa hay ghi đè nhóm vừa rời. Giảm số người tiếp tục giới hạn lại số imposter theo luật Phase 4.
+- Luật chỉnh tại setup tự lưu vào nhóm đã xác nhận đang dùng; thay đổi người chơi chỉ lưu sau `Xác nhận`. Đổi tên/xóa trong màn quản lý lưu độc lập với draft editor.
+- Dùng Hive/`LocalJsonStore` hiện có, ghi tuần tự và nguyên tử khi cập nhật setup/liên kết/thư viện để giữ dữ liệu nhất quán. Dữ liệu setup cũ khôi phục với thư viện rỗng, `Trò chơi chưa lưu` và nguyên roster/luật; giữ migration JSON → Hive hiện có.
+- Lỗi đọc không tự reset hoặc ghi đè dữ liệu; cho thử lại và chặn ghi liên quan khi chưa đọc/validate được. Lỗi ghi giữ draft/form, báo chưa lưu và cho thử lại; không báo thành công chỉ vì state trong bộ nhớ đã đổi.
+- Dữ liệu chỉ nằm trên thiết bị, không gửi tên người chơi/luật lên backend. Session đang chơi giữ nguyên snapshot.
+
+### Quy tắc giao diện và kiểm tra
+
+- Dùng `AppTheme`/`AppColors`, `AppContent`, spacing, routing, Signals/Riverpod và ARB VI/EN hiện có; không sao chép palette tím/nền tối trong ảnh.
+- Sheet/modal hỗ trợ cuộn, SafeArea, bàn phím, màn nhỏ và text scale 2; nút biểu tượng có nhãn truy cập, trạng thái chọn/đang dùng có chữ hoặc dấu chọn.
+- Kiểm tra bằng unit/widget test và đóng/mở storage thật: chọn/xác nhận/hủy draft, tạo nhóm rồi bỏ draft, tự lưu luật, chi tiết, đổi tên, xóa nhóm đang dùng, draft không khôi phục nhóm đã xóa, lỗi/retry và dữ liệu cũ. Hồi quy word sau khi nạp nhóm; chạy l10n/analyze/test khi triển khai.
+- Không yêu cầu chụp ảnh hoặc image-based UI verification cho Phase 6. Không thêm đồng bộ, đăng nhập hoặc luật chơi mới.
 
 ## 16. Màn hình cài đặt
 

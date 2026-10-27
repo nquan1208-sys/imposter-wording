@@ -43,11 +43,11 @@ Các phương án dưới đây là **đề xuất triển khai**, không tự t
 | Phạm vi số kẻ mạo danh chưa có công thức; `1–4` chỉ là ví dụ | **Đã chốt Phase 4:** với N người, dùng 1…floor((N−1)/2), bảo đảm phe thường chiếm đa số; random đều trong phạm vi đó. Với tùy chọn không đi trước, chọn người bắt đầu trước rồi loại người đó khỏi tập gán vai. | Phase 4; phase 3 chỉ dùng 1 kẻ mạo danh |
 | Layout vừa nói không đi trước theo người chơi đầu tiên, vừa nói chọn người bắt đầu | **Đã chốt Phase 4:** dùng một `startingPlayerId` làm nguồn duy nhất cho luật gán vai và tên người bắt đầu trên màn thảo luận. | Phase 4 |
 | Chưa có UI ghi nhận người bị bầu, xử lý hòa hoặc luật thắng khi có nhiều kẻ mạo danh | Nhóm bầu bằng lời nói; nút công bố mở sheet chọn người bị nhóm bầu rồi xác nhận. Một imposter: chọn đúng thì nhóm thắng, sai thì imposter thắng. **Đã chốt Phase 4:** nhiều imposter chọn đúng K người và nhóm chỉ thắng khi chọn đúng toàn bộ tập imposter. Nếu hòa, nhóm bầu lại trước khi xác nhận; chưa làm hệ thống thu từng phiếu. | Phase 3 đã chốt chọn một người, đúng thì nhóm thắng/sai thì imposter thắng; luật nhiều imposter đã chốt ở Phase 4 |
-| Game câu hỏi chưa rõ có báo vai cho người nhận câu hỏi khác hay không | **Đã chốt Phase 5:** chỉ hiện câu hỏi riêng, không báo vai; thẻ khóa giống nhau cho mọi người. Tiết lộ danh mục cho imposter/biết nhau chỉ áp dụng word; question giữ bản nháp riêng trong bộ nhớ và công bố trực tiếp, không ghi nhận bầu/tính bên thắng. | Phase 5 |
+| Game câu hỏi chưa rõ có báo vai cho người nhận câu hỏi khác hay không | **Đã chốt Phase 5:** chỉ hiện câu hỏi riêng, không báo vai; thẻ khóa giống nhau cho mọi người. **Bổ sung Phase 6:** mở `Kẻ mạo danh biết nhau` cho question; khi bật và có ít nhất hai imposter, chỉ imposter đã mở thẻ riêng mới thấy tên đồng vai. Khi tắt hoặc chỉ có một imposter, giữ hành vi Phase 5. Question vẫn giữ bản nháp riêng trong bộ nhớ và công bố trực tiếp, không ghi nhận bầu/tính bên thắng; `showCategory` tiếp tục chỉ áp dụng word. | Phase 5; mở rộng ở Phase 6 |
 | Tùy chỉnh chỉ dùng cho ván hiện tại nhưng cũng nói lưu local và các ván; sau lưu lại về tab `Cổ điển` không tồn tại ở màn danh mục | Giữ nội dung tùy chỉnh cho bộ thiết lập hiện tại và `Chơi lại`, không làm thư viện lâu dài. Sau lưu trở về picker theo đúng loại game/mode hiện tại. Không tự đổi từ Gia đình sang Cổ điển. | Phase 8 |
 | Một field `Câu hỏi` không đủ tạo game với hai nhóm nhận câu hỏi khác nhau | Form question tùy chỉnh phải nhập một cặp câu hỏi khác nhau. Nhập nhiều dùng hai ô nhiều dòng, ghép cặp theo dòng, kiểm tra số dòng bằng nhau. | Phase 9 |
 | Tùy chỉnh chưa có thuộc tính phù hợp gia đình | Khi tạo trong mode Gia đình, yêu cầu người tạo xác nhận nội dung phù hợp; không mặc định mọi nội dung tự nhập là phù hợp gia đình. | Phase 8–9 |
-| Chi tiết danh sách đã lưu có `Hiển thị số kẻ mạo danh`, nhưng setup chưa có công tắc tương ứng | Cần quyết định thêm công tắc ở bảng chọn kẻ mạo danh hoặc bỏ dòng này ở chi tiết. Không tạo một setting không thể chỉnh từ UI. | Phase 6 |
+| Chi tiết danh sách đã lưu có `Hiển thị số kẻ mạo danh`, nhưng setup chưa có công tắc tương ứng | **Đã chốt Phase 6:** bỏ dòng này; chi tiết chỉ hiển thị luật đã có, số imposter cố định hoặc chế độ ngẫu nhiên. Không thêm setting hay luật chơi mới. | Phase 6 |
 | Mục 16 chỉ có một dòng Ngôn ngữ, trong khi DB đã hỗ trợ bản dịch nội dung riêng | Đề xuất tách `Ngôn ngữ giao diện` (VI/EN từ ARB) và `Ngôn ngữ nội dung` (từ `content_languages`), mặc định đều `vi`. Đổi UI không tự đổi đề; thiếu bản dịch nội dung thì báo rỗng, không fallback sang ngôn ngữ khác. Cập nhật layout khi chốt. | Phase 11–12 |
 | Chưa có ảnh cho mọi trạng thái, store URL và kênh phản hồi | Tái sử dụng theme hiện có; không hứa khớp pixel. URL/ID phát hành phải được cung cấp trước phase 11/13. | Theo phase tương ứng |
 
@@ -108,7 +108,7 @@ Hợp đồng đọc theo schema mới, áp dụng ngay từ phase 2 dù lúc đ
 | 3. Một ván word hoàn chỉnh | Thiết lập → chuyển máy xem từ/vai → thảo luận → công bố → chơi lại | 2 |
 | 4. Người chơi và luật nâng cao | Đổi tên/thứ tự người chơi; fixed/random imposters, không đi trước, biết nhau | 3 |
 | 5. Một ván question hoàn chỉnh | Nhập câu trả lời riêng → câu hỏi chung → thảo luận → công bố → chơi lại | 4 |
-| 6. Danh sách người chơi đã lưu | Lưu/nạp/đổi tên/xóa bộ người chơi và thiết lập liên quan | 4 |
+| 6. Danh sách người chơi đã lưu và tùy chọn kẻ mạo danh | Lưu/chọn/xem chi tiết/đổi tên/xóa nhóm; modal chọn imposter; question có tùy chọn biết nhau; giữ mode, danh mục và ngôn ngữ hiện tại | 4, 5 |
 | 7. Hoàn thiện đồng bộ content và ảnh | Refresh từ setup, ảnh word từ Storage; phục hồi lỗi đồng bộ và cache | 5 |
 | 8. Tùy chỉnh word bằng văn bản | Tạo danh mục/từ, nhập nhiều, dùng ngay trong ván word | 4 |
 | 9. Tùy chỉnh question bằng văn bản | Tạo cặp câu hỏi tùy chỉnh và chơi trọn ván question | 5, 8 |
@@ -117,17 +117,17 @@ Hợp đồng đọc theo schema mới, áp dụng ngay từ phase 2 dù lúc đ
 | 12. Tích hợp ngôn ngữ nội dung | Chọn ngôn ngữ từ DB, chơi cả hai game bằng bản dịch đúng locale, cache/offline tách ngôn ngữ | 6, 7, 10, 11 |
 | 13. Hoàn thiện bản phát hành | Hai game và mọi tính năng đã chọn chạy trên Android/iOS release | 1–12 |
 
-Thứ tự mặc định là 1 → 13. Giữ số phase 1–11; phase 12 mới dành cho ngôn ngữ nội dung, phase phát hành cũ chuyển thành 13. Sau phase 4, phase 6 và 8 có thể làm trước phase 5 nếu ưu tiên sản phẩm thay đổi. Phase 7 không phải điều kiện để chơi: phase 2 đã đọc bản dịch `vi` đầy đủ từ backend và cache. Phase 12 mở rộng repository có sẵn sang nhiều locale, không duy trì hai bộ game logic.
+Thứ tự mặc định là 1 → 13. Giữ số phase 1–11; phase 12 mới dành cho ngôn ngữ nội dung, phase phát hành cũ chuyển thành 13. Sau phase 4, phase 8 có thể làm trước phase 5 nếu ưu tiên sản phẩm thay đổi; phase 6 cần phase 5 để mở tùy chọn biết nhau cho question. Phase 7 không phải điều kiện để chơi: phase 2 đã đọc bản dịch `vi` đầy đủ từ backend và cache. Phase 12 mở rộng repository có sẵn sang nhiều locale, không duy trì hai bộ game logic.
 
 Đối chiếu phạm vi layout:
 
 | Mục trong layout | Phase chịu trách nhiệm |
 | --- | --- |
 | 1–2: bắt đầu, cách chơi | 1; cập nhật hướng dẫn theo luật mới ở 4–5 |
-| 3–4: setup, picker và bottom sheet imposter | 2, 4; bật question ở 5, hoàn thiện sync/ảnh ở 7, đổi content locale ở 12 |
+| 3–4: setup, picker và bottom sheet imposter | 2, 4; bật question ở 5; hoàn thiện modal imposter và biết nhau cho question ở 6; hoàn thiện sync/ảnh ở 7, đổi content locale ở 12 |
 | 5: tạo tùy chỉnh | 8–10 |
 | 6–9: luồng word và kết quả | 3–4 |
-| 10–14: luồng question và kết quả | 5 |
+| 10–14: luồng question và kết quả | 5; bổ sung hiển thị đồng vai riêng tư ở 6 |
 | 15: người chơi và danh sách đã lưu | 4, 6 |
 | 16: cài đặt | 11; thêm ngôn ngữ nội dung ở 12 sau khi chốt tách hai lựa chọn |
 | 17–19: bố cục chung, điều hướng, ảnh/trạng thái còn thiếu | Áp dụng trong từng PR; đối chiếu tổng thể ở 13 |
@@ -332,13 +332,15 @@ trọn luồng người chơi → câu hỏi riêng/trả lời → câu hỏi c
 công bố → chơi lại. Roster, số imposter cố định/ngẫu nhiên và không đi trước dùng
 chung luật Phase 4; word giữ luồng bầu/thắng hiện tại.
 
-**Quyết định đã chốt:** không báo vai hoặc đồng vai; thẻ khóa giống nhau cho tất
+**Quyết định đã chốt trong phạm vi Phase 5:** không báo vai hoặc đồng vai; thẻ khóa giống nhau cho tất
 cả. Back trước gửi giữ draft riêng theo ID trong RAM, chỉ hiện lại khi mở đúng
 thẻ; gửi trim/chặn rỗng và khóa người đã gửi. App ra nền che cả câu hỏi/ô nhập
 và bỏ focus. Question công bố trực tiếp mọi imposter và câu hỏi khác, không có
 sheet bầu hoặc tính bên thắng. Không gửi câu trả lời lên backend, không lưu
 session/draft xuống đĩa. Thiết lập word cũ được giữ nguyên; loại game mặc định
 là word.
+
+**Mở rộng đã lên kế hoạch ở Phase 6:** thêm tùy chọn `Kẻ mạo danh biết nhau` cho question và hiển thị đồng vai sau khi mở thẻ riêng theo điều kiện bên dưới. Bằng chứng Phase 5 không xác nhận phần mở rộng này.
 
 **Bằng chứng kiểm tra Phase 5:**
 
@@ -373,17 +375,66 @@ là word.
 - **Nghiệm thu:** cả Cổ điển/Gia đình chơi được từ setup tới replay; chưa gửi đủ không thể vào thảo luận; đổi loại game không mang theo câu trả lời/session cũ.
 - **Kiểm tra:** unit test assignment/stage, answer validation; widget/integration test chuyển máy nhiều người, pause che câu hỏi, double submit, riêng tư trước công bố và reset khi replay.
 
-### Phase 6 — Danh sách người chơi đã lưu
+### Phase 6 — Danh sách người chơi đã lưu và tùy chọn kẻ mạo danh
 
-**PR đề xuất:** `feat(app): persist and manage player presets`
+**PR đề xuất:** `feat(app): manage player presets and imposter options`
 
-- Phạm vi: phần Danh sách đã lưu, Lưu thành danh sách mới, Quản lý, Chi tiết và Đổi tên/Xóa của màn 15.
-- Lưu ID/tên danh sách, roster và các tùy chọn liên quan theo layout; bản đầu không gắn category tùy chỉnh tạm thời vào preset. Chốt trường hiển thị số imposter trước khi hoàn thành chi tiết.
-- Chọn preset nạp dữ liệu và validate lại; thay đổi lúc đang dùng tự lưu đúng như ghi chú layout. `Trò chơi chưa lưu` không bị ghi đè sang preset đang có.
-- Hủy modal không làm đổi dữ liệu; tên trống/trùng báo rõ, xóa có xác nhận; xóa preset đang dùng giữ roster hiện tại thành trò chơi chưa lưu. Lưu lỗi giữ nội dung và báo chưa lưu thành công.
-- Điểm chạm: player_names, feature player_presets, local storage, setup/store, ARB; không thêm đồng bộ tài khoản.
-- **Nghiệm thu:** lưu/nạp/đổi tên/xóa hoạt động qua lần mở lại app; chi tiết khớp setup và không mất các danh sách khác.
-- **Kiểm tra:** unit test serialize/validate, auto-save và lỗi lưu; widget test các sheet/modal, hủy/xóa danh sách hiện tại, khôi phục dữ liệu hỏng mà không ghi đè bản cũ.
+**Đặc tả chốt 27/10/2026; chưa triển khai:** giữ nguyên số Phase 6, phụ thuộc Phase 4–5; không thêm Phase 4.1 hoặc đổi số các phase khác. Phạm vi là màn 15 và đường vào quản lý nhóm, modal chọn kẻ mạo danh ở setup cho cả hai game, cùng tùy chọn biết nhau trong luồng question. Ảnh tham khảo cung cấp cấu trúc/tương tác; màu sắc, typography, component và code tiếp tục theo rules hiện tại của app.
+
+#### Modal chọn kẻ mạo danh và tùy chọn question
+
+- **Style theo rules của app:** ảnh chỉ tham khảo bố cục và tương tác. Màu sắc, typography, spacing, bo góc, biểu tượng, trạng thái chọn, lớp phủ modal và theme sáng/tối phải dùng `AppTheme`/`AppColors`, constants và component hiện có; không sao chép style từ ảnh hoặc tạo bộ style riêng.
+- Chạm ô `Có bao nhiêu kẻ mạo danh?` ở setup mở modal dạng bottom sheet `Chọn kẻ mạo danh`, nền phía sau được làm mờ tối, phần đầu có biểu tượng và tiêu đề như ảnh `IMG_2987.PNG`. Tái sử dụng điểm mở sheet hiện có cho word/question, không thêm route riêng.
+- Thay công tắc chọn ngẫu nhiên bằng hai thẻ chọn loại trừ nhau, có radio/trạng thái chọn rõ: `Cố định` — `Chọn số kẻ mạo danh chính xác`; `Ngẫu nhiên` — `Số kẻ mạo danh ngẫu nhiên mỗi ván`.
+- Thẻ `Cố định` khi được chọn hiện nút `−`, số lớn ở giữa, nút `+` và dòng phạm vi. Dùng giới hạn hiện có 1…floor((N−1)/2); khóa nút tại biên, không dùng cứng `1–3` từ ảnh. Đánh dấu `1` là `Được khuyến nghị`; không thêm công thức đề xuất mới. Chọn `Ngẫu nhiên` thu phần tăng/giảm; giữ số cố định trong draft để quay lại. Số ngẫu nhiên vẫn chỉ được chọn một lần khi bắt đầu ván.
+- Đưa công tắc `Kẻ mạo danh không bao giờ đi trước` vào cuối modal như ảnh, bỏ bản trùng ở setup. Tái sử dụng `imposterNotFirst` và luật `startingPlayerId` Phase 4. Cả số lượng, chế độ và công tắc nằm trong một draft: `Xác nhận` áp dụng/lưu cùng nhau; back, kéo đóng hoặc chạm ngoài hủy draft. Khi đang dùng nhóm đã lưu, chỉ cập nhật luật nhóm sau xác nhận và ghi thành công; lỗi giữ draft để thử lại.
+- Theo ảnh `IMG_2986.PNG`, hiển thị công tắc `Kẻ mạo danh biết nhau` ở thẻ danh mục/tùy chọn của **cả word và question**, cho cả Cổ điển/Gia đình. Dùng chung trường `knowEachOther`, giữ giá trị khi đổi loại game, nạp nhóm hoặc chơi lại; setup cũ thiếu trường vẫn mặc định `false`. Không mở rộng `showCategory` sang question trong yêu cầu này.
+- Question khi bật `knowEachOther` và session có ít nhất hai imposter: chỉ imposter đã mở thẻ câu hỏi riêng mới thấy tên các imposter khác, không kèm chính mình; lọc theo ID để tên trùng không làm sai danh sách. Người thường, thẻ đang khóa, danh sách chuyển máy và màn thảo luận không hiện vai/tên đồng vai. Không hiển thị câu hỏi của phe còn lại hoặc câu trả lời riêng của người khác. Khi tắt hoặc chỉ có một imposter, giữ hành vi không báo vai/đồng vai của Phase 5.
+- App ra nền, back/chuyển người hoặc gửi câu trả lời phải che cả danh sách đồng vai cùng câu hỏi/ô nhập; mở lại đúng thẻ mới được xem. Session dùng snapshot `knowEachOther`, không đổi theo setup sau khi bắt đầu. Cập nhật Cách chơi VI/EN để nói rõ tùy chọn bật sẽ tiết lộ đồng vai trong thẻ riêng; giữ luồng công bố không bầu/tính thắng của question.
+
+#### Luồng giao diện
+
+- **Màn chỉnh sửa người chơi:** thêm thẻ nhóm trên cùng, trước số lượng và roster. Hiển thị biểu tượng thư mục, tên nhóm đang chọn hoặc `Trò chơi chưa lưu`, cùng dấu hiệu mở sheet. Cả thẻ có thể chạm. Giữ editor Phase 4: sửa tên, thêm/xóa, nút lên/xuống, giới hạn 3–100 và `Xác nhận`.
+- **Sheet chọn nhóm:** tiêu đề `Danh sách đã lưu`; mục `Trò chơi chưa lưu` có mô tả chơi nhanh; các nhóm đã lưu có tên, số người và dấu chọn theo lựa chọn trong draft. Cuối sheet có `Lưu thành danh sách…` và `Quản lý danh sách`. Chọn một mục nạp vào draft rồi đóng sheet; đóng sheet không chọn thì giữ nguyên draft.
+- **Lưu thành danh sách:** đóng sheet chọn trước khi mở dialog `Lưu thành danh sách mới…`, gồm trường `Tên danh sách`, placeholder `Nhập tên danh sách`, nút `Hủy`/`Lưu`. Tạo nhóm từ roster và luật trong draft, không lấy roster cũ của setup. Trim tên, chặn rỗng và trùng sau khi trim/không phân biệt hoa thường. Roster phải hợp lệ trước khi lưu; báo lỗi để người dùng sửa, không lưu tên người chơi trống.
+- **Màn quản lý:** đóng sheet chọn rồi mở route `Quản lý danh sách`; back quay lại editor và giữ draft. Mỗi card có biểu tượng, tên, số người, nhãn `Đang dùng` theo nhóm đã xác nhận ở setup và nút ba chấm dọc. Khi rỗng, hướng dẫn quay về editor để lưu nhóm đầu tiên; không có nút dẫn tới màn trống.
+- **Menu ba chấm:** popover neo tại nút gồm `Chi tiết`, `Đổi tên danh sách`, đường phân cách và `Xóa` dùng màu lỗi từ theme. Chạm menu không kích hoạt card. Đóng menu trước khi mở sheet/dialog tiếp theo.
+- **Chi tiết:** chạm card hoặc chọn `Chi tiết` mở cùng một bottom sheet chỉ đọc; không chuyển nhóm. Có thẻ tổng quan tên/số người, tên người chơi dạng chip theo đúng thứ tự, phần luật đã lưu và ghi chú về thời điểm tự lưu. Chế độ số imposter hiển thị cố định hoặc `Ngẫu nhiên`, không lấy số đã random trong session.
+- **Đổi tên:** dialog điền sẵn tên và dùng cùng validation với tạo nhóm; bỏ qua chính nhóm đang đổi khi kiểm tra trùng. Hủy giữ dữ liệu; thành công cập nhật tên ở editor, sheet chọn, quản lý và chi tiết mà không đổi ID/roster/luật.
+- **Xóa:** dialog xác nhận có tên nhóm, nút hủy và nút xóa. Chỉ xóa sau xác nhận và ghi thành công; các nhóm khác giữ nguyên.
+- Dùng `AppTheme`/`AppColors`, `AppContent`, constants và các widget Material hiện có; không sao chép palette tím/nền tối trong ảnh hoặc hardcode giao diện riêng. Sheet/modal cuộn được, tránh bàn phím, giữ SafeArea và nhãn truy cập cho nút biểu tượng. Nút cuối sheet xuống hàng khi thiếu chiều rộng; trạng thái chọn/đang dùng có chữ hoặc dấu chọn, không chỉ dựa vào màu.
+
+#### Dữ liệu và thời điểm áp dụng
+
+- Mỗi nhóm lưu ID ổn định, tên, roster có ID/tên/thứ tự, bộ đếm ID người chơi tiếp theo và các luật `imposters`, `randomImposters`, `imposterNotFirst`, `showCategory`, `knowEachOther`. Dùng validation/giới hạn imposter hiện có theo N; giảm số người tiếp tục giới hạn lại số imposter.
+- Không lưu game type, mode, category IDs, UI/content locale, nội dung tùy chỉnh hoặc session vào nhóm. Chọn nhóm chỉ thay roster và các luật trên; giữ nguyên loại game, mode, danh mục và ngôn ngữ hiện tại. `knowEachOther` áp dụng cho cả word/question từ Phase 6; `showCategory` chỉ có tác dụng với word.
+- Chi tiết hiển thị số imposter cố định/ngẫu nhiên, không đi trước, hiển thị danh mục và biết nhau. Bỏ dòng `Hiển thị số kẻ mạo danh`; không thêm công tắc mới để khớp ảnh.
+- Mở editor tạo draft gồm roster, luật và ID nhóm được chọn. Chọn nhóm chỉ nạp dữ liệu/đổi liên kết trong draft, không ghi setup hoặc nhóm cũ. `Xác nhận` mới áp dụng draft vào setup và cập nhật nhóm được chọn nếu còn tồn tại. Back có thay đổi hỏi bỏ draft như Phase 4; bỏ draft giữ setup/nhóm đã xác nhận trước đó.
+- Chọn `Trò chơi chưa lưu` giữ roster/luật trong draft và bỏ liên kết nhóm; chỉ có hiệu lực với setup sau `Xác nhận`. Không xóa hoặc ghi đè nhóm vừa rời.
+- `Lưu thành danh sách` ghi nhóm mới ngay khi lưu thành công rồi chọn nhóm đó trong draft, chưa đổi nhóm đang dùng tại setup. Nếu bỏ draft sau đó, nhóm mới vẫn tồn tại trong thư viện và setup giữ lựa chọn trước đó.
+- Khi setup đang dùng nhóm đã lưu, thay đổi luật tại setup tự cập nhật đúng nhóm đó. Thay đổi người chơi chỉ cập nhật sau `Xác nhận`; không tự lưu từng lần gõ hoặc thao tác thêm/xóa/sắp xếp trong editor.
+- Xóa nhóm đang dùng giữ roster/luật hiện tại của setup và chuyển sang `Trò chơi chưa lưu`. Draft đang mở giữ nội dung nhưng bỏ liên kết nếu nhóm được chọn đã bị xóa. Xác nhận draft cũ không được tạo lại nhóm đã xóa. Đổi tên nhóm không làm mất draft.
+- Session đang chơi tiếp tục dùng snapshot đã chụp; các thao tác với thư viện không đổi vai, prompt hoặc tiến độ ván.
+
+#### Lưu trữ, lỗi và tích hợp
+
+- Tái sử dụng Hive CE, `LocalJsonStore`, hàng đợi ghi và vòng đời storage hiện có; không thêm dependency, API/backend hoặc một cơ chế state management khác. Model/store nhóm đặt theo cấu trúc feature hiện tại; dùng Signals, Riverpod DI và `RouterService`/route registry hiện có.
+- Lưu setup, ID nhóm đang dùng và thư viện nhất quán trong một lần ghi nguyên tử khi thao tác liên quan nhiều phần; không để khởi động lại thấy nhóm đã xóa vẫn đang dùng hoặc setup khác luật của nhóm. Giữ thứ tự ghi để thao tác cũ không ghi đè thao tác mới; storage chờ các lần ghi đang chờ trước khi đóng.
+- Dữ liệu setup Phase 2–4 thiếu thư viện/liên kết nhóm được đọc với thư viện rỗng và `Trò chơi chưa lưu`, giữ nguyên roster/luật. Tiếp tục hỗ trợ migration JSON → Hive đã có; không xóa file cũ hoặc reset dữ liệu người dùng để nâng định dạng.
+- Loading/read error có trạng thái rõ và nút thử lại; dữ liệu thiếu khác dữ liệu hỏng. Lỗi đọc không âm thầm reset hoặc ghi đè bản lưu. Chưa đọc/validate được dữ liệu thì chặn thao tác ghi liên quan.
+- Lỗi ghi giữ form/draft và dữ liệu cần thử lại, không báo thành công/đóng dialog hoặc editor trước khi ghi xong. Chặn gửi lặp khi đang lưu; lỗi tự lưu luật phải báo chưa lưu và cho thử lại, không coi thay đổi trong bộ nhớ là đã bền vững.
+- Điểm chạm: `player_names`, feature quản lý nhóm, `setup_screen`/setup store/model, `question_game` (snapshot và hiển thị đồng vai), Hive/local storage và migration, providers/routes, Cách chơi, ARB VI/EN cùng test/fixtures liên quan. Không sửa tay localization generated; giữ layout và hướng dẫn đồng nhất khi triển khai.
+
+#### Nghiệm thu và kiểm tra
+
+- **Nghiệm thu:** từ editor tạo nhóm → xác nhận → sửa luật → chuyển nhóm → xem chi tiết → đổi tên/xóa → đóng/mở storage vẫn giữ đúng dữ liệu. Nạp nhóm không đổi loại game/mode/danh mục/ngôn ngữ; xem chi tiết không chuyển nhóm; không mất nhóm khác hoặc thay session đang chơi.
+- **Unit test:** serialize/validate, tên nhóm trim/rỗng/trùng không phân biệt hoa thường, tên người chơi trùng nhưng ID riêng, ID/thứ tự/bộ đếm và biên 3/100. Kiểm tra fixed/random, giảm N, chọn nhóm trong draft, xác nhận/hủy, chọn chưa lưu, tạo nhóm rồi bỏ draft và tự lưu luật đúng nhóm.
+- **Lưu trữ:** test tương thích setup cũ và migration JSON → Hive; đóng/mở storage thật để kiểm tra nhóm/liên kết/luật. Test lỗi đọc/ghi, retry, thao tác lặp, ghi tuần tự và dispose; dữ liệu lỗi không bị ghi đè và nhóm đã xóa không bị draft cũ khôi phục.
+- **Widget test:** thẻ nhóm → sheet → tạo/chọn/chưa lưu → quản lý → popover → chi tiết/đổi tên/xóa. Có hủy dialog, xóa nhóm đang dùng, đổi tên khi editor còn draft, trạng thái rỗng/lỗi/loading, bàn phím, nhãn truy cập và màn nhỏ/text scale 2. Kiểm tra menu không đồng thời mở chi tiết.
+- **Modal:** widget test mở từ ô imposter ở cả hai game, chọn Cố định/Ngẫu nhiên, tăng/giảm tại biên, giảm N, giữ số khi đổi chế độ, công tắc không đi trước, xác nhận/hủy và tự lưu đúng nhóm; màn nhỏ/text scale 2 vẫn cuộn tới nút xác nhận và đọc được trạng thái chọn.
+- **Question biết nhau:** unit/widget test bật/tắt, một/nhiều imposter, fixed/random, tên trùng với ID riêng, chỉ thấy đồng vai khi mở đúng thẻ, người thường không thấy; pause/resume, back, gửi/chuyển người đều che danh sách. Kiểm tra lưu/nạp nhóm, đổi loại game, snapshot và replay; chơi trọn ván question ở cả hai mode, VI/EN, không lộ câu hỏi khác trước công bố.
+- Khi triển khai chạy `flutter gen-l10n`, `flutter analyze`, `flutter test`; hồi quy ván word và question sau khi nạp nhóm và kiểm tra replay giữ đúng setup. Không yêu cầu chụp ảnh hoặc image-based UI verification cho Phase 6; bằng chứng nghiệm thu dùng kết quả kiểm tra mã, static analysis và automated tests.
+- Không mở rộng sang đăng nhập, đồng bộ nhiều thiết bị, luật ngoài các bổ sung nêu trên hoặc lưu ván. Đặc tả này không phải bằng chứng tính năng đã triển khai hay kiểm thử.
 
 ### Phase 7 — Hoàn thiện đồng bộ content và ảnh
 
@@ -454,14 +505,14 @@ là word.
 
 - Phạm vi: bổ sung `Ngôn ngữ nội dung` trong settings bên cạnh `Ngôn ngữ giao diện` sau khi chốt mục 3; hiển thị locale nội dung tại setup/picker. Dùng repository, cache, hai game và nội dung tùy chỉnh hiện có; không mở thêm API quản trị hoặc đổi schema DB.
 - Đọc `content_languages(code, display_name, sort_order)` qua quyền anon, sắp theo `sort_order`, rồi `code`; cache danh sách cùng backend để picker dùng offline. Có mã ngôn ngữ không bảo đảm đã có content; không hardcode danh sách nội dung bằng `supportedLocales` của Flutter, không giả định chỉ có VI/EN hoặc có cờ active trong bảng.
-- Lưu `contentLocale` độc lập với UI locale. Thiết lập/preset cũ thiếu trường này được đọc là `vi`; preset mới lưu content locale, validate lại khi nạp và không đổi UI locale. Mã locale không còn trong danh sách sau lần tải thành công phải hiện trạng thái không khả dụng và yêu cầu chọn lại; không âm thầm đổi ngôn ngữ hoặc xóa thiết lập cũ.
+- Lưu `contentLocale` độc lập với UI locale. Thiết lập cũ thiếu trường này được đọc là `vi`; nhóm người chơi Phase 6 không lưu hoặc ghi đè locale, nên chọn nhóm giữ nguyên cả UI/content locale hiện tại. Mã locale không còn trong danh sách sau lần tải thành công phải hiện trạng thái không khả dụng và yêu cầu chọn lại; không âm thầm đổi ngôn ngữ hoặc xóa thiết lập cũ.
 - Đổi content locale ngoài ván: chuyển repository sang snapshot của locale mới, tải/validate đủ trước khi cho bắt đầu; có cache đúng locale thì dùng khi offline. Lỗi tải không hiển thị dữ liệu của locale cũ dưới nhãn mới; không có cache thì báo lỗi/thử lại. Ngôn ngữ hợp lệ nhưng chưa có đề published hiện trạng thái rỗng/chặn bắt đầu, cho đổi ngôn ngữ; không tự fallback sang VI/EN.
 - Scope request và kết quả theo backend + content locale; nếu người dùng đổi nhanh VI→EN→VI, kết quả về trễ chỉ được cập nhật cache tương ứng, không ghi đè danh mục/count hiện đang xem. Picker đang mở phải hủy lựa chọn tạm khi đổi locale; validate lại category IDs và tên hiển thị bằng bộ lọc chung ở mục 4.
 - Word reveal/kết quả dùng `word_prompt_translations.text` đã ghép; question lấy nguyên cặp cùng hàng translation. Session giữ locale, tên category và prompt đã chụp; refresh hoặc đổi UI không làm đổi nội dung ván. `Chơi lại` về setup và giữ locale hiện tại; khi bắt đầu ván tiếp theo mới tạo session theo quy tắc chung.
 - Nội dung tùy chỉnh chỉ hiện trong locale lúc tạo; đổi locale không xóa draft/category/ảnh đang còn vòng đời. Không nhân đôi hoặc tự dịch nội dung người chơi nhập. File ảnh remote dùng chung theo backend + `image_path`, chỉ dọn khi mọi cache locale và session đều hết tham chiếu; đổi locale không tải lại ảnh đã có.
-- Điểm chạm: settings/language picker, `AppStore`/local settings, setup/category picker, data/content/cache keys, preset serialization, custom content, session/reveal/kết quả, ARB và fixtures. Không thêm ARB cho mọi mã ngôn ngữ nội dung hoặc thay cấu trúc state/DI.
+- Điểm chạm: settings/language picker, `AppStore`/local settings, setup/category picker, data/content/cache keys, kiểm tra nhóm giữ nguyên locale khi nạp, custom content, session/reveal/kết quả, ARB và fixtures. Không thêm ARB cho mọi mã ngôn ngữ nội dung hoặc thay cấu trúc state/DI.
 - **Nghiệm thu:** đổi nội dung VI↔EN và chơi trọn cả hai game, hai mode; UI EN + content VI và ngược lại hoạt động đúng. Tên/count/random đều cùng locale, không đếm nhiều bản dịch thành nhiều đề; thiếu bản dịch/đề thì rỗng; khởi động lại nhớ lựa chọn; offline chỉ chơi bằng cache đúng locale. Backend kiểm thử phải có bản dịch published cho từng tổ hợp cần nghiệm thu; mã trong `content_languages` đơn thuần không đủ.
-- **Kiểm tra:** unit test bản dịch VI published/EN draft và ngược lại, category translation thiếu/ẩn, hai câu hỏi cùng locale, nhiều trang, cache tách backend/locale, response về sai thứ tự, lỗi/rỗng và preset cũ. Widget/integration test đổi hai locale độc lập → chọn danh mục → chơi → replay → restart/offline, custom content không bị gắn lại locale, ảnh dùng chung không bị dọn nhầm. Read-only check trên backend local/dev xác minh anon không fallback khi bản dịch bị ẩn; dùng fixture trong test để thêm mã nội dung thứ ba mà không cần thêm ARB UI.
+- **Kiểm tra:** unit test bản dịch VI published/EN draft và ngược lại, category translation thiếu/ẩn, hai câu hỏi cùng locale, nhiều trang, cache tách backend/locale, response về sai thứ tự, lỗi/rỗng và thiết lập cũ. Widget/integration test đổi hai locale độc lập → chọn danh mục → nạp nhóm mà không đổi locale → chơi → replay → restart/offline, custom content không bị gắn lại locale, ảnh dùng chung không bị dọn nhầm. Read-only check trên backend local/dev xác minh anon không fallback khi bản dịch bị ẩn; dùng fixture trong test để thêm mã nội dung thứ ba mà không cần thêm ARB UI.
 
 ### Phase 13 — Hoàn thiện và kiểm tra bản phát hành
 
