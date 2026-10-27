@@ -348,7 +348,7 @@ Cho phép từng người chơi lần lượt mở thông tin bí mật của m�
 - Kẻ mạo danh thấy vai trò và tên danh mục của từ được chọn khi bật `Hiển thị danh mục cho kẻ mạo danh`; khi tắt chỉ thấy vai trò. Không hiển thị từ, hint hoặc ảnh bí mật. Thiết lập thuộc ván và lưu local, không thuộc từng đề.
 - Chạm `Hiểu rồi!` sẽ quay về màn hình `Người chơi` và đánh dấu người chơi hiện tại đã hoàn tất.
 - Không cho phép hiển thị lại từ của người chơi đã hoàn tất.
-- Phase 4 hỗ trợ nhiều kẻ mạo danh; khi bật `Biết nhau`, chỉ imposter đã mở thẻ mới thấy tên các imposter khác. Không hiện từ/ảnh cho imposter. Ảnh word được bổ sung ở Phase 7.
+- Phase 4 hỗ trợ nhiều kẻ mạo danh; khi bật `Biết nhau`, chỉ imposter đã mở thẻ mới thấy tên các imposter khác. Không hiện từ/ảnh cho imposter. Phase 7 hiển thị ảnh local dưới từ cho người thường đã mở thẻ; thiếu/lỗi ảnh giữ placeholder cao 180dp, không có image path thì chỉ hiện chữ. Ảnh tới sau tự cập nhật và bị gỡ khỏi widget/semantics khi che thẻ.
 - Back khi xem thẻ che nội dung và về danh sách, chưa đánh dấu hoàn tất. App ra nền che thẻ; khi trở lại phải chủ động mở lại.
 
 ## 8. Màn hình giai đoạn bầu chọn
@@ -691,3 +691,10 @@ Màn hình bắt đầu
 
 - [Kế hoạch triển khai ứng dụng theo phase/PR](../app-implementation-plan.md)
 - [Bố cục màn hình Admin](admin-screen-layout.md)
+
+### Ghi chú nghiệm thu Phase 7 — 27/10/2026
+
+- App bar setup có `Làm mới nội dung` / `Refresh content`, tooltip/semantics và trạng thái disabled trong lúc đồng bộ. Nội dung giữ lại vẫn chơi được; thành công rỗng thay snapshot và category không còn hợp lệ được bỏ chọn.
+- Ảnh word local nằm dưới từ ở thẻ người thường đã mở và màn kết quả. Không có ảnh/semantics ảnh ở thẻ che, imposter, danh sách người chơi hoặc thảo luận. Màn kết quả dùng cùng widget ảnh và vùng cuộn hiện có.
+- Widget tests kiểm tra ảnh tới sau, file thiếu/decode lỗi, placeholder, lifecycle/semantics, không đổi session khi refresh, 320×568 với text scale 2 ở cả hai theme. Bộ test hiện có còn kiểm tra kết quả/voting ở 320×568, 844×390 và 1024×768.
+- Không chụp screenshot; chưa kiểm tra trên thiết bị thật hoặc bản Release.

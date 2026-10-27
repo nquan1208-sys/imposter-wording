@@ -227,5 +227,15 @@
   "chooseImposters": "Chọn kẻ mạo danh",
   "fixedCountHelp": "Chọn số kẻ mạo danh chính xác",
   "randomCountHelp": "Số kẻ mạo danh ngẫu nhiên mỗi ván",
-  "moreImpostersNeedPlayers": "Cần ít nhất 5 người chơi để chọn nhiều hơn 1 kẻ mạo danh."
+  "moreImpostersNeedPlayers": "Cần ít nhất 5 người chơi để chọn nhiều hơn 1 kẻ mạo danh.",
+  "refreshContent": "Làm mới nội dung",
+  "wordImageUnavailable": "Ảnh chưa khả dụng",
+  "wordImage": "Ảnh cho từ {word}",
+  "@wordImage": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  }
 }

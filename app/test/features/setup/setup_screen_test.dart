@@ -633,6 +633,61 @@ void main() {
     expect(store.setup.value.imposters, 1);
   });
 
+  testWidgets(
+    'refresh is accessible, disabled while syncing, keeps offline play and revalidates categories',
+    (tester) async {
+      var data = fixture();
+      Completer<List<JsonMap>>? gate;
+      await pump(
+        tester,
+        english: true,
+        fetch: (t, l, f, e) async {
+          if (gate != null) return gate.future;
+          return fixturePage(data, t, l, f, e);
+        },
+      );
+      await store.setCategories({'b'});
+      gate = Completer<List<JsonMap>>();
+      await tester.tap(find.byTooltip('Refresh content'));
+      await tester.pump();
+      expect(
+        tester
+            .widget<IconButton>(find.widgetWithIcon(IconButton, Icons.refresh))
+            .onPressed,
+        null,
+      );
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Start game'),
+            )
+            .onPressed,
+        isNotNull,
+      );
+      gate.completeError(const SocketException('offline'));
+      await content.load();
+      await tester.pump();
+      expect(content.cached.value, true);
+      expect(content.loadFailed.value, true);
+      gate = null;
+      data = fixture();
+      (data['words'] as List).removeWhere((w) => w['category_id'] == 'b');
+      await tester.tap(find.byTooltip('Refresh content'));
+      await content.load();
+      await store.pendingWrites;
+      await tester.pumpAndSettle();
+      expect(store.setup.value.categoryIds, isEmpty);
+      expect(content.cached.value, false);
+      expect(content.loadFailed.value, false);
+      expect(
+        tester
+            .widget<IconButton>(find.widgetWithIcon(IconButton, Icons.refresh))
+            .onPressed,
+        isNotNull,
+      );
+    },
+  );
+
   testWidgets('loading, error and retry without cache', (tester) async {
     var offline = true;
     final gate = Completer<List<JsonMap>>();

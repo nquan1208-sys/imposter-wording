@@ -8,11 +8,13 @@ import 'package:untitled/features/question_game/question_game_screen.dart';
 import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/main.dart';
 import '../../data/fixtures.dart';
+import 'package:untitled/models/content.dart';
 
 void main() {
   late ContentRepository content;
   late SetupStore setup;
   late ProviderContainer container;
+  late JsonMap fetchData;
 
   Future<void> tap(WidgetTester tester, Finder finder) async {
     if (finder.evaluate().isEmpty) {
@@ -37,9 +39,10 @@ void main() {
     bool random = false,
     int imposters = 2,
   }) async {
+    fetchData = fixture();
     content = ContentRepository(
       cache: MemoryStorage(),
-      fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
+      fetchPage: (t, l, f, e) => fixturePage(fetchData, t, l, f, e),
     );
     setup = SetupStore(content: content, file: MemoryStorage());
     await content.load();
@@ -145,6 +148,16 @@ void main() {
         findsNothing,
       );
       expect(find.bySemanticsLabel(other.name), findsOneWidget);
+      fetchData = {'categories': [], 'words': [], 'questions': []};
+      await content.load();
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<QuestionGameScreen>(find.byType(QuestionGameScreen))
+            .session,
+        same(session),
+      );
+      expect(teammates, findsOneWidget);
       await setup.setRules(knowEachOther: false, showCategory: false);
       expect(
         find.descendant(of: teammates, matching: find.text(other.name)),

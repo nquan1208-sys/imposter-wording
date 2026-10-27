@@ -448,6 +448,17 @@ là word.
 
 **PR đề xuất:** `feat(app): harden content sync and word images`
 
+**Triển khai và bằng chứng 27/10/2026 (`app-phase-7`):**
+
+- Đã thêm refresh setup dùng chung `load()`, timeout 15 giây/trang, giữ snapshot khi lỗi và đánh dấu stale kể cả sau lần tải thành công. Kết quả rỗng hợp lệ thay cache; lỗi ghi cache chỉ cảnh báo persistence. Cache đọc lại không được thay nội dung memory mới hơn khi lần download tiếp theo thất bại.
+- `WordImageCache` dùng Application Support, key backend chuẩn hóa + path, không phụ thuộc locale/không lưu URL ký. Phục hồi ảnh có sẵn trước queue tải thiếu; ký URL 300 giây, timeout, giới hạn 5 MiB, kiểm tra MIME/decode, ghi tạm + rename, renew một lần khi hết hạn/unauthorized. Lỗi ảnh độc lập và đợi startup/refresh sau.
+- Hive có inventory read-only cho mọi snapshot cùng backend, kể cả legacy JSON. Cleanup serialize với download, kiểm tra lại inventory/current snapshot/session pin trước khi xóa; inventory lỗi thì không prune. Pin trước navigation và release cả khi route lỗi. Không thay setup/presets/migration/RLS/schema.
+- Người thường mở thẻ và kết quả word hiện ảnh local dưới từ; placeholder ổn định khi thiếu/lỗi, prompt không ảnh chỉ hiện chữ. Không có ảnh/semantics ở thẻ che/imposter, chọn người chơi hoặc thảo luận. Refresh không đổi prompt, locale, category, vai hoặc tiến độ của hai game.
+- `flutter gen-l10n` thành công, `flutter analyze` không có issue, `flutter test` **175 test qua**, 10 check HTTP/live opt-in được skip trong suite mặc định. Test bao phủ phân trang/lỗi giữa/late response/cache hỏng-rỗng/lỗi ghi/recovery, phân tách backend/chia sẻ locale/restart/cleanup/pin, ảnh đến sau/file-decode lỗi/concealment, route thất bại, refresh/category removal, hai theme và màn nhỏ/text scale 2.
+- Postman local HTTP simulation: **8/8 case qua, 57 request được ghi nhận** ở lần chạy cuối. REST nhiều trang (offset 0/2), JSON 500, HTML 502, malformed payload, timeout/late response, ký ảnh 300 giây, GET token expired → ký lại → GET 200 và Storage GET 500 đều đi qua client thật. Mã và hướng dẫn chạy: `postman/simulations/phase-7.context.md`; URL đọc từ `SUPABASE_SIMULATION_URL` trong env, không hardcode địa chỉ backend trong test.
+- Anonymous local read-only: **14 category, 52 word, 52 question pair**; snapshot `vi` hợp lệ, các translation anonymous trả về đều published, ký path không tồn tại bị từ chối. Không có image path trong dữ liệu hiện tại nên chưa xác minh tải ảnh hợp lệ hoặc ảnh chỉ eligible qua locale khác trên backend thật. **Dev không truy cập được/bị từ chối**, ghi nhận là chưa kiểm chứng; không ghi dữ liệu lên backend.
+- Giới hạn còn lại: chưa chạy thiết bị thật/Release hoặc screenshot. Quyền tải ảnh hợp lệ và tình huống locale khác cần dataset/backend khả dụng. Content offline có thể cũ tới khi sync thành công.
+
 - Phạm vi: hoàn thiện repository API/cache có từ phase 2; không thay UI hoặc luật của hai game. Chỉ lấy trường cần cho game, không lấy thông tin người tạo/quản trị.
 - Giữ hợp đồng gốc + translation published cùng content locale ở phase 2; kiểm tra hồi quy phân trang đầy đủ trước khi tính số lượng/random. Đồng bộ lại không được khôi phục query theo schema cũ hoặc lấy thêm locale ngoài yêu cầu.
 - Lỗi mạng, timeout, lỗi trang giữa hoặc payload lỗi không được ghi đè cache tốt; fallback cache gần nhất, chưa có cache thì báo lỗi và thử lại. Không có content đóng gói trong build. Một kết quả hợp lệ nhưng rỗng được xử lý là rỗng, không đánh đồng với lỗi mạng.

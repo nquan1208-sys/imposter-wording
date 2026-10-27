@@ -30,14 +30,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     await store.revalidate();
     if (!mounted) return;
     RouteInput? input;
+    VoidCallback? releaseImage;
     if (store.setup.value.gameType == 'question') {
       final session = QuestionGameSession.create(store);
       if (session != null) input = RouteInput.questionGame(session);
     } else {
       final session = WordGameSession.create(store);
-      if (session != null) input = RouteInput.wordGame(session);
+      if (session != null) {
+        input = RouteInput.wordGame(session);
+        releaseImage = store.content.images?.pin(session.prompt.imagePath);
+      }
     }
     if (input == null || store.writeFailed.value) {
+      releaseImage?.call();
       setState(() => _openingGame = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).gameStartError)),
@@ -47,7 +52,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     setState(() => _openingGame = true);
     try {
       await ref.read(AppService.router).push(input);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).gameStartError)),
+        );
+      }
     } finally {
+      releaseImage?.call();
       if (mounted) setState(() => _openingGame = false);
     }
   }
@@ -75,7 +87,16 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   .length;
         final textTheme = Theme.of(context).textTheme;
         return Scaffold(
-          appBar: AppBar(title: Text(l.setupTitle)),
+          appBar: AppBar(
+            title: Text(l.setupTitle),
+            actions: [
+              IconButton(
+                tooltip: l.refreshContent,
+                onPressed: content.loading.value ? null : content.load,
+                icon: const Icon(Icons.refresh),
+              ),
+            ],
+          ),
           bottomNavigationBar: AppContent(
             top: false,
             child: Padding(

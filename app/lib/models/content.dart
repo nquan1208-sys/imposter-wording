@@ -52,6 +52,15 @@ class WordPrompt {
       imagePath = row['image_path'] as String?,
       text = requiredText(translation(row, contentLocale), 'text') {
     validatePrompt(row, contentLocale, id, difficulty);
+    if (imagePath != null &&
+        (imagePath!.trim().isEmpty ||
+            imagePath!.startsWith('/') ||
+            imagePath!
+                .split('/')
+                .any((p) => p.isEmpty || p == '.' || p == '..') ||
+            imagePath!.contains('://'))) {
+      throw const FormatException('Invalid image path');
+    }
   }
 }
 

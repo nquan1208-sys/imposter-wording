@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/base/store/auto_dispose_manager.dart';
 import 'package:untitled/base/store/store_base.dart';
 import 'package:untitled/data/local_json_store.dart';
+import 'package:untitled/data/word_image_cache.dart';
 import 'package:untitled/models/content.dart';
 
 typedef FetchContentPage =
@@ -54,6 +55,8 @@ class ContentRepository extends StoreBase {
   final LocalJsonStore cache;
   final String contentLocale;
   final int pageSize;
+  final Duration requestTimeout;
+  final WordImageCache? images;
   final _disposers = AutoDisposeManager();
   late final snapshot = signal<ContentSnapshot?>(null).manageBy(_disposers);
   late final loading = signal(false).manageBy(_disposers);
@@ -67,19 +70,32 @@ class ContentRepository extends StoreBase {
     required this.cache,
     this.contentLocale = 'vi',
     this.pageSize = 500,
+    this.requestTimeout = const Duration(seconds: 15),
+    this.images,
   });
   Future<void> load() =>
       _pending ??= _load().whenComplete(() => _pending = null);
   Future<void> _load() async {
+    var imagesStarted = false;
+    void refreshImages() {
+      final current = snapshot.value;
+      if (current != null) {
+        images?.refresh(current, retryFailures: !imagesStarted);
+        imagesStarted = true;
+      }
+    }
+
+    refreshImages();
     loading.value = true;
     loadFailed.value = false;
-    if (!_readCache) {
+    if (!_readCache && snapshot.value == null) {
       try {
         final data = await cache.read();
         if (isDispose) return;
         if (data != null) {
           snapshot.value = ContentSnapshot.fromJson(data, contentLocale);
           cached.value = true;
+          refreshImages();
         }
         _readCache = true;
         cacheWarning.value = false;
@@ -101,7 +117,8 @@ class ContentRepository extends StoreBase {
             contentLocale,
             from,
             from + pageSize - 1,
-          );
+          ).timeout(requestTimeout);
+          if (isDispose) return;
           for (final row in page) {
             final id = requiredText(row, 'id');
             // Validate repeated rows too; malformed duplicates must fail the load.
@@ -126,6 +143,7 @@ class ContentRepository extends StoreBase {
       final complete = ContentSnapshot.fromJson(data, contentLocale);
       if (isDispose) return;
       snapshot.value = complete;
+      refreshImages();
       cached.value = false;
       try {
         await cache.write(data);
@@ -134,9 +152,15 @@ class ContentRepository extends StoreBase {
         if (!isDispose) cacheWarning.value = true;
       }
     } catch (_) {
-      if (!isDispose) loadFailed.value = true;
+      if (!isDispose) {
+        loadFailed.value = true;
+        cached.value = snapshot.value != null;
+      }
     } finally {
-      if (!isDispose) loading.value = false;
+      if (!isDispose) {
+        loading.value = false;
+        refreshImages();
+      }
     }
   }
 

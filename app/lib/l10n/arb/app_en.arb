@@ -227,5 +227,15 @@
   "chooseImposters": "Choose imposters",
   "fixedCountHelp": "Choose the exact number of imposters",
   "randomCountHelp": "A random number of imposters each game",
-  "moreImpostersNeedPlayers": "At least 5 players are needed to choose more than 1 imposter."
+  "moreImpostersNeedPlayers": "At least 5 players are needed to choose more than 1 imposter.",
+  "refreshContent": "Refresh content",
+  "wordImageUnavailable": "Image unavailable",
+  "wordImage": "Image for {word}",
+  "@wordImage": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  }
 }

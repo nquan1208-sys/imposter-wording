@@ -80,7 +80,11 @@ words; categories without eligible words are hidden.
 validates category links and translations, and replaces the snapshot only after
 all three tables (categories, words, question pairs) succeed. It restores cached
 content immediately while refreshing. Failed refreshes retain the previous cache;
-a successful empty load replaces it. Images retain their Storage paths only.
+a successful empty load replaces it. Each page has a 15-second timeout, and late
+responses cannot replace newer content. Setup's refresh button shares the startup
+and retry operation; retained content stays playable while it runs. A failed refresh
+marks retained content as stale. Persistence failures warn separately while keeping
+downloaded content playable.
 
 Snapshots and committed setup use separate Hive CE boxes in Application Support,
 scoped by environment, normalized backend URL, and content locale. Existing
@@ -90,9 +94,9 @@ storage. Failed autosaves retain the attempted change for retry; dialogs/editors
 retain their input. Unreadable records block writes until a successful retry.
 Changing backend URLs creates a separate scope.
 
-No backend schema changes or seed data are needed. Current Local content contains
-one Classic word and zero Family words; populated Family and multi-page behavior
-are covered with fixtures.
+No backend schema changes or seed data are needed. The read-only Local check on
+2026-10-27 returned 14 categories, 52 words and 52 question pairs. Dataset counts
+can change; pagination and Family filtering are also covered with fixtures.
 
 ### Release builds
 
@@ -152,3 +156,59 @@ tests passed. Coverage includes real Hive close/reopen and legacy migration,
 serialized/failing writes, preset management, small layouts/text scale 2/keyboard,
 private question options and complete word/question games after preset loading.
 No screenshot verification, real-device smoke or backend integration test was run.
+
+### Content refresh and word images (Phase 7)
+
+Private `word-prompt-images` files are downloaded in a background queue using
+five-minute signed URLs. Only backend identity and `image_path` identify local files;
+signed URLs are never saved. Existing files restore before missing downloads run.
+Signing and downloads have 15-second timeouts. Downloads enforce the bucket's
+5 MiB limit and JPEG/PNG/WebP response types, decode before publishing, and use
+atomic temporary-file renames. Expired/unauthorized downloads renew their URL once;
+other failures retry on the next startup or setup refresh.
+
+Opened civilian word cards and the final result show the local image below the word.
+Missing, unreadable or undecodable images use a stable placeholder. Words without
+images stay text-only. Covered/imposter cards, player selection and discussion
+contain no image or image semantics. Lifecycle concealment removes private images.
+Background completion updates visible images without changing the session.
+
+Images live in a backend-scoped Application Support directory shared across locales.
+Cleanup retains every validated persisted snapshot (including legacy JSON), current
+content and pinned word sessions. Pins release when navigation ends or fails.
+Unreadable/invalid snapshot inventory prevents deletion. Existing setup/presets and
+legacy migration remain intact. Offline content can remain stale until sync succeeds.
+
+#### HTTP verification
+
+From the repository root, start the local Postman simulation:
+
+```sh
+postman simulation run postman/simulations/phase-7.sim.yaml --port 4937 --output ndjson --no-history
+```
+
+In another terminal, run from `app/`:
+
+```sh
+cp env/.env.test.example env/.env.test
+flutter test test/data/backend_http_test.dart
+PHASE7_LIVE_CHECKS=1 flutter test test/data/backend_http_test.dart --plain-name 'read-only anonymous'
+```
+
+`SUPABASE_SIMULATION_URL` comes from `env/.env.test` or the process environment.
+`TEST_HTTP_HOST` is an optional process environment override for in-process test
+servers; otherwise tests use the address their server actually bound. The application
+continues to read its backend URL from `SUPABASE_URL` in the selected environment.
+The live checks use only anonymous read/sign/download requests against local/dev.
+HTTP and live checks skip in the default suite unless explicitly configured.
+
+Evidence and remaining backend/device gaps are recorded in the Phase 7 section of
+[the implementation plan](../docs/app-implementation-plan.md) and the
+[simulation context](../postman/simulations/phase-7.context.md).
+
+Phase 7 verification (2026-10-27): localization generation and static analysis passed;
+175 automated tests passed (10 optional HTTP/live checks skipped in the default run).
+All eight Postman HTTP cases passed separately, with 57 requests confirmed in its log.
+Local anonymous reads passed; valid image downloads and cross-locale-only images were
+unavailable in that dataset, and Dev was unreachable/rejected. Physical-device and
+Release behavior remain unverified. No screenshot capture was performed.
