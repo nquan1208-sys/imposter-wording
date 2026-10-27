@@ -1,3 +1,6 @@
+bool validLocalImageId(String id) =>
+    RegExp(r'^[a-f0-9]{32}\.img$').hasMatch(id);
+
 typedef JsonMap = Map<String, dynamic>;
 
 String requiredText(JsonMap json, String key) {
@@ -55,15 +58,18 @@ class ContentCategory {
 class WordPrompt {
   final String id, categoryId, difficulty, text, contentLocale;
   final String? imagePath;
+  final String? localImageId;
   const WordPrompt.local({
     required this.id,
     required this.categoryId,
     required this.text,
     required this.contentLocale,
+    this.localImageId,
   }) : difficulty = 'easy',
        imagePath = null;
   WordPrompt(JsonMap row, this.contentLocale)
-    : id = requiredText(row, 'id'),
+    : localImageId = null,
+      id = requiredText(row, 'id'),
       categoryId = requiredText(row, 'category_id'),
       difficulty = requiredText(row, 'difficulty'),
       imagePath = row['image_path'] as String?,
@@ -82,6 +88,7 @@ class WordPrompt {
 }
 
 class QuestionPair {
+  final String? localImageId;
   final String id,
       categoryId,
       difficulty,
@@ -94,9 +101,11 @@ class QuestionPair {
     required this.civilianQuestion,
     required this.imposterQuestion,
     required this.contentLocale,
+    this.localImageId,
   }) : difficulty = 'easy';
   QuestionPair(JsonMap row, this.contentLocale)
-    : id = requiredText(row, 'id'),
+    : localImageId = null,
+      id = requiredText(row, 'id'),
       categoryId = requiredText(row, 'category_id'),
       difficulty = requiredText(row, 'difficulty'),
       civilianQuestion = requiredText(

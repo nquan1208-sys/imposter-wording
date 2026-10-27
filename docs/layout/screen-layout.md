@@ -245,7 +245,7 @@ Cho phép chọn một hoặc nhiều danh mục, hoặc dùng toàn bộ danh m
 
 ### Mục đích
 
-Cho phép người dùng tự tạo danh mục từ (Phase 8) hoặc cặp câu hỏi (Phase 9) để sử dụng trong các ván chơi. Mọi thao tác ảnh bên dưới thuộc Phase 10 và chưa hiển thị. Dùng theme/component hiện tại của app.
+Cho phép người dùng tự tạo danh mục từ (Phase 8) hoặc cặp câu hỏi (Phase 9) để sử dụng trong các ván chơi. Phase 10 đã thêm ảnh local tùy chọn cho từng từ hoặc cả cặp câu hỏi. Dùng theme/component hiện tại của app.
 
 ### Bố cục đề xuất
 
@@ -261,8 +261,7 @@ Cho phép người dùng tự tạo danh mục từ (Phase 8) hoặc cặp câu 
    - Tiêu đề nhóm: `Danh sách từ`.
    - Hiển thị số lượng từ hiện có.
    - Mỗi từ nằm trên một dòng/thẻ, gồm:
-     - Ảnh thu nhỏ ở bên trái nếu đã thêm ảnh.
-     - Nội dung từ ở giữa.
+     - Nội dung từ ở trên; ảnh thu nhỏ và nút thêm/thay ảnh nằm bên dưới để giữ khoảng trống trên màn hình nhỏ.
      - Nút thêm/thay ảnh.
      - Nút xóa ở bên phải.
    - Khi chưa có từ, hiển thị trạng thái trống: `Chưa có từ nào`.
@@ -284,12 +283,12 @@ Cho phép người dùng tự tạo danh mục từ (Phase 8) hoặc cặp câu 
    - Dòng trống được bỏ qua; từ trùng lặp chỉ giữ một bản.
 
 6. **Ảnh minh họa**
-   - Mỗi từ hoặc câu hỏi có field `Ảnh` riêng; ảnh không bắt buộc.
+   - Mỗi từ có ảnh riêng; mỗi **cặp câu hỏi có một ảnh dùng chung**; ảnh không bắt buộc.
    - Chạm vào vùng ảnh của một từ sẽ cho phép:
      - Chọn ảnh từ thư viện.
      - Chụp ảnh mới.
      - Xóa ảnh hiện tại.
-   - Nếu chưa có ảnh, hiển thị ô trống với biểu tượng thêm ảnh.
+   - Nếu chưa có ảnh, hiển thị nút có biểu tượng và nhãn `Thêm ảnh`. Nếu đã có ảnh, hiện thumbnail và `Thay ảnh`. Sheet có `Thư viện ảnh`, `Máy ảnh`, `Xóa ảnh` khi đã có ảnh, và `Hủy`.
    - Khi nhập nhiều từ, chỉ tạo các từ; ảnh được thêm sau cho từng từ.
 
 7. **Nút lưu**
@@ -308,6 +307,15 @@ Cho phép người dùng tự tạo danh mục từ (Phase 8) hoặc cặp câu 
 - Lưu lỗi giữ nguyên tên/danh sách/checkbox và cho thử lại, không tạo category dở dang; trong khi lưu khóa chỉnh sửa và điều hướng. Ô nhập có label, lỗi gần field, thao tác xóa có nhãn; form cuộn và nút lưu nằm trên bàn phím.
 - Nội dung lưu local cùng setup, giữ qua restart và `Chơi lại`, không đi vào nhóm người chơi đã lưu hoặc backend. Back từ setup về trang đầu phải xác nhận xóa vĩnh viễn nội dung tùy chỉnh; chỉ rời sau khi xóa và bỏ selected IDs thành công. Ghi lỗi giữ nguyên setup cho thử lại.
 - Thẻ danh mục tùy chỉnh hiển thị tên danh mục, tổng số từ và trạng thái có ảnh minh họa.
+
+### Ảnh local — Phase 10
+
+- Dialog thêm một mục có ảnh tùy chọn và nút xác nhận; nhập nhiều vẫn chỉ nhận văn bản. Thumbnail dưới nội dung từng mục; ô danh mục chỉ hiện `Có hình ảnh`, không lộ ảnh.
+- Chấp nhận ảnh giải mã được tối đa 5 MiB. Chọn/hủy/đọc/ghi lỗi giữ ảnh trước đó; lỗi hiển thị ngay cạnh điều khiển, có live-region VI/EN. Quyền bị từ chối/hạn chế hướng dẫn mở Cài đặt hệ thống, camera không khả dụng cho chọn thư viện. File thiếu/hỏng lúc chơi dùng placeholder ổn định.
+- Khóa thao tác và Back khi picker/import/save chạy. Thay đổi ảnh nằm trong draft/discard; save lỗi giữ ảnh và văn bản để thử lại. Dialog cuộn, dùng inset 16 để nút/ảnh còn truy cập được trên màn 320×568 với text scale 2 và bàn phím. Dùng theme, nút và touch target Material hiện tại.
+- Word: chỉ hiện ảnh khi session bật Gia đình + Hiển thị ảnh; người thường sau reveal và kết quả được xem, kẻ mạo danh không xem trong thẻ riêng. Question: ảnh chung dưới câu hỏi của người hiện tại sau reveal; kết quả hiện đúng một lần dưới câu thường dân. Handoff, locked card, common-question, discussion không có ảnh; conceal/background/submit/Back/đổi người gỡ widget và semantics riêng. Nhãn `Ảnh câu hỏi` không nêu vai hoặc câu đối lập.
+- Ảnh đã lưu ở thiết bị suốt vòng đời category, qua replay/restart/offline; không đi vào preset/backend. Draft chưa lưu mất khi process kết thúc. Android startup nhận/bỏ lost-data của picker, thông báo tạo lại draft; không gắn ảnh vào mục mới.
+- Đã kiểm tra bằng unit/widget/semantics: thêm/thay/xóa/hủy, retry, disposal, lifecycle, các stage question VI/EN, ba cấu hình ảnh word, màn nhỏ/text lớn/bàn phím/theme sáng-tối. Không dùng screenshot. Kiểm tra thư viện/camera/quyền/process death trên thiết bị thật vẫn là điều kiện nghiệm thu.
 
 ### Question tùy chỉnh — Phase 9
 

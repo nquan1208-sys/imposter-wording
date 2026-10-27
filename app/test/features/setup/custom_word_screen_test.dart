@@ -1,3 +1,9 @@
+import 'dart:io';
+import 'dart:async';
+import 'package:image_picker/image_picker.dart';
+import 'package:untitled/data/local_image_store.dart';
+import 'package:untitled/features/word_game/local_prompt_image.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,11 +22,65 @@ import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 import 'package:untitled/theme/app_theme.dart';
 import '../../data/fixtures.dart';
 
+class FakeImagePicker extends ImagePicker {
+  XFile? selected = XFile('/library/photo.png');
+  Object? error;
+  Completer<XFile?>? pending;
+  @override
+  Future<XFile?> pickImage({
+    required ImageSource source,
+    double? maxWidth,
+    double? maxHeight,
+    int? imageQuality,
+    CameraDevice preferredCameraDevice = CameraDevice.rear,
+    bool requestFullMetadata = true,
+  }) async {
+    assert(!requestFullMetadata);
+    if (error != null) throw error!;
+    return pending == null ? selected : pending!.future;
+  }
+}
+
+class FakeLocalImages extends LocalImageStore {
+  FakeLocalImages() : super(inventory: () async => {});
+  int next = 0;
+  Completer<void>? importing;
+  final references = <Object, Set<String>>{};
+  @override
+  void retain(Object owner, Iterable<String> ids) {
+    references[owner] = ids.toSet();
+    super.retain(owner, ids);
+  }
+
+  @override
+  void release(Object owner) {
+    references.remove(owner);
+    super.release(owner);
+  }
+
+  Object? error;
+  @override
+  Future<String> import(File source, Object owner) async {
+    if (error != null) throw error!;
+    if (importing != null) await importing!.future;
+    final id = '${(++next).toRadixString(16).padLeft(32, '0')}.img';
+    retain(owner, {id});
+    return id;
+  }
+
+  @override
+  Future<File> file(String id) async => File('/missing/$id');
+  @override
+  Future<void> cleanup() async {}
+}
+
 void main() {
   late ContentRepository content;
   late SetupStore store;
   late MemoryStorage file;
   late ProviderContainer container;
+  late FakeLocalImages images;
+  late FakeImagePicker imagePicker;
 
   Future<void> tap(WidgetTester tester, String text) async {
     final matches = find.text(text);
@@ -52,12 +112,16 @@ void main() {
       fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
     );
     file = MemoryStorage();
-    store = SetupStore(content: content, file: file);
+    images = FakeLocalImages();
+    imagePicker = FakeImagePicker();
+    store = SetupStore(content: content, file: file, images: images);
     await store.restore();
     if (!offline) await content.load();
     await store.setPlayerCount(3);
     container = ProviderContainer(
       overrides: [
+        localImageStoreProvider.overrideWithValue(images),
+        imagePickerProvider.overrideWithValue(imagePicker),
         contentRepositoryProvider.overrideWithValue(content),
         setupStoreProvider.overrideWithValue(store),
       ],
@@ -105,6 +169,7 @@ void main() {
     String imposter, {
     bool batch = false,
     bool english = true,
+    bool attach = false,
   }) async {
     await tap(
       tester,
@@ -118,8 +183,127 @@ void main() {
     );
     await tester.enterText(fields.first, civilian);
     await tester.enterText(fields.last, imposter);
+    if (attach) {
+      await tap(tester, english ? 'Add image' : 'Thêm ảnh');
+      await tap(tester, english ? 'Photo library' : 'Thư viện ảnh');
+    }
     await tap(tester, english ? 'Confirm' : 'Xác nhận');
   }
+
+  testWidgets('late import after forced disposal releases its orphan', (
+    tester,
+  ) async {
+    await pump(tester, offline: true);
+    await picker(tester);
+    await tap(tester, 'Create custom category');
+    await word(tester, 'Apple');
+    images.importing = Completer<void>();
+    await tap(tester, 'Add image');
+    await tap(tester, 'Photo library');
+    await tester.pumpWidget(const SizedBox());
+    images.importing!.complete();
+    await tester.pumpAndSettle();
+    expect(images.references, isEmpty);
+    expect(store.setup.value.customWordCategories, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'word attachments preserve replacement on cancel/failure, remove, retry and discard',
+    (tester) async {
+      await pump(tester, offline: true);
+      await picker(tester);
+      await tap(tester, 'Create custom category');
+      await tester.enterText(find.byType(TextField), 'Images');
+      await word(tester, 'Apple');
+      await tap(tester, 'Add image');
+      await tap(tester, 'Photo library');
+      expect(find.byType(LocalPromptImage), findsOneWidget);
+      imagePicker.selected = null;
+      await tap(tester, 'Replace image');
+      await tap(tester, 'Camera');
+      expect(images.next, 1);
+      imagePicker.selected = XFile('/library/photo.png');
+      images.error = const LocalImageException(oversized: true);
+      await tap(tester, 'Replace image');
+      await tap(tester, 'Photo library');
+      expect(
+        find.text('Choose an image no larger than 5 MiB.'),
+        findsOneWidget,
+      );
+      expect(find.byType(LocalPromptImage), findsOneWidget);
+      images.error = null;
+      await tap(tester, 'Replace image');
+      await tap(tester, 'Photo library');
+      expect(images.next, 2);
+      file.failWrite = true;
+      await tap(tester, 'Save category');
+      expect(store.setup.value.customWordCategories, isEmpty);
+      expect(find.byType(LocalPromptImage), findsOneWidget);
+      file.failWrite = false;
+      await tap(tester, 'Save category');
+      expect(
+        store.setup.value.customWordCategories.single.imageIds['Apple'],
+        '00000000000000000000000000000002.img',
+      );
+      expect(find.text('Includes images'), findsOneWidget);
+      await tap(tester, 'Create custom category');
+      await word(tester, 'Other');
+      await tap(tester, 'Add image');
+      await tap(tester, 'Photo library');
+      await tap(tester, 'Replace image');
+      await tap(tester, 'Remove image');
+      expect(find.byType(LocalPromptImage), findsNothing);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Discard');
+      expect(store.setup.value.customWordCategories.length, 1);
+    },
+  );
+
+  testWidgets(
+    'picker blocks edits and navigation, permission errors preserve single-item draft',
+    (tester) async {
+      await pump(tester, offline: true);
+      await picker(tester);
+      await tap(tester, 'Create custom category');
+      await tap(tester, 'Add word');
+      final field = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(field, 'Apple');
+      imagePicker.pending = Completer<XFile?>();
+      await tap(tester, 'Add image');
+      await tap(tester, 'Photo library');
+      expect(
+        tester
+            .widget<FilledButton>(find.widgetWithText(FilledButton, 'Confirm'))
+            .onPressed,
+        isNull,
+      );
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      imagePicker.pending!.complete(null);
+      await tester.pumpAndSettle();
+      imagePicker.pending = null;
+      imagePicker.error = PlatformException(code: 'photo_access_denied');
+      await tap(tester, 'Add image');
+      await tap(tester, 'Photo library');
+      expect(find.textContaining('system Settings'), findsOneWidget);
+      expect(find.text('Apple'), findsOneWidget);
+      imagePicker.error = null;
+      await tap(tester, 'Add image');
+      await tap(tester, 'Photo library');
+      await tap(tester, 'Confirm');
+      expect(find.byType(LocalPromptImage), findsOneWidget);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Discard');
+      expect(store.setup.value.customWordCategories, isEmpty);
+    },
+  );
 
   for (final english in [true, false]) {
     testWidgets('custom-only offline question game and replay ($english)', (
@@ -134,7 +318,13 @@ void main() {
         english ? 'Create custom category' : 'Tạo danh mục tùy chỉnh',
       );
       await tester.enterText(find.byType(TextField), 'Local questions');
-      await questionEntry(tester, 'Civilian?', 'Imposter?', english: english);
+      await questionEntry(
+        tester,
+        'Civilian?',
+        'Imposter?',
+        english: english,
+        attach: true,
+      );
       await tap(tester, english ? 'Save category' : 'Lưu danh mục');
       expect(store.setup.value.categoryIds, isEmpty);
       await tap(tester, english ? 'Confirm' : 'Xác nhận');
@@ -151,6 +341,27 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Imposter?'), findsNothing);
         expect(find.text('Civilian?'), findsNothing);
+        expect(find.byType(LocalPromptImage), findsNothing);
+        expect(
+          find.bySemanticsLabel(
+            english ? 'Image unavailable' : 'Không thể hiển thị ảnh',
+          ),
+          findsNothing,
+        );
+        await tap(tester, english ? 'Tap to reveal' : 'Nhấn để hiển thị');
+        expect(find.byType(LocalPromptImage), findsOneWidget);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.inactive,
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(LocalPromptImage), findsNothing);
+        expect(
+          find.bySemanticsLabel(english ? 'Question image' : 'Ảnh câu hỏi'),
+          findsNothing,
+        );
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
         await tap(tester, english ? 'Tap to reveal' : 'Nhấn để hiển thị');
         final imposter = session.imposterIds.contains(player.id);
         expect(find.text(imposter ? 'Imposter?' : 'Civilian?'), findsOneWidget);
@@ -164,11 +375,14 @@ void main() {
         );
         await tap(tester, english ? 'Submit answer' : 'Gửi câu trả lời');
       }
+      expect(find.byType(LocalPromptImage), findsNothing);
       expect(find.text('Civilian?'), findsOneWidget);
       expect(find.text('Imposter?'), findsNothing);
       await tap(tester, english ? 'Start round' : 'Bắt đầu vòng');
+      expect(find.byType(LocalPromptImage), findsNothing);
       expect(find.bySemanticsLabel('Imposter?'), findsNothing);
       await tap(tester, english ? 'Find the imposters' : 'Tìm kẻ giả mạo');
+      expect(find.byType(LocalPromptImage), findsOneWidget);
       expect(find.text('Imposter?'), findsOneWidget);
       await tap(tester, english ? 'Play again' : 'Chơi lại');
       expect(
@@ -284,6 +498,8 @@ void main() {
       await tester.enterText(fields.at(1), 'A?');
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.enterText(fields.last, 'B?');
+      await tap(tester, 'Add image');
+      await tap(tester, 'Photo library');
       await tap(tester, 'Confirm');
       expect(
         tester
@@ -340,6 +556,8 @@ void main() {
             matching: find.byType(TextField),
           );
           await tester.enterText(entry, 'Apple');
+          await tap(tester, english ? 'Add image' : 'Thêm ảnh');
+          await tap(tester, english ? 'Photo library' : 'Thư viện ảnh');
           await tap(tester, english ? 'Confirm' : 'Xác nhận');
           final checkbox = find.byType(CheckboxListTile);
           await tester.scrollUntilVisible(
@@ -488,58 +706,83 @@ void main() {
     },
   );
 
-  testWidgets(
-    'one-word custom-only offline game completes and replay retains content',
-    (tester) async {
-      await pump(tester, offline: true);
-      await picker(tester);
-      await tap(tester, 'Create custom category');
-      await tester.enterText(find.byType(TextField), 'Solo');
-      await word(tester, 'Only word');
-      await tap(tester, 'Save category');
-      await tap(tester, 'Confirm');
-      await tap(tester, 'Start game');
-      final session = tester
-          .widget<WordGameScreen>(find.byType(WordGameScreen))
-          .session;
-      for (final player in session.setup.players) {
-        final target = find.byKey(ValueKey(player.id));
-        await tester.ensureVisible(target);
-        await tester.tap(target);
+  for (final (family, show) in [(true, true), (true, false), (false, true)]) {
+    testWidgets(
+      'local word image game and replay (family=$family, show=$show)',
+      (tester) async {
+        await pump(tester, offline: true);
+        await picker(tester);
+        if (family) await tap(tester, 'Family mode');
+        await tap(tester, 'Create custom category');
+        await tester.enterText(find.byType(TextField), 'Solo');
+        await word(tester, 'Only word');
+        await tap(tester, 'Add image');
+        await tap(tester, 'Photo library');
+        if (family) {
+          await tap(
+            tester,
+            'I confirm these words are suitable for family play.',
+          );
+        }
+        await tap(tester, 'Save category');
+        await tap(tester, 'Confirm');
+        await store.setShowWordImages(show);
         await tester.pumpAndSettle();
-        expect(find.text('Only word'), findsNothing);
-        await tap(tester, 'Tap to reveal');
-        expect(
-          find.text('Only word'),
-          session.imposterIds.contains(player.id)
-              ? findsNothing
-              : findsOneWidget,
-        );
-        await tap(tester, 'Got it!');
-      }
-      await tap(tester, 'Announce results');
-      final imposter = session.setup.players.firstWhere(
-        (p) => session.imposterIds.contains(p.id),
-      );
-      await tap(tester, imposter.name);
-      await tap(tester, 'Confirm');
-      expect(find.text('Only word'), findsOneWidget);
-      await tap(tester, 'Play again');
-      expect(find.byType(SetupScreen), findsOneWidget);
-      expect(store.setup.value.customWordCategories.single.words, [
-        'Only word',
-      ]);
-      await tap(tester, 'Start game');
-      expect(
-        tester
+        await tap(tester, 'Start game');
+        final session = tester
             .widget<WordGameScreen>(find.byType(WordGameScreen))
-            .session
-            .prompt
-            .text,
-        'Only word',
-      );
-    },
-  );
+            .session;
+        for (final player in session.setup.players) {
+          final target = find.byKey(ValueKey(player.id));
+          await tester.ensureVisible(target);
+          await tester.tap(target);
+          await tester.pumpAndSettle();
+          expect(find.byType(LocalPromptImage), findsNothing);
+          expect(find.text('Only word'), findsNothing);
+          await tap(tester, 'Tap to reveal');
+          expect(
+            find.text('Only word'),
+            session.imposterIds.contains(player.id)
+                ? findsNothing
+                : findsOneWidget,
+          );
+          expect(
+            find.byType(LocalPromptImage),
+            session.imposterIds.contains(player.id) || !family || !show
+                ? findsNothing
+                : findsOneWidget,
+          );
+          await tap(tester, 'Got it!');
+          expect(find.byType(LocalPromptImage), findsNothing);
+        }
+        await tap(tester, 'Announce results');
+        final imposter = session.setup.players.firstWhere(
+          (p) => session.imposterIds.contains(p.id),
+        );
+        await tap(tester, imposter.name);
+        await tap(tester, 'Confirm');
+        expect(
+          find.byType(LocalPromptImage),
+          family && show ? findsOneWidget : findsNothing,
+        );
+        expect(find.text('Only word'), findsOneWidget);
+        await tap(tester, 'Play again');
+        expect(find.byType(SetupScreen), findsOneWidget);
+        expect(store.setup.value.customWordCategories.single.words, [
+          'Only word',
+        ]);
+        await tap(tester, 'Start game');
+        expect(
+          tester
+              .widget<WordGameScreen>(find.byType(WordGameScreen))
+              .session
+              .prompt
+              .text,
+          'Only word',
+        );
+      },
+    );
+  }
 
   testWidgets(
     'leaving setup confirms deletion, handles write errors, and preserves roster',

@@ -1,3 +1,4 @@
+import 'package:untitled/data/local_image_store.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/base/store/auto_dispose_manager.dart';
 import 'package:untitled/base/store/store_base.dart';
@@ -11,6 +12,7 @@ import 'package:untitled/models/custom_question_category.dart';
 class SetupStore extends StoreBase {
   final ContentRepository content;
   final LocalJsonStore file;
+  final LocalImageStore? images;
   final _disposers = AutoDisposeManager();
   late final setup = signal(GameSetup.defaults()).manageBy(_disposers);
   late final reading = signal(true).manageBy(_disposers);
@@ -24,7 +26,7 @@ class SetupStore extends StoreBase {
   final _availableCategories = <(String, bool), Set<String>>{};
   ContentSnapshot? _remoteSnapshot;
 
-  SetupStore({required this.content, required this.file}) {
+  SetupStore({required this.content, required this.file, this.images}) {
     effect(() {
       final snapshot = content.snapshot.value;
       _remoteSnapshot = snapshot;
@@ -76,10 +78,13 @@ class SetupStore extends StoreBase {
     GameSetup Function(GameSetup) change, {
     bool retryable = false,
     bool skipUnchanged = false,
+    Iterable<String> pinnedImages = const [],
   }) {
     if (isDispose || reading.value || readFailed.value) {
       return Future.value(false);
     }
+    final imageOwner = Object();
+    images?.retain(imageOwner, pinnedImages.where(validLocalImageId));
     _queued++;
     writing.value = true;
     final result = _writes.then((_) async {
@@ -88,8 +93,13 @@ class SetupStore extends StoreBase {
         final value = _validatedCategories(change(_committed));
         if (skipUnchanged && identical(value, _committed)) return true;
         GameSetup.fromJson(value.toJson());
+        images?.retain(imageOwner, value.localImageIds);
         validated = true;
-        await file.write(value.toJson());
+        if (images == null) {
+          await file.write(value.toJson());
+        } else {
+          await images!.persist(() => file.write(value.toJson()));
+        }
         _committed = value;
         if (!isDispose) {
           setup.value = value;
@@ -106,6 +116,7 @@ class SetupStore extends StoreBase {
         }
         return false;
       } finally {
+        images?.release(imageOwner);
         _queued--;
         if (!isDispose) writing.value = _queued != 0;
       }
@@ -355,6 +366,14 @@ class SetupStore extends StoreBase {
         if (!family || c.isFamilyFriendly) c.category: c.words.length,
   };
 
+  bool categoryHasImages(String id) =>
+      setup.value.customWordCategories.any(
+        (c) => c.id == id && c.imageIds.isNotEmpty,
+      ) ||
+      setup.value.customQuestionCategories.any(
+        (c) => c.id == id && c.pairs.any((p) => p.imageId != null),
+      );
+
   bool validCustomCategoryName(
     String name, {
     GameSetup? candidate,
@@ -413,7 +432,7 @@ class SetupStore extends StoreBase {
           ),
         ]),
       );
-    });
+    }, pinnedImages: entries.map((p) => p.imageId).whereType<String>());
     return saved ? id : null;
   }
 
@@ -421,7 +440,9 @@ class SetupStore extends StoreBase {
     String name,
     List<String> words, {
     required bool family,
+    Map<String, String> imageIds = const {},
   }) async {
+    final attachments = Map<String, String>.of(imageIds);
     final entries = uniqueWords(words);
     String? id;
     final saved = await _mutate((current) {
@@ -450,10 +471,11 @@ class SetupStore extends StoreBase {
             contentLocale: content.contentLocale,
             isFamilyFriendly: family,
             words: entries,
+            imageIds: attachments,
           ),
         ]),
       );
-    });
+    }, pinnedImages: attachments.values);
     return saved ? id : null;
   }
 

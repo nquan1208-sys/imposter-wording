@@ -1,3 +1,5 @@
+import 'package:image_picker/image_picker.dart';
+import 'package:untitled/data/local_image_store.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/config/app_config.dart';
@@ -5,6 +7,15 @@ import 'package:untitled/data/content_repository.dart';
 import 'package:untitled/data/hive_local_storage.dart';
 import 'package:untitled/data/word_image_cache.dart';
 import 'package:untitled/features/setup/setup_store.dart';
+
+final imagePickerProvider = Provider<ImagePicker>((ref) => ImagePicker());
+final localImageStoreProvider = Provider<LocalImageStore>((ref) {
+  final store = LocalImageStore(
+    inventory: ref.watch(localStorageProvider).localImageReferences,
+  );
+  store.cleanup();
+  return store;
+});
 
 final localStorageProvider = Provider<HiveLocalStorage>((ref) {
   final storage = HiveLocalStorage();
@@ -46,6 +57,7 @@ final contentRepositoryProvider = Provider<ContentRepository>((ref) {
 final setupStoreProvider = Provider<SetupStore>((ref) {
   final storage = ref.watch(localStorageProvider);
   final store = SetupStore(
+    images: ref.watch(localImageStoreProvider),
     content: ref.watch(contentRepositoryProvider),
     file: storage.scoped(
       environment: AppConfig.current.environment,

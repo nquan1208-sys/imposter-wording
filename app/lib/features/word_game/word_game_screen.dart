@@ -1,3 +1,5 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/widgets/app_content.dart';
 import 'package:untitled/features/word_game/word_image.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
@@ -8,22 +10,26 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/features/word_game/word_game_store.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 
-class WordGameScreen extends StatefulWidget {
+class WordGameScreen extends ConsumerStatefulWidget {
   final WordGameSession session;
   const WordGameScreen({super.key, required this.session});
 
   @override
-  State<WordGameScreen> createState() => _WordGameScreenState();
+  ConsumerState<WordGameScreen> createState() => _WordGameScreenState();
 }
 
-class _WordGameScreenState extends State<WordGameScreen>
+class _WordGameScreenState extends ConsumerState<WordGameScreen>
     with WidgetsBindingObserver {
   late final store = WordGameStore(widget.session);
+  final imageOwner = Object();
+  late final localImages = ref.read(localImageStoreProvider);
   bool _exiting = false, _dialogOpen = false, _voteOpen = false;
 
   @override
   void initState() {
     super.initState();
+    final id = widget.session.prompt.localImageId;
+    if (id != null) localImages.retain(imageOwner, {id});
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -35,6 +41,9 @@ class _WordGameScreenState extends State<WordGameScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    if (widget.session.prompt.localImageId != null) {
+      localImages.release(imageOwner);
+    }
     store.dispose();
     super.dispose();
   }

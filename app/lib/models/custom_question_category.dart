@@ -2,11 +2,13 @@ import 'package:untitled/models/content.dart';
 
 class CustomQuestionEntry {
   final String civilianQuestion, imposterQuestion;
+  final String? imageId;
 
-  CustomQuestionEntry(String civilian, String imposter)
+  CustomQuestionEntry(String civilian, String imposter, {this.imageId})
     : civilianQuestion = civilian.trim(),
       imposterQuestion = imposter.trim() {
-    if (civilianQuestion.isEmpty ||
+    if ((imageId != null && !validLocalImageId(imageId!)) ||
+        civilianQuestion.isEmpty ||
         imposterQuestion.isEmpty ||
         civilianQuestion.toLowerCase() == imposterQuestion.toLowerCase()) {
       throw const FormatException('Invalid question pair');
@@ -19,11 +21,13 @@ class CustomQuestionEntry {
   factory CustomQuestionEntry.fromJson(JsonMap json) => CustomQuestionEntry(
     requiredText(json, 'civilianQuestion'),
     requiredText(json, 'imposterQuestion'),
+    imageId: json['imageId'] as String?,
   );
 
   JsonMap toJson() => {
     'civilianQuestion': civilianQuestion,
     'imposterQuestion': imposterQuestion,
+    'imageId': imageId,
   };
 }
 
@@ -132,6 +136,7 @@ class CustomQuestionCategory {
         id: '$id-pair-$i',
         categoryId: id,
         civilianQuestion: pairs[i].civilianQuestion,
+        localImageId: pairs[i].imageId,
         imposterQuestion: pairs[i].imposterQuestion,
         contentLocale: contentLocale,
       ),
