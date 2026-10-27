@@ -290,11 +290,11 @@ void main() {
       await store.setCategories({'a', id});
       await store.setPlayerCount(5);
       file.failWrite = true;
-      expect(await store.clearCustomWordCategories(), false);
+      expect(await store.clearCustomCategories(), false);
       expect(store.setup.value.categoryIds, {'a', id});
       expect(store.setup.value.customWordCategories.length, 1);
       file.failWrite = false;
-      expect(await store.clearCustomWordCategories(), true);
+      expect(await store.clearCustomCategories(), true);
       expect(store.setup.value.categoryIds, {'a'});
       expect(store.setup.value.customWordCategories, isEmpty);
       expect(store.setup.value.players.length, 5);

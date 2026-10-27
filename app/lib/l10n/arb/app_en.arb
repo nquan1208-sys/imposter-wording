@@ -259,7 +259,21 @@
   "discardCustomDraft": "Discard unsaved changes?",
   "customSaveError": "Could not save. Your words are still here. Try saving again.",
   "clearCustomContentTitle": "Remove custom content and leave?",
-  "clearCustomContentHelp": "Returning to the home screen permanently removes custom categories and words for this setup.",
+  "clearCustomContentHelp": "Returning to the home screen permanently removes custom categories, words and question pairs for this setup.",
   "clearCustomContentAction": "Remove and leave",
-  "@removeCustomWord": {"placeholders": {"word": {"type": "String"}}}
+  "@removeCustomWord": {"placeholders": {"word": {"type": "String"}}},
+  "customQuestionList": "Question pairs",
+  "customQuestionsEmpty": "No question pairs yet.",
+  "customCivilianQuestion": "Civilian question",
+  "customImposterQuestion": "Imposter question",
+  "addCustomQuestion": "Add question pair",
+  "importCustomQuestions": "Import question pairs",
+  "customQuestionLineHelp": "Enter one question per line in each field. Questions on the same row form a pair.",
+  "customQuestionSaveError": "Could not save. Your question pairs are still here. Try saving again.",
+  "removeCustomQuestion": "Remove pair {row}",
+  "customQuestionRowsError": "Check rows {rows}: questions must be nonempty, different, and pairs must not repeat.",
+  "customQuestionCountError": "The two fields must have the same number of rows. Check rows {rows}.",
+  "@removeCustomQuestion": {"placeholders": {"row": {"type": "int"}}},
+  "@customQuestionRowsError": {"placeholders": {"rows": {"type": "String"}}},
+  "@customQuestionCountError": {"placeholders": {"rows": {"type": "String"}}}
 }

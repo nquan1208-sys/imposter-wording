@@ -55,7 +55,12 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
   Future<void> createCustom() async {
     final id = await ref
         .read(AppService.router)
-        .push<String>(RouteInput.customWords(family: family));
+        .push<String>(
+          RouteInput.customWords(
+            family: family,
+            gameType: ref.read(setupStoreProvider).setup.value.gameType,
+          ),
+        );
     if (mounted && id != null) setState(() => selected = {...selected, id});
   }
 
@@ -83,9 +88,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
           onChanged: updateSelection,
           selectionRemoved: selectionRemoved,
           saveFailed: saveFailed,
-          onCreateCustom: store.setup.value.gameType == 'word'
-              ? createCustom
-              : null,
+          onCreateCustom: createCustom,
         );
         return Scaffold(
           appBar: AppBar(title: Text(l.categories)),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:untitled/models/custom_question_category.dart';
 import 'package:untitled/models/content.dart';
 import 'package:untitled/models/custom_word_category.dart';
 
@@ -37,6 +38,10 @@ class PlayerPreset {
 }
 
 class GameSetup {
+  final List<CustomQuestionCategory> customQuestionCategories;
+  final int nextCustomQuestionCategoryId;
+  bool get hasCustomContent =>
+      customWordCategories.isNotEmpty || customQuestionCategories.isNotEmpty;
   final List<CustomWordCategory> customWordCategories;
   final int nextCustomWordCategoryId;
   final List<PlayerPreset> presets;
@@ -52,6 +57,8 @@ class GameSetup {
   bool get validRules => imposters >= 1 && imposters <= maxImposters;
   final Set<String> categoryIds;
   const GameSetup({
+    this.customQuestionCategories = const [],
+    this.nextCustomQuestionCategoryId = 1,
     this.customWordCategories = const [],
     this.nextCustomWordCategoryId = 1,
     this.presets = const [],
@@ -130,6 +137,13 @@ class GameSetup {
       throw const FormatException('Invalid presets');
     }
     final setup = GameSetup(
+      customQuestionCategories: List.unmodifiable(
+        (json['customQuestionCategories'] as List? ?? []).map(
+          (c) => CustomQuestionCategory.fromJson(c as JsonMap),
+        ),
+      ),
+      nextCustomQuestionCategoryId:
+          json['nextCustomQuestionCategoryId'] as int? ?? 1,
       customWordCategories: List.unmodifiable(
         (json['customWordCategories'] as List? ?? []).map(
           (c) => CustomWordCategory.fromJson(c as JsonMap),
@@ -152,6 +166,21 @@ class GameSetup {
       showCategory: json['showCategory'] as bool? ?? false,
       knowEachOther: json['knowEachOther'] as bool? ?? false,
     );
+    final questions = setup.customQuestionCategories;
+    if (setup.nextCustomQuestionCategoryId < 1 ||
+        questions.map((c) => c.id).toSet().length != questions.length ||
+        questions
+                .map((c) => (c.contentLocale, c.name.toLowerCase()))
+                .toSet()
+                .length !=
+            questions.length ||
+        questions.any(
+          (c) =>
+              int.parse(c.id.substring('custom-question-'.length)) >=
+              setup.nextCustomQuestionCategoryId,
+        )) {
+      throw const FormatException('Invalid custom question categories');
+    }
     if (!setup.validRules) throw const FormatException('Invalid rules');
     final custom = setup.customWordCategories;
     if (setup.nextCustomWordCategoryId < 1 ||
@@ -181,6 +210,8 @@ class GameSetup {
     return setup;
   }
   GameSetup copyWith({
+    List<CustomQuestionCategory>? customQuestionCategories,
+    int? nextCustomQuestionCategoryId,
     List<CustomWordCategory>? customWordCategories,
     int? nextCustomWordCategoryId,
     List<PlayerPreset>? presets,
@@ -199,6 +230,10 @@ class GameSetup {
     bool? knowEachOther,
     Set<String>? categoryIds,
   }) => GameSetup(
+    customQuestionCategories:
+        customQuestionCategories ?? this.customQuestionCategories,
+    nextCustomQuestionCategoryId:
+        nextCustomQuestionCategoryId ?? this.nextCustomQuestionCategoryId,
     customWordCategories: customWordCategories ?? this.customWordCategories,
     nextCustomWordCategoryId:
         nextCustomWordCategoryId ?? this.nextCustomWordCategoryId,
@@ -258,6 +293,10 @@ class GameSetup {
     'knowEachOther': knowEachOther,
   };
   JsonMap toJson() => {
+    'customQuestionCategories': customQuestionCategories
+        .map((c) => c.toJson())
+        .toList(),
+    'nextCustomQuestionCategoryId': nextCustomQuestionCategoryId,
     'customWordCategories': customWordCategories
         .map((c) => c.toJson())
         .toList(),

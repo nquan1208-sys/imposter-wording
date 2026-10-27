@@ -495,10 +495,19 @@ là word.
 
 **PR đề xuất:** `feat(app): create local custom question pairs`
 
+**Triển khai Phase 9 — 27/10/2026:**
+
+- Mở rộng route/form Phase 8 theo game type; tạo question từ picker kể cả offline. Danh sách cặp có nhãn hai vai, số lượng, xóa, thêm một cặp và import bằng hai ô nhiều dòng. Dùng chung tên/lưu/lỗi/discard/layout; không bật Gia đình cho question.
+- `CustomQuestionEntry`/`CustomQuestionCategory` immutable, JSON và ID `custom-question-N`; setup cũ mặc định danh sách rỗng/counter 1. Parse giữ blank rows để ghép, nhận LF/CRLF/newline cuối; báo dòng rỗng/giống nhau/lệch số dòng/trùng cặp theo thứ tự, không import một phần.
+- `SetupStore.eligibleQuestions` kết hợp remote/local dùng chung cho picker/count/start/random; session lấy tên từ catalog và không cần snapshot remote. Recheck tên cùng game/locale và cấp ID trong write queue; ghi lỗi giữ counter/draft. Preset và cache không chứa nội dung custom; xóa cả hai loại atomically khi xác nhận rời setup.
+- Bằng chứng: `app/test/features/setup/custom_question_categories_test.dart` (parser, JSON/legacy, ID, queued writes, tên/game/locale, catalog/session, preset, atomic clear), `custom_word_screen_test.dart` (form, lỗi/discard/draft, offline trọn ván/replay VI–EN, privacy/semantics/layout/keyboard và hồi quy word), `app/test/data/hive_local_storage_test.dart` (close–reopen).
+- Kiểm tra cuối: `flutter gen-l10n` thành công; `flutter analyze` không có issue; `flutter test` **219 test qua**, 10 check HTTP/live opt-in được skip trong suite mặc định (thêm 13 test so với Phase 8). Không có ảnh, API/backend mới, dependency mới hoặc screenshot; chưa xác minh trên thiết bị thật.
+
+
 - Phạm vi: mở rộng form phase 8 cho question, giữ chung tên category/validation/draft; chưa có ảnh.
 - Nhập hai câu hỏi bắt buộc khác nhau sau trim/so sánh không phân biệt hoa thường; không dùng một câu hỏi cho cả hai vai hoặc tự sinh câu còn lại.
 - Sau khi duyệt UX ở mục 3, nhập nhiều bằng hai ô nhiều dòng ghép theo chỉ số; số dòng không bằng nhau hoặc có cặp không hợp lệ phải báo dòng lỗi và không lưu một phần âm thầm.
-- Giữ cùng vòng đời/category selection/Gia đình như phase 8; kết nối vào ván question và màn kết quả đang có.
+- Giữ cùng vòng đời/category selection như Phase 8; question dùng picker chuẩn, xác nhận/lọc Gia đình chỉ áp dụng word. Kết nối vào ván question và màn kết quả đang có.
 - Điểm chạm: custom_content, model cặp câu hỏi, picker, question assignment/reveal, ARB. Không thêm cột backend cho dữ liệu local.
 - **Nghiệm thu:** category question tùy chỉnh không xuất hiện trong word; cả hai nhóm nhận đúng câu hỏi; kết quả hiện đúng câu hỏi khác sau công bố.
 - **Kiểm tra:** unit test cặp rỗng/trùng, batch thiếu dòng/dòng trống/trùng cặp; widget test form → lưu → chơi hết ván → replay, hồi quy word tùy chỉnh.

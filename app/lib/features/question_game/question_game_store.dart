@@ -26,13 +26,11 @@ class QuestionGameSession {
     if (setup.gameType != 'question' || !GameAssignment.validSetup(setup)) {
       return null;
     }
-    final pairs = store.content.eligibleQuestions(
-      categoryIds: setup.categoryIds,
-    );
+    final pairs = store.eligibleQuestions(categoryIds: setup.categoryIds);
     if (pairs.isEmpty) return null;
     final rng = random ?? Random();
     final prompt = pairs[rng.nextInt(pairs.length)];
-    final category = store.content.snapshot.value!.categories.firstWhere(
+    final category = store.categories.firstWhere(
       (c) => c.id == prompt.categoryId,
     );
     return QuestionGameSession._(

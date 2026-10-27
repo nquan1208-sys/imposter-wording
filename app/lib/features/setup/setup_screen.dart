@@ -30,7 +30,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     }
     final l = AppLocalizations.of(context);
     setState(() => _leaving = true);
-    if (store.setup.value.customWordCategories.isNotEmpty) {
+    if (store.setup.value.hasCustomContent) {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -53,13 +53,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         setState(() => _leaving = false);
         return;
       }
-      final saved = await store.clearCustomWordCategories();
+      final saved = await store.clearCustomCategories();
       if (!mounted) return;
       if (!saved) {
         setState(() => _leaving = false);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l.customSaveError)));
+        ).showSnackBar(SnackBar(content: Text(l.settingsWriteError)));
         return;
       }
     }
@@ -121,7 +121,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       builder: (context) {
         final setup = store.setup.value;
         final count = setup.gameType == 'question'
-            ? content.eligibleQuestions(categoryIds: setup.categoryIds).length
+            ? store.eligibleQuestions(categoryIds: setup.categoryIds).length
             : store
                   .eligibleWords(
                     family: setup.family,
@@ -135,7 +135,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               (!_leaving &&
                   !store.reading.value &&
                   !store.writing.value &&
-                  setup.customWordCategories.isEmpty),
+                  !setup.hasCustomContent),
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) _leave(store);
           },
@@ -285,7 +285,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                           Text(l.selectionRemoved),
                         ContentNotices(content),
                         if (content.snapshot.value != null ||
-                            setup.customWordCategories.isNotEmpty) ...[
+                            setup.hasCustomContent) ...[
                           Text(
                             setup.gameType == 'question'
                                 ? l.questionCount(count)

@@ -30,8 +30,8 @@ class ContentCategory {
     required this.name,
     required this.contentLocale,
     required this.isFamilyFriendly,
-  }) : gameType = 'word',
-       slug = id,
+    this.gameType = 'word',
+  }) : slug = id,
        description = null,
        sortOrder = 0;
   ContentCategory(JsonMap row, this.contentLocale)
@@ -88,6 +88,13 @@ class QuestionPair {
       civilianQuestion,
       imposterQuestion,
       contentLocale;
+  const QuestionPair.local({
+    required this.id,
+    required this.categoryId,
+    required this.civilianQuestion,
+    required this.imposterQuestion,
+    required this.contentLocale,
+  }) : difficulty = 'easy';
   QuestionPair(JsonMap row, this.contentLocale)
     : id = requiredText(row, 'id'),
       categoryId = requiredText(row, 'category_id'),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:untitled/models/custom_question_category.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/data/game_providers.dart';
@@ -29,7 +30,12 @@ Future<bool> _discard(BuildContext context) async {
 
 class CustomWordScreen extends ConsumerStatefulWidget {
   final bool family;
-  const CustomWordScreen({super.key, required this.family});
+  final String gameType;
+  const CustomWordScreen({
+    super.key,
+    required this.family,
+    this.gameType = 'word',
+  });
 
   @override
   ConsumerState<CustomWordScreen> createState() => _CustomWordScreenState();
@@ -38,12 +44,16 @@ class CustomWordScreen extends ConsumerStatefulWidget {
 class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
   final name = TextEditingController();
   final words = <String>[];
+  final pairs = <CustomQuestionEntry>[];
+  bool get question => widget.gameType == 'question';
+  bool get needsFamily => !question && widget.family;
+  bool get hasEntries => question ? pairs.isNotEmpty : words.isNotEmpty;
   bool suitable = false,
       busy = false,
       failed = false,
       exiting = false,
       asking = false;
-  bool get dirty => name.text.isNotEmpty || words.isNotEmpty || suitable;
+  bool get dirty => name.text.isNotEmpty || hasEntries || suitable;
 
   @override
   void dispose() {
@@ -67,6 +77,15 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
   }
 
   Future<void> addWords(bool batch) async {
+    if (question) {
+      final entries = await showDialog<List<CustomQuestionEntry>>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => _QuestionEntryDialog(batch: batch, existing: pairs),
+      );
+      if (mounted && entries != null) setState(() => pairs.addAll(entries));
+      return;
+    }
     final entries = await showDialog<List<String>>(
       context: context,
       barrierDismissible: false,
@@ -79,9 +98,9 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
     final store = ref.read(setupStoreProvider);
     if (busy ||
         !store.editable ||
-        words.isEmpty ||
-        !store.validCustomCategoryName(name.text) ||
-        (widget.family && !suitable)) {
+        !hasEntries ||
+        !store.validCustomCategoryName(name.text, gameType: widget.gameType) ||
+        (needsFamily && !suitable)) {
       setState(() {});
       return;
     }
@@ -89,11 +108,13 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
       busy = true;
       failed = false;
     });
-    final id = await store.createCustomWordCategory(
-      name.text,
-      words,
-      family: widget.family && suitable,
-    );
+    final id = question
+        ? await store.createCustomQuestionCategory(name.text, pairs)
+        : await store.createCustomWordCategory(
+            name.text,
+            words,
+            family: widget.family && suitable,
+          );
     if (!mounted) return;
     if (id != null) {
       close(id);
@@ -110,7 +131,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
     final l = AppLocalizations.of(context);
     final validName = ref
         .read(setupStoreProvider)
-        .validCustomCategoryName(name.text);
+        .validCustomCategoryName(name.text, gameType: widget.gameType);
     return PopScope(
       canPop: exiting,
       onPopInvokedWithResult: (didPop, _) {
@@ -133,8 +154,8 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                 onPressed:
                     !busy &&
                         validName &&
-                        words.isNotEmpty &&
-                        (!widget.family || suitable)
+                        hasEntries &&
+                        (!needsFamily || suitable)
                     ? save
                     : null,
                 child: Text(busy ? l.customSaving : l.saveCustomCategory),
@@ -162,35 +183,63 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  l.customWordList,
+                  question ? l.customQuestionList : l.customWordList,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                Text(l.wordCount(words.length)),
-                if (words.isEmpty) Text(l.customWordsEmpty),
-                for (var i = 0; i < words.length; i++)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(words[i]),
-                    trailing: IconButton(
-                      tooltip: l.removeCustomWord(words[i]),
-                      onPressed: () => setState(() => words.removeAt(i)),
-                      icon: const Icon(Icons.delete_outline),
+                Text(
+                  question
+                      ? l.questionCount(pairs.length)
+                      : l.wordCount(words.length),
+                ),
+                if (!hasEntries)
+                  Text(question ? l.customQuestionsEmpty : l.customWordsEmpty),
+                if (question)
+                  for (var i = 0; i < pairs.length; i++)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        '${l.customCivilianQuestion}: ${pairs[i].civilianQuestion}',
+                      ),
+                      subtitle: Text(
+                        '${l.customImposterQuestion}: ${pairs[i].imposterQuestion}',
+                      ),
+                      trailing: IconButton(
+                        tooltip: l.removeCustomQuestion(i + 1),
+                        onPressed: () => setState(() => pairs.removeAt(i)),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
                     ),
-                  ),
+                if (!question)
+                  for (var i = 0; i < words.length; i++)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(words[i]),
+                      trailing: IconButton(
+                        tooltip: l.removeCustomWord(words[i]),
+                        onPressed: () => setState(() => words.removeAt(i)),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    ),
                 Wrap(
                   spacing: 8,
                   children: [
                     OutlinedButton(
                       onPressed: () => addWords(false),
-                      child: Text(l.addCustomWord),
+                      child: Text(
+                        question ? l.addCustomQuestion : l.addCustomWord,
+                      ),
                     ),
                     TextButton(
                       onPressed: () => addWords(true),
-                      child: Text(l.importCustomWords),
+                      child: Text(
+                        question
+                            ? l.importCustomQuestions
+                            : l.importCustomWords,
+                      ),
                     ),
                   ],
                 ),
-                if (widget.family)
+                if (needsFamily)
                   CheckboxListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(l.customFamilyConfirmation),
@@ -199,7 +248,12 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                         setState(() => suitable = value == true),
                   ),
                 if (failed)
-                  Semantics(liveRegion: true, child: Text(l.customSaveError)),
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      question ? l.customQuestionSaveError : l.customSaveError,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -284,6 +338,111 @@ class _WordEntryDialogState extends State<_WordEntryDialog> {
                 return;
               }
               close(entries);
+            },
+            child: Text(l.confirm),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuestionEntryDialog extends StatefulWidget {
+  final bool batch;
+  final List<CustomQuestionEntry> existing;
+  const _QuestionEntryDialog({required this.batch, required this.existing});
+  @override
+  State<_QuestionEntryDialog> createState() => _QuestionEntryDialogState();
+}
+
+class _QuestionEntryDialogState extends State<_QuestionEntryDialog> {
+  final civilian = TextEditingController(), imposter = TextEditingController();
+  QuestionImportException? error;
+  bool exiting = false, asking = false;
+  @override
+  void dispose() {
+    civilian.dispose();
+    imposter.dispose();
+    super.dispose();
+  }
+
+  Future<void> leave() async {
+    if (asking || exiting) return;
+    asking = true;
+    final discard =
+        (civilian.text.isEmpty && imposter.text.isEmpty) ||
+        await _discard(context);
+    asking = false;
+    if (mounted && discard) close();
+  }
+
+  void close([List<CustomQuestionEntry>? entries]) {
+    setState(() => exiting = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.pop(context, entries);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return PopScope(
+      canPop: exiting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) leave();
+      },
+      child: AlertDialog(
+        scrollable: true,
+        title: Text(
+          widget.batch ? l.importCustomQuestions : l.addCustomQuestion,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.batch) Text(l.customQuestionLineHelp),
+            for (final field in [
+              (civilian, l.customCivilianQuestion),
+              (imposter, l.customImposterQuestion),
+            ])
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: TextField(
+                  controller: field.$1,
+                  autofocus: field.$1 == civilian,
+                  minLines: widget.batch ? 3 : 1,
+                  maxLines: widget.batch ? 6 : 3,
+                  decoration: InputDecoration(labelText: field.$2),
+                  onChanged: (_) => setState(() => error = null),
+                ),
+              ),
+            if (error != null)
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  error!.unequalCounts
+                      ? l.customQuestionCountError(error!.rows.join(', '))
+                      : l.customQuestionRowsError(error!.rows.join(', ')),
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: leave, child: Text(l.cancel)),
+          FilledButton(
+            onPressed: () {
+              try {
+                close(
+                  parseQuestionPairs(
+                    civilian.text,
+                    imposter.text,
+                    batch: widget.batch,
+                    existing: widget.existing,
+                  ),
+                );
+              } on QuestionImportException catch (e) {
+                setState(() => error = e);
+              }
             },
             child: Text(l.confirm),
           ),

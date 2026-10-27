@@ -259,7 +259,21 @@
   "discardCustomDraft": "Hủy thay đổi chưa lưu?",
   "customSaveError": "Không thể lưu. Các từ vẫn được giữ lại. Hãy thử lưu lại.",
   "clearCustomContentTitle": "Xóa nội dung tùy chỉnh và rời thiết lập?",
-  "clearCustomContentHelp": "Quay về trang đầu sẽ xóa vĩnh viễn danh mục và từ tùy chỉnh của bộ thiết lập này.",
+  "clearCustomContentHelp": "Quay về trang đầu sẽ xóa vĩnh viễn danh mục, từ và cặp câu hỏi tùy chỉnh của bộ thiết lập này.",
   "clearCustomContentAction": "Xóa và rời đi",
-  "@removeCustomWord": {"placeholders": {"word": {"type": "String"}}}
+  "@removeCustomWord": {"placeholders": {"word": {"type": "String"}}},
+  "customQuestionList": "Danh sách cặp câu hỏi",
+  "customQuestionsEmpty": "Chưa có cặp câu hỏi nào.",
+  "customCivilianQuestion": "Câu hỏi thường dân",
+  "customImposterQuestion": "Câu hỏi kẻ mạo danh",
+  "addCustomQuestion": "Thêm cặp câu hỏi",
+  "importCustomQuestions": "Nhập nhiều cặp câu hỏi",
+  "customQuestionLineHelp": "Nhập mỗi câu hỏi trên một dòng trong mỗi ô. Hai câu hỏi cùng dòng tạo thành một cặp.",
+  "customQuestionSaveError": "Không thể lưu. Các cặp câu hỏi vẫn được giữ lại. Hãy thử lưu lại.",
+  "removeCustomQuestion": "Xóa cặp {row}",
+  "customQuestionRowsError": "Kiểm tra dòng {rows}: câu hỏi không được trống, phải khác nhau và cặp không được trùng.",
+  "customQuestionCountError": "Hai ô phải có cùng số dòng. Kiểm tra dòng {rows}.",
+  "@removeCustomQuestion": {"placeholders": {"row": {"type": "int"}}},
+  "@customQuestionRowsError": {"placeholders": {"rows": {"type": "String"}}},
+  "@customQuestionCountError": {"placeholders": {"rows": {"type": "String"}}}
 }
