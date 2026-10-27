@@ -732,7 +732,7 @@ void main() {
   });
 
   testWidgets(
-    'refresh is accessible, disabled while syncing, keeps offline play and revalidates categories',
+    'pull to refresh shows progress, keeps offline play and revalidates categories',
     (tester) async {
       var data = fixture();
       Completer<List<JsonMap>>? gate;
@@ -746,14 +746,21 @@ void main() {
       );
       await store.setCategories({'b'});
       gate = Completer<List<JsonMap>>();
-      await tester.tap(find.byTooltip('Refresh content'));
-      await tester.pump();
+      expect(find.byIcon(Icons.refresh), findsNothing);
       expect(
         tester
-            .widget<IconButton>(find.widgetWithIcon(IconButton, Icons.refresh))
-            .onPressed,
-        null,
+            .widget<RefreshIndicator>(find.byType(RefreshIndicator))
+            .semanticsLabel,
+        'Refresh content',
       );
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, 500),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(content.loading.value, true);
+      expect(find.byType(RefreshProgressIndicator), findsOneWidget);
       expect(
         tester
             .widget<FilledButton>(
@@ -764,27 +771,53 @@ void main() {
       );
       gate.completeError(const SocketException('offline'));
       await content.load();
-      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(find.byType(RefreshProgressIndicator), findsNothing);
       expect(content.cached.value, true);
       expect(content.loadFailed.value, true);
       gate = null;
       data = fixture();
       (data['words'] as List).removeWhere((w) => w['category_id'] == 'b');
-      await tester.tap(find.byTooltip('Refresh content'));
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, 500),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
       await content.load();
       await store.pendingWrites;
       await tester.pumpAndSettle();
       expect(store.setup.value.categoryIds, isEmpty);
       expect(content.cached.value, false);
       expect(content.loadFailed.value, false);
-      expect(
-        tester
-            .widget<IconButton>(find.widgetWithIcon(IconButton, Icons.refresh))
-            .onPressed,
-        isNotNull,
-      );
+      expect(find.byType(RefreshProgressIndicator), findsNothing);
+      expect(content.loading.value, false);
     },
   );
+
+  testWidgets('pull to refresh works when content fits the viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1024, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    var requests = 0;
+    await pump(
+      tester,
+      english: true,
+      fetch: (t, l, f, e) async {
+        requests++;
+        return fixturePage(fixture(), t, l, f, e);
+      },
+    );
+    final scrollable = tester.state<ScrollableState>(find.byType(Scrollable));
+    expect(scrollable.position.maxScrollExtent, 0);
+    final before = requests;
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, 700));
+    await tester.pumpAndSettle();
+    expect(requests, greaterThan(before));
+    expect(content.loading.value, false);
+  });
 
   testWidgets('loading, error and retry without cache', (tester) async {
     var offline = true;

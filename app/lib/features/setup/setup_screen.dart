@@ -84,16 +84,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   .length;
         final textTheme = Theme.of(context).textTheme;
         return Scaffold(
-          appBar: AppBar(
-            title: Text(l.setupTitle),
-            actions: [
-              IconButton(
-                tooltip: l.refreshContent,
-                onPressed: content.loading.value ? null : content.load,
-                icon: const Icon(Icons.refresh),
-              ),
-            ],
-          ),
+          appBar: AppBar(title: Text(l.setupTitle)),
           bottomNavigationBar: AppContent(
             top: false,
             child: Padding(
@@ -115,139 +106,146 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             ),
           ),
           body: AppContent(
-            child: SingleChildScrollView(
-              padding: AppEdgeInsets.all24,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (store.reading.value) Text(l.settingsLoading),
-                  if (store.readFailed.value) ...[
-                    Text(l.settingsReadError),
-                    TextButton(
-                      onPressed: store.reading.value ? null : store.restore,
-                      child: Text(l.retry),
+            child: RefreshIndicator(
+              onRefresh: content.load,
+              semanticsLabel: l.refreshContent,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: AppEdgeInsets.all24,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (store.reading.value) Text(l.settingsLoading),
+                    if (store.readFailed.value) ...[
+                      Text(l.settingsReadError),
+                      TextButton(
+                        onPressed: store.reading.value ? null : store.restore,
+                        child: Text(l.retry),
+                      ),
+                    ],
+                    if (store.writeFailed.value) ...[
+                      Text(l.settingsWriteError),
+                      TextButton(
+                        onPressed: store.editable ? store.save : null,
+                        child: Text(l.retry),
+                      ),
+                    ],
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: _statCard(
+                              context,
+                              label: l.players,
+                              value: '${setup.players.length}',
+                              semantics: l.playerCount(setup.players.length),
+                              onTap: store.editable
+                                  ? () => ref
+                                        .read(AppService.router)
+                                        .push(RouteInput.playerNames())
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: _statCard(
+                              context,
+                              label: l.imposters,
+                              value: setup.randomImposters
+                                  ? l.randomCount
+                                  : '${setup.imposters}',
+                              semantics:
+                                  '${l.imposters}: ${setup.randomImposters ? l.randomCount : setup.imposters}',
+                              onTap: store.editable
+                                  ? () => _imposters(context, store)
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                  if (store.writeFailed.value) ...[
-                    Text(l.settingsWriteError),
-                    TextButton(
-                      onPressed: store.editable ? store.save : null,
-                      child: Text(l.retry),
-                    ),
-                  ],
-                  IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(l.gameMode, style: textTheme.titleLarge),
+                    const SizedBox(height: AppSpacing.md),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
                       children: [
-                        Expanded(
-                          child: _statCard(
-                            context,
-                            label: l.players,
-                            value: '${setup.players.length}',
-                            semantics: l.playerCount(setup.players.length),
-                            onTap: store.editable
-                                ? () => ref
-                                      .read(AppService.router)
-                                      .push(RouteInput.playerNames())
+                        for (final type in ['word', 'question'])
+                          ChoiceChip(
+                            label: Text(
+                              type == 'word' ? l.wordGame : l.questionGame,
+                            ),
+                            selected: setup.gameType == type,
+                            onSelected: store.editable
+                                ? (_) => store.setGameType(type)
                                 : null,
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.lg),
-                        Expanded(
-                          child: _statCard(
-                            context,
-                            label: l.imposters,
-                            value: setup.randomImposters
-                                ? l.randomCount
-                                : '${setup.imposters}',
-                            semantics:
-                                '${l.imposters}: ${setup.randomImposters ? l.randomCount : setup.imposters}',
-                            onTap: store.editable
-                                ? () => _imposters(context, store)
-                                : null,
-                          ),
-                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Text(l.gameMode, style: textTheme.titleLarge),
-                  const SizedBox(height: AppSpacing.md),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children: [
-                      for (final type in ['word', 'question'])
-                        ChoiceChip(
-                          label: Text(
-                            type == 'word' ? l.wordGame : l.questionGame,
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(l.categories, style: textTheme.titleLarge),
+                    const SizedBox(height: AppSpacing.md),
+                    Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
+                        key: const Key('categoryPicker'),
+                        contentPadding: AppEdgeInsets.all24,
+                        leading: const CircleAvatar(
+                          backgroundColor: AppColors.tealSurface,
+                          child: Icon(
+                            Icons.category_outlined,
+                            color: AppColors.teal,
                           ),
-                          selected: setup.gameType == type,
-                          onSelected: store.editable
-                              ? (_) => store.setGameType(type)
-                              : null,
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Text(l.categories, style: textTheme.titleLarge),
-                  const SizedBox(height: AppSpacing.md),
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                        title: Text(
+                          setup.categoryIds.isEmpty
+                              ? l.allCategories
+                              : l.selectedCategoryCount(
+                                  setup.categoryIds.length,
+                                ),
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: store.editable && content.snapshot.value != null
+                            ? () => ref
+                                  .read(AppService.router)
+                                  .push(RouteInput.categories())
+                            : null,
+                      ),
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: ListTile(
-                      key: const Key('categoryPicker'),
-                      contentPadding: AppEdgeInsets.all24,
-                      leading: const CircleAvatar(
-                        backgroundColor: AppColors.tealSurface,
-                        child: Icon(
-                          Icons.category_outlined,
-                          color: AppColors.teal,
-                        ),
+                    const SizedBox(height: AppSpacing.lg),
+                    if (store.selectionRemoved.value) Text(l.selectionRemoved),
+                    ContentNotices(content),
+                    if (content.snapshot.value != null) ...[
+                      Text(
+                        setup.gameType == 'question'
+                            ? l.questionCount(count)
+                            : l.wordCount(count),
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      title: Text(
-                        setup.categoryIds.isEmpty
-                            ? l.allCategories
-                            : l.selectedCategoryCount(setup.categoryIds.length),
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: store.editable && content.snapshot.value != null
-                          ? () => ref
-                                .read(AppService.router)
-                                .push(RouteInput.categories())
+                      if (count == 0) Text(l.emptyContent),
+                    ],
+                    SwitchListTile(
+                      title: Text(l.showCategory),
+                      value: setup.showCategory,
+                      onChanged: store.editable
+                          ? (v) => store.setRules(showCategory: v)
                           : null,
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  if (store.selectionRemoved.value) Text(l.selectionRemoved),
-                  ContentNotices(content),
-                  if (content.snapshot.value != null) ...[
-                    Text(
-                      setup.gameType == 'question'
-                          ? l.questionCount(count)
-                          : l.wordCount(count),
-                      style: Theme.of(context).textTheme.titleLarge,
+                    SwitchListTile(
+                      title: Text(l.knowEachOther),
+                      value: setup.knowEachOther,
+                      onChanged: store.editable
+                          ? (v) => store.setRules(knowEachOther: v)
+                          : null,
                     ),
-                    if (count == 0) Text(l.emptyContent),
+                    const SizedBox(height: AppSpacing.md),
                   ],
-                  SwitchListTile(
-                    title: Text(l.showCategory),
-                    value: setup.showCategory,
-                    onChanged: store.editable
-                        ? (v) => store.setRules(showCategory: v)
-                        : null,
-                  ),
-                  SwitchListTile(
-                    title: Text(l.knowEachOther),
-                    value: setup.knowEachOther,
-                    onChanged: store.editable
-                        ? (v) => store.setRules(knowEachOther: v)
-                        : null,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                ],
+                ),
               ),
             ),
           ),
