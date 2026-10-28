@@ -8,6 +8,7 @@ import 'package:untitled/theme/app_theme.dart';
 import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:untitled/widgets/app_notice.dart';
 import 'package:untitled/widgets/app_selection_card.dart';
+import 'package:untitled/widgets/app_hero_card.dart';
 
 void main() {
   Widget app(Widget child) => MaterialApp(
@@ -16,6 +17,79 @@ void main() {
     supportedLocales: AppLocalizations.supportedLocales,
     home: child,
   );
+
+  testWidgets(
+    'selection press responds and reduced motion removes scaling animation',
+    (tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      var selected = false;
+      await tester.pumpWidget(
+        app(
+          Scaffold(
+            body: AppSelectionCard(
+              selected: false,
+              onTap: () => selected = true,
+              child: const Text('Chọn danh mục'),
+            ),
+          ),
+        ),
+      );
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(AppSelectionCard)),
+      );
+      await tester.pump(const Duration(milliseconds: 120));
+      final animation = tester.widget<AnimatedScale>(
+        find.byType(AnimatedScale),
+      );
+      expect(animation.duration, Duration.zero);
+      expect(animation.scale, .98);
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(selected, isTrue);
+      expect(tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale, 1);
+    },
+  );
+
+  for (final size in [
+    const Size(320, 568),
+    const Size(844, 390),
+    const Size(1024, 768),
+  ]) {
+    testWidgets('hero supports Vietnamese at large text size on $size', (
+      tester,
+    ) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 3;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpWidget(
+        app(
+          const Scaffold(
+            body: AppContent(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(24),
+                child: AppHeroCard(
+                  title: 'Kẻ mạo danh',
+                  subtitle: 'Cùng bạn bè khám phá bí mật trong từng lời nói.',
+                  icon: Icons.theater_comedy_outlined,
+                  prominent: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.ensureVisible(
+        find.text('Cùng bạn bè khám phá bí mật trong từng lời nói.'),
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('footer clears keyboard once and leaves content scrollable', (
     tester,

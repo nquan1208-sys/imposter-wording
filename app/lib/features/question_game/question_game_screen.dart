@@ -2,6 +2,8 @@ import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:untitled/widgets/app_notice.dart';
 import 'package:untitled/widgets/player_cards.dart';
 import 'package:untitled/theme/app_colors.dart';
+import 'package:untitled/theme/app_effects.dart';
+import 'package:untitled/widgets/app_hero_card.dart';
 import 'package:untitled/features/word_game/local_prompt_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/data/game_providers.dart';
@@ -135,30 +137,27 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
                         SliverPadding(
                           padding: AppEdgeInsets.all24,
                           sliver: SliverToBoxAdapter(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l.questionPassPhone,
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                Text(
-                                  l.answersSubmitted(
-                                    store.answers.value.length,
-                                    players.length,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                LinearProgressIndicator(
-                                  value:
-                                      store.answers.value.length /
+                            child: AppHeroCard(
+                              title: l.questionPassPhone,
+                              icon: Icons.chat_bubble_outline_rounded,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l.answersSubmitted(
+                                      store.answers.value.length,
                                       players.length,
-                                  minHeight: 8,
-                                  borderRadius: BorderRadius.circular(8),
-                                  semanticsLabel: l.players,
-                                ),
-                              ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  LinearProgressIndicator(
+                                    value:
+                                        store.answers.value.length /
+                                        players.length,
+                                    semanticsLabel: l.players,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -384,10 +383,13 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
   }
 
   Widget _questionCard(String question) => Card(
-    color: AppColors.tealSurface,
-    child: Padding(
-      padding: AppEdgeInsets.all24,
-      child: Text(question, style: Theme.of(context).textTheme.headlineSmall),
+    clipBehavior: Clip.antiAlias,
+    child: Ink(
+      decoration: const BoxDecoration(gradient: AppEffects.selectedGradient),
+      child: Padding(
+        padding: AppEdgeInsets.all24,
+        child: Text(question, style: Theme.of(context).textTheme.headlineSmall),
+      ),
     ),
   );
 }

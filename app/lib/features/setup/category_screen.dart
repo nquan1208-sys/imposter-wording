@@ -9,6 +9,9 @@ import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/features/setup/all_categories_screen.dart';
 import 'package:untitled/features/setup/family_categories_screen.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
+import 'package:untitled/constants/app_radii.dart';
+import 'package:untitled/theme/app_colors.dart';
+import 'package:untitled/theme/app_effects.dart';
 
 class CategoryScreen extends ConsumerStatefulWidget {
   const CategoryScreen({super.key});
@@ -32,8 +35,12 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
     selected = Set.of(setup.categoryIds);
     family = setup.gameType == 'word' && setup.family;
     showWordImages = setup.showWordImages;
-    tabs = TabController(length: 2, initialIndex: family ? 1 : 0, vsync: this)
-      ..addListener(changeTab);
+    tabs = TabController(
+      length: 2,
+      initialIndex: family ? 1 : 0,
+      animationDuration: AppEffects.transition,
+      vsync: this,
+    )..addListener(changeTab);
     final store = ref.read(setupStoreProvider);
     stopLocaleEffect = effect(() {
       final locale = store.setup.value.contentLocale;
@@ -142,14 +149,27 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
                     children: [
                       IgnorePointer(
                         ignoring: !store.editable,
-                        child: TabBar(
-                          controller: tabs,
-                          isScrollable: true,
-                          tabAlignment: TabAlignment.center,
-                          tabs: [
-                            Tab(text: l.allCategories),
-                            Tab(text: l.familyCategories),
-                          ],
+                        child: Container(
+                          margin: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.lightGray,
+                            borderRadius: BorderRadius.circular(AppRadii.card),
+                          ),
+                          child: TabBar(
+                            controller: tabs,
+                            onTap: (index) {
+                              if (MediaQuery.disableAnimationsOf(context)) {
+                                tabs.index = index;
+                              }
+                            },
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.center,
+                            tabs: [
+                              Tab(text: l.allCategories),
+                              Tab(text: l.familyCategories),
+                            ],
+                          ),
                         ),
                       ),
                       Expanded(

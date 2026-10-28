@@ -1,4 +1,4 @@
-import 'package:untitled/constants/app_radii.dart';
+import 'package:untitled/widgets/app_hero_card.dart';
 import 'package:untitled/widgets/app_content.dart';
 import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:flutter/material.dart';
@@ -25,29 +25,32 @@ class LandingScreen extends ConsumerWidget {
         child: ListView(
           padding: AppEdgeInsets.all24,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-              decoration: BoxDecoration(
-                color: AppColors.yellow,
-                borderRadius: BorderRadius.circular(AppRadii.hero),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const ExcludeSemantics(
-                    child: Icon(Icons.theater_comedy_outlined, size: 80),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  Text(l10n.appTitle, style: textTheme.headlineLarge),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(l10n.tagline, style: textTheme.titleLarge),
-                ],
-              ),
+            AppHeroCard(
+              title: l10n.appTitle,
+              subtitle: l10n.tagline,
+              icon: Icons.theater_comedy_outlined,
+              prominent: true,
             ),
             const SizedBox(height: AppSpacing.xxl),
             Text(
               l10n.appDescription,
               style: textTheme.bodyMedium?.copyWith(color: AppColors.gray),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                for (final (icon, label) in [
+                  (Icons.visibility_outlined, l10n.stepRevealTitle),
+                  (Icons.forum_outlined, l10n.stepHintTitle),
+                  (Icons.person_search_outlined, l10n.stepFindTitle),
+                ])
+                  Chip(
+                    avatar: ExcludeSemantics(child: Icon(icon, size: 20)),
+                    label: Text(label),
+                  ),
+              ],
             ),
           ],
         ),

@@ -3,6 +3,8 @@ import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:untitled/widgets/app_selection_card.dart';
 import 'package:untitled/widgets/player_cards.dart';
 import 'package:untitled/widgets/app_notice.dart';
+import 'package:untitled/widgets/app_hero_card.dart';
+import 'package:untitled/theme/app_effects.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/widgets/app_content.dart';
@@ -230,27 +232,27 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: AppEdgeInsets.all24,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l.passPhone,
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                const SizedBox(height: AppSpacing.lg),
-                                Text(
-                                  '${store.completed.value.length} / ${players.length}',
-                                  style: Theme.of(context).textTheme.labelLarge,
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                LinearProgressIndicator(
-                                  value:
-                                      store.completed.value.length /
-                                      players.length,
-                                  minHeight: 8,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ],
+                            child: AppHeroCard(
+                              title: l.passPhone,
+                              icon: Icons.phonelink_lock_outlined,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${store.completed.value.length} / ${players.length}',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.labelLarge,
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  LinearProgressIndicator(
+                                    value:
+                                        store.completed.value.length /
+                                        players.length,
+                                    semanticsLabel: l.players,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -271,9 +273,10 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                             child: Container(
                               padding: AppEdgeInsets.all24,
                               decoration: BoxDecoration(
-                                color: stage == WordGameStage.result
-                                    ? AppColors.tealSurface
-                                    : AppColors.yellow,
+                                gradient: stage == WordGameStage.result
+                                    ? AppEffects.selectedGradient
+                                    : AppEffects.accentGradient,
+                                boxShadow: AppEffects.cardShadow,
                                 borderRadius: BorderRadius.circular(
                                   AppRadii.hero,
                                 ),
@@ -302,65 +305,70 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                               )
                             else
                               Card(
-                                color: AppColors.tealSurface,
-                                child: Padding(
-                                  padding: AppEdgeInsets.all24,
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        session.imposterIds.contains(current)
-                                            ? l.youAreImposter
-                                            : session.prompt.text,
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.headlineMedium,
-                                      ),
-                                      if (session.showWordImages &&
-                                          !session.imposterIds.contains(
-                                            current,
-                                          ))
-                                        WordImage(session.prompt),
-                                      if (!session.imposterIds.contains(
-                                            current,
-                                          ) ||
-                                          session.setup.showCategory)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: AppSpacing.lg,
-                                          ),
-                                          child: Text(
-                                            session.categoryName,
-                                            textAlign: TextAlign.center,
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodySmall,
-                                          ),
+                                clipBehavior: Clip.antiAlias,
+                                child: Ink(
+                                  decoration: const BoxDecoration(
+                                    gradient: AppEffects.selectedGradient,
+                                  ),
+                                  child: Padding(
+                                    padding: AppEdgeInsets.all24,
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          session.imposterIds.contains(current)
+                                              ? l.youAreImposter
+                                              : session.prompt.text,
+                                          textAlign: TextAlign.center,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.headlineMedium,
                                         ),
-                                      if (session.imposterIds.contains(
-                                            current,
-                                          ) &&
-                                          session.setup.knowEachOther &&
-                                          session.imposterIds.length > 1)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: AppSpacing.xl,
-                                          ),
-                                          child: AppNotice(
-                                            message: l.fellowImposters(
-                                              session.setup.players
-                                                  .where(
-                                                    (p) =>
-                                                        p.id != current &&
-                                                        session.imposterIds
-                                                            .contains(p.id),
-                                                  )
-                                                  .map((p) => p.name)
-                                                  .join(', '),
+                                        if (session.showWordImages &&
+                                            !session.imposterIds.contains(
+                                              current,
+                                            ))
+                                          WordImage(session.prompt),
+                                        if (!session.imposterIds.contains(
+                                              current,
+                                            ) ||
+                                            session.setup.showCategory)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: AppSpacing.lg,
+                                            ),
+                                            child: Text(
+                                              session.categoryName,
+                                              textAlign: TextAlign.center,
+                                              style: Theme.of(
+                                                context,
+                                              ).textTheme.bodySmall,
                                             ),
                                           ),
-                                        ),
-                                    ],
+                                        if (session.imposterIds.contains(
+                                              current,
+                                            ) &&
+                                            session.setup.knowEachOther &&
+                                            session.imposterIds.length > 1)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: AppSpacing.xl,
+                                            ),
+                                            child: AppNotice(
+                                              message: l.fellowImposters(
+                                                session.setup.players
+                                                    .where(
+                                                      (p) =>
+                                                          p.id != current &&
+                                                          session.imposterIds
+                                                              .contains(p.id),
+                                                    )
+                                                    .map((p) => p.name)
+                                                    .join(', '),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

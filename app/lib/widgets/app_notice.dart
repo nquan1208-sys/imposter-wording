@@ -24,8 +24,11 @@ class AppNotice extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: error ? AppColors.lightGray : AppColors.tealSurface,
+          color: error ? AppColors.errorSurface : AppColors.tealSurface,
           borderRadius: BorderRadius.circular(AppRadii.card),
+          border: Border.all(
+            color: error ? AppColors.error : AppColors.tealBorder,
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

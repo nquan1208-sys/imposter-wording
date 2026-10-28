@@ -18,6 +18,7 @@ import 'package:untitled/features/setup/content_notices.dart';
 import 'package:untitled/features/setup/setup_store.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 import 'package:untitled/theme/app_colors.dart';
+import 'package:untitled/theme/app_effects.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
@@ -119,7 +120,16 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         semanticsLabel: l.startGame,
                       ),
                     )
-                  : Text(l.startGame),
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const ExcludeSemantics(
+                          child: Icon(Icons.play_arrow_rounded),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Flexible(child: Text(l.startGame)),
+                      ],
+                    ),
             ),
           ),
           body: AppContent(
@@ -156,6 +166,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         _statCard(
                           context,
                           label: l.players,
+                          icon: Icons.group_outlined,
                           value: '${setup.players.length}',
                           semantics: l.playerCount(setup.players.length),
                           onTap: store.editable
@@ -167,6 +178,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         _statCard(
                           context,
                           label: l.imposters,
+                          icon: Icons.person_search_outlined,
                           value: setup.randomImposters
                               ? l.randomCount
                               : '${setup.imposters}',
@@ -193,12 +205,32 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                ExcludeSemantics(
-                                  child: Icon(
-                                    setup.gameType == type
-                                        ? Icons.radio_button_checked
-                                        : Icons.radio_button_off,
-                                  ),
+                                Row(
+                                  children: [
+                                    ExcludeSemantics(
+                                      child: Icon(
+                                        type == 'word'
+                                            ? Icons.style_outlined
+                                            : Icons.forum_outlined,
+                                        color: AppColors.teal,
+                                        size: 32,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    ExcludeSemantics(
+                                      child: AnimatedSwitcher(
+                                        duration: AppEffects.duration(context),
+                                        child: Icon(
+                                          setup.gameType == type
+                                              ? Icons.check_circle
+                                              : Icons.circle_outlined,
+                                          key: ValueKey(setup.gameType == type),
+                                          color: AppColors.teal,
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: AppSpacing.lg),
                                 Text(
@@ -310,6 +342,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   Widget _statCard(
     BuildContext context, {
     required String label,
+    required IconData icon,
     required String value,
     required String semantics,
     VoidCallback? onTap,
@@ -322,23 +355,43 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 100),
-          padding: AppEdgeInsets.all16,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.gray),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(value, style: Theme.of(context).textTheme.headlineLarge),
-              Icon(onTap != null ? Icons.tune : Icons.person_outline, size: 20),
-            ],
+        child: Ink(
+          decoration: const BoxDecoration(gradient: AppEffects.accentGradient),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 100),
+            padding: AppEdgeInsets.all24,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ExcludeSemantics(
+                  child: CircleAvatar(
+                    backgroundColor: AppColors.tealSurface,
+                    foregroundColor: AppColors.teal,
+                    child: Icon(icon),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.gray),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                AnimatedSwitcher(
+                  duration: AppEffects.duration(context),
+                  child: Text(
+                    value,
+                    key: ValueKey(value),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                const Icon(Icons.tune_rounded, size: 20, color: AppColors.teal),
+              ],
+            ),
           ),
         ),
       ),

@@ -364,6 +364,7 @@ void main() {
       for (final player in session.setup.players) {
         final target = find.byKey(ValueKey(player.id));
         await tester.ensureVisible(target);
+        await tester.pumpAndSettle();
         await tester.tap(target);
         await tester.pumpAndSettle();
         expect(find.text('Imposter?'), findsNothing);
@@ -790,6 +791,7 @@ void main() {
         for (final player in session.setup.players) {
           final target = find.byKey(ValueKey(player.id));
           await tester.ensureVisible(target);
+          await tester.pumpAndSettle();
           await tester.tap(target);
           await tester.pumpAndSettle();
           expect(find.byType(LocalPromptImage), findsNothing);

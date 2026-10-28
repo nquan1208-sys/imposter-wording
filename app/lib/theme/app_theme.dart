@@ -1,6 +1,7 @@
 import 'package:untitled/constants/app_radii.dart';
 import 'package:flutter/material.dart';
 import 'package:untitled/theme/app_colors.dart';
+import 'package:untitled/theme/app_effects.dart';
 
 class AppTheme {
   AppTheme._();
@@ -18,16 +19,16 @@ class AppTheme {
     headlineLarge: TextStyle(
       fontSize: 32,
       fontWeight: FontWeight.w600,
-      height: 1.5,
+      height: 1.4,
     ),
     headlineMedium: TextStyle(
       fontSize: 28,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w600,
       height: 1.4,
     ),
     headlineSmall: TextStyle(
       fontSize: 24,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w600,
       height: 1.4,
     ),
     titleSmall: TextStyle(
@@ -71,6 +72,7 @@ class AppTheme {
 
   static final light = ThemeData(
     useMaterial3: true,
+    fontFamily: 'BeVietnamPro',
     materialTapTargetSize: MaterialTapTargetSize.padded,
     focusColor: AppColors.tealBorder,
     hoverColor: AppColors.lightGray,
@@ -78,7 +80,7 @@ class AppTheme {
     colorScheme: const ColorScheme.light(
       primary: AppColors.yellow,
       onPrimary: AppColors.charcoal,
-      primaryContainer: AppColors.yellow,
+      primaryContainer: AppColors.cream,
       onPrimaryContainer: AppColors.charcoal,
       secondary: AppColors.teal,
       secondaryContainer: AppColors.tealSurface,
@@ -89,11 +91,14 @@ class AppTheme {
       onSurfaceVariant: AppColors.gray,
       error: AppColors.error,
       onError: AppColors.white,
+      errorContainer: AppColors.errorSurface,
+      onErrorContainer: AppColors.error,
       outlineVariant: AppColors.border,
       outline: AppColors.charcoal,
     ),
     scaffoldBackgroundColor: AppColors.background,
     textTheme: _textTheme.apply(
+      fontFamily: 'BeVietnamPro',
       bodyColor: AppColors.charcoal,
       displayColor: AppColors.charcoal,
     ),
@@ -105,7 +110,8 @@ class AppTheme {
       scrolledUnderElevation: 0,
       titleTextStyle: TextStyle(
         fontSize: 20,
-        fontWeight: FontWeight.w500,
+        fontFamily: 'BeVietnamPro',
+        fontWeight: FontWeight.w600,
         height: 1.4,
         color: AppColors.charcoal,
       ),
@@ -116,6 +122,21 @@ class AppTheme {
         padding: const WidgetStatePropertyAll(_buttonPadding),
         shape: const WidgetStatePropertyAll(_buttonShape),
         textStyle: WidgetStatePropertyAll(_textTheme.labelLarge),
+        animationDuration: AppEffects.quick,
+        backgroundBuilder: (context, states, child) => Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.control),
+            gradient:
+                states.contains(WidgetState.disabled) ||
+                    states.contains(WidgetState.pressed)
+                ? null
+                : AppEffects.heroGradient,
+            color: states.contains(WidgetState.disabled)
+                ? AppColors.lightGray
+                : AppColors.amber,
+          ),
+          child: child,
+        ),
         side: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.focused)
               ? const BorderSide(color: AppColors.charcoal, width: 2)
@@ -150,7 +171,7 @@ class AppTheme {
       color: AppColors.white,
       surfaceTintColor: Colors.transparent,
       shadowColor: AppColors.shadow,
-      elevation: 0,
+      elevation: 1,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         side: BorderSide(color: AppColors.border),
@@ -189,11 +210,11 @@ class AppTheme {
     chipTheme: ChipThemeData(
       backgroundColor: AppColors.white,
       selectedColor: AppColors.tealSurface,
-      checkmarkColor: AppColors.charcoal,
+      checkmarkColor: AppColors.teal,
       labelStyle: _textTheme.bodyMedium,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       side: const BorderSide(color: AppColors.border),
-      shape: _buttonShape,
+      shape: const StadiumBorder(),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: AppColors.white,
@@ -220,11 +241,14 @@ class AppTheme {
       minVerticalPadding: 16,
       contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       titleTextStyle: TextStyle(
+        fontFamily: 'BeVietnamPro',
+        fontWeight: FontWeight.w500,
         fontSize: 17,
         height: 1.4,
         color: AppColors.charcoal,
       ),
       subtitleTextStyle: TextStyle(
+        fontFamily: 'BeVietnamPro',
         fontSize: 15,
         height: 1.5,
         color: AppColors.gray,
@@ -245,15 +269,15 @@ class AppTheme {
       helperMaxLines: 4,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadii.control),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: AppColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadii.control),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: AppColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadii.control),
-        borderSide: const BorderSide(color: AppColors.charcoal, width: 2),
+        borderSide: const BorderSide(color: AppColors.teal, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadii.control),
@@ -277,7 +301,11 @@ class AppTheme {
             ? AppColors.yellow
             : AppColors.lightGray,
       ),
-      trackOutlineColor: const WidgetStatePropertyAll(AppColors.gray),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? AppColors.charcoal
+            : AppColors.gray,
+      ),
       materialTapTargetSize: MaterialTapTargetSize.padded,
     ),
     checkboxTheme: CheckboxThemeData(
@@ -299,13 +327,27 @@ class AppTheme {
       unselectedLabelColor: AppColors.gray,
       labelStyle: _textTheme.titleMedium,
       unselectedLabelStyle: _textTheme.titleMedium,
-      indicatorColor: AppColors.charcoal,
-      dividerColor: AppColors.border,
+      indicator: BoxDecoration(
+        gradient: AppEffects.selectedGradient,
+        borderRadius: BorderRadius.circular(AppRadii.control),
+        border: Border.all(color: AppColors.tealBorder),
+      ),
+      indicatorSize: TabBarIndicatorSize.tab,
+      dividerColor: Colors.transparent,
+      labelPadding: const EdgeInsets.symmetric(horizontal: 24),
     ),
     dividerTheme: const DividerThemeData(color: AppColors.border, thickness: 1),
     progressIndicatorTheme: const ProgressIndicatorThemeData(
       color: AppColors.teal,
       linearTrackColor: AppColors.tealBorder,
+      linearMinHeight: 6,
+      borderRadius: BorderRadius.all(Radius.circular(8)),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: AppColors.charcoal,
+      contentTextStyle: _textTheme.bodyMedium?.copyWith(color: AppColors.white),
+      behavior: SnackBarBehavior.floating,
+      shape: _buttonShape,
     ),
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
@@ -315,6 +357,6 @@ class AppTheme {
     ),
   );
 
-  // shortcut: the supplied design is light-only; add dark tokens with a dark design.
+  // shortcut: this palette is light-only; add dark tokens with a dark design.
   static final dark = light;
 }
