@@ -205,6 +205,20 @@ supabase db reset --local
 Sau reset, cần tạo lại tài khoản admin theo bước 5. Không dùng reset như một
 bước bắt buộc khi mở dự án.
 
+### Dữ liệu mẫu và ảnh từ ngữ
+
+Sau khi áp dụng migrations, nạp 5 danh mục cho mỗi loại game, mỗi danh mục
+5 đề bài có bản tiếng Việt và tiếng Anh đã publish, cùng 25 ảnh minh họa từ ngữ:
+
+```bash
+python3 supabase/scripts/seed_local_images.py
+```
+
+Script chỉ chạy với local stack mặc định, giữ dữ liệu cũ và kiểm tra quyền
+đọc đề bài/ảnh của người chơi. Chạy lại không tạo bản ghi trùng. Khi reset,
+`supabase/seed.sql` được nạp tự động; chạy lại script để upload và liên kết
+ảnh. Nguồn ảnh và giấy phép: [seed-images](../supabase/seed-images/README.md).
+
 ## 9. Lỗi thường gặp
 
 - **Không kết nối Docker daemon:** mở Docker Desktop/OrbStack và chạy lại
