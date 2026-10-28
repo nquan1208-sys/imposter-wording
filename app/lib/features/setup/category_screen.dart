@@ -21,16 +21,36 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
   late final TabController tabs;
   late Set<String> selected;
   late bool family, showWordImages;
+  late String contentLocale;
+  late final void Function() stopLocaleEffect;
   bool selectionRemoved = false, saveFailed = false;
   @override
   void initState() {
     super.initState();
     final setup = ref.read(setupStoreProvider).setup.value;
+    contentLocale = setup.contentLocale;
     selected = Set.of(setup.categoryIds);
     family = setup.gameType == 'word' && setup.family;
     showWordImages = setup.showWordImages;
     tabs = TabController(length: 2, initialIndex: family ? 1 : 0, vsync: this)
       ..addListener(changeTab);
+    final store = ref.read(setupStoreProvider);
+    stopLocaleEffect = effect(() {
+      final locale = store.setup.value.contentLocale;
+      if (locale == contentLocale) return;
+      untracked(() {
+        setState(() {
+          contentLocale = locale;
+          final setup = store.setup.value;
+          selected = Set.of(setup.categoryIds);
+          family = setup.family;
+          showWordImages = setup.showWordImages;
+          selectionRemoved = false;
+          saveFailed = false;
+          tabs.index = family ? 1 : 0;
+        });
+      });
+    });
   }
 
   void changeTab() {
@@ -53,6 +73,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
   void updateSelection(Set<String> value) => setState(() => selected = value);
 
   Future<void> createCustom() async {
+    final locale = contentLocale;
     final id = await ref
         .read(AppService.router)
         .push<String>(
@@ -61,11 +82,16 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
             gameType: ref.read(setupStoreProvider).setup.value.gameType,
           ),
         );
-    if (mounted && id != null) setState(() => selected = {...selected, id});
+    if (mounted &&
+        id != null &&
+        locale == ref.read(setupStoreProvider).setup.value.contentLocale) {
+      setState(() => selected = {...selected, id});
+    }
   }
 
   @override
   void dispose() {
+    stopLocaleEffect();
     tabs.dispose();
     super.dispose();
   }
@@ -97,7 +123,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
             child: Padding(
               padding: AppEdgeInsets.all24,
               child: FilledButton(
-                onPressed: store.editable
+                onPressed: store.editable && store.contentReady
                     ? () async {
                         final saved = await store.setCategories(
                           valid,

@@ -229,7 +229,11 @@ void main() {
         'Only word',
       ], family: true))!;
       await store.setCategories({id}, family: true);
-      content.snapshot.value = null;
+      content.snapshot.value = ContentSnapshot.fromJson({
+        'categories': [],
+        'words': [],
+        'questions': [],
+      }, 'vi');
       await store.restore();
       expect(store.setup.value.categoryIds, {id});
       expect(WordGameSession.create(store)!.prompt.text, 'Only word');

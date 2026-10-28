@@ -21,7 +21,7 @@ class QuestionGameSession {
   QuestionGameSession._(this.assignment, this.prompt, this.categoryName);
 
   static QuestionGameSession? create(SetupStore store, {Random? random}) {
-    if (!store.editable) return null;
+    if (!store.editable || !store.contentReady) return null;
     final setup = store.setup.value;
     if (setup.gameType != 'question' || !GameAssignment.validSetup(setup)) {
       return null;

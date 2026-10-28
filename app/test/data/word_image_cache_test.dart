@@ -124,6 +124,32 @@ void main() {
   );
 
   test(
+    'late snapshots from another locale cannot prune current or session images',
+    () async {
+      final images = cache();
+      images.refresh(snapshot(['vi.png', 'shared.png']));
+      await images.pending;
+      final release = images.pin('vi.png');
+      final english = localizedFixture('en');
+      english['words'] = [
+        word('1', 'a', locale: 'en')..['image_path'] = 'shared.png',
+      ];
+      images.refresh(ContentSnapshot.fromJson(english, 'en'));
+      await images.pending;
+      expect(requests, 2);
+      expect(await images.file('vi.png')!.exists(), true);
+      images.refresh(snapshot([]));
+      await images.pending;
+      expect(await images.file('vi.png')!.exists(), true);
+      expect(await images.file('shared.png')!.exists(), true);
+      release();
+      await images.pending;
+      expect(images.file('vi.png'), isNull);
+      expect(await images.file('shared.png')!.exists(), true);
+    },
+  );
+
+  test(
     'restores offline files before waiting for missing image downloads',
     () async {
       final initial = cache();

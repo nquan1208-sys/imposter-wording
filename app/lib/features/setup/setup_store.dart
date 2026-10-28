@@ -1,3 +1,5 @@
+import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
+import 'package:untitled/data/content_language_repository.dart';
 import 'package:untitled/data/local_image_store.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/base/store/auto_dispose_manager.dart';
@@ -10,7 +12,26 @@ import 'package:untitled/models/custom_word_category.dart';
 import 'package:untitled/models/custom_question_category.dart';
 
 class SetupStore extends StoreBase {
-  final ContentRepository content;
+  final ContentRepository _initialContent;
+  final ContentRepository Function(String)? repositoryForLocale;
+  final ContentLanguageRepository? languages;
+  late final _content = computed(
+    () =>
+        repositoryForLocale?.call(setup.value.contentLocale) ?? _initialContent,
+  ).manageBy(_disposers);
+  ContentRepository get content => _content.value;
+  late final sessionActive = signal(false).manageBy(_disposers);
+  bool supportsLocale(String code) => AppLocalizations.supportedLocales.any(
+    (locale) => locale.languageCode == code,
+  );
+  bool get localeAvailable =>
+      supportsLocale(setup.value.contentLocale) &&
+      (languages?.contains(setup.value.contentLocale) ?? true);
+  bool get contentReady =>
+      localeAvailable &&
+      content.contentLocale == setup.value.contentLocale &&
+      content.snapshot.value != null;
+
   final LocalJsonStore file;
   final LocalImageStore? images;
   final _disposers = AutoDisposeManager();
@@ -26,8 +47,15 @@ class SetupStore extends StoreBase {
   final _availableCategories = <(String, bool), Set<String>>{};
   ContentSnapshot? _remoteSnapshot;
 
-  SetupStore({required this.content, required this.file, this.images}) {
+  SetupStore({
+    required ContentRepository content,
+    required this.file,
+    this.images,
+    this.repositoryForLocale,
+    this.languages,
+  }) : _initialContent = content {
     effect(() {
+      final content = this.content;
       final snapshot = content.snapshot.value;
       _remoteSnapshot = snapshot;
       _availableCategories.clear();
@@ -213,6 +241,21 @@ class SetupStore extends StoreBase {
     retryable: true,
   );
 
+  Future<bool> setContentLocale(String locale) {
+    if (!supportsLocale(locale) ||
+        sessionActive.value ||
+        !(languages?.contains(locale) ?? true) ||
+        (repositoryForLocale == null && locale != content.contentLocale)) {
+      return Future.value(false);
+    }
+    return _mutate((s) {
+      if (sessionActive.value || !(languages?.contains(locale) ?? true)) {
+        throw const FormatException('Language unavailable');
+      }
+      return s.copyWith(contentLocale: locale);
+    }, retryable: true);
+  }
+
   Future<bool> setFamily(bool family) =>
       _mutate((s) => s.copyWith(family: family), retryable: true);
   Future<bool> setShowWordImages(bool show) =>
@@ -224,15 +267,20 @@ class SetupStore extends StoreBase {
     bool? family,
     bool? showWordImages,
   }) {
+    if (!contentReady) return Future.value(false);
+    final locale = setup.value.contentLocale;
     final selected = Set<String>.of(ids);
     // Retry stays in the picker so leaving it discards a failed draft.
-    return _mutate(
-      (s) => s.copyWith(
+    return _mutate((s) {
+      if (s.contentLocale != locale || !contentReady) {
+        throw const FormatException('Content changed');
+      }
+      return s.copyWith(
         categoryIds: selected,
         family: family,
         showWordImages: showWordImages,
-      ),
-    );
+      );
+    });
   }
 
   bool validPresetName(String name, {String? exceptId}) =>
@@ -293,6 +341,10 @@ class SetupStore extends StoreBase {
   );
 
   GameSetup _validatedCategories(GameSetup current) {
+    if (current.contentLocale != _remoteSnapshot?.contentLocale &&
+        repositoryForLocale != null) {
+      return current;
+    }
     // Queued writes can finish after the content signals have been disposed.
     final remote = _availableCategories[(current.gameType, current.family)];
     final available = {
@@ -322,12 +374,12 @@ class SetupStore extends StoreBase {
 
   List<CustomWordCategory> _custom(GameSetup current) => current
       .customWordCategories
-      .where((c) => c.contentLocale == content.contentLocale)
+      .where((c) => c.contentLocale == current.contentLocale)
       .toList();
 
   List<CustomQuestionCategory> _customQuestions(GameSetup current) => current
       .customQuestionCategories
-      .where((c) => c.contentLocale == content.contentLocale)
+      .where((c) => c.contentLocale == current.contentLocale)
       .toList();
 
   List<QuestionPair> eligibleQuestions({Set<String> categoryIds = const {}}) =>
@@ -378,27 +430,31 @@ class SetupStore extends StoreBase {
     String name, {
     GameSetup? candidate,
     String gameType = 'word',
+    String? contentLocale,
   }) {
     final normalized = name.trim().toLowerCase();
     final current = candidate ?? setup.value;
+    final locale = contentLocale ?? current.contentLocale;
     final catalog = [
       ...?_remoteSnapshot?.categories,
-      ..._custom(current).map((c) => c.category),
-      ..._customQuestions(current).map((c) => c.category),
+      ...current.customWordCategories.map((c) => c.category),
+      ...current.customQuestionCategories.map((c) => c.category),
     ];
     return normalized.isNotEmpty &&
         !catalog.any(
           (c) =>
               c.gameType == gameType &&
-              c.contentLocale == content.contentLocale &&
+              c.contentLocale == locale &&
               c.name.trim().toLowerCase() == normalized,
         );
   }
 
   Future<String?> createCustomQuestionCategory(
     String name,
-    List<CustomQuestionEntry> pairs,
-  ) async {
+    List<CustomQuestionEntry> pairs, {
+    String? contentLocale,
+  }) async {
+    final locale = contentLocale ?? setup.value.contentLocale;
     final entries = List<CustomQuestionEntry>.of(pairs);
     String? id;
     final saved = await _mutate((current) {
@@ -407,6 +463,7 @@ class SetupStore extends StoreBase {
             name,
             candidate: current,
             gameType: 'question',
+            contentLocale: locale,
           )) {
         throw const FormatException('Invalid custom category');
       }
@@ -427,7 +484,7 @@ class SetupStore extends StoreBase {
           CustomQuestionCategory(
             id: id!,
             name: name.trim(),
-            contentLocale: content.contentLocale,
+            contentLocale: locale,
             pairs: entries,
           ),
         ]),
@@ -441,14 +498,20 @@ class SetupStore extends StoreBase {
     List<String> words, {
     required bool family,
     Map<String, String> imageIds = const {},
+    String? contentLocale,
   }) async {
+    final locale = contentLocale ?? setup.value.contentLocale;
     final attachments = Map<String, String>.of(imageIds);
     final entries = uniqueWords(words);
     String? id;
     final saved = await _mutate((current) {
       if (current.gameType != 'word' ||
           entries.isEmpty ||
-          !validCustomCategoryName(name, candidate: current)) {
+          !validCustomCategoryName(
+            name,
+            candidate: current,
+            contentLocale: locale,
+          )) {
         throw const FormatException('Invalid custom category');
       }
       var next = current.nextCustomWordCategoryId;
@@ -468,7 +531,7 @@ class SetupStore extends StoreBase {
           CustomWordCategory(
             id: id!,
             name: name.trim(),
-            contentLocale: content.contentLocale,
+            contentLocale: locale,
             isFamilyFriendly: family,
             words: entries,
             imageIds: attachments,

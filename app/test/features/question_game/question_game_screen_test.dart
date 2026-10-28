@@ -40,14 +40,16 @@ void main() {
     bool random = false,
     int imposters = 2,
   }) async {
-    fetchData = fixture();
+    fetchData = fixture(locale: english ? 'en' : 'vi');
     content = ContentRepository(
+      contentLocale: english ? 'en' : 'vi',
       cache: MemoryStorage(),
       fetchPage: (t, l, f, e) => fixturePage(fetchData, t, l, f, e),
     );
     setup = SetupStore(content: content, file: MemoryStorage());
     await content.load();
     await setup.restore();
+    if (english) await setup.setContentLocale('en');
     await setup.setPlayerCount(5);
     await setup.setRules(
       imposters: imposters,
@@ -65,16 +67,15 @@ void main() {
     container = ProviderContainer(
       overrides: [
         localStorageProvider.overrideWithValue(MemoryAppSettingsStorage()),
-        contentRepositoryProvider.overrideWithValue(content),
+        contentRepositoryProvider(
+          english ? 'en' : 'vi',
+        ).overrideWithValue(content),
         setupStoreProvider.overrideWithValue(setup),
       ],
     );
     await container.read(StoreProvider.app).restore();
     if (english) {
-      expect(
-        await container.read(StoreProvider.app).setLocale(const Locale('en')),
-        isTrue,
-      );
+      expect(await setup.setContentLocale('en'), isTrue);
     }
     addTearDown(() async {
       await tester.pumpWidget(const SizedBox());

@@ -1,3 +1,4 @@
+import 'package:untitled/data/content_language_repository.dart';
 import 'dart:io';
 import 'package:untitled/data/local_json_store.dart';
 import 'package:untitled/models/content.dart';
@@ -38,29 +39,33 @@ JsonMap word(String id, String categoryId, {String locale = 'vi'}) => {
     },
   ],
 };
-JsonMap question(String id, String categoryId) => {
+JsonMap question(String id, String categoryId, {String locale = 'vi'}) => {
   'id': id,
   'category_id': categoryId,
   'difficulty': 'hard',
   't': [
     {
       'prompt_id': id,
-      'locale': 'vi',
+      'locale': locale,
       'status': 'published',
       'civilian_question': 'Favorite food?',
       'imposter_question': 'Worst food?',
     },
   ],
 };
-JsonMap fixture() => {
+JsonMap fixture({String locale = 'vi'}) => {
   'categories': [
-    category('a', family: true),
-    category('b'),
-    category('empty'),
-    category('q', type: 'question'),
+    category('a', family: true, locale: locale),
+    category('b', locale: locale),
+    category('empty', locale: locale),
+    category('q', type: 'question', locale: locale),
   ],
-  'words': [word('1', 'a'), word('2', 'a'), word('3', 'b')],
-  'questions': [question('4', 'q')],
+  'words': [
+    word('1', 'a', locale: locale),
+    word('2', 'a', locale: locale),
+    word('3', 'b', locale: locale),
+  ],
+  'questions': [question('4', 'q', locale: locale)],
 };
 
 Future<List<JsonMap>> fixturePage(
@@ -99,4 +104,29 @@ class MemoryStorage implements LocalJsonStore {
     if (failWrite) throw const FileSystemException('write');
     this.data = data;
   }
+}
+
+ContentLanguageRepository fixtureLanguages() => ContentLanguageRepository(
+  cache: MemoryStorage(),
+  fetchPage: (from, to) async => [
+    {'code': 'vi', 'display_name': 'Tiếng Việt', 'sort_order': 0},
+    {'code': 'en', 'display_name': 'English', 'sort_order': 1},
+    {'code': 'ja', 'display_name': '日本語', 'sort_order': 2},
+  ].skip(from).take(to - from + 1).toList(),
+);
+
+JsonMap localizedFixture(String locale) {
+  final data = fixture();
+  for (final rows in data.values) {
+    for (final row in rows as List) {
+      row['t'][0]['locale'] = locale;
+      if (row['t'][0].containsKey('name')) {
+        row['t'][0]['name'] = '$locale ${row['id']}';
+      }
+      if (row['t'][0].containsKey('text')) {
+        row['t'][0]['text'] = '$locale ${row['id']}';
+      }
+    }
+  }
+  return data;
 }

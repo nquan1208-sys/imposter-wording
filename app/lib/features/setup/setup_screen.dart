@@ -1,3 +1,4 @@
+import 'package:untitled/features/settings/content_language_tile.dart';
 import 'package:untitled/features/question_game/question_game_store.dart';
 import 'package:untitled/widgets/app_content.dart';
 import 'package:untitled/features/word_game/word_game_store.dart';
@@ -23,7 +24,7 @@ class SetupScreen extends ConsumerStatefulWidget {
 class _SetupScreenState extends ConsumerState<SetupScreen> {
   bool _openingGame = false;
   Future<void> _start(SetupStore store) async {
-    if (_openingGame) return;
+    if (_openingGame || !store.contentReady) return;
     setState(() => _openingGame = true);
     await store.pendingWrites;
     await store.revalidate();
@@ -51,6 +52,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       return;
     }
     setState(() => _openingGame = true);
+    store.sessionActive.value = true;
     try {
       await ref.read(AppService.router).push(input);
     } catch (_) {
@@ -60,6 +62,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         );
       }
     } finally {
+      store.sessionActive.value = false;
       releaseImage?.call();
       if (mounted) setState(() => _openingGame = false);
     }
@@ -68,11 +71,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   @override
   Widget build(BuildContext context) {
     final store = ref.watch(setupStoreProvider);
-    final content = store.content;
     final l = AppLocalizations.of(context);
     return SignalBuilder(
       builder: (context) {
         final setup = store.setup.value;
+        final content = store.content;
         final count = setup.gameType == 'question'
             ? store.eligibleQuestions(categoryIds: setup.categoryIds).length
             : store
@@ -104,7 +107,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: store.editable && count > 0 && !_openingGame
+                      onPressed:
+                          store.editable &&
+                              store.contentReady &&
+                              count > 0 &&
+                              !_openingGame
                           ? () => _start(store)
                           : null,
                       child: Text(l.startGame),
@@ -229,7 +236,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     const SizedBox(height: AppSpacing.lg),
                     if (store.selectionRemoved.value) Text(l.selectionRemoved),
                     ContentNotices(content),
-                    Text(l.contentLanguageVietnamese),
+                    const Card(child: ContentLanguageTile()),
                     if (content.snapshot.value != null ||
                         setup.hasCustomContent) ...[
                       Text(

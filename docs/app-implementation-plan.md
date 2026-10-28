@@ -22,7 +22,7 @@ Triển khai app Flutter chơi chung trên một thiết bị, gồm game từ n
 | State và DI | `StoreBase`, `StoreProvider`, Signals, `AutoDisposeManager`, Riverpod | Tái sử dụng code hiện tại; không đưa thêm một cơ chế state management. |
 | Điều hướng | `RouterService`, `RouteName`, `RouteInput`, `RoutePage`, `RouteScreen`; route landing/Cách chơi/unknown | Dùng Navigator/service hiện có; luồng sản phẩm không còn bottom navigation demo. |
 | Tài liệu app | README và `app/docs/` đã mô tả Signals/Store, routing và VI/EN | Tái sử dụng hướng dẫn hiện tại, cập nhật theo tính năng mới. |
-| Ngôn ngữ giao diện | Có ARB VI/EN, mặc định `vi`; `AppStore.setLocale` cập nhật MaterialApp nhưng chỉ giữ trong bộ nhớ | Phase 11 thêm picker và lưu UI locale; phase 12 tích hợp ngôn ngữ nội dung độc lập. |
+| Ngôn ngữ giao diện | Có ARB VI/EN, mặc định `vi`; `AppStore.setLocale` cập nhật MaterialApp nhưng chỉ giữ trong bộ nhớ | Phase 12 hiện dùng một lựa chọn chung cho UI và nội dung. |
 | Cấu hình backend | `AppConfig` đã đọc/validate URL và publishable key theo `APP_ENV`; chưa khởi tạo client hay gọi API | Phase 2 dùng config hiện có, thêm client/repository và quyền đọc anon; không dựng lại cấu hình môi trường. |
 | Backend nội dung | Ba bảng gốc, `content_languages` và ba bảng translation; grants/RLS đọc public đã đổi theo bản dịch | Mobile đọc Data API với quyền anon, không dùng các RPC quản trị `admin_*`/`save_*`. |
 | Schema hiện tại | Bảng gốc giữ ID/metadata dùng chung; tên danh mục, từ, cặp câu hỏi, `locale` và trạng thái nằm ở translation | Không select `text`/`status`/`locale` từ prompt gốc hoặc `name` từ category gốc. Word giữ `image_path` dùng chung; question chưa có ảnh remote. |
@@ -48,7 +48,7 @@ Các phương án dưới đây là **đề xuất triển khai**, không tự t
 | Một field `Câu hỏi` không đủ tạo game với hai nhóm nhận câu hỏi khác nhau | Form question tùy chỉnh phải nhập một cặp câu hỏi khác nhau. Nhập nhiều dùng hai ô nhiều dòng, ghép cặp theo dòng, kiểm tra số dòng bằng nhau. | Phase 9 |
 | Tùy chỉnh chưa có thuộc tính phù hợp gia đình | **Đã chốt Phase 8:** tạo trong tab Gia đình bắt buộc xác nhận phù hợp, category hiện ở cả hai tab; tạo ở tab Tất cả không được coi là phù hợp Gia đình. Không tự xóa category khi đổi tab/game. | Phase 8–9 |
 | Chi tiết danh sách đã lưu có `Hiển thị số kẻ mạo danh`, nhưng setup chưa có công tắc tương ứng | **Đã chốt Phase 6:** bỏ dòng này; chi tiết chỉ hiển thị luật đã có, số imposter cố định hoặc chế độ ngẫu nhiên. Không thêm setting hay luật chơi mới. | Phase 6 |
-| Mục 16 chỉ có một dòng Ngôn ngữ, trong khi DB đã hỗ trợ bản dịch nội dung riêng | Đề xuất tách `Ngôn ngữ giao diện` (VI/EN từ ARB) và `Ngôn ngữ nội dung` (từ `content_languages`), mặc định đều `vi`. Đổi UI không tự đổi đề; thiếu bản dịch nội dung thì báo rỗng, không fallback sang ngôn ngữ khác. Cập nhật layout khi chốt. | Phase 11–12 |
+| Mục 16 chỉ có một dòng Ngôn ngữ, trong khi DB đã hỗ trợ bản dịch nội dung riêng | Đã chốt một mục `Ngôn ngữ` dùng chung cho UI và nội dung, mặc định `vi`; danh sách từ DB giới hạn mã đã có ARB UI. Thiếu đề thì báo rỗng, không fallback. | Phase 11–12 |
 | Chưa có ảnh cho mọi trạng thái, store URL và kênh phản hồi | Tái sử dụng theme hiện có; không hứa khớp pixel. URL/ID phát hành phải được cung cấp trước phase 11/13. | Theo phase tương ứng |
 
 Nếu một quyết định chưa được chốt, giữ chức năng liên quan chưa khả dụng và ghi rõ trong PR; không báo phase đó hoàn tất toàn bộ đặc tả.
@@ -77,10 +77,10 @@ Hợp đồng đọc theo schema mới, áp dụng ngay từ phase 2 dù lúc đ
 
 ### Ngôn ngữ giao diện và nội dung
 
-- `uiLocale` điều khiển ARB/MaterialApp qua `AppStore.locale`; `contentLocale` điều khiển query, cache, tên danh mục và đề. Phase 2–11 dùng `contentLocale = vi`, kể cả khi phase 11 cho đổi UI sang EN.
-- Phase 12 cho chọn content locale từ `content_languages`, theo `sort_order`, rồi `code`; không biến mã nội dung mới thành ngôn ngữ UI khi chưa có ARB tương ứng. Danh sách này không có cờ active/status hoặc bảo đảm đủ bản dịch.
+- Từ điều chỉnh Phase 12, `GameSetup.contentLocale` điều khiển cả ARB/MaterialApp và query/cache/danh mục/đề. Chỉ một lựa chọn Ngôn ngữ; `ui_locale` cũ chỉ được giữ để tương thích dữ liệu lưu trữ.
+- Phase 12 cho chọn content locale từ `content_languages`, theo `sort_order`, rồi `code`; chỉ cho chọn mã đã có ARB giao diện tương ứng. Danh sách này không có cờ active/status hoặc bảo đảm đủ bản dịch.
 - Không tự dịch, sao chép hay fallback nội dung VI↔EN; ngôn ngữ có trong danh sách nhưng chưa có đề hợp lệ là trạng thái rỗng. Offline chỉ dùng cache của locale được chọn, hiển thị rõ ngôn ngữ và tình trạng dữ liệu cũ.
-- Lưu độc lập hai lựa chọn. Đổi content locale chỉ ở ngoài ván; giữ nguyên snapshot của session đang chơi. Nội dung tùy chỉnh có locale lúc tạo, không tự đổi ngôn ngữ theo nhãn UI.
+- Lưu một lựa chọn chung tại `GameSetup.contentLocale`, chỉ đổi ngoài ván; giữ nguyên snapshot của session đang chơi. Nội dung tùy chỉnh giữ locale lúc tạo, không tự dịch.
 
 ### Thiết lập và session
 
@@ -130,7 +130,7 @@ Thứ tự mặc định là 1 → 13. Giữ số phase 1–11; phase 12 mới d
 | 6–9: luồng word và kết quả | 3–4 |
 | 10–14: luồng question và kết quả | 5; bổ sung hiển thị đồng vai riêng tư ở 6 |
 | 15: người chơi và danh sách đã lưu | 4, 6 |
-| 16: cài đặt | 11; thêm ngôn ngữ nội dung ở 12 sau khi chốt tách hai lựa chọn |
+| 16: cài đặt | 11; phase 12 gộp thành một lựa chọn ngôn ngữ chung |
 | 17–19: bố cục chung, điều hướng, ảnh/trạng thái còn thiếu | Áp dụng trong từng PR; đối chiếu tổng thể ở 13 |
 
 ## 6. Chi tiết từng phase
@@ -554,20 +554,19 @@ là word.
 - **Nghiệm thu:** đổi ngôn ngữ giao diện tồn tại qua mở lại, Cách chơi back đúng màn gọi, ID ổn định và clipboard đủ giá trị; link mở đúng đích trên từng nền tảng. UI tiếng Anh vẫn chơi đề tiếng Việt với nhãn nội dung rõ ràng.
 - **Kiểm tra:** widget test locale/restart/copy với service giả; kiểm tra thiết bị thật việc mở store/kênh phản hồi; đổi UI không làm query/cache/session đổi content locale.
 
-### Phase 12 — Tích hợp ngôn ngữ nội dung với DB đa ngôn ngữ
+### Phase 12 — Ngôn ngữ chung cho giao diện và nội dung
 
-**PR đề xuất:** `feat(app): integrate content languages and localized game content`
+**Điều chỉnh theo yêu cầu người dùng 2026-10-28:** gộp ngôn ngữ giao diện và nội dung thành **một mục Ngôn ngữ**; thay thế quyết định tách riêng trước đó.
 
-- Phạm vi: bổ sung `Ngôn ngữ nội dung` trong settings bên cạnh `Ngôn ngữ giao diện` sau khi chốt mục 3; hiển thị locale nội dung tại setup/picker. Dùng repository, cache, hai game và nội dung tùy chỉnh hiện có; không mở thêm API quản trị hoặc đổi schema DB.
-- Đọc `content_languages(code, display_name, sort_order)` qua quyền anon, sắp theo `sort_order`, rồi `code`; cache danh sách cùng backend để picker dùng offline. Có mã ngôn ngữ không bảo đảm đã có content; không hardcode danh sách nội dung bằng `supportedLocales` của Flutter, không giả định chỉ có VI/EN hoặc có cờ active trong bảng.
-- Lưu `contentLocale` độc lập với UI locale. Thiết lập cũ thiếu trường này được đọc là `vi`; nhóm người chơi Phase 6 không lưu hoặc ghi đè locale, nên chọn nhóm giữ nguyên cả UI/content locale hiện tại. Mã locale không còn trong danh sách sau lần tải thành công phải hiện trạng thái không khả dụng và yêu cầu chọn lại; không âm thầm đổi ngôn ngữ hoặc xóa thiết lập cũ.
-- Đổi content locale ngoài ván: chuyển repository sang snapshot của locale mới, tải/validate đủ trước khi cho bắt đầu; có cache đúng locale thì dùng khi offline. Lỗi tải không hiển thị dữ liệu của locale cũ dưới nhãn mới; không có cache thì báo lỗi/thử lại. Ngôn ngữ hợp lệ nhưng chưa có đề published hiện trạng thái rỗng/chặn bắt đầu, cho đổi ngôn ngữ; không tự fallback sang VI/EN.
-- Scope request và kết quả theo backend + content locale; nếu người dùng đổi nhanh VI→EN→VI, kết quả về trễ chỉ được cập nhật cache tương ứng, không ghi đè danh mục/count hiện đang xem. Picker đang mở phải hủy lựa chọn tạm khi đổi locale; validate lại category IDs và tên hiển thị bằng bộ lọc chung ở mục 4.
-- Word reveal/kết quả dùng `word_prompt_translations.text` đã ghép; question lấy nguyên cặp cùng hàng translation. Session giữ locale, tên category và prompt đã chụp; refresh hoặc đổi UI không làm đổi nội dung ván. `Chơi lại` về setup và giữ locale hiện tại; khi bắt đầu ván tiếp theo mới tạo session theo quy tắc chung.
-- Nội dung tùy chỉnh chỉ hiện trong locale lúc tạo; đổi locale không xóa draft/category/ảnh đang còn vòng đời. Không nhân đôi hoặc tự dịch nội dung người chơi nhập. File ảnh remote dùng chung theo backend + `image_path`, chỉ dọn khi mọi cache locale và session đều hết tham chiếu; đổi locale không tải lại ảnh đã có.
-- Điểm chạm: settings/language picker, `AppStore`/local settings, setup/category picker, data/content/cache keys, kiểm tra nhóm giữ nguyên locale khi nạp, custom content, session/reveal/kết quả, ARB và fixtures. Không thêm ARB cho mọi mã ngôn ngữ nội dung hoặc thay cấu trúc state/DI.
-- **Nghiệm thu:** đổi nội dung VI↔EN và chơi trọn cả hai game, hai mode; UI EN + content VI và ngược lại hoạt động đúng. Tên/count/random đều cùng locale, không đếm nhiều bản dịch thành nhiều đề; thiếu bản dịch/đề thì rỗng; khởi động lại nhớ lựa chọn; offline chỉ chơi bằng cache đúng locale. Backend kiểm thử phải có bản dịch published cho từng tổ hợp cần nghiệm thu; mã trong `content_languages` đơn thuần không đủ.
-- **Kiểm tra:** unit test bản dịch VI published/EN draft và ngược lại, category translation thiếu/ẩn, hai câu hỏi cùng locale, nhiều trang, cache tách backend/locale, response về sai thứ tự, lỗi/rỗng và thiết lập cũ. Widget/integration test đổi hai locale độc lập → chọn danh mục → nạp nhóm mà không đổi locale → chơi → replay → restart/offline, custom content không bị gắn lại locale, ảnh dùng chung không bị dọn nhầm. Read-only check trên backend local/dev xác minh anon không fallback khi bản dịch bị ẩn; dùng fixture trong test để thêm mã nội dung thứ ba mà không cần thêm ARB UI.
+- Chọn English đổi cả UI và danh mục/đề game sang EN, chọn Tiếng Việt đổi cả hai sang VI. Màn chọn lấy tên/mã/thứ tự từ `content_languages`, chỉ hiện mã đã có bản dịch UI trong `AppLocalizations.supportedLocales`. Locale DB mới chưa có ARB UI không xuất hiện; không cho chọn ngôn ngữ mà giao diện không thể dùng.
+- `GameSetup.contentLocale` là nguồn lưu chung, `MaterialApp.locale` và repository cùng đọc giá trị này. Khóa `ui_locale` cũ vẫn được giữ cùng dữ liệu ID cài đặt để tương thích lưu trữ, nhưng không điều khiển UI nữa. Ghi setup thành công mới đổi cả giao diện lẫn nội dung; lỗi giữ lựa chọn cũ và cho thử lại.
+- Bỏ dòng và màn chọn ngôn ngữ giao diện riêng. Mục Ngôn ngữ có ở Cài đặt, setup và picker. Không đổi ngôn ngữ trong ván; session giữ nguyên prompt, tên và locale. Chơi lại trở về setup với lựa chọn đã lưu.
+- Giữ record setup ở khóa cũ để bảo toàn người chơi, nhóm, custom và ảnh; preset không lưu/ghi đè locale. Cache danh sách ngôn ngữ riêng theo environment/backend, snapshot theo environment/backend/locale. `SetupStore` sống xuyên suốt việc đổi ngôn ngữ; tải về trễ không thay dữ liệu locale đang xem.
+- Chờ snapshot đúng locale trước xác nhận/bắt đầu. Offline dùng cache cùng locale; thiếu/rỗng thì không fallback. Sau snapshot, giữ ID hợp lệ và dùng tên mới; bỏ ID không hợp lệ kèm thông báo, hết lựa chọn thì dùng Tất cả danh mục. Picker hủy nháp ngay cả khi đổi VI→EN→VI trước một frame.
+- Custom/draft giữ locale lúc tạo/mở form. Cache ảnh dùng chung theo backend/path; kiểm kê mọi locale cùng session trước dọn. Không thêm dependency, migration, seed hay API quản trị.
+- Bằng chứng backend anon chỉ đọc từ lượt Phase 12: local `http://127.0.0.1:54321` có `vi` 13 category/27 word (25 family)/26 question pair, `en` 13 category/25 word (25 family)/25 question pair. Dev `https://pxycsjwjakzehcuygngv.supabase.co` không truy cập được/từ chối trong 5 giây, chưa nghiệm thu dev. Không ghi DB để kiểm thử.
+- Kiểm tra cập nhật: widget chọn một ngôn ngữ đổi cả UI/game, lỗi lưu không đổi cả hai, picker hủy nháp, session/replay, cache/restart, màn nhỏ/text scale/semantics; repository vẫn kiểm tra locale DB thứ ba bằng fixture, nhưng picker không hiện locale chưa có UI. Không chụp ảnh màn hình.
+- Kết quả sau điều chỉnh: `flutter gen-l10n` thành công; `flutter analyze` sạch; `flutter test` **274 đạt, 12 opt-in skip**. Build debug và khởi chạy trên iPhone 17 Pro simulator thành công; không chụp screenshot. Chưa nghiệm thu thiết bị thật.
 
 ### Phase 13 — Hoàn thiện và kiểm tra bản phát hành
 

@@ -1,3 +1,4 @@
+import 'package:untitled/features/settings/content_language_tile.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -84,16 +85,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 Card(
                   child: Column(
                     children: [
-                      ListTile(
-                        leading: const Icon(Icons.language),
-                        title: Text(l.interfaceLanguage),
-                        subtitle: Text(_languageName(l, store.locale.value)),
-                        trailing: const Icon(Icons.chevron_right),
-                        enabled: ready,
-                        onTap: ready
-                            ? () => router.push(RouteInput.settingsLanguage())
-                            : null,
-                      ),
+                      const ContentLanguageTile(),
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.help_outline),
@@ -187,9 +179,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       },
     );
   }
-
-  String _languageName(AppLocalizations l, Locale locale) =>
-      locale.languageCode == 'vi' ? l.languageVietnamese : l.languageEnglish;
 
   Future<void> _copyInstallationId(String id) async {
     try {

@@ -312,15 +312,23 @@ void main() {
         await server.close(force: true);
       });
       final source = SupabaseContentSource(client);
-      for (final table in [
-        'game_categories',
-        'word_prompts',
-        'question_prompts',
-      ]) {
-        await source.fetch(table, 'vi', 500, 999);
+      for (final locale in ['vi', 'en', 'ja']) {
+        for (final table in [
+          'game_categories',
+          'word_prompts',
+          'question_prompts',
+        ]) {
+          await source.fetch(table, locale, 500, 999);
+        }
       }
-      for (final uri in requests) {
-        expect(uri.queryParameters['t.locale'], 'eq.vi');
+      for (var i = 0; i < requests.length; i++) {
+        final uri = requests[i];
+        final locale = ['vi', 'en', 'ja'][i ~/ 3];
+        expect(uri.queryParameters['t.locale'], 'eq.$locale');
+        if (i % 3 != 0) {
+          expect(uri.queryParameters['c.t.locale'], 'eq.$locale');
+          expect(uri.queryParameters['c.t.status'], 'eq.published');
+        }
         expect(uri.queryParameters['t.status'], 'eq.published');
         expect(uri.queryParameters['select'], contains('!inner'));
         expect(uri.queryParameters['order'], startsWith('id.asc'));

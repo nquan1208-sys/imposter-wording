@@ -631,7 +631,7 @@ Cho phép người dùng thay đổi ngôn ngữ, mở hướng dẫn, gửi đ�
    - Tiêu đề căn giữa: `Cài đặt`.
 
 2. **Nhóm tùy chọn chung**
-    - `Ngôn ngữ giao diện`: có biểu tượng, ngôn ngữ hiện tại và mũi tên mở màn hình chọn ngôn ngữ giao diện. Nội dung game vẫn giữ tiếng Việt cho tới phase 12.
+   - `Ngôn ngữ`: một lựa chọn dùng chung cho giao diện, danh mục và đề; tên/mã từ DB, chỉ hiện VI/EN đã có UI.
    - `Cách chơi`: có biểu tượng và mũi tên mở màn hình hướng dẫn.
    - Hai mục nằm trong cùng một thẻ và được ngăn cách bằng đường phân chia.
 
@@ -649,7 +649,11 @@ Cho phép người dùng thay đổi ngôn ngữ, mở hướng dẫn, gửi đ�
 
 ### Hành vi
 
-- Chọn ngôn ngữ giao diện cập nhật nội dung hiển thị ngay và được lưu trên thiết bị; không đổi ngôn ngữ nội dung game.
+- Chọn Ngôn ngữ đổi đồng thời giao diện và nội dung game sau khi ghi setup thành công. Chỉ một giá trị lưu; lỗi ghi giữ ngôn ngữ cũ.
+- Màn `Ngôn ngữ` dùng Card/ListTile: tên DB, mã locale, biểu tượng và semantics đã chọn. Giữ màn sau khi chọn để hiển thị tiến trình, lỗi lưu và nút thử lại; ghi thành công mới chuyển nội dung.
+- Danh sách phân trang, sắp theo `sort_order`, rồi `code`; có loading, lỗi/thử lại và thông báo dùng cache. Không suy danh sách từ ARB. Ngôn ngữ biến mất sau tải thành công được đánh dấu không khả dụng, giữ lựa chọn cũ và chặn bắt đầu.
+- Setup và picker đều có dòng mở màn Ngôn ngữ. Locale mới chưa có snapshot thì chặn xác nhận/bắt đầu; rỗng thì báo chưa có nội dung và cho đổi ngôn ngữ. Đổi locale hủy lựa chọn nháp trong picker, giữ ID danh mục còn hợp lệ theo snapshot mới.
+- Không đổi ngôn ngữ trong ván. Session giữ prompt/tên danh mục đã chụp; chơi lại về setup. Form tùy chỉnh giữ locale lúc mở và không bị xóa khi đổi ngôn ngữ.
 - Chạm `Cách chơi` mở màn hình hướng dẫn hiện có.
 - Chạm `Đánh giá ứng dụng` hoặc `Gửi phản hồi` chuyển sang ứng dụng phù hợp trên thiết bị nếu đã cấu hình; nếu chưa, mục bị vô hiệu hóa và nêu lý do.
 - Chạm nút sao chép lưu toàn bộ ID cài đặt vào clipboard dù giá trị trên màn hình đang được rút gọn.

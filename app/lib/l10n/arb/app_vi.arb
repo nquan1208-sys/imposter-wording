@@ -28,7 +28,7 @@
   "confirm": "Xác nhận",
   "cancel": "Hủy",
   "retry": "Thử lại",
-  "loadingContent": "Đang tải nội dung tiếng Việt…",
+  "loadingContent": "Đang tải nội dung…",
   "emptyContent": "Chưa có nội dung phù hợp trong chế độ này.",
   "contentError": "Không thể tải nội dung mới. Vui lòng thử lại.",
   "cachedContent": "Đang dùng nội dung đã lưu.",
@@ -292,11 +292,8 @@
   "localImageDraftLost": "Ứng dụng đã khởi động lại khi chọn ảnh. Bản nháp chưa lưu đã mất. Vui lòng tạo lại.",
   "localImagePreview": "Ảnh đính kèm",
   "settingsTitle": "Cài đặt",
-  "interfaceLanguage": "Ngôn ngữ giao diện",
-  "chooseInterfaceLanguage": "Chọn ngôn ngữ giao diện",
   "languageVietnamese": "Tiếng Việt",
   "languageEnglish": "English",
-  "contentLanguageVietnamese": "Ngôn ngữ nội dung: Tiếng Việt",
   "generalOptions": "Tùy chọn chung",
   "rateAndFeedback": "Đánh giá và phản hồi",
   "rateApp": "Đánh giá ứng dụng",
@@ -312,5 +309,10 @@
   "appSettingsLoading": "Đang khôi phục cài đặt ứng dụng…",
   "appSettingsReadError": "Không đọc được cài đặt ứng dụng. Hãy thử lại.",
   "appSettingsWriteError": "Không thể lưu cài đặt. Lựa chọn vẫn được giữ trên màn hình.",
-  "appInfoUnavailable": "Thông tin ứng dụng chưa khả dụng."
+  "appInfoUnavailable": "Thông tin ứng dụng chưa khả dụng.",
+  "contentLanguage": "Ngôn ngữ",
+  "contentLanguageHelp": "Ngôn ngữ được dùng cho cả giao diện, danh mục và đề chơi.",
+  "contentLanguageUnavailable": "Ngôn ngữ đã lưu không còn khả dụng. Hãy chọn ngôn ngữ khác để chơi.",
+  "cachedLanguages": "Đang dùng danh sách ngôn ngữ đã lưu trên thiết bị.",
+  "languageListError": "Không tải được danh sách ngôn ngữ. Hãy thử lại."
 }

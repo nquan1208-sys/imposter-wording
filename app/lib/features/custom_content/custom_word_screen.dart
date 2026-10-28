@@ -51,6 +51,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
   final imageIds = <String, String>{};
   final imageOwner = Object();
   late final LocalImageStore images;
+  late final String contentLocale;
   void retainImages() => images.retain(imageOwner, {
     ...imageIds.values,
     for (final p in pairs)
@@ -71,6 +72,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
   void initState() {
     super.initState();
     images = ref.read(localImageStoreProvider);
+    contentLocale = ref.read(setupStoreProvider).setup.value.contentLocale;
   }
 
   @override
@@ -136,7 +138,11 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
     if (busy ||
         !store.editable ||
         !hasEntries ||
-        !store.validCustomCategoryName(name.text, gameType: widget.gameType) ||
+        !store.validCustomCategoryName(
+          name.text,
+          gameType: widget.gameType,
+          contentLocale: contentLocale,
+        ) ||
         (needsFamily && !suitable)) {
       setState(() {});
       return;
@@ -146,12 +152,17 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
       failed = false;
     });
     final id = question
-        ? await store.createCustomQuestionCategory(name.text, pairs)
+        ? await store.createCustomQuestionCategory(
+            name.text,
+            pairs,
+            contentLocale: contentLocale,
+          )
         : await store.createCustomWordCategory(
             name.text,
             words,
             family: widget.family && suitable,
             imageIds: imageIds,
+            contentLocale: contentLocale,
           );
     if (!mounted) return;
     if (id != null) {
@@ -169,7 +180,11 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
     final l = AppLocalizations.of(context);
     final validName = ref
         .read(setupStoreProvider)
-        .validCustomCategoryName(name.text, gameType: widget.gameType);
+        .validCustomCategoryName(
+          name.text,
+          gameType: widget.gameType,
+          contentLocale: contentLocale,
+        );
     return PopScope(
       canPop: exiting,
       onPopInvokedWithResult: (didPop, _) {

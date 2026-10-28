@@ -37,29 +37,33 @@ void main() {
     MemoryStorage? setupFile,
   }) async {
     content = ContentRepository(
+      contentLocale: english ? 'en' : 'vi',
       cache: cache ?? MemoryStorage(),
-      fetchPage: fetch ?? (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
+      fetchPage:
+          fetch ??
+          (t, l, f, e) =>
+              fixturePage(fixture(locale: english ? 'en' : 'vi'), t, l, f, e),
     );
     file = setupFile ?? MemoryStorage();
     store = SetupStore(content: content, file: file);
     addTearDown(content.dispose);
     addTearDown(store.dispose);
     await store.restore();
+    if (english) await store.setContentLocale('en');
     if (load) await content.load();
     container = ProviderContainer(
       overrides: [
         localStorageProvider.overrideWithValue(MemoryAppSettingsStorage()),
-        contentRepositoryProvider.overrideWithValue(content),
+        contentRepositoryProvider(
+          english ? 'en' : 'vi',
+        ).overrideWithValue(content),
         setupStoreProvider.overrideWithValue(store),
       ],
     );
     await container.read(StoreProvider.app).restore();
     addTearDown(container.dispose);
     if (english) {
-      expect(
-        await container.read(StoreProvider.app).setLocale(const Locale('en')),
-        isTrue,
-      );
+      expect(await store.setContentLocale('en'), isTrue);
     }
     await tester.pumpWidget(
       UncontrolledProviderScope(container: container, child: const MyApp()),
@@ -79,7 +83,11 @@ void main() {
       await tester.scrollUntilVisible(
         target,
         180,
-        scrollable: find.byType(Scrollable).first,
+        scrollable: find
+            .byWidgetPredicate(
+              (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+            )
+            .last,
       );
     }
     final finder = target.last;
@@ -108,6 +116,15 @@ void main() {
     expect(store.setup.value.categoryIds, {'b'});
     expect(store.setup.value.family, false);
     await tap(tester, 'Category a');
+    await tester.scrollUntilVisible(
+      find.text('Show images'),
+      -180,
+      scrollable: find
+          .byWidgetPredicate(
+            (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+          )
+          .last,
+    );
     await tap(tester, 'Show images');
     await tester.drag(pages, const Offset(500, 0));
     await tester.pumpAndSettle();
@@ -559,7 +576,11 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Add player'),
       180,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find
+          .byWidgetPredicate(
+            (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+          )
+          .last,
     );
     await tap(tester, 'Add player');
     await tap(tester, 'Confirm');
@@ -701,7 +722,11 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Add player'),
       500,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find
+          .byWidgetPredicate(
+            (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+          )
+          .last,
     );
     expect(
       tester
@@ -740,7 +765,7 @@ void main() {
   testWidgets(
     'pull to refresh shows progress, keeps offline play and revalidates categories',
     (tester) async {
-      var data = fixture();
+      var data = fixture(locale: 'en');
       Completer<List<JsonMap>>? gate;
       await pump(
         tester,
@@ -782,7 +807,7 @@ void main() {
       expect(content.cached.value, true);
       expect(content.loadFailed.value, true);
       gate = null;
-      data = fixture();
+      data = fixture(locale: 'en');
       (data['words'] as List).removeWhere((w) => w['category_id'] == 'b');
       await tester.drag(
         find.byType(SingleChildScrollView),
@@ -813,7 +838,7 @@ void main() {
       english: true,
       fetch: (t, l, f, e) async {
         requests++;
-        return fixturePage(fixture(), t, l, f, e);
+        return fixturePage(fixture(locale: 'en'), t, l, f, e);
       },
     );
     final scrollable = tester.state<ScrollableState>(find.byType(Scrollable));
@@ -834,12 +859,12 @@ void main() {
       english: true,
       fetch: (t, l, f, e) async {
         if (offline) return gate.future;
-        return fixturePage(fixture(), t, l, f, e);
+        return fixturePage(fixture(locale: 'en'), t, l, f, e);
       },
     );
     final pending = content.load();
     await tester.pump();
-    expect(find.text('Loading Vietnamese content…'), findsOneWidget);
+    expect(find.text('Loading content…'), findsOneWidget);
     gate.completeError(const SocketException('offline'));
     await pending;
     await tester.pumpAndSettle();
@@ -855,7 +880,7 @@ void main() {
   testWidgets('offline cache, empty family mode and persistence retry', (
     tester,
   ) async {
-    final data = fixture();
+    final data = fixture(locale: 'en');
     for (final c in data['categories'] as List) {
       c.remove('is_family_friendly');
     }
@@ -895,6 +920,7 @@ void main() {
 
   testWidgets('unreadable settings require retry', (tester) async {
     await pump(tester, english: true);
+    final writesBeforeRead = file.writes;
     file.failRead = true;
     await store.restore();
     await tester.pumpAndSettle();
@@ -904,7 +930,7 @@ void main() {
     );
     expect(find.text('Reset setup'), findsNothing);
     expect(store.readFailed.value, true);
-    expect(file.writes, 0);
+    expect(file.writes, writesBeforeRead);
     file.failRead = false;
     await tap(tester, 'Retry');
     expect(store.readFailed.value, false);
@@ -916,9 +942,9 @@ void main() {
       await pump(tester, english: true);
       await tap(tester, 'Categories');
       await tap(tester, 'Category b');
-      final data = fixture();
+      final data = fixture(locale: 'en');
       (data['words'] as List).removeWhere((w) => w['category_id'] == 'b');
-      content.snapshot.value = ContentSnapshot.fromJson(data, 'vi');
+      content.snapshot.value = ContentSnapshot.fromJson(data, 'en');
       await tester.pumpAndSettle();
       expect(
         find.textContaining('Unavailable categories were removed.'),
@@ -948,7 +974,11 @@ void main() {
         await tester.scrollUntilVisible(
           find.byKey(const ValueKey('name-0-player-1')),
           100,
-          scrollable: find.byType(Scrollable).first,
+          scrollable: find
+              .byWidgetPredicate(
+                (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+              )
+              .last,
         );
         await tester.enterText(
           find.byKey(const ValueKey('name-0-player-1')),
@@ -964,7 +994,11 @@ void main() {
         await tester.scrollUntilVisible(
           find.text('Người chơi'),
           -180,
-          scrollable: find.byType(Scrollable).first,
+          scrollable: find
+              .byWidgetPredicate(
+                (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+              )
+              .last,
         );
         await tap(tester, 'Người chơi');
         await tap(tester, 'Xác nhận');
@@ -974,7 +1008,11 @@ void main() {
         await tester.scrollUntilVisible(
           find.text('Bắt đầu ván chơi'),
           180,
-          scrollable: find.byType(Scrollable).first,
+          scrollable: find
+              .byWidgetPredicate(
+                (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+              )
+              .last,
         );
         await tester.pumpAndSettle();
         final buttonRect = tester.getRect(

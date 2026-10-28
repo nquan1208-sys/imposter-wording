@@ -97,8 +97,9 @@ void main() {
     WordImageCache? images,
     bool failNavigation = false,
   }) async {
-    fetchData = fixture();
+    fetchData = fixture(locale: english ? 'en' : 'vi');
     content = ContentRepository(
+      contentLocale: english ? 'en' : 'vi',
       images: images,
       cache: MemoryStorage(),
       fetchPage: (t, l, f, e) => fixturePage(fetchData, t, l, f, e),
@@ -106,6 +107,7 @@ void main() {
     setup = SetupStore(content: content, file: MemoryStorage());
     await content.load();
     await setup.restore();
+    if (english) await setup.setContentLocale('en');
     await setup.setFamily(family);
     await setup.setShowWordImages(showWordImages);
     await setup.setPlayerCount(advanced ? 5 : 3);
@@ -125,16 +127,15 @@ void main() {
         if (failNavigation)
           AppService.router.overrideWithValue(FailingGameRouter()),
         localStorageProvider.overrideWithValue(MemoryAppSettingsStorage()),
-        contentRepositoryProvider.overrideWithValue(content),
+        contentRepositoryProvider(
+          english ? 'en' : 'vi',
+        ).overrideWithValue(content),
         setupStoreProvider.overrideWithValue(setup),
       ],
     );
     await container.read(StoreProvider.app).restore();
     if (english) {
-      expect(
-        await container.read(StoreProvider.app).setLocale(const Locale('en')),
-        isTrue,
-      );
+      expect(await setup.setContentLocale('en'), isTrue);
     }
     addTearDown(() {
       container.dispose();
@@ -559,12 +560,9 @@ void main() {
       await tester.pump();
       expect(find.text('Nhấn để hiển thị'), findsOneWidget);
       content.snapshot.value = ContentSnapshot.fromJson(fixture(), 'vi');
-      expect(
-        await container.read(StoreProvider.app).setLocale(const Locale('en')),
-        isTrue,
-      );
+      expect(await setup.setContentLocale('en'), isFalse);
       await tester.pumpAndSettle();
-      await tap(tester, 'Tap to reveal');
+      await tap(tester, 'Nhấn để hiển thị');
       expect(find.text(session.prompt.text), findsOneWidget);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
@@ -575,11 +573,11 @@ void main() {
       );
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      await tap(tester, 'Cancel');
+      await tap(tester, 'Hủy');
       expect(find.byType(WordGameScreen), findsOneWidget);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      await tap(tester, 'End game');
+      await tap(tester, 'Kết thúc ván');
       expect(find.byType(WordGameScreen), findsNothing);
       semantics.dispose();
     },

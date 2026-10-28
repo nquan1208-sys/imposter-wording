@@ -19,7 +19,9 @@ class WordImageCache extends ChangeNotifier {
   final _pending = <String>{};
   final _failed = <String>{};
   final _pins = <String, int>{};
-  Set<String> _current = {};
+  final _snapshots = <String, Set<String>>{};
+  Set<String> get _current =>
+      _snapshots.values.expand((paths) => paths).toSet();
   Future<void> _queue = Future.value();
   bool _disposed = false;
 
@@ -64,7 +66,7 @@ class WordImageCache extends ChangeNotifier {
 
   void refresh(ContentSnapshot snapshot, {bool retryFailures = true}) {
     if (retryFailures) _failed.clear();
-    _current = snapshot.words
+    _snapshots[snapshot.contentLocale] = snapshot.words
         .map((w) => w.imagePath)
         .whereType<String>()
         .toSet();

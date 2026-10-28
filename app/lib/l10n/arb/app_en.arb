@@ -28,7 +28,7 @@
   "confirm": "Confirm",
   "cancel": "Cancel",
   "retry": "Retry",
-  "loadingContent": "Loading Vietnamese content…",
+  "loadingContent": "Loading content…",
   "emptyContent": "No eligible content in this mode.",
   "contentError": "Content could not be refreshed. Please retry.",
   "cachedContent": "Using saved content.",
@@ -292,11 +292,8 @@
   "localImageDraftLost": "The app restarted while choosing an image. Your unsaved draft was lost. Please create it again.",
   "localImagePreview": "Attached image",
   "settingsTitle": "Settings",
-  "interfaceLanguage": "Interface language",
-  "chooseInterfaceLanguage": "Choose interface language",
   "languageVietnamese": "Tiếng Việt",
   "languageEnglish": "English",
-  "contentLanguageVietnamese": "Content language: Vietnamese",
   "generalOptions": "General options",
   "rateAndFeedback": "Rate and feedback",
   "rateApp": "Rate this app",
@@ -312,5 +309,10 @@
   "appSettingsLoading": "Restoring app settings…",
   "appSettingsReadError": "Saved app settings could not be read. Please retry.",
   "appSettingsWriteError": "Settings could not be saved. Your choice is still here.",
-  "appInfoUnavailable": "App information is unavailable."
+  "appInfoUnavailable": "App information is unavailable.",
+  "contentLanguage": "Language",
+  "contentLanguageHelp": "This language is used for the interface, categories and game prompts.",
+  "contentLanguageUnavailable": "The saved language is unavailable. Choose another language to play.",
+  "cachedLanguages": "Using the language list saved on this device.",
+  "languageListError": "Could not load languages. Please retry."
 }

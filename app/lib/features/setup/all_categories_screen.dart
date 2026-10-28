@@ -1,3 +1,4 @@
+import 'package:untitled/features/settings/content_language_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/constants/app_spacing.dart';
@@ -39,6 +40,7 @@ class AllCategoriesScreen extends StatelessWidget {
       padding: AppEdgeInsets.all24,
       children: [
         ?header,
+        const Card(child: ContentLanguageTile()),
         ContentNotices(store.content),
         if (saveFailed) Text(l.settingsWriteError),
         if (selectionRemoved || selected.length != valid.length)
