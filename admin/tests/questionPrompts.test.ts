@@ -65,3 +65,19 @@ test('question category discovery reads all pages and labels only the selected l
  assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'game_type' && call[2] === 'question'))
  assert.ok(!calls.some(call => call[0] === 'eq' && call[1] === 'locale'), 'category identity is shared')
 })
+
+test('question category filter preserves seeded IDs through the list RPC and form validation', async () => {
+  for (const category of ['5eed0002-0000-0000-0000-000000000001', id]) {
+    const filters = questionPromptFilters({ category })
+    assert.equal(filters.category, category)
+    const calls: Calls = []
+    const client = asClient({ rpc: async (...args: unknown[]) => { calls.push(args); return { data: { rows: [], total: 0 } } } })
+    await listQuestionPrompts(client, filters)
+    assert.equal((calls[0]![1] as Record<string, unknown>).p_category_id, category)
+    assert.equal(questionPromptPayload({ ...form, category_id: category }, 'draft').category_id, category)
+  }
+  for (const category of ['', 'all', 'invalid', '5eed0002-0000-0000-0000-00000000000g', ['5eed0002-0000-0000-0000-000000000001']]) {
+    assert.equal(questionPromptFilters({ category }).category, '')
+    assert.throws(() => questionPromptPayload({ ...form, category_id: category }, 'draft'), /categoryRequired/)
+  }
+})

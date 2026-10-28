@@ -6,7 +6,7 @@ export const difficulties = ['easy', 'medium', 'hard'] as const
 export const questionPromptSchema = z.object({
   civilian_question: z.string().trim().min(1, 'questionPrompts.errors.civilianRequired'),
   imposter_question: z.string().trim().min(1, 'questionPrompts.errors.imposterRequired'),
-  category_id: z.uuid({ error: 'questionPrompts.errors.categoryRequired' }),
+  category_id: z.guid({ error: 'questionPrompts.errors.categoryRequired' }),
   difficulty: z.enum(difficulties),
   locale: z.string().trim().min(1, 'questionPrompts.errors.localeRequired'),
 }).refine(value => value.civilian_question.toLowerCase() !== value.imposter_question.toLowerCase(), { message: 'questionPrompts.errors.sameQuestions' })
@@ -21,7 +21,7 @@ export function questionPromptFilters(query: LocationQuery) {
   const page = Number(query.page)
   return {
     search: typeof query.search === 'string' ? query.search : '',
-    category: z.uuid().safeParse(query.category).success ? String(query.category) : '',
+    category: z.guid().safeParse(query.category).success ? String(query.category) : '',
     difficulty: z.enum(difficulties).safeParse(query.difficulty).success ? query.difficulty as typeof difficulties[number] : '' as const,
     locale: typeof query.locale === 'string' && query.locale ? query.locale : 'vi',
     status: z.enum(statuses).safeParse(query.status).success ? query.status as typeof statuses[number] : '' as const,

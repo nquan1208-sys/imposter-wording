@@ -9,7 +9,7 @@ const optionalText = z.string().nullish().transform(value => value?.trim() || nu
 export const wordPromptSchema = z.object({
   text: z.string().trim().min(1, 'wordPrompts.errors.textRequired'),
   image_path: optionalText,
-  category_id: z.uuid({ error: 'wordPrompts.errors.categoryRequired' }),
+  category_id: z.guid({ error: 'wordPrompts.errors.categoryRequired' }),
   difficulty: z.enum(difficulties),
   locale: z.string().trim().min(1, 'wordPrompts.errors.localeRequired'),
 })
@@ -24,7 +24,7 @@ export function wordPromptFilters(query: LocationQuery) {
   const page = Number(query.page)
   return {
     search: typeof query.search === 'string' ? query.search : '',
-    category: z.uuid().safeParse(query.category).success ? String(query.category) : '',
+    category: z.guid().safeParse(query.category).success ? String(query.category) : '',
     difficulty: z.enum(difficulties).safeParse(query.difficulty).success ? query.difficulty as typeof difficulties[number] : '' as const,
     locale: typeof query.locale === 'string' && query.locale ? query.locale : 'vi',
     status: z.enum(statuses).safeParse(query.status).success ? query.status as typeof statuses[number] : '' as const,
