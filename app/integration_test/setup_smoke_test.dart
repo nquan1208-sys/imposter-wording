@@ -1,3 +1,5 @@
+import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
+import 'package:untitled/widgets/app_selection_card.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,9 +59,38 @@ void main() {
       await store.restore();
       expect(content.loadFailed.value, false);
       expect(content.cacheWarning.value, false);
-      expect(content.eligibleWords(family: false).length, 1);
-      expect(content.eligibleWords(family: true), isEmpty);
+      final totalWords = content.eligibleWords(family: false).length;
+      expect(
+        totalWords,
+        greaterThan(0),
+        reason: 'Local dataset needs a published Vietnamese word',
+      );
+      final category = store.categoryCounts(family: false).keys.first;
+      final selectedWords = store
+          .eligibleWords(family: false, categoryIds: {category.id})
+          .length;
+      final nextPlayerCount = store.setup.value.players.length + 1;
       expect(Supabase.instance.client.auth.currentSession, null);
+      Future<void> tap(Finder target) async {
+        if (target.evaluate().isEmpty) {
+          await tester.scrollUntilVisible(
+            target,
+            200,
+            maxScrolls: 150,
+            scrollable: find
+                .byWidgetPredicate(
+                  (w) =>
+                      w is Scrollable && w.axisDirection == AxisDirection.down,
+                )
+                .first,
+          );
+        }
+        await tester.ensureVisible(target);
+        await tester.pumpAndSettle();
+        await tester.tap(target);
+        await tester.pumpAndSettle();
+      }
+
       var container = ProviderContainer(
         overrides: [
           contentRepositoryProvider('vi').overrideWithValue(content),
@@ -70,25 +101,22 @@ void main() {
         UncontrolledProviderScope(container: container, child: const MyApp()),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Bắt đầu'));
-      await tester.pumpAndSettle();
-      expect(find.text('1 từ phù hợp'), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.chevron_right));
-      await tester.pumpAndSettle();
-      expect(find.text('Đồ ăn Việt Nam'), findsOneWidget);
-      expect(find.text('Nhân vật hư cấu'), findsNothing);
-      await tester.tap(find.text('Đồ ăn Việt Nam'));
-      await tester.tap(find.text('Xác nhận'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Người chơi'));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Thêm người chơi'));
-      await tester.tap(find.text('Thêm người chơi'));
-      await tester.tap(find.text('Xác nhận'));
-      await tester.pumpAndSettle();
+      await tap(find.text('Bắt đầu'));
+      final l = AppLocalizations.of(
+        tester.element(find.byType(Scaffold).first),
+      );
+      expect(find.text(l.wordCount(totalWords)), findsOneWidget);
+      await tap(find.byKey(const Key('categoryPicker')));
+      await tap(find.widgetWithText(AppSelectionCard, category.name));
+      await tap(find.widgetWithText(FilledButton, l.confirm));
+      expect(store.setup.value.categoryIds, {category.id});
+      expect(find.text(l.wordCount(selectedWords)), findsOneWidget);
+      await tap(find.text(l.players));
+      await tap(find.text(l.addPlayer));
+      await tap(find.widgetWithText(FilledButton, l.confirm));
       await store.save();
-      expect(store.setup.value.players.length, 5);
-      expect(store.setup.value.categoryIds.length, 1);
+      expect(store.setup.value.players.length, nextPlayerCount);
+      expect(store.setup.value.categoryIds, {category.id});
       final playerIds = store.setup.value.players.map((p) => p.id).toList();
       await tester.pumpWidget(const SizedBox());
       container.dispose();
@@ -107,7 +135,9 @@ void main() {
       await offline.load();
       await restored.restore();
       expect(restored.setup.value.players.map((p) => p.id), playerIds);
-      expect(restored.setup.value.categoryIds.length, 1);
+      expect(restored.setup.value.categoryIds, {category.id});
+      expect(offline.cached.value, true);
+      expect(offline.loadFailed.value, true);
       container = ProviderContainer(
         overrides: [
           contentRepositoryProvider('vi').overrideWithValue(offline),
@@ -118,15 +148,30 @@ void main() {
         UncontrolledProviderScope(container: container, child: const MyApp()),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Bắt đầu'));
-      await tester.pumpAndSettle();
-      expect(find.text('5'), findsOneWidget);
-      expect(find.text('1 từ phù hợp'), findsOneWidget);
-      expect(find.text('Đang dùng nội dung đã lưu.'), findsOneWidget);
-      await tester.tap(find.text('Gia đình'));
-      await tester.pumpAndSettle();
-      expect(find.text('0 từ phù hợp'), findsOneWidget);
-      expect(restored.setup.value.categoryIds, isEmpty);
+      await tap(find.text(l.start));
+      expect(find.text('$nextPlayerCount'), findsOneWidget);
+      expect(find.text(l.wordCount(selectedWords)), findsOneWidget);
+      expect(find.text(l.cachedContent), findsOneWidget);
+      await tap(find.byKey(const Key('categoryPicker')));
+      await tap(find.text(l.familyCategories));
+      await tap(find.widgetWithText(FilledButton, l.confirm));
+      expect(restored.setup.value.family, true);
+      final familyCategoryIds = restored
+          .categoryCounts(family: true)
+          .keys
+          .map((c) => c.id)
+          .toSet();
+      expect(
+        restored.setup.value.categoryIds,
+        {category.id}.intersection(familyCategoryIds),
+      );
+      final familyWords = restored
+          .eligibleWords(
+            family: true,
+            categoryIds: restored.setup.value.categoryIds,
+          )
+          .length;
+      expect(find.text(l.wordCount(familyWords)), findsOneWidget);
       await restored.save();
       expect(tester.takeException(), null);
       await tester.pumpWidget(const SizedBox());

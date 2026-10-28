@@ -1,3 +1,6 @@
+import 'package:untitled/widgets/app_action_bar.dart';
+import 'package:untitled/widgets/app_notice.dart';
+import 'package:untitled/constants/app_spacing.dart';
 import 'package:untitled/data/local_image_store.dart';
 import 'package:untitled/features/custom_content/image_attachment.dart';
 import 'dart:convert';
@@ -47,6 +50,7 @@ class CustomWordScreen extends ConsumerStatefulWidget {
 
 class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
   final name = TextEditingController();
+  final scroll = ScrollController();
   final words = <String>[];
   final imageIds = <String, String>{};
   final imageOwner = Object();
@@ -79,6 +83,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
   void dispose() {
     images.release(imageOwner);
     name.dispose();
+    scroll.dispose();
     super.dispose();
   }
 
@@ -172,6 +177,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
         busy = false;
         failed = true;
       });
+      scroll.jumpTo(0);
     }
   }
 
@@ -195,33 +201,30 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
           title: Text(l.createCustomCategory),
           leading: BackButton(onPressed: leave),
         ),
-        bottomNavigationBar: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom,
-          ),
-          child: AppContent(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: FilledButton(
-                onPressed:
-                    !busy &&
-                        validName &&
-                        hasEntries &&
-                        (!needsFamily || suitable)
-                    ? save
-                    : null,
-                child: Text(busy ? l.customSaving : l.saveCustomCategory),
-              ),
-            ),
+        bottomNavigationBar: AppActionBar(
+          child: FilledButton(
+            onPressed:
+                !busy && validName && hasEntries && (!needsFamily || suitable)
+                ? save
+                : null,
+            child: Text(busy ? l.customSaving : l.saveCustomCategory),
           ),
         ),
         body: AppContent(
           child: AbsorbPointer(
             absorbing: busy,
             child: ListView(
+              controller: scroll,
               padding: const EdgeInsets.all(24),
               children: [
+                if (busy) const LinearProgressIndicator(),
+                if (failed)
+                  AppNotice(
+                    message: question
+                        ? l.customQuestionSaveError
+                        : l.customSaveError,
+                    error: true,
+                  ),
                 TextField(
                   enabled: !busy,
                   controller: name,
@@ -235,7 +238,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xxl),
                 Text(
                   question ? l.customQuestionList : l.customWordList,
                   style: Theme.of(context).textTheme.titleLarge,
@@ -245,79 +248,98 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                       ? l.questionCount(pairs.length)
                       : l.wordCount(words.length),
                 ),
+                const SizedBox(height: AppSpacing.lg),
                 if (!hasEntries)
-                  Text(question ? l.customQuestionsEmpty : l.customWordsEmpty),
+                  AppNotice(
+                    message: question
+                        ? l.customQuestionsEmpty
+                        : l.customWordsEmpty,
+                  ),
                 if (question)
                   for (var i = 0; i < pairs.length; i++)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        '${l.customCivilianQuestion}: ${pairs[i].civilianQuestion}',
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${l.customImposterQuestion}: ${pairs[i].imposterQuestion}',
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Card(
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(AppSpacing.lg),
+                          title: Text(
+                            '${l.customCivilianQuestion}: ${pairs[i].civilianQuestion}',
                           ),
-                          ImageAttachment(
-                            key: ValueKey(i),
-                            imageId: pairs[i].imageId,
-                            onBusy: (value) => setState(() => busy = value),
-                            onChanged: (id) => setState(() {
-                              final p = pairs[i];
-                              pairs[i] = CustomQuestionEntry(
-                                p.civilianQuestion,
-                                p.imposterQuestion,
-                                imageId: id,
-                              );
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: AppSpacing.md),
+                              Text(
+                                '${l.customImposterQuestion}: ${pairs[i].imposterQuestion}',
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              ImageAttachment(
+                                key: ValueKey(i),
+                                imageId: pairs[i].imageId,
+                                onBusy: (value) => setState(() => busy = value),
+                                onChanged: (id) => setState(() {
+                                  final p = pairs[i];
+                                  pairs[i] = CustomQuestionEntry(
+                                    p.civilianQuestion,
+                                    p.imposterQuestion,
+                                    imageId: id,
+                                  );
+                                  retainImages();
+                                  images.cleanup();
+                                }),
+                              ),
+                            ],
+                          ),
+                          trailing: IconButton(
+                            tooltip: l.removeCustomQuestion(i + 1),
+                            onPressed: () => setState(() {
+                              pairs.removeAt(i);
                               retainImages();
                               images.cleanup();
                             }),
+                            icon: const Icon(Icons.delete_outline),
                           ),
-                        ],
-                      ),
-                      trailing: IconButton(
-                        tooltip: l.removeCustomQuestion(i + 1),
-                        onPressed: () => setState(() {
-                          pairs.removeAt(i);
-                          retainImages();
-                          images.cleanup();
-                        }),
-                        icon: const Icon(Icons.delete_outline),
+                        ),
                       ),
                     ),
                 if (!question)
                   for (var i = 0; i < words.length; i++)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(words[i]),
-                      subtitle: ImageAttachment(
-                        key: ValueKey(words[i]),
-                        imageId: imageIds[words[i]],
-                        onBusy: (value) => setState(() => busy = value),
-                        onChanged: (id) => setState(() {
-                          if (id == null) {
-                            imageIds.remove(words[i]);
-                          } else {
-                            imageIds[words[i]] = id;
-                          }
-                          retainImages();
-                          images.cleanup();
-                        }),
-                      ),
-                      trailing: IconButton(
-                        tooltip: l.removeCustomWord(words[i]),
-                        onPressed: () => setState(() {
-                          imageIds.remove(words.removeAt(i));
-                          retainImages();
-                          images.cleanup();
-                        }),
-                        icon: const Icon(Icons.delete_outline),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Card(
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(AppSpacing.lg),
+                          title: Text(words[i]),
+                          subtitle: ImageAttachment(
+                            key: ValueKey(words[i]),
+                            imageId: imageIds[words[i]],
+                            onBusy: (value) => setState(() => busy = value),
+                            onChanged: (id) => setState(() {
+                              if (id == null) {
+                                imageIds.remove(words[i]);
+                              } else {
+                                imageIds[words[i]] = id;
+                              }
+                              retainImages();
+                              images.cleanup();
+                            }),
+                          ),
+                          trailing: IconButton(
+                            tooltip: l.removeCustomWord(words[i]),
+                            onPressed: () => setState(() {
+                              imageIds.remove(words.removeAt(i));
+                              retainImages();
+                              images.cleanup();
+                            }),
+                            icon: const Icon(Icons.delete_outline),
+                          ),
+                        ),
                       ),
                     ),
+                const SizedBox(height: AppSpacing.lg),
                 Wrap(
-                  spacing: 8,
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
                   children: [
                     OutlinedButton(
                       onPressed: () => addWords(false),
@@ -336,18 +358,15 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                   ],
                 ),
                 if (needsFamily)
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l.customFamilyConfirmation),
-                    value: suitable,
-                    onChanged: (value) =>
-                        setState(() => suitable = value == true),
-                  ),
-                if (failed)
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      question ? l.customQuestionSaveError : l.customSaveError,
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.xxl),
+                    child: Card(
+                      child: CheckboxListTile(
+                        title: Text(l.customFamilyConfirmation),
+                        value: suitable,
+                        onChanged: (value) =>
+                            setState(() => suitable = value == true),
+                      ),
                     ),
                   ),
               ],
@@ -436,35 +455,49 @@ class _WordEntryDialogState extends State<_WordEntryDialog> {
                 onChanged: (id) => setState(() => imageId = id),
                 onBusy: (value) => setState(() => busy = value),
               ),
+            const SizedBox(height: AppSpacing.xl),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                TextButton(
+                  onPressed: busy ? null : leave,
+                  child: Text(l.cancel),
+                ),
+                FilledButton(
+                  onPressed: busy
+                      ? null
+                      : () {
+                          final existing = widget.existing
+                              .map((w) => w.toLowerCase())
+                              .toSet();
+                          final entries =
+                              uniqueWords(
+                                    widget.batch
+                                        ? const LineSplitter().convert(
+                                            text.text,
+                                          )
+                                        : [text.text],
+                                  )
+                                  .where(
+                                    (w) => !existing.contains(w.toLowerCase()),
+                                  )
+                                  .toList();
+                          if (entries.isEmpty) {
+                            setState(() => invalid = true);
+                            return;
+                          }
+                          if (!widget.batch) {
+                            widget.onImage(entries.single, imageId);
+                          }
+                          close(entries);
+                        },
+                  child: Text(l.confirm),
+                ),
+              ],
+            ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: busy ? null : leave, child: Text(l.cancel)),
-          FilledButton(
-            onPressed: busy
-                ? null
-                : () {
-                    final existing = widget.existing
-                        .map((w) => w.toLowerCase())
-                        .toSet();
-                    final entries =
-                        uniqueWords(
-                              widget.batch
-                                  ? const LineSplitter().convert(text.text)
-                                  : [text.text],
-                            )
-                            .where((w) => !existing.contains(w.toLowerCase()))
-                            .toList();
-                    if (entries.isEmpty) {
-                      setState(() => invalid = true);
-                      return;
-                    }
-                    if (!widget.batch) widget.onImage(entries.single, imageId);
-                    close(entries);
-                  },
-            child: Text(l.confirm),
-          ),
-        ],
       ),
     );
   }
@@ -531,7 +564,7 @@ class _QuestionEntryDialogState extends State<_QuestionEntryDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.batch) Text(l.customQuestionLineHelp),
+            if (widget.batch) AppNotice(message: l.customQuestionLineHelp),
             for (final field in [
               (civilian, l.customCivilianQuestion),
               (imposter, l.customImposterQuestion),
@@ -555,49 +588,55 @@ class _QuestionEntryDialogState extends State<_QuestionEntryDialog> {
                 onBusy: (value) => setState(() => busy = value),
               ),
             if (error != null)
-              Semantics(
-                liveRegion: true,
-                child: Text(
-                  error!.unequalCounts
-                      ? l.customQuestionCountError(error!.rows.join(', '))
-                      : l.customQuestionRowsError(error!.rows.join(', ')),
-                ),
+              AppNotice(
+                error: true,
+                message: error!.unequalCounts
+                    ? l.customQuestionCountError(error!.rows.join(', '))
+                    : l.customQuestionRowsError(error!.rows.join(', ')),
               ),
+            const SizedBox(height: AppSpacing.xl),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                TextButton(
+                  onPressed: busy ? null : leave,
+                  child: Text(l.cancel),
+                ),
+                FilledButton(
+                  onPressed: busy
+                      ? null
+                      : () {
+                          try {
+                            final entries = parseQuestionPairs(
+                              civilian.text,
+                              imposter.text,
+                              batch: widget.batch,
+                              existing: widget.existing,
+                            );
+                            if (!widget.batch) {
+                              widget.onImage(imageId);
+                              final p = entries.single;
+                              close([
+                                CustomQuestionEntry(
+                                  p.civilianQuestion,
+                                  p.imposterQuestion,
+                                  imageId: imageId,
+                                ),
+                              ]);
+                            } else {
+                              close(entries);
+                            }
+                          } on QuestionImportException catch (e) {
+                            setState(() => error = e);
+                          }
+                        },
+                  child: Text(l.confirm),
+                ),
+              ],
+            ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: busy ? null : leave, child: Text(l.cancel)),
-          FilledButton(
-            onPressed: busy
-                ? null
-                : () {
-                    try {
-                      final entries = parseQuestionPairs(
-                        civilian.text,
-                        imposter.text,
-                        batch: widget.batch,
-                        existing: widget.existing,
-                      );
-                      if (!widget.batch) {
-                        widget.onImage(imageId);
-                        final p = entries.single;
-                        close([
-                          CustomQuestionEntry(
-                            p.civilianQuestion,
-                            p.imposterQuestion,
-                            imageId: imageId,
-                          ),
-                        ]);
-                      } else {
-                        close(entries);
-                      }
-                    } on QuestionImportException catch (e) {
-                      setState(() => error = e);
-                    }
-                  },
-            child: Text(l.confirm),
-          ),
-        ],
       ),
     );
   }

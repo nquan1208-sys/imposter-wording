@@ -1,3 +1,4 @@
+import 'package:untitled/widgets/app_selection_card.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -124,7 +125,7 @@ void main() {
       contentGate!.complete();
       await tester.pumpAndSettle();
       expect(
-        tester.getSemantics(find.widgetWithText(ListTile, 'English')),
+        tester.getSemantics(find.widgetWithText(AppSelectionCard, 'English')),
         isSemantics(isSelected: true, hasSelectedState: true),
       );
       await tester.tap(find.byType(BackButton));
@@ -144,7 +145,7 @@ void main() {
   testWidgets('unified language change cancels picker draft', (tester) async {
     await pump(tester);
     await tap(tester, find.byKey(const Key('categoryPicker')));
-    await tap(tester, find.widgetWithText(OutlinedButton, 'vi b'));
+    await tap(tester, find.widgetWithText(AppSelectionCard, 'vi b'));
     await tap(tester, find.text('Ngôn ngữ'), delta: -160);
     await tap(tester, find.text('English'));
     await tester.tap(find.byType(BackButton));
@@ -164,7 +165,7 @@ void main() {
     (tester) async {
       await pump(tester);
       await tap(tester, find.byKey(const Key('categoryPicker')));
-      await tap(tester, find.widgetWithText(OutlinedButton, 'vi b'));
+      await tap(tester, find.widgetWithText(AppSelectionCard, 'vi b'));
       await store.setContentLocale('en');
       await store.setContentLocale('vi');
       await store.pendingWrites;

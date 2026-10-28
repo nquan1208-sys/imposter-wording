@@ -1,3 +1,7 @@
+import 'package:untitled/constants/app_radii.dart';
+import 'package:untitled/widgets/app_notice.dart';
+import 'package:untitled/constants/app_spacing.dart';
+import 'package:untitled/theme/app_colors.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -50,6 +54,8 @@ class _ImageAttachmentState extends ConsumerState<ImageAttachment> {
     final l = AppLocalizations.of(context);
     final choice = await showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) => SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -67,7 +73,10 @@ class _ImageAttachmentState extends ConsumerState<ImageAttachment> {
               ),
               if (widget.imageId != null)
                 ListTile(
-                  title: Text(l.removeLocalImage),
+                  title: Text(
+                    l.removeLocalImage,
+                    style: const TextStyle(color: AppColors.error),
+                  ),
                   leading: const Icon(Icons.delete_outline),
                   onTap: () => Navigator.pop(context, 'remove'),
                 ),
@@ -142,15 +151,21 @@ class _ImageAttachmentState extends ConsumerState<ImageAttachment> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (errorMessage != null)
-          Semantics(liveRegion: true, child: Text(errorMessage!)),
+          AppNotice(message: errorMessage!, error: true),
         if (widget.imageId != null)
-          SizedBox(
-            height: 72,
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.lightGray,
+              borderRadius: BorderRadius.circular(AppRadii.card),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: LocalPromptImage(
               widget.imageId!,
               label: l.localImagePreview,
             ),
           ),
+        if (busy) const LinearProgressIndicator(),
         TextButton.icon(
           onPressed: busy ? null : pick,
           icon: const Icon(Icons.add_photo_alternate_outlined),

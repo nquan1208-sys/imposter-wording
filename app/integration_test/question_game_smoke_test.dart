@@ -64,6 +64,14 @@ void main() {
       expect(content.cached.value, true);
       expect(content.loadFailed.value, true);
       Future<void> tap(Finder target) async {
+        if (target.evaluate().isEmpty) {
+          await tester.scrollUntilVisible(
+            target,
+            200,
+            maxScrolls: 150,
+            scrollable: find.byType(Scrollable).first,
+          );
+        }
         await tester.ensureVisible(target);
         await tester.pumpAndSettle();
         await tester.tap(target);
@@ -95,9 +103,20 @@ void main() {
       await tap(find.widgetWithText(FilledButton, 'Bắt đầu vòng'));
       expect(find.text(session.prompt.imposterQuestion), findsNothing);
       for (final p in session.setup.players) {
-        expect(find.text('${p.name} answer'), findsOneWidget);
+        final answer = find.text('${p.name} answer');
+        await tester.scrollUntilVisible(
+          answer,
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(answer, findsOneWidget);
       }
       await tap(find.widgetWithText(FilledButton, 'Tìm kẻ giả mạo'));
+      await tester.scrollUntilVisible(
+        find.text(session.prompt.imposterQuestion),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text(session.prompt.imposterQuestion), findsOneWidget);
       final previous = setup.setup.value.toJson();
       await tap(find.widgetWithText(FilledButton, 'Chơi lại'));

@@ -1,3 +1,4 @@
+import 'package:untitled/widgets/app_selection_card.dart';
 import 'package:untitled/models/game_setup.dart';
 import 'dart:async';
 import 'dart:io';
@@ -77,7 +78,7 @@ void main() {
     final target = text == 'Danh mục' || text == 'Categories'
         ? find.byKey(const Key('categoryPicker'))
         : text.startsWith('Category ')
-        ? find.widgetWithText(OutlinedButton, text)
+        ? find.widgetWithText(AppSelectionCard, text)
         : find.text(text);
     if (target.evaluate().isEmpty) {
       await tester.scrollUntilVisible(
@@ -95,6 +96,80 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(finder);
     await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+    'category is word-only, know-each-other stays shared, hints stay hidden',
+    (tester) async {
+      await pump(tester, english: true);
+      final category = find.widgetWithText(
+        SwitchListTile,
+        'Show category to imposters',
+      );
+      final teammates = find.widgetWithText(
+        SwitchListTile,
+        'Imposters know each other',
+      );
+      expect(find.byType(SwitchListTile), findsNWidgets(2));
+      await tap(tester, 'Show category to imposters');
+      await tap(tester, 'Imposters know each other');
+      expect(store.setup.value.showCategory, true);
+      expect(store.setup.value.knowEachOther, true);
+      await tap(tester, 'Question game');
+      expect(category, findsNothing);
+      expect(find.byType(SwitchListTile), findsOneWidget);
+      expect(tester.widget<SwitchListTile>(teammates).value, true);
+      expect(find.text('Show hints to imposters'), findsNothing);
+      await tap(tester, 'Word game');
+      expect(tester.widget<SwitchListTile>(category).value, true);
+      expect(tester.widget<SwitchListTile>(teammates).value, true);
+      expect(find.byType(SwitchListTile), findsNWidgets(2));
+      expect(find.text('Show hints to imposters'), findsNothing);
+    },
+  );
+
+  for (final width in [360.0, 375.0, 430.0]) {
+    testWidgets(
+      'phone $width keeps stats, game types and categories in two columns',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 812);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final semantics = tester.ensureSemantics();
+        await pump(tester, english: true);
+        final players = tester.getRect(find.bySemanticsLabel('4 players'));
+        final imposters = tester.getRect(find.bySemanticsLabel('Imposters: 1'));
+        expect(players.top, imposters.top);
+        expect(players.right, lessThan(imposters.left));
+        final word = tester.getRect(
+          find.byKey(const ValueKey('game-type-word')),
+        );
+        final question = tester.getRect(
+          find.byKey(const ValueKey('game-type-question')),
+        );
+        expect(word.top, question.top);
+        expect(word.height, question.height);
+        final option = find.widgetWithText(
+          SwitchListTile,
+          'Show category to imposters',
+        );
+        expect(
+          tester.getTopLeft(option).dy,
+          lessThan(
+            tester.getTopLeft(find.byKey(const Key('categoryPicker'))).dy,
+          ),
+        );
+        await tap(tester, 'Categories');
+        final a = find.widgetWithText(AppSelectionCard, 'Category a');
+        final b = find.widgetWithText(AppSelectionCard, 'Category b');
+        await tester.ensureVisible(a);
+        await tester.pumpAndSettle();
+        expect(tester.getTopLeft(a).dy, tester.getTopLeft(b).dy);
+        expect(tester.getSize(a).height, tester.getSize(b).height);
+        expect(tester.takeException(), isNull);
+        semantics.dispose();
+      },
+    );
   }
 
   testWidgets('word categories swipe both ways and save the active tab', (
@@ -439,7 +514,7 @@ void main() {
       await tap(tester, 'Players');
       await tap(tester, 'First');
       await tap(tester, 'Small');
-      expect(find.byType(TextFormField), findsNWidgets(3));
+      expect(find.text('3 players'), findsOneWidget);
       expect(store.setup.value.activePresetId, first);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
@@ -572,7 +647,7 @@ void main() {
     await tap(tester, 'Players');
     await tester.tap(find.byTooltip('Remove player').first);
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Remove player'), findsNWidgets(3));
+    expect(find.text('3 players'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Add player'),
       180,

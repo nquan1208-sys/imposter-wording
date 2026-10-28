@@ -1,3 +1,8 @@
+import 'package:untitled/widgets/app_action_bar.dart';
+import 'package:untitled/widgets/app_notice.dart';
+import 'package:untitled/widgets/app_selection_card.dart';
+import 'package:untitled/constants/app_spacing.dart';
+import 'package:untitled/theme/app_colors.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/base/dependency/app_service.dart';
 import 'package:untitled/base/dependency/router/utils/route_input.dart';
@@ -45,21 +50,66 @@ class _PlayerNamesScreenState extends ConsumerState<PlayerNamesScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(l.savedLists, style: Theme.of(context).textTheme.titleLarge),
-              ListTile(
-                title: Text(l.unsavedGame),
-                subtitle: Text(l.unsavedGameHelp),
+              const SizedBox(height: AppSpacing.xl),
+              AppSelectionCard(
                 selected: presetId == null,
-                trailing: presetId == null ? const Icon(Icons.check) : null,
                 onTap: () => Navigator.pop(context, 'unsaved'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const ExcludeSemantics(
+                          child: Icon(Icons.folder_outlined),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Text(
+                            l.unsavedGame,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        if (presetId == null)
+                          const ExcludeSemantics(child: Icon(Icons.check)),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(l.unsavedGameHelp),
+                  ],
+                ),
               ),
               for (final p in store.setup.value.presets)
-                ListTile(
-                  title: Text(p.name),
-                  subtitle: Text(l.playerCount(p.setup.players.length)),
-                  selected: presetId == p.id,
-                  trailing: presetId == p.id ? const Icon(Icons.check) : null,
-                  onTap: () => Navigator.pop(context, p.id),
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.md),
+                  child: AppSelectionCard(
+                    selected: presetId == p.id,
+                    onTap: () => Navigator.pop(context, p.id),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const ExcludeSemantics(
+                              child: Icon(Icons.folder_outlined),
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Text(
+                                p.name,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                            if (presetId == p.id)
+                              const ExcludeSemantics(child: Icon(Icons.check)),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(l.playerCount(p.setup.players.length)),
+                      ],
+                    ),
+                  ),
                 ),
+              const SizedBox(height: AppSpacing.lg),
               TextButton(
                 onPressed: () => Navigator.pop(context, 'create'),
                 child: Text(l.saveList),
@@ -183,57 +233,96 @@ class _PlayerNamesScreenState extends ConsumerState<PlayerNamesScreen> {
                         onTap: choosePreset,
                       ),
                     ),
-                    if (failed) Text(l.settingsWriteError),
-                    Text(l.playerCount(players.length)),
-                    Text(l.playerLimits),
+                    if (failed)
+                      AppNotice(message: l.settingsWriteError, error: true),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Text(
+                      l.playerCount(players.length),
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      l.playerLimits,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: AppColors.gray),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
                     for (final (i, p) in players.indexed)
-                      Column(
+                      Padding(
                         key: ValueKey(p.id),
-                        children: [
-                          TextFormField(
-                            key: ValueKey('name-$revision-${p.id}'),
-                            initialValue: p.name,
-                            decoration: InputDecoration(
-                              labelText: l.playerName(i + 1),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ExcludeSemantics(
+                                  child: CircleAvatar(
+                                    backgroundColor: AppColors.tealSurface,
+                                    foregroundColor: AppColors.teal,
+                                    child: Text(
+                                      p.name.trim().isEmpty
+                                          ? '${i + 1}'
+                                          : p.name
+                                                .trim()
+                                                .characters
+                                                .first
+                                                .toUpperCase(),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                                TextFormField(
+                                  key: ValueKey('name-$revision-${p.id}'),
+                                  initialValue: p.name,
+                                  decoration: InputDecoration(
+                                    labelText: l.playerName(i + 1),
+                                  ),
+                                  autovalidateMode: AutovalidateMode.always,
+                                  validator: (name) =>
+                                      name == null || name.trim().isEmpty
+                                      ? l.nameRequired
+                                      : null,
+                                  onChanged: (name) => setState(() {
+                                    players[i] = SetupPlayer(p.id, name);
+                                    dirty = true;
+                                  }),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    IconButton(
+                                      tooltip: l.moveUp,
+                                      onPressed: i > 0
+                                          ? () => move(i, -1)
+                                          : null,
+                                      icon: const Icon(Icons.arrow_upward),
+                                    ),
+                                    IconButton(
+                                      tooltip: l.moveDown,
+                                      onPressed: i < players.length - 1
+                                          ? () => move(i, 1)
+                                          : null,
+                                      icon: const Icon(Icons.arrow_downward),
+                                    ),
+                                    IconButton(
+                                      tooltip: l.removePlayer,
+                                      onPressed: players.length > 3
+                                          ? () => setState(() {
+                                              players.removeAt(i);
+                                              dirty = true;
+                                            })
+                                          : null,
+                                      icon: const Icon(Icons.delete_outline),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            autovalidateMode: AutovalidateMode.always,
-                            validator: (name) =>
-                                name == null || name.trim().isEmpty
-                                ? l.nameRequired
-                                : null,
-                            onChanged: (name) => setState(() {
-                              players[i] = SetupPlayer(p.id, name);
-                              dirty = true;
-                            }),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              IconButton(
-                                tooltip: l.moveUp,
-                                onPressed: i > 0 ? () => move(i, -1) : null,
-                                icon: const Icon(Icons.arrow_upward),
-                              ),
-                              IconButton(
-                                tooltip: l.moveDown,
-                                onPressed: i < players.length - 1
-                                    ? () => move(i, 1)
-                                    : null,
-                                icon: const Icon(Icons.arrow_downward),
-                              ),
-                              IconButton(
-                                tooltip: l.removePlayer,
-                                onPressed: players.length > 3
-                                    ? () => setState(() {
-                                        players.removeAt(i);
-                                        dirty = true;
-                                      })
-                                    : null,
-                                icon: const Icon(Icons.delete_outline),
-                              ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
                     TextButton.icon(
                       onPressed: players.length < 100
@@ -260,31 +349,27 @@ class _PlayerNamesScreenState extends ConsumerState<PlayerNamesScreen> {
                 ),
               ),
             ),
-            bottomNavigationBar: AppContent(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: FilledButton(
-                  onPressed: busy || !store.editable || !draft.validRoster
-                      ? null
-                      : () async {
-                          setState(() {
-                            busy = true;
-                            failed = false;
-                          });
-                          final success = await store.confirmDraft(
-                            draft,
-                            presetId,
-                          );
-                          if (!mounted) return;
-                          setState(() {
-                            busy = false;
-                            failed = !success;
-                          });
-                          if (success) close();
-                        },
-                  child: Text(l.confirm),
-                ),
+            bottomNavigationBar: AppActionBar(
+              child: FilledButton(
+                onPressed: busy || !store.editable || !draft.validRoster
+                    ? null
+                    : () async {
+                        setState(() {
+                          busy = true;
+                          failed = false;
+                        });
+                        final success = await store.confirmDraft(
+                          draft,
+                          presetId,
+                        );
+                        if (!mounted) return;
+                        setState(() {
+                          busy = false;
+                          failed = !success;
+                        });
+                        if (success) close();
+                      },
+                child: Text(l.confirm),
               ),
             ),
           ),

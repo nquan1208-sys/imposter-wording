@@ -1,3 +1,4 @@
+import 'package:untitled/widgets/app_selection_card.dart';
 import 'dart:io';
 import 'package:untitled/base/dependency/app_service.dart';
 import 'package:untitled/base/dependency/router/router_service.dart';
@@ -207,7 +208,7 @@ void main() {
               .first,
         );
         expect(
-          tester.widget<TextButton>(find.byKey(ValueKey(p.id))).onPressed,
+          tester.widget<AppSelectionCard>(find.byKey(ValueKey(p.id))).onTap,
           null,
         );
       }
@@ -219,6 +220,54 @@ void main() {
     (false, true),
     (true, false),
   ]) {
+    for (final show in [false, true]) {
+      testWidgets(
+        'setup category toggle controls imposter reveal: $show',
+        (tester) async {
+          await pump(tester, direct: false, english: true);
+          await tap(tester, 'Start');
+          final toggle = find.widgetWithText(
+            SwitchListTile,
+            'Show category to imposters',
+          );
+          await tester.ensureVisible(toggle);
+          await tester.pumpAndSettle();
+          if (tester.widget<SwitchListTile>(toggle).value != show) {
+            await tester.tap(toggle);
+            await tester.pumpAndSettle();
+          }
+          expect(tester.widget<SwitchListTile>(toggle).value, show);
+          expect(setup.setup.value.showCategory, show);
+          await tap(tester, 'Start game');
+          final active = tester
+              .widget<WordGameScreen>(find.byType(WordGameScreen))
+              .session;
+          final imposter = active.setup.players.firstWhere(
+            (p) => active.imposterIds.contains(p.id),
+          );
+          final player = find.byKey(ValueKey(imposter.id));
+          if (player.evaluate().isEmpty) {
+            await tester.scrollUntilVisible(
+              player,
+              200,
+              scrollable: find.byType(Scrollable).first,
+            );
+          }
+          await tester.ensureVisible(player);
+          await tester.pumpAndSettle();
+          await tester.tap(player);
+          await tester.pumpAndSettle();
+          expect(find.text(active.categoryName), findsNothing);
+          await tap(tester, 'Tap to reveal');
+          expect(
+            find.text(active.categoryName),
+            show ? findsOneWidget : findsNothing,
+          );
+          expect(find.text(active.prompt.text), findsNothing);
+        },
+      );
+    }
+
     testWidgets(
       'text only through result (family=$family, images=$showImages)',
       (tester) async {
@@ -524,7 +573,7 @@ void main() {
     );
     for (final p in session.setup.players) {
       expect(
-        tester.widget<TextButton>(find.byKey(ValueKey(p.id))).onPressed,
+        tester.widget<AppSelectionCard>(find.byKey(ValueKey(p.id))).onTap,
         isNotNull,
       );
     }
@@ -568,7 +617,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(session.prompt.text), findsNothing);
       expect(
-        tester.widget<TextButton>(find.byKey(ValueKey(civilian.id))).onPressed,
+        tester
+            .widget<AppSelectionCard>(find.byKey(ValueKey(civilian.id)))
+            .onTap,
         isNotNull,
       );
       await tester.binding.handlePopRoute();
@@ -638,6 +689,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('player-100')),
       400,
+      maxScrolls: 150,
       scrollable: find
           .descendant(
             of: find.byType(CustomScrollView),

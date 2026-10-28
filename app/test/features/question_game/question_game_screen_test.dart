@@ -1,3 +1,4 @@
+import 'package:untitled/widgets/app_selection_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -90,19 +91,16 @@ void main() {
     await tap(tester, find.text(english ? 'Start' : 'Bắt đầu'));
     await tap(
       tester,
-      find.widgetWithText(
-        ChoiceChip,
-        english ? 'Question game' : 'Trò chơi câu hỏi',
-      ),
+      find.text(english ? 'Question game' : 'Trò chơi câu hỏi'),
     );
     expect(setup.setup.value.gameType, 'question');
     expect(
       find.text(
         english
             ? 'Show category to imposters'
-            : 'Hiển thị danh mục cho kẻ mạo danh',
+            : 'Hiển thị tên danh mục cho kẻ mạo danh',
       ),
-      findsOneWidget,
+      findsNothing,
     );
     expect(
       find.text(
@@ -112,7 +110,7 @@ void main() {
     );
     await tap(tester, find.byKey(const Key('categoryPicker')));
     expect(find.text('Category a'), findsNothing);
-    await tap(tester, find.widgetWithText(OutlinedButton, 'Category q'));
+    await tap(tester, find.widgetWithText(AppSelectionCard, 'Category q'));
     await tap(
       tester,
       find.widgetWithText(FilledButton, english ? 'Confirm' : 'Xác nhận'),
@@ -201,7 +199,7 @@ void main() {
     for (final know in [false, true]) {
       for (final random in [false, true]) {
         testWidgets(
-          'private options showCategory=$show know=$know random=$random',
+          'question ignores word-only category=$show, know=$know random=$random',
           (tester) async {
             await pump(
               tester,
@@ -217,10 +215,7 @@ void main() {
             await tap(tester, find.byKey(ValueKey(id)));
             expect(find.text(session.categoryName), findsNothing);
             await tap(tester, find.text('Tap to reveal'));
-            expect(
-              find.text(session.categoryName),
-              show ? findsOneWidget : findsNothing,
-            );
+            expect(find.text(session.categoryName), findsNothing);
             expect(
               find.byKey(const Key('questionTeammates')),
               know && session.imposterIds.length > 1
@@ -378,8 +373,8 @@ void main() {
                 await tester.ensureVisible(find.byKey(ValueKey(p.id)));
                 expect(
                   tester
-                      .widget<TextButton>(find.byKey(ValueKey(p.id)))
-                      .onPressed,
+                      .widget<AppSelectionCard>(find.byKey(ValueKey(p.id)))
+                      .onTap,
                   null,
                 );
               }
@@ -399,7 +394,18 @@ void main() {
               findsNothing,
             );
             for (final p in session.setup.players) {
-              expect(find.text('answer ${p.id}'), findsOneWidget);
+              await tester.scrollUntilVisible(
+                find.text('answer ${p.id}'),
+                160,
+                scrollable: find.byType(Scrollable).first,
+              );
+              await tester.ensureVisible(find.text('answer ${p.id}'));
+              await tester.pumpAndSettle();
+              expect(find.text('answer ${p.id}').hitTestable(), findsOneWidget);
+              expect(
+                find.bySemanticsLabel(session.prompt.imposterQuestion),
+                findsNothing,
+              );
             }
             await tap(
               tester,
@@ -408,10 +414,29 @@ void main() {
                 english ? 'Find the imposters' : 'Tìm kẻ giả mạo',
               ),
             );
-            expect(
-              find.text(session.prompt.imposterQuestion),
-              findsNWidgets(2),
-            );
+            for (final p in session.setup.players) {
+              final response = find.text('answer ${p.id}');
+              await tester.scrollUntilVisible(
+                response,
+                160,
+                scrollable: find.byType(Scrollable).first,
+              );
+              await tester.ensureVisible(response);
+              await tester.pumpAndSettle();
+              final card = find
+                  .ancestor(of: response, matching: find.byType(Card))
+                  .first;
+              expect(
+                find.descendant(
+                  of: card,
+                  matching: find.text(session.prompt.imposterQuestion),
+                ),
+                session.imposterIds.contains(p.id)
+                    ? findsOneWidget
+                    : findsNothing,
+              );
+            }
+
             final previous = setup.setup.value.toJson();
             await tap(
               tester,
@@ -459,7 +484,7 @@ void main() {
             await tap(
               tester,
               find.widgetWithText(
-                ChoiceChip,
+                AppSelectionCard,
                 english ? 'Word game' : 'Trò chơi từ ngữ',
               ),
             );

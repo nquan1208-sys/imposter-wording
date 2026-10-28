@@ -1,3 +1,7 @@
+import 'package:untitled/widgets/app_action_bar.dart';
+import 'package:untitled/widgets/app_selection_card.dart';
+import 'package:untitled/widgets/app_card_grid.dart';
+import 'package:untitled/widgets/app_notice.dart';
 import 'package:untitled/features/settings/content_language_tile.dart';
 import 'package:untitled/features/question_game/question_game_store.dart';
 import 'package:untitled/widgets/app_content.dart';
@@ -97,28 +101,25 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               ),
             ],
           ),
-          bottomNavigationBar: AppContent(
-            top: false,
-            child: Padding(
-              padding: AppEdgeInsets.all24,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed:
-                          store.editable &&
-                              store.contentReady &&
-                              count > 0 &&
-                              !_openingGame
-                          ? () => _start(store)
-                          : null,
-                      child: Text(l.startGame),
-                    ),
-                  ),
-                ],
-              ),
+          bottomNavigationBar: AppActionBar(
+            child: FilledButton(
+              onPressed:
+                  store.editable &&
+                      store.contentReady &&
+                      count > 0 &&
+                      !_openingGame
+                  ? () => _start(store)
+                  : null,
+              child: _openingGame
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        semanticsLabel: l.startGame,
+                      ),
+                    )
+                  : Text(l.startGame),
             ),
           ),
           body: AppContent(
@@ -131,82 +132,127 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (store.reading.value) Text(l.settingsLoading),
+                    if (store.reading.value) ...[
+                      const LinearProgressIndicator(),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(l.settingsLoading),
+                    ],
                     if (store.readFailed.value) ...[
-                      Text(l.settingsReadError),
+                      AppNotice(message: l.settingsReadError, error: true),
                       TextButton(
                         onPressed: store.reading.value ? null : store.restore,
                         child: Text(l.retry),
                       ),
                     ],
                     if (store.writeFailed.value) ...[
-                      Text(l.settingsWriteError),
+                      AppNotice(message: l.settingsWriteError, error: true),
                       TextButton(
                         onPressed: store.editable ? store.save : null,
                         child: Text(l.retry),
                       ),
                     ],
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: _statCard(
-                              context,
-                              label: l.players,
-                              value: '${setup.players.length}',
-                              semantics: l.playerCount(setup.players.length),
-                              onTap: store.editable
-                                  ? () => ref
-                                        .read(AppService.router)
-                                        .push(RouteInput.playerNames())
-                                  : null,
+                    AppCardGrid(
+                      children: [
+                        _statCard(
+                          context,
+                          label: l.players,
+                          value: '${setup.players.length}',
+                          semantics: l.playerCount(setup.players.length),
+                          onTap: store.editable
+                              ? () => ref
+                                    .read(AppService.router)
+                                    .push(RouteInput.playerNames())
+                              : null,
+                        ),
+                        _statCard(
+                          context,
+                          label: l.imposters,
+                          value: setup.randomImposters
+                              ? l.randomCount
+                              : '${setup.imposters}',
+                          semantics:
+                              '${l.imposters}: ${setup.randomImposters ? l.randomCount : setup.imposters}',
+                          onTap: store.editable
+                              ? () => _imposters(context, store)
+                              : null,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Text(l.gameMode, style: textTheme.titleLarge),
+                    const SizedBox(height: AppSpacing.md),
+                    AppCardGrid(
+                      children: [
+                        for (final type in ['word', 'question'])
+                          AppSelectionCard(
+                            key: ValueKey('game-type-$type'),
+                            selected: setup.gameType == type,
+                            onTap: store.editable
+                                ? () => store.setGameType(type)
+                                : null,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ExcludeSemantics(
+                                  child: Icon(
+                                    setup.gameType == type
+                                        ? Icons.radio_button_checked
+                                        : Icons.radio_button_off,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                                Text(
+                                  type == 'word' ? l.wordGame : l.questionGame,
+                                  style: textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  type == 'word'
+                                      ? l.wordGameSummary
+                                      : l.questionGameSummary,
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: AppColors.gray,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: _statCard(
-                              context,
-                              label: l.imposters,
-                              value: setup.randomImposters
-                                  ? l.randomCount
-                                  : '${setup.imposters}',
-                              semantics:
-                                  '${l.imposters}: ${setup.randomImposters ? l.randomCount : setup.imposters}',
-                              onTap: store.editable
-                                  ? () => _imposters(context, store)
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Card(
+                      child: Column(
+                        children: [
+                          if (setup.gameType == 'word') ...[
+                            SwitchListTile(
+                              secondary: const ExcludeSemantics(
+                                child: Icon(Icons.visibility_outlined),
+                              ),
+                              title: Text(l.showCategory),
+                              value: setup.showCategory,
+                              onChanged: store.editable
+                                  ? (v) => store.setRules(showCategory: v)
                                   : null,
                             ),
+                            const Divider(height: 1),
+                          ],
+                          SwitchListTile(
+                            secondary: const ExcludeSemantics(
+                              child: Icon(Icons.group_outlined),
+                            ),
+                            title: Text(l.knowEachOther),
+                            value: setup.knowEachOther,
+                            onChanged: store.editable
+                                ? (v) => store.setRules(knowEachOther: v)
+                                : null,
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Text(l.gameMode, style: textTheme.titleLarge),
-                    const SizedBox(height: AppSpacing.md),
-                    Wrap(
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.sm,
-                      children: [
-                        for (final type in ['word', 'question'])
-                          ChoiceChip(
-                            label: Text(
-                              type == 'word' ? l.wordGame : l.questionGame,
-                            ),
-                            selected: setup.gameType == type,
-                            onSelected: store.editable
-                                ? (_) => store.setGameType(type)
-                                : null,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: AppSpacing.xxl),
                     Text(l.categories, style: textTheme.titleLarge),
                     const SizedBox(height: AppSpacing.md),
                     Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
                       clipBehavior: Clip.antiAlias,
                       child: ListTile(
                         key: const Key('categoryPicker'),
@@ -234,9 +280,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    if (store.selectionRemoved.value) Text(l.selectionRemoved),
+                    if (store.selectionRemoved.value)
+                      AppNotice(message: l.selectionRemoved),
                     ContentNotices(content),
                     const Card(child: ContentLanguageTile()),
+                    const SizedBox(height: AppSpacing.lg),
                     if (content.snapshot.value != null ||
                         setup.hasCustomContent) ...[
                       Text(
@@ -245,22 +293,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                             : l.wordCount(count),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      if (count == 0) Text(l.emptyContent),
+                      if (count == 0) AppNotice(message: l.emptyContent),
                     ],
-                    SwitchListTile(
-                      title: Text(l.showCategory),
-                      value: setup.showCategory,
-                      onChanged: store.editable
-                          ? (v) => store.setRules(showCategory: v)
-                          : null,
-                    ),
-                    SwitchListTile(
-                      title: Text(l.knowEachOther),
-                      value: setup.knowEachOther,
-                      onChanged: store.editable
-                          ? (v) => store.setRules(knowEachOther: v)
-                          : null,
-                    ),
+                    const SizedBox(height: AppSpacing.xxl),
                     const SizedBox(height: AppSpacing.md),
                   ],
                 ),
@@ -336,29 +371,59 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.tune),
+                  const ExcludeSemantics(child: Icon(Icons.tune, size: 32)),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     l.chooseImposters,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
+                  const SizedBox(height: AppSpacing.xl),
                   for (final value in [false, true])
-                    Card(
-                      child: ListTile(
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: AppSelectionCard(
                         selected: random == value,
-                        leading: Icon(
-                          random == value
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_off,
-                        ),
-                        title: Text(value ? l.randomCount : l.fixedCount),
-                        subtitle: Text(
-                          value ? l.randomCountHelp : l.fixedCountHelp,
-                        ),
                         onTap: busy ? null : () => update(() => random = value),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ExcludeSemantics(
+                              child: Icon(
+                                random == value
+                                    ? Icons.radio_button_checked
+                                    : Icons.radio_button_off,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    value ? l.randomCount : l.fixedCount,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  Text(
+                                    value
+                                        ? l.randomCountHelp
+                                        : l.fixedCountHelp,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   if (!random)
                     Wrap(
+                      alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         IconButton(
@@ -381,8 +446,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         ),
                       ],
                     ),
-                  if (!random) Text(l.recommendedImposter),
-                  Text(l.imposterRange(setup.maxImposters)),
+                  if (!random && count == 1)
+                    Text(l.recommendedImposter, textAlign: TextAlign.center),
+                  Text(
+                    l.imposterRange(setup.maxImposters),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
                   if (setup.maxImposters == 1)
                     Card(
                       key: const Key('imposterLimitWarning'),
@@ -416,7 +486,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     value: notFirst,
                     onChanged: busy ? null : (v) => update(() => notFirst = v),
                   ),
-                  if (failed) Text(l.settingsWriteError),
+                  if (failed)
+                    AppNotice(message: l.settingsWriteError, error: true),
                   Wrap(
                     spacing: 8,
                     children: [

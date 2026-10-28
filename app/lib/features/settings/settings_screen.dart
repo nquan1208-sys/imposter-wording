@@ -1,3 +1,4 @@
+import 'package:untitled/widgets/app_notice.dart';
 import 'package:untitled/features/settings/content_language_tile.dart';
 import 'dart:async';
 
@@ -50,14 +51,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             !store.writing.value;
         final installationId = store.installationId.value;
         return Scaffold(
-          appBar: AppBar(title: Text(l.settingsTitle), centerTitle: true),
+          appBar: AppBar(title: Text(l.settingsTitle), centerTitle: false),
           body: AppContent(
             child: ListView(
               padding: AppEdgeInsets.all24,
               children: [
-                if (store.loading.value) Text(l.appSettingsLoading),
+                if (store.loading.value) ...[
+                  const LinearProgressIndicator(),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(l.appSettingsLoading),
+                ],
                 if (store.readFailed.value) ...[
-                  Text(l.appSettingsReadError),
+                  AppNotice(message: l.appSettingsReadError, error: true),
                   TextButton(
                     onPressed: store.loading.value
                         ? null
@@ -71,7 +76,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ],
                 if (store.writeFailed.value) ...[
-                  Text(l.appSettingsWriteError),
+                  AppNotice(message: l.appSettingsWriteError, error: true),
                   TextButton(
                     onPressed: store.writing.value ? null : store.retryWrite,
                     child: Text(l.retry),
@@ -81,7 +86,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   l.generalOptions,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.lg),
                 Card(
                   child: Column(
                     children: [
@@ -96,12 +101,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.xxl),
                 Text(
                   l.rateAndFeedback,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.lg),
                 Card(
                   child: Column(
                     children: [
@@ -119,12 +124,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.xxl),
                 Text(
                   l.appInformation,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.lg),
                 Card(
                   child: Column(
                     children: [

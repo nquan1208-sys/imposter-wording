@@ -12,7 +12,7 @@ class UnknownScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(),
       body: AppContent(
-        child: Center(
+        child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(

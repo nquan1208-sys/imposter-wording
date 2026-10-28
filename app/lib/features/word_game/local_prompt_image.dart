@@ -1,3 +1,5 @@
+import 'package:untitled/constants/app_radii.dart';
+import 'package:untitled/theme/app_colors.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,7 +42,12 @@ class _LocalPromptImageState extends ConsumerState<LocalPromptImage> {
     );
     return Padding(
       padding: const EdgeInsets.only(top: 16),
-      child: SizedBox(
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.lightGray,
+          borderRadius: BorderRadius.circular(AppRadii.card),
+        ),
+        clipBehavior: Clip.antiAlias,
         height: 180,
         width: double.infinity,
         child: FutureBuilder<File>(

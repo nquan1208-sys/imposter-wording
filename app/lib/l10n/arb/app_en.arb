@@ -19,6 +19,8 @@
   "setupTitle": "Game setup",
   "players": "Players",
   "imposters": "Imposters",
+  "wordGameSummary": "Find who does not know the secret word.",
+  "questionGameSummary": "Find who received a different question.",
   "wordGame": "Word game",
   "gameMode": "Game mode",
   "classicMode": "Classic",

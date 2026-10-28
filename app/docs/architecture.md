@@ -44,6 +44,7 @@ lib/
     gen_l10n/             # Generated output (do not edit)
   store/app_store.dart    # Global AppStore (UI locale and app settings)
   theme/                  # AppColors tokens + AppTheme (light/dark)
+  widgets/                # Shared content, action bars, notices, selection/grid/player cards
 ```
 
 ---
@@ -62,7 +63,7 @@ Core infrastructure that features depend on but do not own.
 Each feature folder contains its screen(s) and, when it has state, a store. Static screens (landing, how-to-play) have no store.
 
 ### `theme/`
-`AppColors` holds design tokens from `docs/support.bumble.com-DESIGN.md` (repo root). `AppTheme.light` maps them to `ThemeData` (color scheme, text theme, buttons, cards, app bar). `AppTheme.dark` currently mirrors light until a dark design exists. Screens use `Theme.of(context)` and `AppColors`; do not hardcode hex values.
+`AppColors` holds design tokens from `docs/support.bumble.com-DESIGN.md` (repo root). `AppTheme.light` maps them to `ThemeData` (color scheme, text theme, buttons, cards, app bar). `AppTheme.dark` currently mirrors light until a dark design exists. Screens use `Theme.of(context)` and `AppColors`; do not hardcode hex values. Radii come from `AppRadii`. Shared presentation widgets live in `widgets/`; they receive callbacks/state and do not own stores. `AppActionBar` owns the keyboard inset and safe area for scaffold footers. `AppCardGrid` uses two columns on ordinary phones, one below 280 content px or above 1.5 text scale; `PlayerCards` renders matching lazy rows.
 
 ### `l10n/`
 Template is `app_en.arb`; every key must also exist in `app_vi.arb`. Default locale is `vi`, held by `AppStore.locale` and passed to `MaterialApp.locale`. Read strings with `AppLocalizations.of(context)`. Never edit generated files.

@@ -1,3 +1,6 @@
+import 'package:untitled/constants/app_spacing.dart';
+import 'package:untitled/widgets/app_selection_card.dart';
+import 'package:untitled/widgets/app_notice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -25,10 +28,11 @@ class ContentLanguageScreen extends ConsumerWidget {
             child: ListView(
               padding: AppEdgeInsets.all24,
               children: [
-                Text(l.contentLanguageHelp),
+                AppNotice(message: l.contentLanguageHelp),
+                const SizedBox(height: AppSpacing.lg),
                 if (store.reading.value) const LinearProgressIndicator(),
                 if (store.readFailed.value) ...[
-                  Text(l.settingsReadError),
+                  AppNotice(message: l.settingsReadError, error: true),
                   TextButton(
                     onPressed: store.reading.value ? null : store.restore,
                     child: Text(l.retry),
@@ -36,10 +40,12 @@ class ContentLanguageScreen extends ConsumerWidget {
                 ],
                 if (store.writing.value || languages?.loading.value == true)
                   const LinearProgressIndicator(),
-                if (languages?.cached.value == true) Text(l.cachedLanguages),
-                if (languages?.cacheWarning.value == true) Text(l.cacheWarning),
+                if (languages?.cached.value == true)
+                  AppNotice(message: l.cachedLanguages),
+                if (languages?.cacheWarning.value == true)
+                  AppNotice(message: l.cacheWarning),
                 if (languages?.loadFailed.value == true)
-                  Text(l.languageListError),
+                  AppNotice(message: l.languageListError, error: true),
                 TextButton(
                   onPressed: languages?.loading.value == true
                       ? null
@@ -51,7 +57,7 @@ class ContentLanguageScreen extends ConsumerWidget {
                   ),
                 ),
                 if (store.writeFailed.value) ...[
-                  Text(l.settingsWriteError),
+                  AppNotice(message: l.settingsWriteError, error: true),
                   TextButton(
                     onPressed: enabled ? store.save : null,
                     child: Text(l.retry),
@@ -63,25 +69,43 @@ class ContentLanguageScreen extends ConsumerWidget {
                 for (final language in (languages?.languages.value ?? []).where(
                   (language) => store.supportsLocale(language.code),
                 ))
-                  Semantics(
-                    selected: language.code == locale,
-                    button: true,
-                    child: Card(
-                      child: ListTile(
-                        selected: language.code == locale,
-                        leading: Icon(
-                          language.code == locale
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_off,
-                        ),
-                        title: Text(language.displayName),
-                        subtitle: Text(language.code),
-                        trailing: language.code == locale
-                            ? const Icon(Icons.check)
-                            : null,
-                        onTap: enabled
-                            ? () => store.setContentLocale(language.code)
-                            : null,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: AppSelectionCard(
+                      selected: language.code == locale,
+                      onTap: enabled
+                          ? () => store.setContentLocale(language.code)
+                          : null,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ExcludeSemantics(
+                            child: Icon(
+                              language.code == locale
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_off,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  language.displayName,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  language.code,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -89,8 +113,9 @@ class ContentLanguageScreen extends ConsumerWidget {
                 if (content.snapshot.value != null &&
                     content.snapshot.value!.words.isEmpty &&
                     content.snapshot.value!.questions.isEmpty)
-                  Text(l.emptyContent),
-                if (store.selectionRemoved.value) Text(l.selectionRemoved),
+                  AppNotice(message: l.emptyContent),
+                if (store.selectionRemoved.value)
+                  AppNotice(message: l.selectionRemoved),
               ],
             ),
           ),

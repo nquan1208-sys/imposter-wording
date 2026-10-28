@@ -1,3 +1,7 @@
+import 'package:untitled/widgets/app_action_bar.dart';
+import 'package:untitled/widgets/app_notice.dart';
+import 'package:untitled/widgets/player_cards.dart';
+import 'package:untitled/theme/app_colors.dart';
 import 'package:untitled/features/word_game/local_prompt_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/data/game_providers.dart';
@@ -111,6 +115,8 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
             ? l.players
             : stage == QuestionGameStage.commonQuestion
             ? l.everyonesAnswers
+            : stage == QuestionGameStage.result
+            ? l.gameResult
             : l.questionDiscussion;
         return PopScope(
           canPop: _exiting,
@@ -132,7 +138,10 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(l.questionPassPhone),
+                                Text(
+                                  l.questionPassPhone,
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
                                 const SizedBox(height: AppSpacing.md),
                                 Text(
                                   l.answersSubmitted(
@@ -140,222 +149,147 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
                                     players.length,
                                   ),
                                 ),
+                                const SizedBox(height: AppSpacing.sm),
+                                LinearProgressIndicator(
+                                  value:
+                                      store.answers.value.length /
+                                      players.length,
+                                  minHeight: 8,
+                                  borderRadius: BorderRadius.circular(8),
+                                  semanticsLabel: l.players,
+                                ),
                               ],
                             ),
                           ),
                         ),
-                        SliverPadding(
-                          padding: AppEdgeInsets.all16,
-                          sliver: SliverGrid.builder(
-                            itemCount: players.length,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  mainAxisExtent: 160,
-                                  crossAxisSpacing: AppSpacing.md,
-                                  mainAxisSpacing: AppSpacing.md,
-                                ),
-                            itemBuilder: (context, i) {
-                              final p = players[i];
-                              final done = store.answers.value.containsKey(
-                                p.id,
-                              );
-                              return Card(
-                                child: TextButton(
-                                  key: ValueKey(p.id),
-                                  onPressed: done
-                                      ? null
-                                      : () {
-                                          store.selectPlayer(p.id);
-                                          answer.text = store.draft;
-                                        },
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ExcludeSemantics(
-                                          child: CircleAvatar(
-                                            child: Text(
-                                              p.name.characters.first,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: AppSpacing.sm),
-                                        Text(
-                                          p.name,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        if (done) Text(l.answerSent),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                        PlayerCards(
+                          players: players,
+                          completed: store.answers.value.keys.toSet(),
+                          completedLabel: l.answerSent,
+                          onSelected: (id) {
+                            store.selectPlayer(id);
+                            answer.text = store.draft;
+                          },
                         ),
                       ],
                     )
+                  : current == null
+                  ? _publicAnswers(stage)
                   : SingleChildScrollView(
                       padding: AppEdgeInsets.all24,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if (current != null) ...[
-                            Text(
-                              current.name,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            if (!store.revealed.value)
-                              OutlinedButton(
-                                key: const Key('secretCard'),
-                                onPressed: store.reveal,
-                                child: Padding(
-                                  padding: AppEdgeInsets.all24,
-                                  child: Text(l.tapToReveal),
+                          Text(
+                            current.name,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          if (!store.revealed.value)
+                            OutlinedButton(
+                              key: const Key('secretCard'),
+                              onPressed: store.reveal,
+                              child: Padding(
+                                padding: AppEdgeInsets.all24,
+                                child: Text(l.tapToReveal),
+                              ),
+                            )
+                          else ...[
+                            if (!session.imposterIds.contains(current.id))
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.lg,
                                 ),
-                              )
-                            else ...[
-                              if (!session.imposterIds.contains(current.id) ||
-                                  session.setup.showCategory)
-                                Text(session.categoryName),
-                              _questionCard(store.question),
-                              if (session.prompt.localImageId != null)
-                                LocalPromptImage(
-                                  session.prompt.localImageId!,
-                                  label: l.questionImage,
-                                ),
-                              if (store.teammates.isNotEmpty)
-                                Column(
-                                  key: const Key('questionTeammates'),
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(l.knowEachOther),
-                                    for (final teammate in store.teammates)
-                                      Text(teammate.name),
-                                  ],
-                                ),
-                              TextField(
-                                key: const Key('privateAnswer'),
-                                controller: answer,
-                                minLines: 3,
-                                maxLines: 8,
-                                enableSuggestions: false,
-                                autocorrect: false,
-                                enableIMEPersonalizedLearning: false,
-                                decoration: InputDecoration(
-                                  labelText: l.yourAnswer,
-                                  hintText: l.answerHint,
-                                  border: const OutlineInputBorder(),
+                                child: Text(
+                                  session.categoryName,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: AppColors.gray),
                                 ),
                               ),
-                            ],
-                            const SizedBox(height: AppSpacing.lg),
-                            Text(
-                              l.answersSubmitted(
-                                store.answers.value.length,
-                                players.length,
-                              ),
-                            ),
-                          ] else ...[
-                            _questionCard(session.prompt.civilianQuestion),
-                            if (stage == QuestionGameStage.result &&
-                                session.prompt.localImageId != null)
+                            _questionCard(store.question),
+                            if (session.prompt.localImageId != null)
                               LocalPromptImage(
                                 session.prompt.localImageId!,
                                 label: l.questionImage,
                               ),
-                            if (stage == QuestionGameStage.commonQuestion)
-                              Text(l.commonQuestionHelp)
-                            else ...[
-                              Text(
-                                l.startingPlayer(
-                                  players
-                                      .firstWhere(
-                                        (p) => p.id == session.startingPlayerId,
-                                      )
-                                      .name,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              for (final (i, p) in players.indexed)
-                                Card(
-                                  child: Padding(
-                                    padding: AppEdgeInsets.all16,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${i + 1}. ${p.name}',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleMedium,
-                                        ),
-                                        Text(store.answers.value[p.id]!),
-                                        if (stage == QuestionGameStage.result &&
-                                            session.imposterIds.contains(
-                                              p.id,
-                                            )) ...[
-                                          Text(
-                                            l.imposters,
-                                            style: TextStyle(
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.error,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text(session.prompt.imposterQuestion),
-                                        ],
-                                      ],
-                                    ),
+                            if (store.teammates.isNotEmpty)
+                              Card(
+                                key: const Key('questionTeammates'),
+                                semanticContainer: false,
+                                color: AppColors.tealSurface,
+                                child: Padding(
+                                  padding: AppEdgeInsets.all24,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l.knowEachOther,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium,
+                                      ),
+                                      const SizedBox(height: AppSpacing.sm),
+                                      for (final teammate in store.teammates)
+                                        Text(teammate.name),
+                                    ],
                                   ),
                                 ),
-                            ],
+                              ),
+                            const SizedBox(height: AppSpacing.xl),
+                            TextField(
+                              key: const Key('privateAnswer'),
+                              controller: answer,
+                              minLines: 3,
+                              maxLines: 8,
+                              enableSuggestions: false,
+                              autocorrect: false,
+                              enableIMEPersonalizedLearning: false,
+                              decoration: InputDecoration(
+                                labelText: l.yourAnswer,
+                                hintText: l.answerHint,
+                              ),
+                            ),
                           ],
+                          const SizedBox(height: AppSpacing.lg),
+                          Text(
+                            l.answersSubmitted(
+                              store.answers.value.length,
+                              players.length,
+                            ),
+                          ),
                         ],
                       ),
                     ),
             ),
             bottomNavigationBar:
                 current != null || stage != QuestionGameStage.players
-                ? Padding(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.viewInsetsOf(context).bottom,
-                    ),
-                    child: AppContent(
-                      top: false,
-                      child: Padding(
-                        padding: AppEdgeInsets.all16,
-                        child: ValueListenableBuilder<TextEditingValue>(
-                          valueListenable: answer,
-                          builder: (context, value, child) => FilledButton(
-                            onPressed: current != null
-                                ? store.revealed.value &&
-                                          value.text.trim().isNotEmpty
-                                      ? () {
-                                          FocusManager.instance.primaryFocus
-                                              ?.unfocus();
-                                          if (store.submit()) answer.clear();
-                                        }
-                                      : null
-                                : stage == QuestionGameStage.commonQuestion
-                                ? store.startDiscussion
-                                : stage == QuestionGameStage.discussion
-                                ? store.revealResult
-                                : _back,
-                            child: Text(
-                              current != null
-                                  ? l.submitAnswer
-                                  : stage == QuestionGameStage.commonQuestion
-                                  ? l.startRound
-                                  : stage == QuestionGameStage.discussion
-                                  ? l.findImposters
-                                  : l.playAgain,
-                            ),
-                          ),
+                ? AppActionBar(
+                    child: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: answer,
+                      builder: (context, value, child) => FilledButton(
+                        onPressed: current != null
+                            ? store.revealed.value &&
+                                      value.text.trim().isNotEmpty
+                                  ? () {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
+                                      if (store.submit()) answer.clear();
+                                    }
+                                  : null
+                            : stage == QuestionGameStage.commonQuestion
+                            ? store.startDiscussion
+                            : stage == QuestionGameStage.discussion
+                            ? store.revealResult
+                            : _back,
+                        child: Text(
+                          current != null
+                              ? l.submitAnswer
+                              : stage == QuestionGameStage.commonQuestion
+                              ? l.startRound
+                              : stage == QuestionGameStage.discussion
+                              ? l.findImposters
+                              : l.playAgain,
                         ),
                       ),
                     ),
@@ -367,7 +301,90 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
     );
   }
 
+  Widget _publicAnswers(QuestionGameStage stage) {
+    final l = AppLocalizations.of(context);
+    final session = store.session;
+    final players = session.setup.players;
+    return CustomScrollView(
+      key: PageStorageKey(stage),
+      slivers: [
+        SliverPadding(
+          padding: AppEdgeInsets.all24,
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _questionCard(session.prompt.civilianQuestion),
+                if (stage == QuestionGameStage.result &&
+                    session.prompt.localImageId != null)
+                  LocalPromptImage(
+                    session.prompt.localImageId!,
+                    label: l.questionImage,
+                  ),
+                const SizedBox(height: AppSpacing.xl),
+                if (stage == QuestionGameStage.commonQuestion)
+                  AppNotice(message: l.commonQuestionHelp)
+                else
+                  Text(
+                    l.startingPlayer(
+                      players
+                          .firstWhere((p) => p.id == session.startingPlayerId)
+                          .name,
+                    ),
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (stage != QuestionGameStage.commonQuestion)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            sliver: SliverList.builder(
+              itemCount: players.length,
+              itemBuilder: (context, i) {
+                final p = players[i];
+                final revealedImposter =
+                    stage == QuestionGameStage.result &&
+                    session.imposterIds.contains(p.id);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Card(
+                    child: Padding(
+                      padding: AppEdgeInsets.all24,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${i + 1}. ${p.name}',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          Text(store.answers.value[p.id]!),
+                          if (revealedImposter) ...[
+                            const Divider(height: 32),
+                            Text(
+                              l.imposters,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(color: AppColors.error),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(session.prompt.imposterQuestion),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _questionCard(String question) => Card(
+    color: AppColors.tealSurface,
     child: Padding(
       padding: AppEdgeInsets.all24,
       child: Text(question, style: Theme.of(context).textTheme.headlineSmall),

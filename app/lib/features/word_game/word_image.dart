@@ -1,3 +1,5 @@
+import 'package:untitled/constants/app_radii.dart';
+import 'package:untitled/theme/app_colors.dart';
 import 'package:untitled/features/word_game/local_prompt_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -42,7 +44,12 @@ class WordImage extends ConsumerWidget {
       final file = cache?.file(path);
       return Padding(
         padding: const EdgeInsets.only(top: AppSpacing.md),
-        child: SizedBox(
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.lightGray,
+            borderRadius: BorderRadius.circular(AppRadii.card),
+          ),
+          clipBehavior: Clip.antiAlias,
           height: 180,
           width: double.infinity,
           child: file == null

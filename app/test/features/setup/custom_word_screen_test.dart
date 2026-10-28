@@ -1,3 +1,4 @@
+import 'package:untitled/widgets/app_selection_card.dart';
 import 'package:untitled/models/content.dart';
 import 'dart:io';
 import 'dart:async';
@@ -84,7 +85,11 @@ void main() {
   late FakeLocalImages images;
   late FakeImagePicker imagePicker;
 
-  Future<void> tap(WidgetTester tester, String text) async {
+  Future<void> tap(
+    WidgetTester tester,
+    String text, {
+    bool settle = true,
+  }) async {
     final matches = find.text(text);
     if (matches.evaluate().isEmpty) {
       await tester.scrollUntilVisible(
@@ -101,7 +106,11 @@ void main() {
     await tester.ensureVisible(target);
     await tester.pumpAndSettle();
     await tester.tap(target);
-    await tester.pumpAndSettle();
+    if (settle) {
+      await tester.pumpAndSettle();
+    } else {
+      await tester.pump(const Duration(milliseconds: 300));
+    }
   }
 
   Future<void> pump(
@@ -216,7 +225,7 @@ void main() {
     await word(tester, 'Apple');
     images.importing = Completer<void>();
     await tap(tester, 'Add image');
-    await tap(tester, 'Photo library');
+    await tap(tester, 'Photo library', settle: false);
     await tester.pumpWidget(const SizedBox());
     images.importing!.complete();
     await tester.pumpAndSettle();
@@ -292,7 +301,7 @@ void main() {
       await tester.enterText(field, 'Apple');
       imagePicker.pending = Completer<XFile?>();
       await tap(tester, 'Add image');
-      await tap(tester, 'Photo library');
+      await tap(tester, 'Photo library', settle: false);
       expect(
         tester
             .widget<FilledButton>(find.widgetWithText(FilledButton, 'Confirm'))
@@ -300,8 +309,9 @@ void main() {
         isNull,
       );
       await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byType(LinearProgressIndicator), findsWidgets);
       imagePicker.pending!.complete(null);
       await tester.pumpAndSettle();
       imagePicker.pending = null;
@@ -400,6 +410,11 @@ void main() {
       expect(find.bySemanticsLabel('Imposter?'), findsNothing);
       await tap(tester, english ? 'Find the imposters' : 'Tìm kẻ giả mạo');
       expect(find.byType(LocalPromptImage), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Imposter?'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('Imposter?'), findsOneWidget);
       await tap(tester, english ? 'Play again' : 'Chơi lại');
       expect(
@@ -440,6 +455,18 @@ void main() {
     await tap(tester, 'Cancel');
     expect(find.text('A\nC'), findsOneWidget);
     await tap(tester, 'Confirm');
+    await tester.scrollUntilVisible(
+      find.byTooltip('Remove pair 2'),
+      180,
+      scrollable: find
+          .descendant(
+            of: find.byType(CustomWordScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.ensureVisible(find.byTooltip('Remove pair 2'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Remove pair 2'));
     await tester.pumpAndSettle();
     file.failWrite = true;
@@ -624,6 +651,18 @@ void main() {
       await tester.enterText(find.byType(TextField), ' Office ');
       await word(tester, '  Alpha \nalpha\n\n Beta\r\nGamma ', batch: true);
       expect(find.text('3 eligible words'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.byTooltip('Remove Gamma'),
+        180,
+        scrollable: find
+            .descendant(
+              of: find.byType(CustomWordScreen),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await tester.ensureVisible(find.byTooltip('Remove Gamma'));
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Remove Gamma'));
       await tester.pumpAndSettle();
       expect(find.text('2 eligible words'), findsOneWidget);
@@ -641,10 +680,10 @@ void main() {
       await tap(tester, 'Save category');
       expect(find.byType(CategoryScreen), findsOneWidget);
       final id = store.setup.value.customWordCategories.single.id;
-      final custom = tester.widget<OutlinedButton>(
-        find.widgetWithText(OutlinedButton, 'Office'),
+      final custom = tester.widget<AppSelectionCard>(
+        find.widgetWithText(AppSelectionCard, 'Office'),
       );
-      expect(custom.onPressed, isNotNull);
+      expect(custom.onTap, isNotNull);
       expect(store.setup.value.categoryIds, {'a'});
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();

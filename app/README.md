@@ -221,3 +221,28 @@ independent of the backend/content cache. Game content remains Vietnamese until
 Phase 12. Version/build comes from platform package metadata; the full local ID
 is copied only when the user asks. Store review and feedback actions stay visibly
 unavailable until real destinations are configured.
+
+
+### Flutter UI refresh (2026-10-29)
+
+The entire mobile interface now follows the Bumble reference through the shared
+light theme, system font, Material icons and 640 logical-pixel content width.
+Setup stats, game choices, categories and player cards prefer two columns on
+ordinary phones. Cards share their row height and grow with content; narrow
+screens and enlarged text fall back to one column. Category reveal remains a
+persisted word-only option directly below the game choices, before content/network
+notices. Know-each-other remains available in both games; hints remain hidden. Custom-content dialogs scroll their actions with the form when space
+is limited by the keyboard.
+
+See [design rules](DESIGN_RULES.md) and the
+[phase checkpoint](../docs/plans/flutter-ui-refresh.md) for the component contract,
+user amendments and verification evidence. Role assignment, scoring, route inputs, storage
+formats and dependencies are unchanged.
+
+Verification: analyzer clean; 294 unit/widget tests passed. Twelve existing
+backend checks remain opt-in through their environment flags. The offline
+setup/word/question integration suites passed on both iPhone 16 Pro (iOS 18.5
+Simulator) and Android `Sm_Phone_test`: 5 cases on each platform, including live
+anonymous Local Supabase reads and offline disk recovery. No screenshots or
+golden tests were used; physical-device and opt-in backend test gaps are recorded
+in the checkpoint.

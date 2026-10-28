@@ -1,3 +1,5 @@
+import 'package:untitled/widgets/app_notice.dart';
+import 'package:untitled/constants/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/data/content_repository.dart';
@@ -15,17 +17,17 @@ class ContentNotices extends StatelessWidget {
         children: [
           if (content.loading.value) ...[
             const LinearProgressIndicator(),
-            Text(l.loadingContent),
+            const SizedBox(height: AppSpacing.md),
+            AppNotice(message: l.loadingContent),
           ],
-          if (content.cached.value) Text(l.cachedContent),
-          if (content.loadFailed.value) ...[
-            Text(l.contentError),
-            TextButton(
-              onPressed: content.loading.value ? null : content.load,
-              child: Text(l.retry),
+          if (content.cached.value) AppNotice(message: l.cachedContent),
+          if (content.loadFailed.value)
+            AppNotice(
+              message: l.contentError,
+              error: true,
+              onRetry: content.loading.value ? null : content.load,
             ),
-          ],
-          if (content.cacheWarning.value) Text(l.cacheWarning),
+          if (content.cacheWarning.value) AppNotice(message: l.cacheWarning),
         ],
       );
     },

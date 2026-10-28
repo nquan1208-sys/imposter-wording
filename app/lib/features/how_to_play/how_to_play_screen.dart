@@ -1,3 +1,4 @@
+import 'package:untitled/constants/app_radii.dart';
 import 'package:untitled/widgets/app_content.dart';
 import 'package:flutter/material.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
@@ -34,7 +35,7 @@ class HowToPlayScreen extends StatelessWidget {
                   number: index + 1,
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
             ],
             const SizedBox(height: AppSpacing.sm),
             Card(
@@ -60,7 +61,7 @@ class HowToPlayScreen extends StatelessWidget {
               elevation: 0,
               shape: const RoundedRectangleBorder(
                 side: BorderSide(color: AppColors.tealBorder),
-                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderRadius: BorderRadius.all(Radius.circular(AppRadii.card)),
               ),
               child: _StepContent(
                 icon: Icons.lightbulb_outline,
@@ -91,43 +92,61 @@ class _StepContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final iconWidget = ExcludeSemantics(
+      child: Container(
+        padding: AppEdgeInsets.all16,
+        decoration: BoxDecoration(
+          color: number == null ? AppColors.white : AppColors.lightGray,
+          borderRadius: BorderRadius.circular(AppRadii.card),
+        ),
+        child: Icon(
+          icon,
+          color: number == null ? AppColors.teal : AppColors.charcoal,
+        ),
+      ),
+    );
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (number != null) ...[
+          Text(
+            number.toString().padLeft(2, '0'),
+            style: textTheme.labelLarge?.copyWith(color: AppColors.gray),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        Text(title, style: textTheme.titleLarge),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          body,
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.gray),
+        ),
+      ],
+    );
     return Padding(
       padding: AppEdgeInsets.all24,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: AppEdgeInsets.all8,
-            decoration: const BoxDecoration(
-              color: AppColors.yellow,
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            child: Icon(icon, color: AppColors.charcoal),
-          ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 300 ||
+              MediaQuery.textScalerOf(context).scale(16) > 24) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (number != null) ...[
-                  Text(
-                    number.toString().padLeft(2, '0'),
-                    style: textTheme.labelLarge?.copyWith(
-                      color: AppColors.gray,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                ],
-                Text(title, style: textTheme.titleLarge),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  body,
-                  style: textTheme.bodyMedium?.copyWith(color: AppColors.gray),
-                ),
+                iconWidget,
+                const SizedBox(height: AppSpacing.lg),
+                content,
               ],
-            ),
-          ),
-        ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              iconWidget,
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(child: content),
+            ],
+          );
+        },
       ),
     );
   }

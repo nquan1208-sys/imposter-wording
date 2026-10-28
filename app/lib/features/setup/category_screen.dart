@@ -1,10 +1,10 @@
+import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:untitled/widgets/app_content.dart';
 import 'package:untitled/base/dependency/app_service.dart';
 import 'package:untitled/base/dependency/router/utils/route_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/features/setup/all_categories_screen.dart';
 import 'package:untitled/features/setup/family_categories_screen.dart';
@@ -118,26 +118,22 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
         );
         return Scaffold(
           appBar: AppBar(title: Text(l.categories)),
-          bottomNavigationBar: AppContent(
-            top: false,
-            child: Padding(
-              padding: AppEdgeInsets.all24,
-              child: FilledButton(
-                onPressed: store.editable && store.contentReady
-                    ? () async {
-                        final saved = await store.setCategories(
-                          valid,
-                          family: family,
-                          showWordImages: showWordImages,
-                        );
-                        if (mounted && !saved) {
-                          setState(() => saveFailed = true);
-                        }
-                        if (context.mounted && saved) Navigator.pop(context);
+          bottomNavigationBar: AppActionBar(
+            child: FilledButton(
+              onPressed: store.editable && store.contentReady
+                  ? () async {
+                      final saved = await store.setCategories(
+                        valid,
+                        family: family,
+                        showWordImages: showWordImages,
+                      );
+                      if (mounted && !saved) {
+                        setState(() => saveFailed = true);
                       }
-                    : null,
-                child: Text(l.confirm),
-              ),
+                      if (context.mounted && saved) Navigator.pop(context);
+                    }
+                  : null,
+              child: Text(l.confirm),
             ),
           ),
           body: AppContent(

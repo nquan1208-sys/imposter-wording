@@ -19,6 +19,8 @@
   "setupTitle": "Thiết lập trò chơi",
   "players": "Người chơi",
   "imposters": "Kẻ mạo danh",
+  "wordGameSummary": "Tìm người không biết từ bí mật.",
+  "questionGameSummary": "Tìm người nhận câu hỏi khác.",
   "wordGame": "Trò chơi từ ngữ",
   "gameMode": "Chế độ trò chơi",
   "classicMode": "Cổ điển",
@@ -145,7 +147,7 @@
   "moreImposters": "Tăng kẻ mạo danh",
   "imposterNotFirst": "Kẻ mạo danh không đi trước",
   "showWordImages": "Hiển thị ảnh",
-  "showCategory": "Hiển thị danh mục cho kẻ mạo danh",
+  "showCategory": "Hiển thị tên danh mục cho kẻ mạo danh",
   "knowEachOther": "Kẻ mạo danh biết nhau",
   "fellowImposters": "Kẻ mạo danh cùng vai: {name}",
   "@fellowImposters": {

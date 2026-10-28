@@ -1,3 +1,7 @@
+import 'package:untitled/constants/app_radii.dart';
+import 'package:untitled/widgets/app_selection_card.dart';
+import 'package:untitled/widgets/app_card_grid.dart';
+import 'package:untitled/widgets/app_notice.dart';
 import 'package:untitled/features/settings/content_language_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
@@ -39,120 +43,109 @@ class AllCategoriesScreen extends StatelessWidget {
       key: PageStorageKey(family),
       padding: AppEdgeInsets.all24,
       children: [
+        if (saveFailed) AppNotice(message: l.settingsWriteError, error: true),
         ?header,
         const Card(child: ContentLanguageTile()),
-        ContentNotices(store.content),
-        if (saveFailed) Text(l.settingsWriteError),
-        if (selectionRemoved || selected.length != valid.length)
-          Text(l.selectionRemoved),
+        const SizedBox(height: AppSpacing.xl),
         if (counts.isEmpty)
-          Text(family ? l.emptyFamilyCategories : l.emptyContent),
-        FilterChip(
-          label: Text(l.allCategories),
+          AppNotice(message: family ? l.emptyFamilyCategories : l.emptyContent),
+        ContentNotices(store.content),
+        if (selectionRemoved || selected.length != valid.length)
+          AppNotice(message: l.selectionRemoved),
+        AppSelectionCard(
           selected: valid.isEmpty,
-          onSelected: store.editable ? (_) => onChanged({}) : null,
+          onTap: store.editable ? () => onChanged({}) : null,
+          child: Row(
+            children: [
+              ExcludeSemantics(
+                child: Icon(
+                  valid.isEmpty
+                      ? Icons.check_circle_outline
+                      : Icons.circle_outlined,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  l.allCategories,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final tileWidth =
-                constraints.maxWidth < 360 ||
-                    MediaQuery.textScalerOf(context).scale(16) > 24
-                ? constraints.maxWidth
-                : (constraints.maxWidth - AppSpacing.md) / 2;
-            return Wrap(
-              spacing: AppSpacing.md,
-              runSpacing: AppSpacing.md,
-              children: [
-                for (final entry in counts.entries)
-                  SizedBox(
-                    width: tileWidth,
-                    child: Semantics(
-                      selected: valid.contains(entry.key.id),
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: valid.contains(entry.key.id)
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : AppColors.white,
-                          side: BorderSide(
-                            color: valid.contains(entry.key.id)
-                                ? AppColors.charcoal
-                                : AppColors.border,
-                            width: valid.contains(entry.key.id) ? 2 : 1,
-                          ),
-                        ),
-                        onPressed: store.editable
-                            ? () {
-                                final next = Set.of(valid);
-                                if (!next.add(entry.key.id)) {
-                                  next.remove(entry.key.id);
-                                }
-                                onChanged(next);
-                              }
-                            : null,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.lg,
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(
-                                valid.contains(entry.key.id)
-                                    ? Icons.check_circle_outline
-                                    : Icons.category_outlined,
-                                color: AppColors.charcoal,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Text(entry.key.name, textAlign: TextAlign.center),
-                              if (store.categoryHasImages(entry.key.id))
-                                Text(l.hasLocalImages),
-                              Text(
-                                store.setup.value.gameType == 'question'
-                                    ? l.questionCount(entry.value)
-                                    : l.wordCount(entry.value),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: AppColors.gray),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
+        const SizedBox(height: AppSpacing.xl),
+        AppCardGrid(
+          children: [
+            for (final entry in counts.entries)
+              AppSelectionCard(
+                selected: valid.contains(entry.key.id),
+                onTap: store.editable
+                    ? () {
+                        final next = Set.of(valid);
+                        if (!next.add(entry.key.id)) next.remove(entry.key.id);
+                        onChanged(next);
+                      }
+                    : null,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ExcludeSemantics(
+                      child: Icon(
+                        valid.contains(entry.key.id)
+                            ? Icons.check_circle_outline
+                            : Icons.category_outlined,
                       ),
                     ),
-                  ),
-                if (onCreateCustom != null)
-                  SizedBox(
-                    width: tileWidth,
-                    child: OutlinedButton(
-                      key: const Key('createCustomCategory'),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: AppColors.tealSurface,
-                        side: const BorderSide(color: AppColors.teal),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      entry.key.name,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (store.categoryHasImages(entry.key.id))
+                      Text(
+                        l.hasLocalImages,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      onPressed: store.editable ? onCreateCustom : null,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.lg,
-                        ),
-                        child: Column(
-                          children: [
-                            const Icon(
-                              Icons.add_circle_outline,
-                              color: AppColors.teal,
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              l.createCustomCategory,
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+                    Text(
+                      store.setup.value.gameType == 'question'
+                          ? l.questionCount(entry.value)
+                          : l.wordCount(entry.value),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: AppColors.gray),
+                    ),
+                  ],
+                ),
+              ),
+            if (onCreateCustom != null)
+              OutlinedButton(
+                key: const Key('createCustomCategory'),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: AppColors.tealSurface,
+                  side: const BorderSide(color: AppColors.teal),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadii.card),
+                  ),
+                  padding: AppEdgeInsets.all24,
+                ),
+                onPressed: store.editable ? onCreateCustom : null,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const ExcludeSemantics(
+                      child: Icon(
+                        Icons.add_circle_outline,
+                        color: AppColors.teal,
                       ),
                     ),
-                  ),
-              ],
-            );
-          },
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(l.createCustomCategory),
+                  ],
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: AppSpacing.xl),
       ],

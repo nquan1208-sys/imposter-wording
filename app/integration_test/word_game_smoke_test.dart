@@ -1,3 +1,4 @@
+import 'package:untitled/widgets/app_selection_card.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -83,7 +84,16 @@ void main() {
         expect(content.cached.value, true);
         expect(content.loadFailed.value, true);
         Future<void> tap(String text) async {
+          if (find.text(text).evaluate().isEmpty) {
+            await tester.scrollUntilVisible(
+              find.text(text),
+              200,
+              maxScrolls: 150,
+              scrollable: find.byType(Scrollable).first,
+            );
+          }
           await tester.ensureVisible(find.text(text).last);
+          await tester.pumpAndSettle();
           await tester.tap(find.text(text).last);
           await tester.pumpAndSettle();
         }
@@ -135,10 +145,15 @@ void main() {
         );
         expect(find.text('Người chơi'), findsOneWidget);
         for (final p in first.setup.players) {
-          expect(
-            tester.widget<TextButton>(find.byKey(ValueKey(p.id))).onPressed,
-            isNotNull,
-          );
+          final card = find.byKey(ValueKey(p.id));
+          if (card.evaluate().isEmpty) {
+            await tester.scrollUntilVisible(
+              card,
+              200,
+              scrollable: find.byType(Scrollable).first,
+            );
+          }
+          expect(tester.widget<AppSelectionCard>(card).onTap, isNotNull);
         }
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();

@@ -15,11 +15,11 @@ luôn ưu tiên hơn palette gợi ý tự động.
 ## Tokens và chữ
 
 Chỉ thêm màu tại `lib/theme/app_colors.dart`, cấu hình Material tại
-`lib/theme/app_theme.dart`; không thêm mã màu trực tiếp ở từng màn.
+`lib/theme/app_theme.dart`; bo góc dùng `AppRadii`; không thêm mã màu trực tiếp ở từng màn.
 
 | Vai trò | Token / giá trị |
 | --- | --- |
-| CTA, hero, lựa chọn | yellow `#FFDB5B`, chữ charcoal `#202020` |
+| CTA, hero | yellow `#FFDB5B`, chữ charcoal `#202020` |
 | Pressed CTA | amber `#C38F00`, chữ charcoal |
 | Chữ phụ | gray `#575656` |
 | Nền trang | background `#F8F9F9` |
@@ -40,13 +40,19 @@ Dùng `TextTheme`, cho phép chữ xuống dòng và tuân theo text scaling h�
 
 - Dùng `AppContent` cho safe area và giới hạn nội dung 640 logical px, căn giữa.
 - Padding trang 24; khoảng cách theo `AppSpacing` (4/8/12/16/24/32).
-- Nền trắng, thẻ bo 16, hero và sheet bo 20; thẻ phẳng có viền nhẹ.
+- Nền trắng, thẻ bo 12, hero và sheet bo 20; thẻ phẳng có viền nhẹ.
 - CTA chính vàng; action phụ outlined/text, charcoal. Minimum height 50,
   padding 14×24, bo 16. Icon button minimum 48×48.
+- Dùng `AppSelectionCard` cho lựa chọn: teal nhạt, viền charcoal và check/radio.
+- Dùng `AppNotice` cho thông tin/lỗi; dùng `AppActionBar` cho footer của Scaffold.
+  Footer tự xử lý keyboard inset và safe area; caller không thêm inset lần nữa.
+  Khi mở bàn phím, giảm padding dọc footer còn 12 để giữ chỗ cho form.
 - Mỗi màn một hành động chính. CTA cuối trang phải tôn trọng safe area,
   nội dung phía trên cuộn độc lập và không bị CTA che.
-- Danh mục dùng hai cột khi đủ chỗ; chuyển một cột dưới 360 px nội dung
+- Danh mục dùng hai cột khi đủ chỗ; chuyển một cột dưới 280 px nội dung
   hoặc khi font 16 được scale lớn hơn 24. Nhãn luôn được xuống dòng.
+- Thẻ roster và item trong editor dùng padding 16 để tránh lãng phí chỗ khi
+  có nhiều dữ liệu; các thẻ lựa chọn/nội dung khác giữ padding 24.
 - Dùng Material vector icons hiện có, size thường 20/24/32; 48/80 cho hero.
   Icon cạnh chữ là trang trí; icon button phải có tooltip/accessible label.
 - Hoàn thành có check + nhãn, lựa chọn có selected semantics; không chỉ đổi màu.
@@ -64,3 +70,24 @@ contrast độc lập. Không coi đây là dark theme đã hoàn thiện.
 Kiểm tra bằng `flutter analyze` và `flutter test`; widget tests cần bao phủ
 màn nhỏ, chữ lớn, landscape/tablet, trạng thái chọn và luồng chơi/bảo mật thẻ.
 Không mặc định chụp screenshot hay dùng kiểm tra ảnh; tuân theo AGENTS.md.
+
+## Cập nhật UX theo yêu cầu
+
+- Điện thoại 360–430 px ưu tiên hai cột cho người chơi/imposter, loại game và
+  danh mục. Các thẻ cùng hàng có cùng chiều cao theo nội dung; không khóa height.
+- Tùy chọn hiển thị tên danh mục nằm ngay dưới loại game, trước danh mục và
+  các thông báo mạng. Chỉ word có tùy chọn này; question không tiết lộ tên
+  danh mục cho imposter dù giá trị word đã lưu đang bật.
+- Tạm ẩn tùy chọn gợi ý theo yêu cầu; không thêm cờ hoặc dữ liệu hint.
+  `Kẻ mạo danh biết nhau` tiếp tục dùng chung cho hai game.
+
+## Components dùng chung
+
+- `AppCardGrid`: hàng hai cột tự cao, thẻ cùng hàng cao bằng nhau; fallback
+  một cột khi nội dung <280 hoặc text scale >1.5. Không khóa chiều cao thẻ.
+- `PlayerCards`: sliver dựng lazy theo hàng, dùng chung cho word/question;
+  người đã hoàn thành có check + nhãn và không mở lại được.
+- `AppSelectionCard`: trạng thái chọn/disabled qua semantics, viền focus rõ,
+  giữ thao tác bàn phím bằng InkWell.
+- Nội dung riêng tư không dùng animation giữ widget cũ trong cây; chỉ dựng
+  sau reveal và loại khỏi widget/semantics ngay khi conceal.

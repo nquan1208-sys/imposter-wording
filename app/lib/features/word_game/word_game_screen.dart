@@ -1,3 +1,8 @@
+import 'package:untitled/constants/app_radii.dart';
+import 'package:untitled/widgets/app_action_bar.dart';
+import 'package:untitled/widgets/app_selection_card.dart';
+import 'package:untitled/widgets/player_cards.dart';
+import 'package:untitled/widgets/app_notice.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/widgets/app_content.dart';
@@ -92,7 +97,9 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
     final voted = await showModalBottomSheet<Set<String>>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) => AppContent(
+        top: false,
         child: SizedBox(
           height: MediaQuery.sizeOf(context).height * .75,
           child: StatefulBuilder(
@@ -114,26 +121,48 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                           l.voteHelp(store.session.imposterIds.length),
                         ),
                       ),
-                      for (final p in store.session.setup.players)
-                        ListTile(
-                          title: Text(p.name),
-                          leading: Icon(
-                            selected.contains(p.id)
-                                ? Icons.check_box
-                                : Icons.check_box_outline_blank,
+                      Padding(
+                        padding: AppEdgeInsets.all24,
+                        child: Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            '${selected.length} / ${store.session.imposterIds.length}',
+                            semanticsLabel:
+                                '${l.voteTitle}: ${selected.length} / ${store.session.imposterIds.length}',
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          selected: selected.contains(p.id),
-                          onTap: () => setState(() {
-                            if (!selected.remove(p.id)) {
-                              if (store.session.imposterIds.length == 1) {
-                                selected.clear();
+                        ),
+                      ),
+                      for (final p in store.session.setup.players)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                          child: AppSelectionCard(
+                            selected: selected.contains(p.id),
+                            child: Row(
+                              children: [
+                                ExcludeSemantics(
+                                  child: Icon(
+                                    selected.contains(p.id)
+                                        ? Icons.check_box
+                                        : Icons.check_box_outline_blank,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(child: Text(p.name)),
+                              ],
+                            ),
+                            onTap: () => setState(() {
+                              if (!selected.remove(p.id)) {
+                                if (store.session.imposterIds.length == 1) {
+                                  selected.clear();
+                                }
+                                if (selected.length <
+                                    store.session.imposterIds.length) {
+                                  selected.add(p.id);
+                                }
                               }
-                              if (selected.length <
-                                  store.session.imposterIds.length) {
-                                selected.add(p.id);
-                              }
-                            }
-                          }),
+                            }),
+                          ),
                         ),
                     ],
                   ),
@@ -225,64 +254,11 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                             ),
                           ),
                         ),
-                        SliverPadding(
-                          padding: AppEdgeInsets.all16,
-                          sliver: SliverGrid.builder(
-                            itemCount: players.length,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  mainAxisExtent: 160,
-                                  crossAxisSpacing: AppSpacing.md,
-                                  mainAxisSpacing: AppSpacing.md,
-                                ),
-                            itemBuilder: (context, i) {
-                              final p = players[i];
-                              final done = store.completed.value.contains(p.id);
-                              return Card(
-                                color: done
-                                    ? AppColors.tealSurface
-                                    : AppColors.white,
-                                child: TextButton(
-                                  key: ValueKey(p.id),
-                                  onPressed: done
-                                      ? null
-                                      : () => store.selectPlayer(p.id),
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          size: 32,
-                                          color: done
-                                              ? AppColors.teal
-                                              : AppColors.charcoal,
-                                          done
-                                              ? Icons.check_circle
-                                              : Icons.person_outline,
-                                        ),
-                                        const SizedBox(height: AppSpacing.sm),
-                                        Text(
-                                          p.name,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        if (done)
-                                          Text(
-                                            l.playerDone,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
-                                                  color: AppColors.teal,
-                                                ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                        PlayerCards(
+                          players: players,
+                          completed: store.completed.value,
+                          completedLabel: l.playerDone,
+                          onSelected: store.selectPlayer,
                         ),
                       ],
                     )
@@ -298,7 +274,9 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                                 color: stage == WordGameStage.result
                                     ? AppColors.tealSurface
                                     : AppColors.yellow,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadii.hero,
+                                ),
                               ),
                               child: Icon(
                                 reveal
@@ -347,23 +325,39 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                                             current,
                                           ) ||
                                           session.setup.showCategory)
-                                        Text(session.categoryName),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: AppSpacing.lg,
+                                          ),
+                                          child: Text(
+                                            session.categoryName,
+                                            textAlign: TextAlign.center,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
+                                          ),
+                                        ),
                                       if (session.imposterIds.contains(
                                             current,
                                           ) &&
                                           session.setup.knowEachOther &&
                                           session.imposterIds.length > 1)
-                                        Text(
-                                          l.fellowImposters(
-                                            session.setup.players
-                                                .where(
-                                                  (p) =>
-                                                      p.id != current &&
-                                                      session.imposterIds
-                                                          .contains(p.id),
-                                                )
-                                                .map((p) => p.name)
-                                                .join(', '),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: AppSpacing.xl,
+                                          ),
+                                          child: AppNotice(
+                                            message: l.fellowImposters(
+                                              session.setup.players
+                                                  .where(
+                                                    (p) =>
+                                                        p.id != current &&
+                                                        session.imposterIds
+                                                            .contains(p.id),
+                                                  )
+                                                  .map((p) => p.name)
+                                                  .join(', '),
+                                            ),
                                           ),
                                         ),
                                     ],
@@ -387,64 +381,90 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                               style: Theme.of(context).textTheme.headlineMedium,
                             ),
                             const SizedBox(height: AppSpacing.xl),
-                            Text(
-                              l.actualImposter(
-                                session.setup.players
-                                    .where(
-                                      (p) => session.imposterIds.contains(p.id),
-                                    )
-                                    .map((p) => p.name)
-                                    .join(', '),
+                            Card(
+                              child: ListTile(
+                                leading: const ExcludeSemantics(
+                                  child: Icon(Icons.person_search_outlined),
+                                ),
+                                title: Text(
+                                  l.actualImposter(
+                                    players
+                                        .where(
+                                          (p) => session.imposterIds.contains(
+                                            p.id,
+                                          ),
+                                        )
+                                        .map((p) => p.name)
+                                        .join(', '),
+                                  ),
+                                ),
                               ),
                             ),
-                            Text(
-                              l.votedPlayer(
-                                session.setup.players
-                                    .where(
-                                      (p) => store.votedPlayerIds.value
-                                          .contains(p.id),
-                                    )
-                                    .map((p) => p.name)
-                                    .join(', '),
+                            const SizedBox(height: AppSpacing.md),
+                            Card(
+                              child: ListTile(
+                                leading: const ExcludeSemantics(
+                                  child: Icon(Icons.how_to_vote_outlined),
+                                ),
+                                title: Text(
+                                  l.votedPlayer(
+                                    players
+                                        .where(
+                                          (p) => store.votedPlayerIds.value
+                                              .contains(p.id),
+                                        )
+                                        .map((p) => p.name)
+                                        .join(', '),
+                                  ),
+                                ),
                               ),
                             ),
-                            const SizedBox(height: AppSpacing.xl),
-                            const Divider(height: 32),
-                            Text(
-                              l.secretWord,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: AppColors.gray),
+                            const SizedBox(height: AppSpacing.xxl),
+                            Card(
+                              child: Padding(
+                                padding: AppEdgeInsets.all24,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l.secretWord,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(color: AppColors.gray),
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    Text(
+                                      session.prompt.text,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.headlineMedium,
+                                    ),
+                                    if (session.showWordImages)
+                                      WordImage(session.prompt),
+                                  ],
+                                ),
+                              ),
                             ),
-                            Text(
-                              session.prompt.text,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            if (session.showWordImages)
-                              WordImage(session.prompt),
                           ],
                         ],
                       ),
                     ),
             ),
             bottomNavigationBar: reveal || stage != WordGameStage.players
-                ? AppContent(
-                    child: Padding(
-                      padding: AppEdgeInsets.all24,
-                      child: FilledButton(
-                        onPressed: reveal
-                            ? (store.revealed.value
-                                  ? store.completePlayer
-                                  : null)
+                ? AppActionBar(
+                    child: FilledButton(
+                      onPressed: reveal
+                          ? (store.revealed.value ? store.completePlayer : null)
+                          : stage == WordGameStage.discussion
+                          ? _vote
+                          : _back,
+                      child: Text(
+                        reveal
+                            ? l.understood
                             : stage == WordGameStage.discussion
-                            ? _vote
-                            : _back,
-                        child: Text(
-                          reveal
-                              ? l.understood
-                              : stage == WordGameStage.discussion
-                              ? l.announceResult
-                              : l.playAgain,
-                        ),
+                            ? l.announceResult
+                            : l.playAgain,
                       ),
                     ),
                   )

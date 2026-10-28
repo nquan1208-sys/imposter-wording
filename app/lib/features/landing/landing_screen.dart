@@ -1,4 +1,6 @@
+import 'package:untitled/constants/app_radii.dart';
 import 'package:untitled/widgets/app_content.dart';
+import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/base/dependency/app_service.dart';
@@ -19,78 +21,61 @@ class LandingScreen extends ConsumerWidget {
 
     return Scaffold(
       body: AppContent(
-        child: Padding(
+        bottom: false,
+        child: ListView(
           padding: AppEdgeInsets.all24,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: AppSpacing.xxl),
-                      Container(
-                        width: double.infinity,
-                        padding: AppEdgeInsets.all24,
-                        decoration: const BoxDecoration(
-                          color: AppColors.yellow,
-                          borderRadius: BorderRadius.all(Radius.circular(20)),
-                        ),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: AppSpacing.lg),
-                            const Icon(
-                              Icons.theater_comedy_outlined,
-                              size: 80,
-                              color: AppColors.charcoal,
-                            ),
-                            const SizedBox(height: AppSpacing.xl),
-                            Text(
-                              l10n.appTitle,
-                              style: textTheme.headlineLarge,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              l10n.tagline,
-                              style: textTheme.titleLarge,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        l10n.appDescription,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.gray,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              decoration: BoxDecoration(
+                color: AppColors.yellow,
+                borderRadius: BorderRadius.circular(AppRadii.hero),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const ExcludeSemantics(
+                    child: Icon(Icons.theater_comedy_outlined, size: 80),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  Text(l10n.appTitle, style: textTheme.headlineLarge),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(l10n.tagline, style: textTheme.titleLarge),
+                ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton(
-                onPressed: () => routerService.push(RouteInput.setup()),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible(child: Text(l10n.start)),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.arrow_forward, size: 20),
-                  ],
-                ),
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+            Text(
+              l10n.appDescription,
+              style: textTheme.bodyMedium?.copyWith(color: AppColors.gray),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: AppActionBar(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FilledButton(
+              onPressed: () => routerService.push(RouteInput.setup()),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(child: Text(l10n.start)),
+                  const SizedBox(width: AppSpacing.md),
+                  const ExcludeSemantics(
+                    child: Icon(Icons.arrow_forward, size: 20),
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.md),
-              OutlinedButton(
-                onPressed: () => routerService.push(RouteInput.howToPlay()),
-                child: Text(l10n.howToPlay),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton(
+              onPressed: () => routerService.push(RouteInput.howToPlay()),
+              child: Text(l10n.howToPlay),
+            ),
+          ],
         ),
       ),
     );

@@ -1,3 +1,5 @@
+import 'package:untitled/widgets/app_notice.dart';
+import 'package:untitled/theme/app_colors.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/constants/app_spacing.dart';
 import 'package:flutter/material.dart';
@@ -98,48 +100,61 @@ class PlayerPresetsScreen extends ConsumerWidget {
             children: [
               if (store.reading.value) Text(l.settingsLoading),
               if (store.readFailed.value) ...[
-                Text(l.settingsReadError),
+                AppNotice(message: l.settingsReadError, error: true),
                 TextButton(onPressed: store.restore, child: Text(l.retry)),
               ],
               if (store.setup.value.presets.isEmpty && store.editable)
-                Text(l.emptyLists),
+                AppNotice(message: l.emptyLists),
               for (final p in store.setup.value.presets)
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.folder_outlined),
-                    title: Text(p.name),
-                    subtitle: Text(
-                      '${l.playerCount(p.setup.players.length)}${store.setup.value.activePresetId == p.id ? ' · ${l.usingList}' : ''}',
-                    ),
-                    onTap: store.editable ? () => _details(context, p) : null,
-                    trailing: PopupMenuButton<String>(
-                      tooltip: l.listActions,
-                      enabled: store.editable,
-                      onSelected: (action) async {
-                        if (action == 'details') {
-                          _details(context, p);
-                        }
-                        if (action == 'rename') {
-                          await presetNameDialog(context, store, preset: p);
-                        }
-                        if (action == 'delete' && context.mounted) {
-                          await _delete(context, store, p);
-                        }
-                      },
-                      itemBuilder: (_) => [
-                        PopupMenuItem(value: 'details', child: Text(l.details)),
-                        PopupMenuItem(value: 'rename', child: Text(l.rename)),
-                        const PopupMenuDivider(),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Text(
-                            l.delete,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Card(
+                    child: ListTile(
+                      selected: store.setup.value.activePresetId == p.id,
+                      leading: ExcludeSemantics(
+                        child: Icon(
+                          store.setup.value.activePresetId == p.id
+                              ? Icons.folder_special_outlined
+                              : Icons.folder_outlined,
+                        ),
+                      ),
+                      title: Text(p.name),
+                      subtitle: Text(
+                        '${l.playerCount(p.setup.players.length)}${store.setup.value.activePresetId == p.id ? ' · ${l.usingList}' : ''}',
+                      ),
+                      onTap: store.editable ? () => _details(context, p) : null,
+                      trailing: PopupMenuButton<String>(
+                        tooltip: l.listActions,
+                        enabled: store.editable,
+                        onSelected: (action) async {
+                          if (action == 'details') {
+                            _details(context, p);
+                          }
+                          if (action == 'rename') {
+                            await presetNameDialog(context, store, preset: p);
+                          }
+                          if (action == 'delete' && context.mounted) {
+                            await _delete(context, store, p);
+                          }
+                        },
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'details',
+                            child: Text(l.details),
+                          ),
+                          PopupMenuItem(value: 'rename', child: Text(l.rename)),
+                          const PopupMenuDivider(),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text(
+                              l.delete,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -208,6 +223,7 @@ class PlayerPresetsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(l.details, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: AppSpacing.xl),
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.folder_outlined),
@@ -215,24 +231,48 @@ class PlayerPresetsScreen extends ConsumerWidget {
                   subtitle: Text(l.playerCount(s.players.length)),
                 ),
               ),
-              Wrap(
-                spacing: AppSpacing.sm,
-                children: [
-                  for (final player in s.players)
-                    Chip(label: Text(player.name)),
-                ],
+              const SizedBox(height: AppSpacing.xl),
+              LayoutBuilder(
+                builder: (context, constraints) => Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    for (final player in s.players)
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: constraints.maxWidth,
+                        ),
+                        child: Chip(label: Text(player.name)),
+                      ),
+                  ],
+                ),
               ),
+              const SizedBox(height: AppSpacing.xxl),
               Text(l.savedRules, style: Theme.of(context).textTheme.titleLarge),
               Text(
                 '${l.imposters}: ${s.randomImposters ? l.randomCount : '${l.fixedCount} · ${s.imposters}'}',
               ),
+              const SizedBox(height: AppSpacing.md),
               for (final rule in [
                 (l.imposterNotFirst, s.imposterNotFirst),
                 (l.showCategory, s.showCategory),
                 (l.knowEachOther, s.knowEachOther),
               ])
-                Text('${rule.$1}: ${rule.$2 ? l.enabled : l.disabled}'),
-              Text(l.listAutosave),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: ExcludeSemantics(
+                    child: Icon(
+                      rule.$2
+                          ? Icons.check_circle_outline
+                          : Icons.remove_circle_outline,
+                      color: rule.$2 ? AppColors.teal : AppColors.gray,
+                    ),
+                  ),
+                  title: Text(rule.$1),
+                  subtitle: Text(rule.$2 ? l.enabled : l.disabled),
+                ),
+              const SizedBox(height: AppSpacing.xl),
+              AppNotice(message: l.listAutosave),
             ],
           ),
         ),
