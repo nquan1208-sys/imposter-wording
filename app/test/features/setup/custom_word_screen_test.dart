@@ -1,3 +1,4 @@
+import 'package:untitled/models/content.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:image_picker/image_picker.dart';
@@ -109,31 +110,41 @@ void main() {
     bool english = true,
   }) async {
     content = ContentRepository(
+      contentLocale: english ? 'en' : 'vi',
       cache: MemoryStorage(),
-      fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
+      fetchPage: (t, l, f, e) =>
+          fixturePage(fixture(locale: english ? 'en' : 'vi'), t, l, f, e),
     );
     file = MemoryStorage();
     images = FakeLocalImages();
     imagePicker = FakeImagePicker();
     store = SetupStore(content: content, file: file, images: images);
     await store.restore();
-    if (!offline) await content.load();
+    if (english) await store.setContentLocale('en');
+    if (!offline) {
+      await content.load();
+    } else {
+      content.snapshot.value = ContentSnapshot.fromJson({
+        'categories': [],
+        'words': [],
+        'questions': [],
+      }, english ? 'en' : 'vi');
+    }
     await store.setPlayerCount(3);
     container = ProviderContainer(
       overrides: [
         localStorageProvider.overrideWithValue(MemoryAppSettingsStorage()),
         localImageStoreProvider.overrideWithValue(images),
         imagePickerProvider.overrideWithValue(imagePicker),
-        contentRepositoryProvider.overrideWithValue(content),
+        contentRepositoryProvider(
+          english ? 'en' : 'vi',
+        ).overrideWithValue(content),
         setupStoreProvider.overrideWithValue(store),
       ],
     );
     await container.read(StoreProvider.app).restore();
     if (english) {
-      expect(
-        await container.read(StoreProvider.app).setLocale(const Locale('en')),
-        isTrue,
-      );
+      expect(await store.setContentLocale('en'), isTrue);
     }
     addTearDown(() {
       container.dispose();

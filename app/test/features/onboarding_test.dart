@@ -14,7 +14,18 @@ Future<ProviderContainer> pumpApp(WidgetTester tester) async {
     cache: MemoryStorage(),
     fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
   );
-  final store = SetupStore(content: content, file: MemoryStorage());
+  final english = ContentRepository(
+    contentLocale: 'en',
+    cache: MemoryStorage(),
+    fetchPage: (t, l, f, e) => fixturePage(fixture(locale: 'en'), t, l, f, e),
+  );
+  await english.load();
+  addTearDown(english.dispose);
+  final store = SetupStore(
+    content: content,
+    file: MemoryStorage(),
+    repositoryForLocale: (locale) => locale == 'en' ? english : content,
+  );
   await content.load();
   await store.restore();
   addTearDown(store.dispose);
@@ -22,7 +33,7 @@ Future<ProviderContainer> pumpApp(WidgetTester tester) async {
   final container = ProviderContainer(
     overrides: [
       localStorageProvider.overrideWithValue(MemoryAppSettingsStorage()),
-      contentRepositoryProvider.overrideWithValue(content),
+      contentRepositoryProvider('vi').overrideWithValue(content),
       setupStoreProvider.overrideWithValue(store),
     ],
   );
@@ -148,7 +159,7 @@ void main() {
     final container = await pumpApp(tester);
 
     expect(
-      await container.read(StoreProvider.app).setLocale(const Locale('en')),
+      await container.read(setupStoreProvider).setContentLocale('en'),
       isTrue,
     );
     await tester.pumpAndSettle();

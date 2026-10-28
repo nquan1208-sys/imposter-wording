@@ -198,7 +198,11 @@ void main() {
       }, 'vi');
       await store.pendingWrites;
       expect(store.setup.value.categoryIds, {id});
-      content.snapshot.value = null;
+      content.snapshot.value = ContentSnapshot.fromJson({
+        'categories': [],
+        'words': [],
+        'questions': [],
+      }, 'vi');
       await store.restore();
       expect(
         QuestionGameSession.create(store)!.prompt.civilianQuestion,

@@ -24,8 +24,8 @@ class RoutePage {
         return RouteScreen.setupPageRoute(settings);
       case RouteName.settings:
         return RouteScreen.settingsPageRoute(settings);
-      case RouteName.settingsLanguage:
-        return RouteScreen.settingsLanguagePageRoute(settings);
+      case RouteName.contentLanguage:
+        return RouteScreen.contentLanguagePageRoute(settings);
       case RouteName.categories:
         return RouteScreen.categoriesPageRoute(settings);
     }

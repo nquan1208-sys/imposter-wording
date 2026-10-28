@@ -20,7 +20,9 @@ class WordImage extends ConsumerWidget {
     }
     final path = prompt.imagePath;
     if (path == null) return const SizedBox.shrink();
-    final cache = ref.watch(contentRepositoryProvider).images;
+    final cache = ref
+        .watch(contentRepositoryProvider(prompt.contentLocale))
+        .images;
     final l = AppLocalizations.of(context);
     Widget placeholder() => Semantics(
       label: l.wordImageUnavailable,

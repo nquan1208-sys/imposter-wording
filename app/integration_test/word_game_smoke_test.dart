@@ -65,7 +65,7 @@ void main() {
         final setup = SetupStore(content: content, file: local('setup'));
         final container = ProviderContainer(
           overrides: [
-            contentRepositoryProvider.overrideWithValue(content),
+            contentRepositoryProvider('vi').overrideWithValue(content),
             setupStoreProvider.overrideWithValue(setup),
           ],
         );

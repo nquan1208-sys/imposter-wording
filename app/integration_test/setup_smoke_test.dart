@@ -62,7 +62,7 @@ void main() {
       expect(Supabase.instance.client.auth.currentSession, null);
       var container = ProviderContainer(
         overrides: [
-          contentRepositoryProvider.overrideWithValue(content),
+          contentRepositoryProvider('vi').overrideWithValue(content),
           setupStoreProvider.overrideWithValue(store),
         ],
       );
@@ -110,7 +110,7 @@ void main() {
       expect(restored.setup.value.categoryIds.length, 1);
       container = ProviderContainer(
         overrides: [
-          contentRepositoryProvider.overrideWithValue(offline),
+          contentRepositoryProvider('vi').overrideWithValue(offline),
           setupStoreProvider.overrideWithValue(restored),
         ],
       );

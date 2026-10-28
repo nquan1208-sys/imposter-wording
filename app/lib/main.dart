@@ -72,14 +72,13 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   Widget build(BuildContext context) {
     final routerService = ref.watch(AppService.router);
-    final appStore = ref.watch(StoreProvider.app);
-    ref.watch(setupStoreProvider);
+    final setupStore = ref.watch(setupStoreProvider);
     return SignalBuilder(
       builder: (context) => MaterialApp(
         scaffoldMessengerKey: messenger,
         debugShowCheckedModeBanner: false,
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-        locale: appStore.locale.value,
+        locale: Locale(setupStore.setup.value.contentLocale),
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,

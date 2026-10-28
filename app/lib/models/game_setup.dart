@@ -53,6 +53,7 @@ class GameSetup {
   final List<PlayerPreset> presets;
   final String? activePresetId;
   final int nextPresetId;
+  final String contentLocale;
   final String gameType;
   final List<SetupPlayer> players;
   final int nextPlayerId;
@@ -70,6 +71,7 @@ class GameSetup {
     this.presets = const [],
     this.activePresetId,
     this.nextPresetId = 1,
+    this.contentLocale = 'vi',
     this.gameType = 'word',
     required this.players,
     required this.nextPlayerId,
@@ -90,7 +92,10 @@ class GameSetup {
     nextPlayerId: 5,
   );
   factory GameSetup.fromJson(JsonMap json) {
-    if ((json['contentLocale'] ?? 'vi') != 'vi' ||
+    final locale = json['contentLocale'] ?? 'vi';
+    if (locale is! String ||
+        locale.isEmpty ||
+        locale != locale.trim() ||
         !const ['word', 'question'].contains(json['gameType'] ?? 'word') ||
         !const ['classic', 'family'].contains(json['mode'])) {
       throw const FormatException('Unsupported setup');
@@ -159,6 +164,7 @@ class GameSetup {
       presets: presets,
       activePresetId: activePresetId,
       nextPresetId: nextPresetId,
+      contentLocale: locale,
       gameType: json['gameType'] as String? ?? 'word',
       players: players,
       nextPlayerId: next,
@@ -224,6 +230,7 @@ class GameSetup {
     String? activePresetId,
     bool clearActivePreset = false,
     int? nextPresetId,
+    String? contentLocale,
     String? gameType,
     List<SetupPlayer>? players,
     int? nextPlayerId,
@@ -248,6 +255,7 @@ class GameSetup {
         ? null
         : activePresetId ?? this.activePresetId,
     nextPresetId: nextPresetId ?? this.nextPresetId,
+    contentLocale: contentLocale ?? this.contentLocale,
     gameType: gameType ?? this.gameType,
     players: players ?? this.players,
     nextPlayerId: nextPlayerId ?? this.nextPlayerId,
@@ -314,7 +322,7 @@ class GameSetup {
     'mode': family ? 'family' : 'classic',
     'showWordImages': showWordImages,
     'categoryIds': categoryIds.toList(),
-    'contentLocale': 'vi',
+    'contentLocale': contentLocale,
     'gameType': gameType,
   };
 }

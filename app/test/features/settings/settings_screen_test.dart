@@ -17,6 +17,7 @@ void main() {
   late SetupStore setup;
   late ProviderContainer container;
   late MemoryAppSettingsStorage appSettings;
+  late MemoryStorage setupFile;
   final requestedLocales = <String>[];
 
   Future<void> pumpApp(
@@ -32,7 +33,23 @@ void main() {
         return fixturePage(fixture(), table, locale, from, to);
       },
     );
-    setup = SetupStore(content: content, file: MemoryStorage());
+    final languages = fixtureLanguages();
+    await languages.load();
+    final english = ContentRepository(
+      contentLocale: 'en',
+      cache: MemoryStorage(),
+      fetchPage: (t, l, f, e) => fixturePage(fixture(locale: 'en'), t, l, f, e),
+    );
+    await english.load();
+    addTearDown(english.dispose);
+    addTearDown(languages.dispose);
+    setupFile = MemoryStorage();
+    setup = SetupStore(
+      content: content,
+      file: setupFile,
+      languages: languages,
+      repositoryForLocale: (locale) => locale == 'en' ? english : content,
+    );
     await content.load();
     await setup.restore();
     appSettings = MemoryAppSettingsStorage(
@@ -42,7 +59,7 @@ void main() {
     container = ProviderContainer(
       overrides: [
         localStorageProvider.overrideWithValue(appSettings),
-        contentRepositoryProvider.overrideWithValue(content),
+        contentRepositoryProvider('vi').overrideWithValue(content),
         setupStoreProvider.overrideWithValue(setup),
       ],
     );
@@ -73,19 +90,19 @@ void main() {
   }
 
   testWidgets(
-    'language and help return through settings without changing content locale',
+    'one language changes interface and content and returns through settings',
     (tester) async {
       await pumpApp(tester);
-      expect(find.text('Ngôn ngữ nội dung: Tiếng Việt'), findsOneWidget);
+      expect(find.text('Ngôn ngữ'), findsOneWidget);
       await openSettings(tester);
 
-      await tester.tap(find.text('Ngôn ngữ giao diện'));
+      await tester.tap(find.text('Ngôn ngữ'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('English'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Choose interface language'), findsOneWidget);
-      expect(appSettings.settings?.uiLocale, 'en');
+      expect(find.text('Language'), findsOneWidget);
+      expect(setup.setup.value.contentLocale, 'en');
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       expect(find.text('Settings'), findsOneWidget);
@@ -99,8 +116,8 @@ void main() {
 
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
-      expect(find.text('Content language: Vietnamese'), findsOneWidget);
-      expect(requestedLocales, everyElement('vi'));
+      expect(find.text('Language'), findsOneWidget);
+      expect(setup.content.contentLocale, 'en');
     },
   );
 
@@ -114,6 +131,11 @@ void main() {
     );
     await openSettings(tester);
 
+    await tester.scrollUntilVisible(
+      find.text('4.2.2 (158)'),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('4.2.2 (158)'), findsOneWidget);
     expect(find.text('01234567…'), findsOneWidget);
     expect(find.text('ID cài đặt'), findsOneWidget);
@@ -156,22 +178,24 @@ void main() {
   ) async {
     await pumpApp(tester);
     await openSettings(tester);
-    await tester.tap(find.text('Ngôn ngữ giao diện'));
+    await tester.tap(find.text('Ngôn ngữ'));
     await tester.pumpAndSettle();
-    appSettings.failWrite = true;
+    setupFile.failWrite = true;
 
     await tester.tap(find.text('English'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Settings could not be saved. Your choice is still here.'),
+      find.text(
+        'Không thể lưu thiết lập. Các thay đổi vẫn được giữ trên màn hình.',
+      ),
       findsOneWidget,
     );
     expect(find.text('English'), findsOneWidget);
 
-    appSettings.failWrite = false;
-    await tester.tap(find.text('Retry'));
+    setupFile.failWrite = false;
+    await tester.tap(find.text('Thử lại'));
     await tester.pumpAndSettle();
-    expect(appSettings.settings?.uiLocale, 'en');
+    expect(setup.setup.value.contentLocale, 'en');
     expect(find.text('Could not save'), findsNothing);
   });
 

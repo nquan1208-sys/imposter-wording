@@ -18,6 +18,9 @@ import 'fixtures.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    AppConfig.current = await AppConfig.load();
+  });
   late Directory root;
   late HiveLocalStorage storage;
   ScopedJsonFile legacy(String name, {String locale = 'vi'}) => ScopedJsonFile(
@@ -46,6 +49,45 @@ void main() {
     await storage.close();
     await root.delete(recursive: true);
   });
+
+  test(
+    'language list cache is separate by backend/environment and setup keeps its old key',
+    () async {
+      final languages = {
+        'languages': [
+          {'code': 'ja', 'display_name': '日本語', 'sort_order': 2},
+        ],
+      };
+      await local('languages', locale: '').write(languages);
+      await local(
+        'setup',
+      ).write(GameSetup.defaults().copyWith(contentLocale: 'ja').toJson());
+      await local('snapshot', locale: 'ja').write(localizedFixture('ja'));
+      await storage.close();
+      storage = HiveLocalStorage(directory: () async => root);
+      expect(await local('languages', locale: '').read(), languages);
+      expect(
+        await local('languages', locale: '', url: 'https://other.com').read(),
+        isNull,
+      );
+      expect(await local('languages', locale: '', env: 'dev').read(), isNull);
+      expect((await local('setup').read())!['contentLocale'], 'ja');
+      expect(await local('setup', locale: 'ja').read(), isNull);
+      expect(await local('snapshot', locale: 'en').read(), isNull);
+      expect(
+        await local('snapshot', locale: 'ja', url: 'https://other.com').read(),
+        isNull,
+      );
+      expect(
+        (await local(
+          'snapshot',
+          locale: 'ja',
+        ).read())!['words'][0]['t'][0]['locale'],
+        'ja',
+      );
+      expect(await storage.imageReferences('https://example.com'), isNotEmpty);
+    },
+  );
 
   test(
     'local inventory spans scopes/locales and ignores superseded legacy records',
@@ -310,7 +352,6 @@ void main() {
   test(
     'provider disposal drains queued setup writes before closing storage',
     () async {
-      AppConfig.current = await AppConfig.load();
       final content = ContentRepository(
         cache: MemoryStorage(),
         fetchPage: (t, l, f, e) => fixturePage(fixture(), t, l, f, e),
@@ -321,7 +362,12 @@ void main() {
             ref.onDispose(storage.close);
             return storage;
           }),
-          contentRepositoryProvider.overrideWith((ref) {
+          contentLanguageRepositoryProvider.overrideWith((ref) {
+            final languages = fixtureLanguages();
+            ref.onDispose(languages.dispose);
+            return languages;
+          }),
+          contentRepositoryProvider('vi').overrideWith((ref) {
             ref.onDispose(content.dispose);
             return content;
           }),
@@ -342,6 +388,47 @@ void main() {
       ).read();
       expect(restored!['players'], hasLength(8));
       expect(restored['showCategory'], true);
+    },
+  );
+
+  test(
+    'production providers restore and switch repositories without rebuilding setup',
+    () async {
+      final languages = fixtureLanguages();
+      await languages.load();
+      final container = ProviderContainer(
+        overrides: [
+          localStorageProvider.overrideWithValue(storage),
+          contentLanguageRepositoryProvider.overrideWithValue(languages),
+          contentRepositoryProvider.overrideWith((ref, locale) {
+            final repo = ContentRepository(
+              contentLocale: locale,
+              cache: MemoryStorage(),
+              fetchPage: (t, l, f, e) =>
+                  fixturePage(localizedFixture(l), t, l, f, e),
+            );
+            ref.onDispose(repo.dispose);
+            repo.load();
+            return repo;
+          }),
+        ],
+      );
+      addTearDown(() {
+        container.dispose();
+        languages.dispose();
+      });
+      final store = container.read(setupStoreProvider);
+      await store.restore();
+      await store.content.load();
+      await store.setPlayerCount(7);
+      expect(await store.setContentLocale('en'), true);
+      await store.content.load();
+      await store.pendingWrites;
+      expect(container.read(setupStoreProvider), same(store));
+      expect(store.content.contentLocale, 'en');
+      await store.restore();
+      expect(store.setup.value.players, hasLength(7));
+      expect(store.setup.value.contentLocale, 'en');
     },
   );
 

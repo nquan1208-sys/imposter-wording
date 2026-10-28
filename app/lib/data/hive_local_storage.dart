@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:untitled/models/content_language.dart';
 import 'dart:io';
 import 'package:hive_ce/hive.dart';
 import 'package:path_provider/path_provider.dart';
@@ -25,7 +26,7 @@ class HiveLocalStorage {
     required String locale,
     required String name,
   }) {
-    if (name != 'setup' && name != 'snapshot') {
+    if (!const ['setup', 'snapshot', 'languages'].contains(name)) {
       throw ArgumentError.value(name, 'name');
     }
     return _HiveJsonStore(
@@ -175,11 +176,17 @@ class _HiveJsonStore implements LocalJsonStore {
   final ScopedJsonFile legacy;
   final String locale;
   _HiveJsonStore(this.storage, this.legacy, this.locale);
-  String get boxName => legacy.name == 'setup' ? 'settings' : 'content_cache';
+  String get boxName => switch (legacy.name) {
+    'setup' => 'settings',
+    'languages' => 'content_languages',
+    _ => 'content_cache',
+  };
 
   void _validate(JsonMap data) {
     if (legacy.name == 'setup') {
       GameSetup.fromJson(data);
+    } else if (legacy.name == 'languages') {
+      ContentLanguage.parse(data);
     } else {
       ContentSnapshot.fromJson(data, locale);
     }

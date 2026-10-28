@@ -13,7 +13,7 @@ class RouteInput {
   RouteInput.playerNames() : routeName = RouteName.playerNames;
   RouteInput.setup() : routeName = RouteName.setup;
   RouteInput.settings() : routeName = RouteName.settings;
-  RouteInput.settingsLanguage() : routeName = RouteName.settingsLanguage;
+  RouteInput.contentLanguage() : routeName = RouteName.contentLanguage;
   RouteInput.wordGame(WordGameSession session)
     : routeName = RouteName.wordGame,
       arguments = session;

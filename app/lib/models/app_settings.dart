@@ -1,6 +1,7 @@
 class AppSettings {
   const AppSettings({required this.uiLocale, this.installationId});
 
+  // Legacy storage field; GameSetup.contentLocale now controls UI and content.
   final String uiLocale;
   final String? installationId;
 
