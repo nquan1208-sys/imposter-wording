@@ -270,6 +270,7 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           AppHeroCard(
+                            prominent: stage == WordGameStage.discussion,
                             title: reveal
                                 ? l.wordFor(name(current))
                                 : stage == WordGameStage.discussion
@@ -370,7 +371,7 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                               ),
                           ] else if (stage == WordGameStage.discussion) ...[
                             Text(
-                              l.discussionHelp,
+                              l.discussionHelp(name(session.startingPlayerId)),
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(color: AppColors.textMuted),
                             ),
@@ -459,7 +460,7 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                         reveal
                             ? l.understood
                             : stage == WordGameStage.discussion
-                            ? l.announceResult
+                            ? l.startVoting
                             : l.playAgain,
                       ),
                     ),

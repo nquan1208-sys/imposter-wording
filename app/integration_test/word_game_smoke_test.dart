@@ -117,7 +117,7 @@ void main() {
           );
           await tap('Hiểu rồi!');
         }
-        await tap('Thông báo kết quả');
+        await tap('Bắt đầu bầu chọn');
         expect(first.imposterIds, hasLength(advanced ? 2 : 1));
         if (advanced) {
           expect(first.imposterIds.contains(first.startingPlayerId), false);

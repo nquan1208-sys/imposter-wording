@@ -694,7 +694,13 @@ void main() {
     await tap(tester, 'Confirm');
     expect(store.setup.value.randomImposters, true);
     await tap(tester, 'Imposters');
-    await tap(tester, 'Imposters never start');
+    expect(
+      find.text(
+        'The starting player is always a civilian. This does not affect the order of viewing cards.',
+      ),
+      findsOneWidget,
+    );
+    await tap(tester, 'Imposters never start the discussion');
     await tap(tester, 'Confirm');
     for (final label in [
       'Show category to imposters',

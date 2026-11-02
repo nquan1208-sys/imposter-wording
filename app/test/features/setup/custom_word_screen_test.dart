@@ -820,7 +820,7 @@ void main() {
           await tap(tester, 'Got it!');
           expect(find.byType(LocalPromptImage), findsNothing);
         }
-        await tap(tester, 'Announce results');
+        await tap(tester, 'Start voting');
         final imposter = session.setup.players.firstWhere(
           (p) => session.imposterIds.contains(p.id),
         );

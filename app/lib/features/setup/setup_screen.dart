@@ -541,6 +541,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     ),
                   SwitchListTile(
                     title: Text(l.imposterNotFirst),
+                    subtitle: Text(l.imposterNotFirstHelp),
                     value: notFirst,
                     onChanged: busy ? null : (v) => update(() => notFirst = v),
                   ),

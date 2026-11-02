@@ -82,14 +82,14 @@
   "voteTitle": "Chọn người bị bầu",
   "voteHelp": "Chọn đúng {count} người bị bầu. Nếu hòa, hãy bầu lại. Nhóm chỉ thắng khi chọn đúng toàn bộ kẻ mạo danh.",
   "gameStartError": "Không thể tạo ván. Hãy quay về thiết lập và kiểm tra nội dung phù hợp.",
-  "discussionTitle": "Giai đoạn bầu chọn",
+  "discussionTitle": "Gợi ý & thảo luận",
   "gameResult": "Kết quả",
   "passPhone": "Chuyển máy cho từng người để xem thẻ riêng.",
   "playerDone": "Đã xem",
   "youAreImposter": "Bạn là kẻ mạo danh",
   "tapToReveal": "Nhấn để hiển thị",
   "understood": "Hiểu rồi!",
-  "startingPlayer": "{name} bắt đầu vòng chơi.",
+  "startingPlayer": "Người mở đầu: {name}",
   "@startingPlayer": {
     "placeholders": {
       "name": {
@@ -97,7 +97,8 @@
       }
     }
   },
-  "discussionHelp": "Lần lượt theo chiều kim đồng hồ đưa gợi ý kín đáo. Thảo luận và bầu bằng lời. Chọn số người bằng số kẻ mạo danh; nhóm chỉ thắng khi chọn đúng toàn bộ.",
+  "@discussionHelp": {"placeholders": {"name": {"type": "String"}}},
+  "discussionHelp": "{name} đưa gợi ý trước, sau đó lần lượt theo chiều kim đồng hồ. Thảo luận xong, bấm “Bắt đầu bầu chọn” để chọn nghi phạm.",
   "groupWins": "Nhóm chiến thắng!",
   "imposterWins": "Kẻ mạo danh chiến thắng!",
   "actualImposter": "Kẻ mạo danh là: {name}",
@@ -117,7 +118,7 @@
     }
   },
   "secretWord": "Từ bí mật",
-  "announceResult": "Thông báo kết quả",
+  "startVoting": "Bắt đầu bầu chọn",
   "playAgain": "Chơi lại",
   "editPlayers": "Chỉnh sửa người chơi",
   "playerName": "Người chơi {count}",
@@ -146,7 +147,8 @@
   },
   "fewerImposters": "Giảm kẻ mạo danh",
   "moreImposters": "Tăng kẻ mạo danh",
-  "imposterNotFirst": "Kẻ mạo danh không đi trước",
+  "imposterNotFirstHelp": "Người mở đầu luôn là người thường. Không ảnh hưởng thứ tự xem thẻ.",
+  "imposterNotFirst": "Kẻ mạo danh không mở đầu thảo luận",
   "showWordImages": "Hiển thị ảnh",
   "showCategory": "Hiển thị tên danh mục cho kẻ mạo danh",
   "knowEachOther": "Kẻ mạo danh biết nhau",

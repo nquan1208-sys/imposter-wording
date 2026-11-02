@@ -82,14 +82,14 @@
   "voteTitle": "Choose the voted players",
   "voteHelp": "Select exactly {count} voted player(s). Vote again if tied. The group wins only if all imposters are selected.",
   "gameStartError": "Could not start a game. Return to setup and check eligible content.",
-  "discussionTitle": "Discussion and voting",
+  "discussionTitle": "Clues & discussion",
   "gameResult": "Results",
   "passPhone": "Pass the phone to each player to view their private card.",
   "playerDone": "Viewed",
   "youAreImposter": "You are the imposter",
   "tapToReveal": "Tap to reveal",
   "understood": "Got it!",
-  "startingPlayer": "{name} starts the round.",
+  "startingPlayer": "Starting player: {name}",
   "@startingPlayer": {
     "placeholders": {
       "name": {
@@ -97,7 +97,8 @@
       }
     }
   },
-  "discussionHelp": "Go clockwise, each giving a subtle clue. Discuss and vote aloud. Select as many suspects as there are imposters; the group wins only if all are correct.",
+  "@discussionHelp": {"placeholders": {"name": {"type": "String"}}},
+  "discussionHelp": "{name} gives the first clue, then continue clockwise. When discussion is over, tap “Start voting” to choose suspects.",
   "groupWins": "The group wins!",
   "imposterWins": "The imposters win!",
   "actualImposter": "Imposters: {name}",
@@ -117,7 +118,7 @@
     }
   },
   "secretWord": "Secret word",
-  "announceResult": "Announce results",
+  "startVoting": "Start voting",
   "playAgain": "Play again",
   "editPlayers": "Edit player names",
   "playerName": "Player {count}",
@@ -146,7 +147,8 @@
   },
   "fewerImposters": "Fewer imposters",
   "moreImposters": "More imposters",
-  "imposterNotFirst": "Imposters never start",
+  "imposterNotFirstHelp": "The starting player is always a civilian. This does not affect the order of viewing cards.",
+  "imposterNotFirst": "Imposters never start the discussion",
   "showWordImages": "Show images",
   "showCategory": "Show category to imposters",
   "knowEachOther": "Imposters know each other",

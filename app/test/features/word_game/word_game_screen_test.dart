@@ -289,7 +289,7 @@ void main() {
             .session;
         await finish(tester, english: true);
         expect(find.byType(WordImage), findsNothing);
-        await tap(tester, 'Announce results');
+        await tap(tester, 'Start voting');
         final imposter = session.setup.players.firstWhere(
           (p) => session.imposterIds.contains(p.id),
         );
@@ -507,9 +507,16 @@ void main() {
       final starter = session.setup.players.firstWhere(
         (p) => p.id == session.startingPlayerId,
       );
-      expect(find.text('${starter.name} starts the round.'), findsOneWidget);
+      expect(find.text('Starting player: ${starter.name}'), findsOneWidget);
       expect(session.imposterIds.contains(starter.id), false);
-      await tap(tester, 'Announce results');
+      expect(find.text('Clues & discussion'), findsOneWidget);
+      expect(
+        find.textContaining('${starter.name} gives the first clue'),
+        findsOneWidget,
+      );
+      expect(find.text('Choose suspects'), findsNothing);
+      expect(find.text('Confirm'), findsNothing);
+      await tap(tester, 'Start voting');
       await tap(tester, imposter.name);
       expect(
         tester
@@ -520,7 +527,9 @@ void main() {
       await tap(tester, other.name);
       await tap(tester, 'Cancel');
       expect(find.text('Results'), findsNothing);
-      await tap(tester, 'Announce results');
+      expect(find.text('Starting player: ${starter.name}'), findsOneWidget);
+      expect(find.text('Confirm'), findsNothing);
+      await tap(tester, 'Start voting');
       expect(
         tester
             .widget<FilledButton>(find.widgetWithText(FilledButton, 'Confirm'))
@@ -540,9 +549,18 @@ void main() {
   ) async {
     await pump(tester, family: true, showWordImages: true);
     await finish(tester);
-    expect(find.text('Giai đoạn bầu chọn'), findsOneWidget);
+    expect(find.text('Gợi ý & thảo luận'), findsOneWidget);
+    final starter = session.setup.players.firstWhere(
+      (p) => p.id == session.startingPlayerId,
+    );
+    expect(find.text('Người mở đầu: ${starter.name}'), findsOneWidget);
+    expect(
+      find.textContaining('${starter.name} đưa gợi ý trước'),
+      findsOneWidget,
+    );
+    expect(find.text('Xác nhận'), findsNothing);
     expect(find.byType(WordImage), findsNothing);
-    await tap(tester, 'Thông báo kết quả');
+    await tap(tester, 'Bắt đầu bầu chọn');
     expect(
       tester
           .widget<FilledButton>(find.widgetWithText(FilledButton, 'Xác nhận'))
@@ -551,7 +569,7 @@ void main() {
     );
     await tap(tester, 'Hủy');
     expect(find.text('Kết quả'), findsNothing);
-    await tap(tester, 'Thông báo kết quả');
+    await tap(tester, 'Bắt đầu bầu chọn');
     final imposter = session.setup.players.firstWhere(
       (p) => p.id == session.imposterIds.single,
     );
@@ -650,7 +668,7 @@ void main() {
         await tap(tester, 'Tap to reveal');
         await tap(tester, 'Got it!');
       }
-      await tap(tester, 'Announce results');
+      await tap(tester, 'Start voting');
       await tap(tester, session.setup.players.first.name);
       await tap(tester, 'Confirm');
       content.snapshot.value = ContentSnapshot.fromJson({
@@ -721,7 +739,7 @@ void main() {
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await pump(tester, english: true);
       await finish(tester, english: true);
-      await tap(tester, 'Announce results');
+      await tap(tester, 'Start voting');
       await tap(tester, session.setup.players.first.name);
       await tap(tester, 'Confirm');
       expect(find.text('Results'), findsOneWidget);
