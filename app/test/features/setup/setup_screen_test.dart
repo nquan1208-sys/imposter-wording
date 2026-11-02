@@ -3,6 +3,7 @@ import 'package:untitled/models/game_setup.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled/base/store/store_provider.dart';
@@ -24,6 +25,13 @@ class GatedMemoryStorage extends MemoryStorage {
 }
 
 void main() {
+  setUpAll(() async {
+    final fonts = FontLoader('BeVietnamPro');
+    for (final weight in ['Regular', 'Medium', 'SemiBold']) {
+      fonts.addFont(rootBundle.load('assets/fonts/BeVietnamPro-$weight.ttf'));
+    }
+    await fonts.load();
+  });
   late ContentRepository content;
   late SetupStore store;
   late MemoryStorage file;
@@ -227,6 +235,35 @@ void main() {
     expect(store.setup.value.family, true);
     expect(store.setup.value.categoryIds, {'a'});
   });
+
+  for (final scale in [1.0, 2.0]) {
+    testWidgets('category tabs fit a narrow screen at text scale $scale', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(375, 812);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = scale;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await pump(tester);
+      await tap(tester, 'Danh mục');
+
+      final bar = find.byType(TabBar);
+      final bounds = tester.getRect(bar);
+      for (final label in ['Tất cả danh mục', 'Chế độ gia đình']) {
+        final text = find.descendant(of: bar, matching: find.text(label));
+        final rect = tester.getRect(text);
+        expect(rect.left, greaterThanOrEqualTo(bounds.left));
+        expect(rect.right, lessThanOrEqualTo(bounds.right));
+        expect(rect.top, greaterThanOrEqualTo(bounds.top));
+        expect(rect.bottom, lessThanOrEqualTo(bounds.bottom));
+      }
+      await tap(tester, 'Chế độ gia đình');
+      expect(tester.widget<TabBar>(bar).controller!.index, 1);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   for (final english in [false, true]) {
     testWidgets(

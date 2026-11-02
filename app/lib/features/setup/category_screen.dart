@@ -171,7 +171,9 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             color: AppColors.surfaceRaised,
-                            borderRadius: BorderRadius.circular(AppRadii.card),
+                            borderRadius: BorderRadius.circular(
+                              AppRadii.control,
+                            ),
                           ),
                           child: TabBar(
                             controller: tabs,
@@ -180,11 +182,25 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
                                 tabs.index = index;
                               }
                             },
-                            isScrollable: true,
-                            tabAlignment: TabAlignment.center,
+                            tabAlignment: TabAlignment.fill,
+                            labelPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 12,
+                            ),
                             tabs: [
-                              Tab(text: l.allCategories),
-                              Tab(text: l.familyCategories),
+                              for (final label in [
+                                l.allCategories,
+                                l.familyCategories,
+                              ])
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    minHeight: 24,
+                                  ),
+                                  child: Text(
+                                    label,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
                             ],
                           ),
                         ),
