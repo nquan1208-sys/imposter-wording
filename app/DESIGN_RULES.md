@@ -1,93 +1,74 @@
-# App design rules — Bumble inspired
+# App design rules — CrazyGames inspired
 
-Nguồn chuẩn: [`../docs/support.bumble.com-DESIGN.md`](../docs/support.bumble.com-DESIGN.md).
-Áp dụng cho toàn bộ Flutter app, bao gồm landing, hướng dẫn, setup, danh mục,
-chọn người chơi, thẻ bí mật, thảo luận, bầu chọn, kết quả và màn không tìm thấy.
+Reference: [`../docs/www.crazygames.com-DESIGN.md`](../docs/www.crazygames.com-DESIGN.md).
+Implementation: [`../docs/plans/flutter-crazygames-ui-refresh.md`](../docs/plans/flutter-crazygames-ui-refresh.md).
+Mobile decisions in the plan take precedence over incomplete website extraction
+and UI/UX skill palette suggestions. No copied logos or portal features.
 
-## Hướng thiết kế
+## Tokens and typography
 
-Ấm áp, dễ đọc, vui vẻ nhưng gọn. Dùng vàng làm điểm nhấn, charcoal cho chữ,
-trắng cho nội dung và teal nhạt cho thông tin hỗ trợ/hoàn thành.
-Không sao chép logo Bumble. Không dùng gradient, glass, emoji hoặc shadow nặng.
-`ui-ux-pro-max` hỗ trợ quy tắc UX và Flutter; palette trong tài liệu Bumble
-luôn ưu tiên hơn palette gợi ý tự động.
+Use semantic `AppColors`, Material `AppTheme.dark`, `AppRadii` and `AppSpacing`.
+No per-screen hex colors. Explicit `ThemeMode.dark`, even on light devices;
+no theme toggle or light palette.
 
-## Tokens và chữ
-
-Chỉ thêm màu tại `lib/theme/app_colors.dart`, cấu hình Material tại
-`lib/theme/app_theme.dart`; bo góc dùng `AppRadii`; không thêm mã màu trực tiếp ở từng màn.
-
-| Vai trò | Token / giá trị |
+| Role | Value |
 | --- | --- |
-| CTA, hero | yellow `#FFDB5B`, chữ charcoal `#202020` |
-| Pressed CTA | amber `#C38F00`, chữ charcoal |
-| Chữ phụ | gray `#575656` |
-| Nền trang | background `#F8F9F9` |
-| Thẻ | white `#FFFFFF`, border `#E4E4E4` |
-| Hoàn thành / hỗ trợ | teal `#186146` trên tealSurface `#EDF8F4` |
-| Lỗi | error `#B33212` trên trắng, kèm nội dung giải thích |
+| Canvas | `#0C0D14` |
+| Surface / raised | `#1F2026` / `#2F3148` |
+| Primary / body / muted text | `#FFFFFF` / `#E5E6EE` / `#BDBFCE` |
+| Primary action / foreground | `#C7FF5B` / `#0F1A00` |
+| Accent / readable accent | `#7361FF` / `#A48EFF` |
+| Selection / border | `#302A49` / `#A48EFF` |
+| Secondary action | White at 10%, measured after blending |
+| Neutral border / focus | `#85879E` / white, 2 px focus |
+| Error / background | `#FFB4A9` / `#45231F` |
+| Warning / background | `#FFDB85` / `#3B301B` |
+| Success / background | `#83E0BE` / `#16382E` |
 
-Coral gốc `#FF6224` chỉ dùng trang trí; dùng error đậm hơn cho chữ lỗi để đủ
-contrast. Teal đậm thay xanh nhạt của tài liệu khi cần chữ có contrast 4.5:1.
-Không dùng vàng làm chữ trên trắng. Border nhạt chỉ phân nhóm; trạng thái chọn
-phải có icon, chữ hoặc viền charcoal rõ ràng.
+Normal text requires 4.5:1 contrast, controls/focus 3:1. Primary buttons use
+a dark inset focus border against lime. Error/warning/completion include labels
+or icons. Disabled controls retain readable labels and disabled semantics.
+Use bundled BeVietnamPro, real weights 400/500/600. Headings 24/28/32,
+titles 18/20, body 16, supporting text 14; line height 1.4–1.5.
+Allow wrapping and text scaling; no new fonts or packages.
 
-Dùng system sans-serif hiện có, không tải font mới. Scale mobile: headline 32/28,
-title 20/17, body 16, caption 15; weight 400/500/600. Line-height 1.4–1.5.
-Dùng `TextTheme`, cho phép chữ xuống dòng và tuân theo text scaling hệ thống.
+## Layout and interaction
 
-## Layout và components
+- `AppContent`: safe area and centered maximum width 640. Page gutters 16 on
+  narrow phones, 24 when width allows; spacing scale 4/8/12/16/24/32.
+- Cards radius 16; heroes/sheets/dialogs 22; buttons pill; multiline inputs 16.
+  Primary buttons solid lime, minimum height 50; icon hit areas ≥48×48.
+- Reserve two dark purple/teal `AppEffects` gradients for introductions/sections.
+  Selection is solid tint + border/check/radio + selected semantics.
+- `AppActionBar` owns keyboard inset and safe area once. Content scrolls
+  independently; one primary action, subordinate secondary actions.
+- `AppCardGrid`: two columns at content width ≥280 and text scale ≤1.5,
+  otherwise one; rows grow to the tallest card. Labels always wrap.
+- `PlayerCards`: lazy rows for up to 100 players; completion check + label,
+  cannot reopen. `AppSelectionCard`: keyboard activation and visible focus.
+- `AppEffects.duration` respects reduced motion; press scale .98. No animations
+  retaining old secret widgets. No decorative overlays behind hero text.
+- `AppNotice`: explanatory copy and retry. Forms retain inline errors, validation
+  and drafts; dialogs scroll with keyboard/large text. Preset deletion remains
+  separate from selecting/saving, with existing discard/confirmation behavior.
 
-- Dùng `AppContent` cho safe area và giới hạn nội dung 640 logical px, căn giữa.
-- Padding trang 24; khoảng cách theo `AppSpacing` (4/8/12/16/24/32).
-- Nền trắng, thẻ bo 12, hero và sheet bo 20; thẻ phẳng có viền nhẹ.
-- CTA chính vàng; action phụ outlined/text, charcoal. Minimum height 50,
-  padding 14×24, bo 16. Icon button minimum 48×48.
-- Dùng `AppSelectionCard` cho lựa chọn: teal nhạt, viền charcoal và check/radio.
-- Dùng `AppNotice` cho thông tin/lỗi; dùng `AppActionBar` cho footer của Scaffold.
-  Footer tự xử lý keyboard inset và safe area; caller không thêm inset lần nữa.
-  Khi mở bàn phím, giảm padding dọc footer còn 12 để giữ chỗ cho form.
-- Mỗi màn một hành động chính. CTA cuối trang phải tôn trọng safe area,
-  nội dung phía trên cuộn độc lập và không bị CTA che.
-- Danh mục dùng hai cột khi đủ chỗ; chuyển một cột dưới 280 px nội dung
-  hoặc khi font 16 được scale lớn hơn 24. Nhãn luôn được xuống dòng.
-- Thẻ roster và item trong editor dùng padding 16 để tránh lãng phí chỗ khi
-  có nhiều dữ liệu; các thẻ lựa chọn/nội dung khác giữ padding 24.
-- Dùng Material vector icons hiện có, size thường 20/24/32; 48/80 cho hero.
-  Icon cạnh chữ là trang trí; icon button phải có tooltip/accessible label.
-- Hoàn thành có check + nhãn, lựa chọn có selected semantics; không chỉ đổi màu.
-- Sheet có drag handle, nội dung cuộn; giữ cancel/back và xác nhận hiện có.
-- Thẻ bí mật chỉ dựng nội dung sau khi người chơi mở. Luôn giữ hành vi che khi
-  app mất foreground; tuyệt đối không đưa từ bí mật vào semantics khi đang ẩn.
-- Không thêm animation trang trí. Giữ phản hồi nhấn Material và navigation hệ thống.
+## Hierarchy and privacy
 
-## Theme và kiểm tra
+Landing: name → description → three numbered steps → start; help is secondary.
+Setup: players/imposters → game type/rules → content/categories → load status.
+Show-category remains immediately below game choice, word-only;
+know-each-other applies to both games; hints hidden; no duplicate game start.
+Gameplay preserves selection → handoff → reveal → discussion → vote/result with
+contextual titles, progress and one primary action; distinct game rules remain.
+Conceal removes private widgets and semantics immediately on background/back.
+Never build hidden secrets behind opacity/offstage or retain them in transitions.
+Hidden cards remain identical for all roles; images obey reveal permissions.
+Settings retain grouped tiles, language selection, explicit ID copy, disabled
+unavailable actions, retry and VI/EN labels; fallback provides navigation home.
 
-Tài liệu nguồn chỉ có light theme. Hiện `AppTheme.dark` dùng cùng light theme
-một cách chủ động; chỉ triển khai dark thực khi có palette riêng và kiểm tra
-contrast độc lập. Không coi đây là dark theme đã hoàn thiện.
+## Verification
 
-Kiểm tra bằng `flutter analyze` và `flutter test`; widget tests cần bao phủ
-màn nhỏ, chữ lớn, landscape/tablet, trạng thái chọn và luồng chơi/bảo mật thẻ.
-Không mặc định chụp screenshot hay dùng kiểm tra ảnh; tuân theo AGENTS.md.
-
-## Cập nhật UX theo yêu cầu
-
-- Điện thoại 360–430 px ưu tiên hai cột cho người chơi/imposter, loại game và
-  danh mục. Các thẻ cùng hàng có cùng chiều cao theo nội dung; không khóa height.
-- Tùy chọn hiển thị tên danh mục nằm ngay dưới loại game, trước danh mục và
-  các thông báo mạng. Chỉ word có tùy chọn này; question không tiết lộ tên
-  danh mục cho imposter dù giá trị word đã lưu đang bật.
-- Tạm ẩn tùy chọn gợi ý theo yêu cầu; không thêm cờ hoặc dữ liệu hint.
-  `Kẻ mạo danh biết nhau` tiếp tục dùng chung cho hai game.
-
-## Components dùng chung
-
-- `AppCardGrid`: hàng hai cột tự cao, thẻ cùng hàng cao bằng nhau; fallback
-  một cột khi nội dung <280 hoặc text scale >1.5. Không khóa chiều cao thẻ.
-- `PlayerCards`: sliver dựng lazy theo hàng, dùng chung cho word/question;
-  người đã hoàn thành có check + nhãn và không mở lại được.
-- `AppSelectionCard`: trạng thái chọn/disabled qua semantics, viền focus rõ,
-  giữ thao tác bàn phím bằng InkWell.
-- Nội dung riêng tư không dùng animation giữ widget cũ trong cây; chỉ dựng
-  sau reveal và loại khỏi widget/semantics ngay khi conceal.
+Use analyzer, contrast assertions and behavioral widget/integration tests.
+Cover narrow/360/375/430 phones, tablet/landscape, keyboard, large text,
+reduced motion, errors/retry and secret semantics. No screenshots or goldens
+by default, following AGENTS.md.

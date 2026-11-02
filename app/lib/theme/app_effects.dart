@@ -7,17 +7,12 @@ class AppEffects {
   static const heroGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppColors.yellowTint, AppColors.yellow, AppColors.yellowShade],
+    colors: [AppColors.heroStart, AppColors.heroEnd],
   );
   static const accentGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppColors.white, AppColors.tealSurface, AppColors.tealBorder],
-  );
-  static const selectedGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [AppColors.white, AppColors.tealSurface],
+    colors: [AppColors.sectionStart, AppColors.sectionEnd],
   );
   static const cardShadow = [
     BoxShadow(color: AppColors.shadow, blurRadius: 12, offset: Offset(0, 4)),

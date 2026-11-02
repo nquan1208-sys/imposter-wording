@@ -91,7 +91,9 @@ void main() {
             .last,
       );
     }
-    final finder = target.last;
+    final finder = text.startsWith('Category ')
+        ? find.descendant(of: target.last, matching: find.text(text))
+        : target.last;
     await tester.ensureVisible(finder);
     await tester.pumpAndSettle();
     await tester.tap(finder);

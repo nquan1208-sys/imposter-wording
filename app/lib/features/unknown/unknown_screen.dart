@@ -1,33 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:untitled/base/dependency/app_service.dart';
+import 'package:untitled/base/dependency/router/utils/route_input.dart';
+import 'package:untitled/constants/app_edge_insets.dart';
+import 'package:untitled/widgets/app_hero_card.dart';
 import 'package:untitled/widgets/app_content.dart';
-import 'package:untitled/theme/app_colors.dart';
 import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
 
-class UnknownScreen extends StatelessWidget {
+class UnknownScreen extends ConsumerWidget {
   const UnknownScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final message = AppLocalizations.of(context).notFound;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final router = ref.watch(AppService.router);
     return Scaffold(
       appBar: AppBar(),
       body: AppContent(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: AppEdgeInsets.pageFor(context),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.explore_off_outlined,
-                  size: 64,
-                  color: AppColors.gray,
+                AppHeroCard(
+                  title: l.notFound,
+                  icon: Icons.explore_off_outlined,
                 ),
                 const SizedBox(height: 24),
-                Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge,
+                FilledButton(
+                  onPressed: () => router.pushAndRemoveUntil(
+                    RouteInput.landing(),
+                    (_) => false,
+                  ),
+                  child: Text(l.backToHome),
                 ),
               ],
             ),

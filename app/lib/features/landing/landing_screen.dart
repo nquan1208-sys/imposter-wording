@@ -23,7 +23,7 @@ class LandingScreen extends ConsumerWidget {
       body: AppContent(
         bottom: false,
         child: ListView(
-          padding: AppEdgeInsets.all24,
+          padding: AppEdgeInsets.pageFor(context),
           children: [
             AppHeroCard(
               title: l10n.appTitle,
@@ -34,23 +34,30 @@ class LandingScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.xxl),
             Text(
               l10n.appDescription,
-              style: textTheme.bodyMedium?.copyWith(color: AppColors.gray),
+              style: textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
             ),
             const SizedBox(height: AppSpacing.xl),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                for (final (icon, label) in [
-                  (Icons.visibility_outlined, l10n.stepRevealTitle),
-                  (Icons.forum_outlined, l10n.stepHintTitle),
-                  (Icons.person_search_outlined, l10n.stepFindTitle),
-                ])
-                  Chip(
-                    avatar: ExcludeSemantics(child: Icon(icon, size: 20)),
-                    label: Text(label),
-                  ),
-              ],
+            Card(
+              child: Column(
+                children: [
+                  for (final (index, (icon, label)) in [
+                    (Icons.visibility_outlined, l10n.stepRevealTitle),
+                    (Icons.forum_outlined, l10n.stepHintTitle),
+                    (Icons.person_search_outlined, l10n.stepFindTitle),
+                  ].indexed)
+                    ListTile(
+                      leading: ExcludeSemantics(
+                        child: CircleAvatar(
+                          backgroundColor: AppColors.selection,
+                          foregroundColor: AppColors.accentText,
+                          child: Text('${index + 1}'),
+                        ),
+                      ),
+                      title: Text(label),
+                      trailing: ExcludeSemantics(child: Icon(icon)),
+                    ),
+                ],
+              ),
             ),
           ],
         ),

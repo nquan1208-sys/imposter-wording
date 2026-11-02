@@ -77,7 +77,10 @@ class _ImageAttachmentState extends ConsumerState<ImageAttachment> {
                     l.removeLocalImage,
                     style: const TextStyle(color: AppColors.error),
                   ),
-                  leading: const Icon(Icons.delete_outline),
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.error,
+                  ),
                   onTap: () => Navigator.pop(context, 'remove'),
                 ),
               ListTile(
@@ -150,13 +153,14 @@ class _ImageAttachmentState extends ConsumerState<ImageAttachment> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        const SizedBox(height: AppSpacing.md),
         if (errorMessage != null)
           AppNotice(message: errorMessage!, error: true),
         if (widget.imageId != null)
           Container(
             margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.lightGray,
+              color: AppColors.surfaceRaised,
               borderRadius: BorderRadius.circular(AppRadii.card),
             ),
             clipBehavior: Clip.antiAlias,

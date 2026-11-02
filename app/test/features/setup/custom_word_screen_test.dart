@@ -557,10 +557,16 @@ void main() {
   );
 
   for (final english in [true, false]) {
-    for (final dark in [false, true]) {
+    for (final systemDark in [false, true]) {
       testWidgets(
-        'small form, large text, keyboard and semantics (en=$english, dark=$dark)',
+        'small form, large text, keyboard and semantics (en=$english, systemDark=$systemDark)',
         (tester) async {
+          tester.platformDispatcher.platformBrightnessTestValue = systemDark
+              ? Brightness.dark
+              : Brightness.light;
+          addTearDown(
+            tester.platformDispatcher.clearPlatformBrightnessTestValue,
+          );
           await pump(tester, english: english);
           await tester.binding.setSurfaceSize(const Size(320, 568));
           addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -572,7 +578,9 @@ void main() {
                 locale: Locale(english ? 'en' : 'vi'),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
-                theme: dark ? AppTheme.dark : AppTheme.light,
+                theme: AppTheme.dark,
+                darkTheme: AppTheme.dark,
+                themeMode: ThemeMode.dark,
                 builder: (context, child) => MediaQuery(
                   data: MediaQuery.of(context).copyWith(
                     textScaler: const TextScaler.linear(2),

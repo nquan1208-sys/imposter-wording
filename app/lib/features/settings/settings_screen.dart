@@ -54,7 +54,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           appBar: AppBar(title: Text(l.settingsTitle), centerTitle: false),
           body: AppContent(
             child: ListView(
-              padding: AppEdgeInsets.all24,
+              padding: AppEdgeInsets.pageFor(context),
               children: [
                 if (store.loading.value) ...[
                   const LinearProgressIndicator(),
@@ -62,9 +62,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Text(l.appSettingsLoading),
                 ],
                 if (store.readFailed.value) ...[
-                  AppNotice(message: l.appSettingsReadError, error: true),
-                  TextButton(
-                    onPressed: store.loading.value
+                  AppNotice(
+                    message: l.appSettingsReadError,
+                    error: true,
+                    onRetry: store.loading.value
                         ? null
                         : () async {
                             await store.retryRead();
@@ -72,14 +73,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               await store.ensureInstallationId();
                             }
                           },
-                    child: Text(l.retry),
                   ),
                 ],
                 if (store.writeFailed.value) ...[
-                  AppNotice(message: l.appSettingsWriteError, error: true),
-                  TextButton(
-                    onPressed: store.writing.value ? null : store.retryWrite,
-                    child: Text(l.retry),
+                  AppNotice(
+                    message: l.appSettingsWriteError,
+                    error: true,
+                    onRetry: store.writing.value ? null : store.retryWrite,
                   ),
                 ],
                 Text(

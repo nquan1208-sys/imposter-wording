@@ -46,7 +46,7 @@ class WordImage extends ConsumerWidget {
         padding: const EdgeInsets.only(top: AppSpacing.md),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.lightGray,
+            color: AppColors.surfaceRaised,
             borderRadius: BorderRadius.circular(AppRadii.card),
           ),
           clipBehavior: Clip.antiAlias,

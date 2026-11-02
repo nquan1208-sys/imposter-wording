@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/theme/app_colors.dart';
 import 'package:untitled/widgets/app_content.dart';
 import 'package:untitled/theme/app_effects.dart';
@@ -17,7 +18,7 @@ class AppActionBar extends StatelessWidget {
         boxShadow: AppEffects.footerShadow,
       ),
       child: Material(
-        color: AppColors.white,
+        color: AppColors.surface,
         shape: const Border(
           top: BorderSide(color: AppColors.border),
         ),
@@ -26,7 +27,7 @@ class AppActionBar extends StatelessWidget {
           top: false,
           child: Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: 24,
+              horizontal: AppEdgeInsets.pageFor(context).left,
               vertical: MediaQuery.viewInsetsOf(context).bottom > 0 ? 12 : 24,
             ),
             child: child,

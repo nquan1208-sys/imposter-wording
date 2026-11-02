@@ -35,14 +35,14 @@ class _AppSelectionCardState extends State<AppSelectionCard> {
         duration: AppEffects.duration(context, true),
         curve: Curves.easeOutCubic,
         child: Card(
-          color: AppColors.white,
+          color: AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.card),
             side: BorderSide(
               color: focused
-                  ? AppColors.charcoal
+                  ? AppColors.focus
                   : widget.selected
-                  ? AppColors.teal
+                  ? AppColors.accentText
                   : AppColors.border,
               width: widget.selected || focused ? 2 : 1,
             ),
@@ -54,7 +54,7 @@ class _AppSelectionCardState extends State<AppSelectionCard> {
             onHighlightChanged: (value) => setState(() => pressed = value),
             child: Ink(
               decoration: BoxDecoration(
-                gradient: widget.selected ? AppEffects.selectedGradient : null,
+                color: widget.selected ? AppColors.selection : null,
               ),
               child: Padding(padding: AppEdgeInsets.all24, child: widget.child),
             ),

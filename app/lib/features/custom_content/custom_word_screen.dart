@@ -1,6 +1,7 @@
 import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:untitled/widgets/app_notice.dart';
 import 'package:untitled/constants/app_spacing.dart';
+import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/data/local_image_store.dart';
 import 'package:untitled/features/custom_content/image_attachment.dart';
 import 'dart:convert';
@@ -215,7 +216,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
             absorbing: busy,
             child: ListView(
               controller: scroll,
-              padding: const EdgeInsets.all(24),
+              padding: AppEdgeInsets.pageFor(context),
               children: [
                 if (busy) const LinearProgressIndicator(),
                 if (failed)
@@ -225,18 +226,23 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                         : l.customSaveError,
                     error: true,
                   ),
-                TextField(
-                  enabled: !busy,
-                  controller: name,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    labelText: l.customCategoryName,
-                    hintText: l.customCategoryNameHint,
-                    errorText: name.text.trim().isNotEmpty && !validName
-                        ? l.customCategoryNameExists
-                        : null,
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: TextField(
+                      enabled: !busy,
+                      controller: name,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        labelText: l.customCategoryName,
+                        hintText: l.customCategoryNameHint,
+                        errorText: name.text.trim().isNotEmpty && !validName
+                            ? l.customCategoryNameExists
+                            : null,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
                   ),
-                  onChanged: (_) => setState(() {}),
                 ),
                 const SizedBox(height: AppSpacing.xxl),
                 Text(
@@ -297,7 +303,10 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                               retainImages();
                               images.cleanup();
                             }),
-                            icon: const Icon(Icons.delete_outline),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ),
                       ),
@@ -331,7 +340,10 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
                               retainImages();
                               images.cleanup();
                             }),
-                            icon: const Icon(Icons.delete_outline),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ),
                       ),

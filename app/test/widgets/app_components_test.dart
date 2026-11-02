@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/widgets/app_card_grid.dart';
 import 'package:untitled/widgets/app_content.dart';
 import 'package:flutter/material.dart';
@@ -12,11 +13,54 @@ import 'package:untitled/widgets/app_hero_card.dart';
 
 void main() {
   Widget app(Widget child) => MaterialApp(
-    theme: AppTheme.light,
+    theme: AppTheme.dark,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: child,
   );
+
+  for (final width in [320.0, 360.0, 375.0, 430.0, 768.0]) {
+    testWidgets(
+      'page gutters adapt without changing card breakpoints at $width',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          app(
+            Scaffold(
+              body: AppContent(
+                child: Builder(
+                  builder: (context) => Padding(
+                    padding: AppEdgeInsets.pageFor(context),
+                    child: const AppCardGrid(
+                      children: [
+                        SizedBox(key: Key('left'), height: 80),
+                        SizedBox(key: Key('right'), height: 80),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        final left = tester.getRect(find.byKey(const Key('left')));
+        final right = tester.getRect(find.byKey(const Key('right')));
+        expect(left.top, right.top);
+        expect(left.right, lessThan(right.left));
+        expect(
+          left.left,
+          width <= 360
+              ? 16
+              : width > 640
+              ? (width - 640) / 2 + 24
+              : 24,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   testWidgets(
     'selection press responds and reduced motion removes scaling animation',

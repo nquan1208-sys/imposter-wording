@@ -24,11 +24,9 @@ class AppNotice extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: error ? AppColors.errorSurface : AppColors.tealSurface,
+          color: error ? AppColors.errorSurface : AppColors.surfaceRaised,
           borderRadius: BorderRadius.circular(AppRadii.card),
-          border: Border.all(
-            color: error ? AppColors.error : AppColors.tealBorder,
-          ),
+          border: Border.all(color: error ? AppColors.error : AppColors.border),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,7 +34,7 @@ class AppNotice extends StatelessWidget {
             ExcludeSemantics(
               child: Icon(
                 error ? Icons.error_outline : Icons.info_outline,
-                color: error ? AppColors.error : AppColors.teal,
+                color: error ? AppColors.error : AppColors.accentText,
               ),
             ),
             const SizedBox(width: AppSpacing.md),

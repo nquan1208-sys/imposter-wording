@@ -116,6 +116,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
+                        color: AppColors.disabledText,
                         strokeWidth: 2,
                         semanticsLabel: l.startGame,
                       ),
@@ -138,29 +139,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               semanticsLabel: l.refreshContent,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: AppEdgeInsets.all24,
+                padding: AppEdgeInsets.pageFor(context),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (store.reading.value) ...[
-                      const LinearProgressIndicator(),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(l.settingsLoading),
-                    ],
-                    if (store.readFailed.value) ...[
-                      AppNotice(message: l.settingsReadError, error: true),
-                      TextButton(
-                        onPressed: store.reading.value ? null : store.restore,
-                        child: Text(l.retry),
-                      ),
-                    ],
-                    if (store.writeFailed.value) ...[
-                      AppNotice(message: l.settingsWriteError, error: true),
-                      TextButton(
-                        onPressed: store.editable ? store.save : null,
-                        child: Text(l.retry),
-                      ),
-                    ],
                     AppCardGrid(
                       children: [
                         _statCard(
@@ -212,7 +194,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                                         type == 'word'
                                             ? Icons.style_outlined
                                             : Icons.forum_outlined,
-                                        color: AppColors.teal,
+                                        color: AppColors.accentText,
                                         size: 32,
                                       ),
                                     ),
@@ -225,7 +207,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                                               ? Icons.check_circle
                                               : Icons.circle_outlined,
                                           key: ValueKey(setup.gameType == type),
-                                          color: AppColors.teal,
+                                          color: AppColors.accentText,
                                           size: 24,
                                         ),
                                       ),
@@ -243,7 +225,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                                       ? l.wordGameSummary
                                       : l.questionGameSummary,
                                   style: textTheme.bodySmall?.copyWith(
-                                    color: AppColors.gray,
+                                    color: AppColors.textMuted,
                                   ),
                                 ),
                               ],
@@ -290,10 +272,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         key: const Key('categoryPicker'),
                         contentPadding: AppEdgeInsets.all24,
                         leading: const CircleAvatar(
-                          backgroundColor: AppColors.tealSurface,
+                          backgroundColor: AppColors.selection,
                           child: Icon(
                             Icons.category_outlined,
-                            color: AppColors.teal,
+                            color: AppColors.accentText,
                           ),
                         ),
                         title: Text(
@@ -314,6 +296,25 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     const SizedBox(height: AppSpacing.lg),
                     if (store.selectionRemoved.value)
                       AppNotice(message: l.selectionRemoved),
+                    if (store.reading.value) ...[
+                      const LinearProgressIndicator(),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(l.settingsLoading),
+                    ],
+                    if (store.readFailed.value) ...[
+                      AppNotice(message: l.settingsReadError, error: true),
+                      TextButton(
+                        onPressed: store.reading.value ? null : store.restore,
+                        child: Text(l.retry),
+                      ),
+                    ],
+                    if (store.writeFailed.value) ...[
+                      AppNotice(message: l.settingsWriteError, error: true),
+                      TextButton(
+                        onPressed: store.editable ? store.save : null,
+                        child: Text(l.retry),
+                      ),
+                    ],
                     ContentNotices(content),
                     const Card(child: ContentLanguageTile()),
                     const SizedBox(height: AppSpacing.lg),
@@ -365,8 +366,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               children: [
                 ExcludeSemantics(
                   child: CircleAvatar(
-                    backgroundColor: AppColors.tealSurface,
-                    foregroundColor: AppColors.teal,
+                    backgroundColor: AppColors.selection,
+                    foregroundColor: AppColors.accentText,
                     child: Icon(icon),
                   ),
                 ),
@@ -376,7 +377,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppColors.gray),
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 AnimatedSwitcher(
@@ -389,7 +390,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                const Icon(Icons.tune_rounded, size: 20, color: AppColors.teal),
+                const Icon(
+                  Icons.tune_rounded,
+                  size: 20,
+                  color: AppColors.accentText,
+                ),
               ],
             ),
           ),
@@ -509,7 +514,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   if (setup.maxImposters == 1)
                     Card(
                       key: const Key('imposterLimitWarning'),
-                      color: AppColors.yellow,
+                      color: AppColors.warningSurface,
                       child: Padding(
                         padding: AppEdgeInsets.all16,
                         child: Row(
@@ -518,7 +523,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                             const ExcludeSemantics(
                               child: Icon(
                                 Icons.warning_amber_rounded,
-                                color: AppColors.charcoal,
+                                color: AppColors.warning,
                               ),
                             ),
                             const SizedBox(width: AppSpacing.sm),
@@ -526,7 +531,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                               child: Text(
                                 l.moreImpostersNeedPlayers,
                                 style: const TextStyle(
-                                  color: AppColors.charcoal,
+                                  color: AppColors.warning,
                                 ),
                               ),
                             ),

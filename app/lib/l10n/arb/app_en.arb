@@ -15,6 +15,7 @@
   "stepFindBody": "Discuss and vote aloud. Select exactly as many suspects as there are imposters. The group wins only when the entire set is correct; otherwise the imposters win. Vote again if tied.",
   "proTipTitle": "Pro tip",
   "proTipBody": "Imposter: listen carefully, blend in, and give hints that fit the category.",
+  "backToHome": "Back to home",
   "notFound": "Page not found",
   "setupTitle": "Game setup",
   "players": "Players",

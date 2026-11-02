@@ -1,6 +1,6 @@
 # Kế hoạch UX/UI Flutter — CrazyGames inspired
 
-Ngày lập: 2026-11-02. Trạng thái: đã lập kế hoạch, chưa triển khai.
+Ngày lập: 2026-11-02. Trạng thái: đã triển khai; gap smoke setup live do backend local chưa chạy.
 
 Nguồn thiết kế: [CrazyGames](../www.crazygames.com-DESIGN.md).
 Phạm vi: toàn bộ `app/` Flutter; không bao gồm `admin/`.
@@ -206,10 +206,59 @@ backend để đạt tiêu chí UI. Không thêm screenshot, golden hoặc kiể
 
 | Phase | Trạng thái | Bằng chứng |
 | --- | --- | --- |
-| 1. Contract/theme | Chưa bắt đầu | — |
-| 2. Components | Chưa bắt đầu | — |
-| 3. Onboarding/setup | Chưa bắt đầu | — |
-| 4. Editors/content | Chưa bắt đầu | — |
-| 5. Gameplay | Chưa bắt đầu | — |
-| 6. Settings/fallback | Chưa bắt đầu | — |
-| 7. Regression/docs | Chưa bắt đầu | — |
+| 1. Contract/theme | Hoàn tất | Theme tests: 3 passed; contrast trên surface/alpha/gradient, focus, disabled và kích thước control |
+| 2. Components | Hoàn tất | 14 component tests passed: focus/keyboard/semantics/reduced-motion/text/keyboard layouts |
+| 3. Onboarding/setup | Hoàn tất | 54 focused tests passed; final suite không còn cảnh báo hit-test; giữ hai cột 360/375/430 |
+| 4. Editors/content | Hoàn tất | 28 tests passed: preset, word/question form, ảnh local, draft/error, keyboard và text scale 2 |
+| 5. Gameplay | Hoàn tất | Full suite pass: flow hai game, lifecycle/semantics, word images, question draft/locked và 100 người cho cả hai |
+| 6. Settings/fallback | Hoàn tất | Settings/language tests pass, retry gắn notice; dark trên light device và fallback về landing pass |
+| 7. Regression/docs | Hoàn tất, có gap môi trường | gen-l10n/analyzer/diff-check sạch; 305 passed / 12 skipped; 4 offline smoke pass mỗi nền tảng, live setup fail vì backend |
+
+### Baseline thực tế — 2026-11-02
+
+- `flutter analyze --no-pub`: No issues found (2.9s).
+- `flutter test --no-pub`: 298 passed, 12 skipped (backend opt-in).
+- Working tree sạch trước triển khai. Counter demo không còn trong repo;
+  đối chiếu store/provider/router hiện có và skill, không tạo lại demo.
+
+### Regression thực tế — 2026-11-02
+
+- `flutter gen-l10n`: thành công; chỉ sửa ARB, file generated do Flutter sinh.
+- `flutter analyze --no-pub`: No issues found (7.0s).
+- `flutter test --no-pub`: **305 passed, 12 skipped** (28s ở lần cuối).
+  Không có overflow/hit-test warning trong log full suite.
+- Bổ sung 7 widget cases: 5 adaptive-gutter widths 320/360/375/430/768,
+  dark trên thiết bị light + fallback navigation, question lazy/private 100 người.
+  Theme assertions kiểm tra alpha blending, gradient nội suy 11 điểm, focus,
+  disabled và control size; fixture form dùng dark ở cả hai system appearances.
+- Không thêm package, không sửa store/model, route names/arguments, backend/schema
+  hay định dạng lưu. Thêm typed `RouteInput.landing()` cho fallback đã có route.
+- Counter demo không có trong checkout hiện tại: đối chiếu provider/router hiện
+  hành; giữ lifecycle store hiện có, không tạo lại demo hay đổi state management.
+- Không screenshot/golden/image verification. Chưa thử máy vật lý hoặc
+  TalkBack/VoiceOver; widget semantics không thay thế kiểm tra screen reader thật.
+
+### Simulator/emulator và bàn giao — 2026-11-02
+
+Đã chạy `flutter test --no-pub integration_test -d <device>
+--dart-define=APP_ENV=local` trên cả hai nền tảng, không chụp ảnh:
+
+| Thiết bị | Offline question | Offline word | Setup có bước backend live |
+| --- | --- | --- | --- |
+| iPhone 17 Pro, iOS 26.5 Simulator | 2 passed | 2 passed | 1 failed: repository loadFailed trước khi vào UI |
+| Android Sm_Phone_test, API 36 emulator | 2 passed | 2 passed | 1 failed cùng precondition |
+
+- Mỗi lệnh integration tổng kết **4 passed / 1 failed**, không báo full integration
+  suite pass. Live setup thất bại ở `setup_smoke_test.dart:60`, xác nhận endpoint
+  local cấu hình trả `ConnectionRefusedError` khi kiểm tra TCP từ host. Android
+  đang dùng cấu hình loopback hiện có; chưa đổi env hay giả định host routing đã sẵn.
+- Cả hai offline suites bao gồm setup → start, khôi phục disk/cache khi offline,
+  các bước riêng tư, vote/reveal, replay và trở lại setup.
+- Không khởi động/thay backend hoặc sửa expectation để làm live setup xanh. Cần
+  backend local đang chạy, dataset có nội dung và host mapping đúng để chạy lại
+  smoke setup live; 12 HTTP/backend unit checks vẫn opt-in như baseline.
+- Sau full suite, bổ sung system-bar annotation cho landing không có AppBar;
+  chạy lại 9 onboarding tests: passed. Analyzer cuối: sạch.
+- `rtk git diff --check`: passed. README và design contract đã đồng bộ.
+- Chưa kiểm tra máy vật lý, TalkBack/VoiceOver hay cảm nhận thị giác bằng ảnh.
+  Đây là gap kiểm chứng, không phải xác nhận pixel-match với CrazyGames.

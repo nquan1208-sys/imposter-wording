@@ -26,7 +26,7 @@ class ContentLanguageScreen extends ConsumerWidget {
           appBar: AppBar(title: Text(l.contentLanguage)),
           body: AppContent(
             child: ListView(
-              padding: AppEdgeInsets.all24,
+              padding: AppEdgeInsets.pageFor(context),
               children: [
                 AppNotice(message: l.contentLanguageHelp),
                 const SizedBox(height: AppSpacing.lg),

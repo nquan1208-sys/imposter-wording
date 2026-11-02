@@ -2,6 +2,7 @@ import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:untitled/widgets/app_notice.dart';
 import 'package:untitled/widgets/app_selection_card.dart';
 import 'package:untitled/constants/app_spacing.dart';
+import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/theme/app_colors.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/base/dependency/app_service.dart';
@@ -44,7 +45,7 @@ class _PlayerNamesScreenState extends ConsumerState<PlayerNamesScreen> {
       useSafeArea: true,
       builder: (context) => SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: AppEdgeInsets.pageFor(context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -223,7 +224,7 @@ class _PlayerNamesScreenState extends ConsumerState<PlayerNamesScreen> {
               absorbing: busy || !store.editable,
               child: AppContent(
                 child: ListView(
-                  padding: const EdgeInsets.all(24),
+                  padding: AppEdgeInsets.pageFor(context),
                   children: [
                     Card(
                       child: ListTile(
@@ -243,9 +244,9 @@ class _PlayerNamesScreenState extends ConsumerState<PlayerNamesScreen> {
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       l.playerLimits,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: AppColors.gray),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     for (final (i, p) in players.indexed)
@@ -260,17 +261,9 @@ class _PlayerNamesScreenState extends ConsumerState<PlayerNamesScreen> {
                               children: [
                                 ExcludeSemantics(
                                   child: CircleAvatar(
-                                    backgroundColor: AppColors.tealSurface,
-                                    foregroundColor: AppColors.teal,
-                                    child: Text(
-                                      p.name.trim().isEmpty
-                                          ? '${i + 1}'
-                                          : p.name
-                                                .trim()
-                                                .characters
-                                                .first
-                                                .toUpperCase(),
-                                    ),
+                                    backgroundColor: AppColors.selection,
+                                    foregroundColor: AppColors.accentText,
+                                    child: Text('${i + 1}'),
                                   ),
                                 ),
                                 const SizedBox(height: AppSpacing.lg),
@@ -309,6 +302,9 @@ class _PlayerNamesScreenState extends ConsumerState<PlayerNamesScreen> {
                                     ),
                                     IconButton(
                                       tooltip: l.removePlayer,
+                                      style: IconButton.styleFrom(
+                                        foregroundColor: AppColors.error,
+                                      ),
                                       onPressed: players.length > 3
                                           ? () => setState(() {
                                               players.removeAt(i);

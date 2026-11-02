@@ -41,7 +41,7 @@ class AllCategoriesScreen extends StatelessWidget {
     final valid = selected.intersection(counts.keys.map((c) => c.id).toSet());
     return ListView(
       key: PageStorageKey(family),
-      padding: AppEdgeInsets.all24,
+      padding: AppEdgeInsets.pageFor(context),
       children: [
         if (saveFailed) AppNotice(message: l.settingsWriteError, error: true),
         ?header,
@@ -112,9 +112,9 @@ class AllCategoriesScreen extends StatelessWidget {
                       store.setup.value.gameType == 'question'
                           ? l.questionCount(entry.value)
                           : l.wordCount(entry.value),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: AppColors.gray),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -123,8 +123,8 @@ class AllCategoriesScreen extends StatelessWidget {
               OutlinedButton(
                 key: const Key('createCustomCategory'),
                 style: OutlinedButton.styleFrom(
-                  backgroundColor: AppColors.tealSurface,
-                  side: const BorderSide(color: AppColors.teal),
+                  backgroundColor: AppColors.selection,
+                  side: const BorderSide(color: AppColors.accentText),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadii.card),
                   ),
@@ -137,7 +137,7 @@ class AllCategoriesScreen extends StatelessWidget {
                     const ExcludeSemantics(
                       child: Icon(
                         Icons.add_circle_outline,
-                        color: AppColors.teal,
+                        color: AppColors.accentText,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),

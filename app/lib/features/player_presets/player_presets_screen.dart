@@ -96,7 +96,7 @@ class PlayerPresetsScreen extends ConsumerWidget {
       body: AppContent(
         child: SignalBuilder(
           builder: (context) => ListView(
-            padding: AppEdgeInsets.all24,
+            padding: AppEdgeInsets.pageFor(context),
             children: [
               if (store.reading.value) Text(l.settingsLoading),
               if (store.readFailed.value) ...[
@@ -265,7 +265,9 @@ class PlayerPresetsScreen extends ConsumerWidget {
                       rule.$2
                           ? Icons.check_circle_outline
                           : Icons.remove_circle_outline,
-                      color: rule.$2 ? AppColors.teal : AppColors.gray,
+                      color: rule.$2
+                          ? AppColors.accentText
+                          : AppColors.textMuted,
                     ),
                   ),
                   title: Text(rule.$1),

@@ -1,5 +1,6 @@
 import 'package:untitled/constants/app_radii.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:untitled/theme/app_colors.dart';
 import 'package:untitled/theme/app_effects.dart';
 
@@ -32,22 +33,22 @@ class AppTheme {
       height: 1.4,
     ),
     titleSmall: TextStyle(
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: FontWeight.w500,
       height: 1.5,
     ),
     labelMedium: TextStyle(
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: FontWeight.w500,
       height: 1.5,
     ),
-    labelSmall: TextStyle(fontSize: 15, height: 1.5),
+    labelSmall: TextStyle(fontSize: 14, height: 1.5),
     titleMedium: TextStyle(
-      fontSize: 17,
+      fontSize: 18,
       fontWeight: FontWeight.w500,
       height: 1.4,
     ),
-    bodySmall: TextStyle(fontSize: 15, height: 1.5),
+    bodySmall: TextStyle(fontSize: 14, height: 1.5),
     titleLarge: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.w500,
@@ -64,56 +65,66 @@ class AppTheme {
       height: 1.5,
     ),
     labelLarge: TextStyle(
-      fontSize: 17,
+      fontSize: 18,
       fontWeight: FontWeight.w500,
       height: 1.4,
     ),
   );
 
-  static final light = ThemeData(
+  static final dark = ThemeData(
+    brightness: Brightness.dark,
     useMaterial3: true,
     fontFamily: 'BeVietnamPro',
     materialTapTargetSize: MaterialTapTargetSize.padded,
-    focusColor: AppColors.tealBorder,
-    hoverColor: AppColors.lightGray,
-    disabledColor: AppColors.gray,
-    colorScheme: const ColorScheme.light(
-      primary: AppColors.yellow,
-      onPrimary: AppColors.charcoal,
-      primaryContainer: AppColors.cream,
-      onPrimaryContainer: AppColors.charcoal,
-      secondary: AppColors.teal,
-      secondaryContainer: AppColors.tealSurface,
-      onSecondaryContainer: AppColors.teal,
-      onSecondary: AppColors.white,
-      surface: AppColors.white,
-      onSurface: AppColors.charcoal,
-      onSurfaceVariant: AppColors.gray,
+    focusColor: AppColors.secondaryAction,
+    hoverColor: AppColors.secondaryAction,
+    disabledColor: AppColors.disabledText,
+    colorScheme: const ColorScheme.dark(
+      primary: AppColors.primary,
+      onPrimary: AppColors.onPrimary,
+      primaryContainer: AppColors.selection,
+      onPrimaryContainer: AppColors.textPrimary,
+      secondary: AppColors.accentText,
+      secondaryContainer: AppColors.selection,
+      onSecondaryContainer: AppColors.accentText,
+      onSecondary: AppColors.canvas,
+      surface: AppColors.surface,
+      surfaceContainerHighest: AppColors.surfaceRaised,
+      surfaceContainerLow: AppColors.canvas,
+      onSurface: AppColors.textPrimary,
+      onSurfaceVariant: AppColors.textMuted,
       error: AppColors.error,
-      onError: AppColors.white,
+      onError: AppColors.onError,
       errorContainer: AppColors.errorSurface,
       onErrorContainer: AppColors.error,
       outlineVariant: AppColors.border,
-      outline: AppColors.charcoal,
+      outline: AppColors.textPrimary,
     ),
-    scaffoldBackgroundColor: AppColors.background,
+    scaffoldBackgroundColor: AppColors.canvas,
     textTheme: _textTheme.apply(
       fontFamily: 'BeVietnamPro',
-      bodyColor: AppColors.charcoal,
-      displayColor: AppColors.charcoal,
+      bodyColor: AppColors.textBody,
+      displayColor: AppColors.textPrimary,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.background,
-      foregroundColor: AppColors.charcoal,
+      backgroundColor: AppColors.canvas,
+      foregroundColor: AppColors.textPrimary,
       centerTitle: false,
       elevation: 0,
       scrolledUnderElevation: 0,
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: AppColors.canvas,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
       titleTextStyle: TextStyle(
         fontSize: 20,
         fontFamily: 'BeVietnamPro',
         fontWeight: FontWeight.w600,
         height: 1.4,
-        color: AppColors.charcoal,
+        color: AppColors.textPrimary,
       ),
     ),
     filledButtonTheme: FilledButtonThemeData(
@@ -123,52 +134,50 @@ class AppTheme {
         shape: const WidgetStatePropertyAll(_buttonShape),
         textStyle: WidgetStatePropertyAll(_textTheme.labelLarge),
         animationDuration: AppEffects.quick,
-        backgroundBuilder: (context, states, child) => Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadii.control),
-            gradient:
-                states.contains(WidgetState.disabled) ||
-                    states.contains(WidgetState.pressed)
-                ? null
-                : AppEffects.heroGradient,
-            color: states.contains(WidgetState.disabled)
-                ? AppColors.lightGray
-                : AppColors.amber,
-          ),
-          child: child,
-        ),
         side: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.focused)
-              ? const BorderSide(color: AppColors.charcoal, width: 2)
+              ? const BorderSide(color: AppColors.onPrimary, width: 2)
               : BorderSide.none,
         ),
         backgroundColor: WidgetStateProperty.resolveWith(
           (states) => switch (states) {
-            _ when states.contains(WidgetState.disabled) => AppColors.lightGray,
-            _ when states.contains(WidgetState.pressed) => AppColors.amber,
-            _ => AppColors.yellow,
+            _ when states.contains(WidgetState.disabled) =>
+              AppColors.disabledSurface,
+            _ when states.contains(WidgetState.pressed) =>
+              AppColors.primaryPressed,
+            _ => AppColors.primary,
           },
         ),
         foregroundColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.disabled)
-              ? AppColors.gray
-              : AppColors.charcoal,
+              ? AppColors.disabledText
+              : AppColors.onPrimary,
         ),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        minimumSize: _buttonMinSize,
-        padding: _buttonPadding,
-        shape: _buttonShape,
-        textStyle: _textTheme.labelLarge,
-        foregroundColor: AppColors.charcoal,
-        side: const BorderSide(color: AppColors.charcoal, width: 2),
-        disabledForegroundColor: AppColors.gray,
-      ),
+      style:
+          OutlinedButton.styleFrom(
+            minimumSize: _buttonMinSize,
+            padding: _buttonPadding,
+            shape: _buttonShape,
+            textStyle: _textTheme.labelLarge,
+            foregroundColor: AppColors.textPrimary,
+            backgroundColor: AppColors.secondaryAction,
+            disabledForegroundColor: AppColors.disabledText,
+          ).copyWith(
+            side: WidgetStateProperty.resolveWith(
+              (states) => BorderSide(
+                color: states.contains(WidgetState.focused)
+                    ? AppColors.focus
+                    : AppColors.border,
+                width: states.contains(WidgetState.focused) ? 2 : 1,
+              ),
+            ),
+          ),
     ),
     cardTheme: const CardThemeData(
-      color: AppColors.white,
+      color: AppColors.surface,
       surfaceTintColor: Colors.transparent,
       shadowColor: AppColors.shadow,
       elevation: 1,
@@ -181,15 +190,15 @@ class AppTheme {
     textButtonTheme: TextButtonThemeData(
       style:
           TextButton.styleFrom(
-            foregroundColor: AppColors.charcoal,
-            disabledForegroundColor: AppColors.gray,
+            foregroundColor: AppColors.textPrimary,
+            disabledForegroundColor: AppColors.disabledText,
             minimumSize: const Size(48, 48),
             shape: _buttonShape,
             textStyle: _textTheme.labelLarge,
           ).copyWith(
             side: WidgetStateProperty.resolveWith(
               (states) => states.contains(WidgetState.focused)
-                  ? const BorderSide(color: AppColors.charcoal, width: 2)
+                  ? const BorderSide(color: AppColors.focus, width: 2)
                   : BorderSide.none,
             ),
           ),
@@ -197,30 +206,30 @@ class AppTheme {
     iconButtonTheme: IconButtonThemeData(
       style:
           IconButton.styleFrom(
-            foregroundColor: AppColors.charcoal,
+            foregroundColor: AppColors.textPrimary,
             minimumSize: const Size(48, 48),
           ).copyWith(
             side: WidgetStateProperty.resolveWith(
               (states) => states.contains(WidgetState.focused)
-                  ? const BorderSide(color: AppColors.charcoal, width: 2)
+                  ? const BorderSide(color: AppColors.focus, width: 2)
                   : BorderSide.none,
             ),
           ),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: AppColors.white,
-      selectedColor: AppColors.tealSurface,
-      checkmarkColor: AppColors.teal,
-      labelStyle: _textTheme.bodyMedium,
+      backgroundColor: AppColors.surface,
+      selectedColor: AppColors.selection,
+      checkmarkColor: AppColors.accentText,
+      labelStyle: _textTheme.bodyMedium?.copyWith(color: AppColors.textBody),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       side: const BorderSide(color: AppColors.border),
       shape: const StadiumBorder(),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.surface,
       surfaceTintColor: Colors.transparent,
       showDragHandle: true,
-      modalBarrierColor: Color(0x99202020),
+      modalBarrierColor: AppColors.scrim,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppRadii.hero),
@@ -228,109 +237,117 @@ class AppTheme {
       ),
     ),
     dialogTheme: const DialogThemeData(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.surface,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(AppRadii.hero)),
       ),
     ),
     listTileTheme: const ListTileThemeData(
-      selectedColor: AppColors.charcoal,
-      selectedTileColor: AppColors.tealSurface,
-      iconColor: AppColors.teal,
+      selectedColor: AppColors.textPrimary,
+      selectedTileColor: AppColors.selection,
+      iconColor: AppColors.accentText,
       minVerticalPadding: 16,
       contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       titleTextStyle: TextStyle(
         fontFamily: 'BeVietnamPro',
         fontWeight: FontWeight.w500,
-        fontSize: 17,
+        fontSize: 18,
         height: 1.4,
-        color: AppColors.charcoal,
+        color: AppColors.textPrimary,
       ),
       subtitleTextStyle: TextStyle(
         fontFamily: 'BeVietnamPro',
-        fontSize: 15,
+        fontSize: 14,
         height: 1.5,
-        color: AppColors.gray,
+        color: AppColors.textMuted,
       ),
     ),
     inputDecorationTheme: InputDecorationThemeData(
       filled: true,
-      fillColor: AppColors.lightGray,
+      fillColor: AppColors.surfaceRaised,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       constraints: const BoxConstraints(minHeight: 48),
-      labelStyle: _textTheme.bodyMedium?.copyWith(color: AppColors.gray),
-      hintStyle: _textTheme.bodyMedium?.copyWith(color: AppColors.gray),
+      labelStyle: _textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+      hintStyle: _textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
       floatingLabelStyle: _textTheme.bodyMedium?.copyWith(
-        color: AppColors.charcoal,
+        color: AppColors.textPrimary,
       ),
       errorStyle: _textTheme.bodySmall?.copyWith(color: AppColors.error),
       errorMaxLines: 4,
       helperMaxLines: 4,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadii.control),
+        borderRadius: BorderRadius.circular(AppRadii.card),
         borderSide: const BorderSide(color: AppColors.border),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadii.control),
+        borderRadius: BorderRadius.circular(AppRadii.card),
         borderSide: const BorderSide(color: AppColors.border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadii.control),
-        borderSide: const BorderSide(color: AppColors.teal, width: 2),
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        borderSide: const BorderSide(color: AppColors.focus, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadii.control),
+        borderRadius: BorderRadius.circular(AppRadii.card),
         borderSide: const BorderSide(color: AppColors.error, width: 2),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadii.control),
+        borderRadius: BorderRadius.circular(AppRadii.card),
         borderSide: const BorderSide(color: AppColors.error, width: 2),
       ),
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.disabled)
-            ? AppColors.gray
+            ? AppColors.textMuted
             : states.contains(WidgetState.selected)
-            ? AppColors.charcoal
-            : AppColors.gray,
+            ? AppColors.onPrimary
+            : AppColors.textMuted,
       ),
       trackColor: WidgetStateProperty.resolveWith(
-        (states) => states.contains(WidgetState.selected)
-            ? AppColors.yellow
-            : AppColors.lightGray,
+        (states) => states.contains(WidgetState.disabled)
+            ? AppColors.disabledSurface
+            : states.contains(WidgetState.selected)
+            ? AppColors.primary
+            : AppColors.surfaceRaised,
       ),
       trackOutlineColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
-            ? AppColors.charcoal
-            : AppColors.gray,
+            ? AppColors.onPrimary
+            : AppColors.textMuted,
       ),
       materialTapTargetSize: MaterialTapTargetSize.padded,
     ),
     checkboxTheme: CheckboxThemeData(
       fillColor: WidgetStateProperty.resolveWith(
-        (states) => states.contains(WidgetState.selected)
-            ? AppColors.teal
-            : AppColors.white,
+        (states) => states.contains(WidgetState.disabled)
+            ? AppColors.disabledSurface
+            : states.contains(WidgetState.selected)
+            ? AppColors.accentText
+            : AppColors.surface,
       ),
-      checkColor: const WidgetStatePropertyAll(AppColors.white),
-      side: const BorderSide(color: AppColors.gray, width: 2),
+      checkColor: const WidgetStatePropertyAll(AppColors.canvas),
+      side: const BorderSide(color: AppColors.textMuted, width: 2),
       materialTapTargetSize: MaterialTapTargetSize.padded,
     ),
-    radioTheme: const RadioThemeData(
-      fillColor: WidgetStatePropertyAll(AppColors.teal),
+    radioTheme: RadioThemeData(
+      fillColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.disabled)
+            ? AppColors.disabledText
+            : AppColors.accentText,
+      ),
       materialTapTargetSize: MaterialTapTargetSize.padded,
     ),
     tabBarTheme: TabBarThemeData(
-      labelColor: AppColors.charcoal,
-      unselectedLabelColor: AppColors.gray,
+      labelColor: AppColors.textPrimary,
+      unselectedLabelColor: AppColors.textMuted,
       labelStyle: _textTheme.titleMedium,
       unselectedLabelStyle: _textTheme.titleMedium,
       indicator: BoxDecoration(
-        gradient: AppEffects.selectedGradient,
+        color: AppColors.selection,
         borderRadius: BorderRadius.circular(AppRadii.control),
-        border: Border.all(color: AppColors.tealBorder),
+        border: Border.all(color: AppColors.selectionBorder),
       ),
       indicatorSize: TabBarIndicatorSize.tab,
       dividerColor: Colors.transparent,
@@ -338,14 +355,16 @@ class AppTheme {
     ),
     dividerTheme: const DividerThemeData(color: AppColors.border, thickness: 1),
     progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: AppColors.teal,
-      linearTrackColor: AppColors.tealBorder,
+      color: AppColors.accentText,
+      linearTrackColor: AppColors.selection,
       linearMinHeight: 6,
       borderRadius: BorderRadius.all(Radius.circular(8)),
     ),
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: AppColors.charcoal,
-      contentTextStyle: _textTheme.bodyMedium?.copyWith(color: AppColors.white),
+      backgroundColor: AppColors.surfaceRaised,
+      contentTextStyle: _textTheme.bodyMedium?.copyWith(
+        color: AppColors.textPrimary,
+      ),
       behavior: SnackBarBehavior.floating,
       shape: _buttonShape,
     ),
@@ -356,7 +375,4 @@ class AppTheme {
       },
     ),
   );
-
-  // shortcut: this palette is light-only; add dark tokens with a dark design.
-  static final dark = light;
 }

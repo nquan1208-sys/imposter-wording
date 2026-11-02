@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 class AppEdgeInsets {
   AppEdgeInsets._();
 
+  static EdgeInsets pageFor(BuildContext context) => EdgeInsets.symmetric(
+    horizontal: MediaQuery.sizeOf(context).width <= 360 ? 16 : 24,
+    vertical: 24,
+  );
+
   static const all4 = EdgeInsets.all(4);
   static const all8 = EdgeInsets.all(8);
   static const all16 = EdgeInsets.all(16);

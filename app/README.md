@@ -1,6 +1,6 @@
 # EscapeCall Mobile
 
-Flutter mobile app with Signals state management, Riverpod DI, a Bumble-inspired theme (`lib/theme`) and VI/EN localization (default VI).
+Flutter mobile app with Signals state management, Riverpod DI, a CrazyGames-inspired dark theme (`lib/theme`) and VI/EN localization (default VI).
 
 ## Docs
 
@@ -223,26 +223,41 @@ is copied only when the user asks. Store review and feedback actions stay visibl
 unavailable until real destinations are configured.
 
 
-### Flutter UI refresh (2026-10-29)
+### Flutter UI refresh (2026-11-02)
 
-The entire mobile interface now follows the Bumble reference through the shared
-light theme, system font, Material icons and 640 logical-pixel content width.
-Setup stats, game choices, categories and player cards prefer two columns on
-ordinary phones. Cards share their row height and grow with content; narrow
-screens and enlarged text fall back to one column. Category reveal remains a
-persisted word-only option directly below the game choices, before content/network
-notices. Know-each-other remains available in both games; hints remain hidden. Custom-content dialogs scroll their actions with the form when space
-is limited by the keyboard.
+The mobile interface uses an explicit dark theme even on devices set to light
+appearance: near-black canvas, layered surfaces, solid lime primary actions and
+two compact purple/teal introduction gradients. BeVietnamPro is bundled at
+weights 400/500/600; Material icons and the 640 logical-pixel content width remain.
+Cards use radius 16, heroes/sheets/dialogs 22, buttons pill, and inputs 16.
+
+Landing presents three ordered steps. Setup keeps players/imposters, game choices,
+rules and categories ahead of content status; category confirmation summarizes its
+draft. Show-category remains word-only directly below game choices. Know-each-other
+is shared; hints remain hidden. Editors group category names and content, number
+players clearly and distinguish destructive actions. Game screens share handoff,
+progress and result cards while preserving immediate secret concealment and locked
+answers. Settings retain grouped tiles and retry; fallback offers a localized home
+action. No route names/arguments, stores/models, saved formats or dependencies changed.
+
+Ordinary phones retain two columns; cards grow with content and fall back to one
+column below 280 content pixels or above text scale 1.5. Narrow-page gutters are
+16, otherwise 24. Footers own keyboard/safe insets once; dialogs remain scrollable.
 
 See [design rules](DESIGN_RULES.md) and the
-[phase checkpoint](../docs/plans/flutter-ui-refresh.md) for the component contract,
-user amendments and verification evidence. Role assignment, scoring, route inputs, storage
-formats and dependencies are unchanged.
+[current checkpoint](../docs/plans/flutter-crazygames-ui-refresh.md) for verification
+and remaining device/backend gaps. The [previous checkpoint](../docs/plans/flutter-ui-refresh.md)
+retains the historical Bumble implementation and its original results.
 
-Verification: analyzer clean; 294 unit/widget tests passed. Twelve existing
-backend checks remain opt-in through their environment flags. The offline
-setup/word/question integration suites passed on both iPhone 16 Pro (iOS 18.5
-Simulator) and Android `Sm_Phone_test`: 5 cases on each platform, including live
-anonymous Local Supabase reads and offline disk recovery. No screenshots or
-golden tests were used; physical-device and opt-in backend test gaps are recorded
-in the checkpoint.
+Verification: localization regenerated, analyzer clean, **305 unit/widget tests
+passed, 12 backend opt-in tests skipped**. Contrast tests cover dark surfaces,
+composed secondary actions, gradient interiors, focus, disabled controls and touch
+sizes. Widget coverage includes VI/EN, 320/360/375/430/768/tablet/landscape,
+keyboard, large text, reduced motion, privacy/lifecycle and 100-player lists in both
+games. Offline word/question smoke passed 4 cases each on iPhone 17 Pro (iOS 26.5)
+and Android API 36. The live setup smoke failed on both because its local backend
+precondition was unavailable; the configured host endpoint refused TCP connections.
+See the current checkpoint for details. Nine onboarding tests also passed after
+the final landing system-bar annotation.
+No screenshots or goldens were used; physical-device and screen-reader checks
+remain outside this run.

@@ -126,21 +126,38 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
         return Scaffold(
           appBar: AppBar(title: Text(l.categories)),
           bottomNavigationBar: AppActionBar(
-            child: FilledButton(
-              onPressed: store.editable && store.contentReady
-                  ? () async {
-                      final saved = await store.setCategories(
-                        valid,
-                        family: family,
-                        showWordImages: showWordImages,
-                      );
-                      if (mounted && !saved) {
-                        setState(() => saveFailed = true);
-                      }
-                      if (context.mounted && saved) Navigator.pop(context);
-                    }
-                  : null,
-              child: Text(l.confirm),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    valid.isEmpty
+                        ? l.allCategories
+                        : l.selectedCategoryCount(valid.length),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: store.editable && store.contentReady
+                      ? () async {
+                          final saved = await store.setCategories(
+                            valid,
+                            family: family,
+                            showWordImages: showWordImages,
+                          );
+                          if (mounted && !saved) {
+                            setState(() => saveFailed = true);
+                          }
+                          if (context.mounted && saved) Navigator.pop(context);
+                        }
+                      : null,
+                  child: Text(l.confirm),
+                ),
+              ],
             ),
           ),
           body: AppContent(
@@ -153,7 +170,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
                           margin: const EdgeInsets.fromLTRB(24, 8, 24, 8),
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: AppColors.lightGray,
+                            color: AppColors.surfaceRaised,
                             borderRadius: BorderRadius.circular(AppRadii.card),
                           ),
                           child: TabBar(

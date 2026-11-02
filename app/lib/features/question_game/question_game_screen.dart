@@ -2,7 +2,6 @@ import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:untitled/widgets/app_notice.dart';
 import 'package:untitled/widgets/player_cards.dart';
 import 'package:untitled/theme/app_colors.dart';
-import 'package:untitled/theme/app_effects.dart';
 import 'package:untitled/widgets/app_hero_card.dart';
 import 'package:untitled/features/word_game/local_prompt_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -135,7 +134,7 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
                   ? CustomScrollView(
                       slivers: [
                         SliverPadding(
-                          padding: AppEdgeInsets.all24,
+                          padding: AppEdgeInsets.pageFor(context),
                           sliver: SliverToBoxAdapter(
                             child: AppHeroCard(
                               title: l.questionPassPhone,
@@ -175,13 +174,16 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
                   : current == null
                   ? _publicAnswers(stage)
                   : SingleChildScrollView(
-                      padding: AppEdgeInsets.all24,
+                      padding: AppEdgeInsets.pageFor(context),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text(
-                            current.name,
-                            style: Theme.of(context).textTheme.headlineMedium,
+                          AppHeroCard(
+                            title: current.name,
+                            subtitle: !store.revealed.value
+                                ? l.questionPassPhone
+                                : null,
+                            icon: Icons.phonelink_lock_outlined,
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           if (!store.revealed.value)
@@ -202,7 +204,7 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
                                 child: Text(
                                   session.categoryName,
                                   style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: AppColors.gray),
+                                      ?.copyWith(color: AppColors.textMuted),
                                 ),
                               ),
                             _questionCard(store.question),
@@ -215,7 +217,7 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
                               Card(
                                 key: const Key('questionTeammates'),
                                 semanticContainer: false,
-                                color: AppColors.tealSurface,
+                                color: AppColors.selection,
                                 child: Padding(
                                   padding: AppEdgeInsets.all24,
                                   child: Column(
@@ -308,12 +310,17 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
       key: PageStorageKey(stage),
       slivers: [
         SliverPadding(
-          padding: AppEdgeInsets.all24,
+          padding: AppEdgeInsets.pageFor(context),
           sliver: SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _questionCard(session.prompt.civilianQuestion),
+                AppHeroCard(
+                  title: session.prompt.civilianQuestion,
+                  icon: stage == QuestionGameStage.result
+                      ? Icons.emoji_events_outlined
+                      : Icons.forum_outlined,
+                ),
                 if (stage == QuestionGameStage.result &&
                     session.prompt.localImageId != null)
                   LocalPromptImage(
@@ -338,7 +345,7 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
         ),
         if (stage != QuestionGameStage.commonQuestion)
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            padding: AppEdgeInsets.pageFor(context).copyWith(top: 0),
             sliver: SliverList.builder(
               itemCount: players.length,
               itemBuilder: (context, i) {
@@ -385,7 +392,7 @@ class _QuestionGameScreenState extends ConsumerState<QuestionGameScreen>
   Widget _questionCard(String question) => Card(
     clipBehavior: Clip.antiAlias,
     child: Ink(
-      decoration: const BoxDecoration(gradient: AppEffects.selectedGradient),
+      decoration: const BoxDecoration(color: AppColors.selection),
       child: Padding(
         padding: AppEdgeInsets.all24,
         child: Text(question, style: Theme.of(context).textTheme.headlineSmall),

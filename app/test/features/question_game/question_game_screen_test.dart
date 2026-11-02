@@ -40,6 +40,7 @@ void main() {
     bool knowEachOther = true,
     bool random = false,
     int imposters = 2,
+    int playerCount = 5,
   }) async {
     fetchData = fixture(locale: english ? 'en' : 'vi');
     content = ContentRepository(
@@ -51,7 +52,7 @@ void main() {
     await content.load();
     await setup.restore();
     if (english) await setup.setContentLocale('en');
-    await setup.setPlayerCount(5);
+    await setup.setPlayerCount(playerCount);
     await setup.setRules(
       imposters: imposters,
       showCategory: showCategory,
@@ -124,6 +125,30 @@ void main() {
       ),
     );
   }
+
+  testWidgets(
+    'question handoff stays lazy and private with 100 players and large text',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await pump(tester, english: true, playerCount: 100);
+      final cards = find.byType(AppSelectionCard);
+      expect(cards.evaluate().length, lessThan(100));
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('player-100')),
+        400,
+        maxScrolls: 150,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tap(tester, find.byKey(const ValueKey('player-100')));
+      expect(find.byKey(const Key('secretCard')), findsOneWidget);
+      expect(find.byKey(const Key('privateAnswer')), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'teammates leave widgets and semantics on conceal, back and submission',

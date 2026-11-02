@@ -44,7 +44,7 @@ class _LocalPromptImageState extends ConsumerState<LocalPromptImage> {
       padding: const EdgeInsets.only(top: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.lightGray,
+          color: AppColors.surfaceRaised,
           borderRadius: BorderRadius.circular(AppRadii.card),
         ),
         clipBehavior: Clip.antiAlias,

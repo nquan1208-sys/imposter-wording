@@ -37,69 +37,32 @@ class AppHeroCard extends StatelessWidget {
                 ? AppEffects.heroGradient
                 : AppEffects.accentGradient,
           ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -64,
-                top: -64,
-                child: ExcludeSemantics(
-                  child: Container(
-                    width: 224,
-                    height: 224,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: prominent ? AppColors.glass : AppColors.cream,
-                        width: 32,
-                      ),
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ExcludeSemantics(
+                    child: Icon(icon, size: 32, color: AppColors.textPrimary),
                   ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(prominent ? 32 : 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: ExcludeSemantics(
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: prominent
-                                ? AppColors.glass
-                                : AppColors.cream,
-                            borderRadius: BorderRadius.circular(
-                              AppRadii.control,
-                            ),
-                            border: Border.all(color: AppColors.glass),
-                          ),
-                          child: Icon(
-                            icon,
-                            size: prominent ? 56 : 32,
-                            color: AppColors.teal,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Text(
-                      title,
-                      style: prominent ? text.headlineLarge : text.titleLarge,
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(subtitle!, style: text.bodyLarge),
-                    ],
-                    if (child != null) ...[
-                      const SizedBox(height: AppSpacing.lg),
-                      child!,
-                    ],
-                  ],
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  title,
+                  style: prominent ? text.headlineLarge : text.headlineSmall,
                 ),
-              ),
-            ],
+                if (subtitle != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(subtitle!, style: text.bodyLarge),
+                ],
+                if (child != null) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  child!,
+                ],
+              ],
+            ),
           ),
         ),
       ),

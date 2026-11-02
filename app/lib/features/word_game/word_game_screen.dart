@@ -1,10 +1,8 @@
-import 'package:untitled/constants/app_radii.dart';
 import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:untitled/widgets/app_selection_card.dart';
 import 'package:untitled/widgets/player_cards.dart';
 import 'package:untitled/widgets/app_notice.dart';
 import 'package:untitled/widgets/app_hero_card.dart';
-import 'package:untitled/theme/app_effects.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/data/game_providers.dart';
 import 'package:untitled/widgets/app_content.dart';
@@ -231,7 +229,7 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                       slivers: [
                         SliverToBoxAdapter(
                           child: Padding(
-                            padding: AppEdgeInsets.all24,
+                            padding: AppEdgeInsets.pageFor(context),
                             child: AppHeroCard(
                               title: l.passPhone,
                               icon: Icons.phonelink_lock_outlined,
@@ -240,6 +238,8 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                                 children: [
                                   Text(
                                     '${store.completed.value.length} / ${players.length}',
+                                    semanticsLabel:
+                                        '${l.playerDone}: ${store.completed.value.length} / ${players.length}',
                                     style: Theme.of(
                                       context,
                                     ).textTheme.labelLarge,
@@ -265,34 +265,30 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                       ],
                     )
                   : SingleChildScrollView(
-                      padding: AppEdgeInsets.all24,
+                      padding: AppEdgeInsets.pageFor(context),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Center(
-                            child: Container(
-                              padding: AppEdgeInsets.all24,
-                              decoration: BoxDecoration(
-                                gradient: stage == WordGameStage.result
-                                    ? AppEffects.selectedGradient
-                                    : AppEffects.accentGradient,
-                                boxShadow: AppEffects.cardShadow,
-                                borderRadius: BorderRadius.circular(
-                                  AppRadii.hero,
-                                ),
-                              ),
-                              child: Icon(
-                                reveal
-                                    ? Icons.lock_outline
-                                    : stage == WordGameStage.discussion
-                                    ? Icons.forum_outlined
-                                    : Icons.emoji_events_outlined,
-                                size: 48,
-                                color: AppColors.charcoal,
-                              ),
-                            ),
+                          AppHeroCard(
+                            title: reveal
+                                ? l.wordFor(name(current))
+                                : stage == WordGameStage.discussion
+                                ? l.startingPlayer(
+                                    name(session.startingPlayerId),
+                                  )
+                                : store.groupWon
+                                ? l.groupWins
+                                : l.imposterWins,
+                            subtitle: reveal && !store.revealed.value
+                                ? l.passPhone
+                                : null,
+                            icon: reveal
+                                ? Icons.phonelink_lock_outlined
+                                : stage == WordGameStage.discussion
+                                ? Icons.forum_outlined
+                                : Icons.emoji_events_outlined,
                           ),
-                          const SizedBox(height: AppSpacing.xxl),
+                          const SizedBox(height: AppSpacing.xl),
                           if (reveal) ...[
                             if (!store.revealed.value)
                               OutlinedButton(
@@ -308,7 +304,7 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                                 clipBehavior: Clip.antiAlias,
                                 child: Ink(
                                   decoration: const BoxDecoration(
-                                    gradient: AppEffects.selectedGradient,
+                                    color: AppColors.selection,
                                   ),
                                   child: Padding(
                                     padding: AppEdgeInsets.all24,
@@ -374,21 +370,11 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                               ),
                           ] else if (stage == WordGameStage.discussion) ...[
                             Text(
-                              l.startingPlayer(name(session.startingPlayerId)),
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            const SizedBox(height: AppSpacing.xl),
-                            Text(
                               l.discussionHelp,
                               style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: AppColors.gray),
+                                  ?.copyWith(color: AppColors.textMuted),
                             ),
                           ] else ...[
-                            Text(
-                              store.groupWon ? l.groupWins : l.imposterWins,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            const SizedBox(height: AppSpacing.xl),
                             Card(
                               child: ListTile(
                                 leading: const ExcludeSemantics(
@@ -439,7 +425,9 @@ class _WordGameScreenState extends ConsumerState<WordGameScreen>
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall
-                                          ?.copyWith(color: AppColors.gray),
+                                          ?.copyWith(
+                                            color: AppColors.textMuted,
+                                          ),
                                     ),
                                     const SizedBox(height: AppSpacing.sm),
                                     Text(

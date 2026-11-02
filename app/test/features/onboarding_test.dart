@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:untitled/base/dependency/app_service.dart';
+import 'package:untitled/base/dependency/router/utils/route_input.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled/base/store/store_provider.dart';
@@ -47,6 +50,40 @@ Future<ProviderContainer> pumpApp(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'dark appearance overrides a light device and fallback returns home',
+    (tester) async {
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+      final container = await pumpApp(tester);
+      expect(
+        tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+        ThemeMode.dark,
+      );
+      expect(
+        Theme.of(tester.element(find.text('Kẻ mạo danh'))).brightness,
+        Brightness.dark,
+      );
+      final systemBars = tester
+          .widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+            find.byType(AnnotatedRegion<SystemUiOverlayStyle>).first,
+          )
+          .value;
+      expect(systemBars.statusBarIconBrightness, Brightness.light);
+      expect(systemBars.systemNavigationBarIconBrightness, Brightness.light);
+      final navigation = container
+          .read(AppService.router)
+          .push(RouteInput(routeName: '/missing'));
+      await tester.pumpAndSettle();
+      expect(find.text('Không tìm thấy trang'), findsOneWidget);
+      await tester.tap(find.text('Về trang chủ'));
+      await tester.pumpAndSettle();
+      await navigation;
+      expect(find.text('Kẻ mạo danh'), findsOneWidget);
+      expect(find.text('Về trang chủ'), findsNothing);
+    },
+  );
+
   for (final size in [
     const Size(375, 812),
     const Size(812, 375),

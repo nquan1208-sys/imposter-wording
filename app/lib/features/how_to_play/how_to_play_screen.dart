@@ -24,7 +24,7 @@ class HowToPlayScreen extends StatelessWidget {
       body: AppContent(
         top: false,
         child: ListView(
-          padding: AppEdgeInsets.all24,
+          padding: AppEdgeInsets.pageFor(context),
           children: [
             for (final (index, (icon, title, body)) in steps.indexed) ...[
               Card(
@@ -57,10 +57,10 @@ class HowToPlayScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Card(
               key: const Key('proTipCard'),
-              color: AppColors.tealSurface,
+              color: AppColors.selection,
               elevation: 0,
               shape: const RoundedRectangleBorder(
-                side: BorderSide(color: AppColors.tealBorder),
+                side: BorderSide(color: AppColors.selectionBorder),
                 borderRadius: BorderRadius.all(Radius.circular(AppRadii.card)),
               ),
               child: _StepContent(
@@ -96,12 +96,12 @@ class _StepContent extends StatelessWidget {
       child: Container(
         padding: AppEdgeInsets.all16,
         decoration: BoxDecoration(
-          color: number == null ? AppColors.white : AppColors.lightGray,
+          color: number == null ? AppColors.surface : AppColors.surfaceRaised,
           borderRadius: BorderRadius.circular(AppRadii.card),
         ),
         child: Icon(
           icon,
-          color: number == null ? AppColors.teal : AppColors.charcoal,
+          color: number == null ? AppColors.accentText : AppColors.textPrimary,
         ),
       ),
     );
@@ -111,7 +111,7 @@ class _StepContent extends StatelessWidget {
         if (number != null) ...[
           Text(
             number.toString().padLeft(2, '0'),
-            style: textTheme.labelLarge?.copyWith(color: AppColors.gray),
+            style: textTheme.labelLarge?.copyWith(color: AppColors.textMuted),
           ),
           const SizedBox(height: AppSpacing.sm),
         ],
@@ -119,7 +119,7 @@ class _StepContent extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           body,
-          style: textTheme.bodyMedium?.copyWith(color: AppColors.gray),
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
         ),
       ],
     );

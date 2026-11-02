@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/constants/app_spacing.dart';
 import 'package:untitled/models/game_setup.dart';
 import 'package:untitled/theme/app_colors.dart';
@@ -23,12 +24,14 @@ class PlayerCards extends StatelessWidget {
   Widget build(BuildContext context) => SliverLayoutBuilder(
     builder: (context, constraints) {
       final columns =
-          constraints.crossAxisExtent - 48 < 280 ||
+          constraints.crossAxisExtent -
+                      AppEdgeInsets.pageFor(context).horizontal <
+                  280 ||
               MediaQuery.textScalerOf(context).scale(16) > 24
           ? 1
           : 2;
       return SliverPadding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        padding: AppEdgeInsets.pageFor(context).copyWith(top: 0),
         sliver: SliverList.builder(
           itemCount: (players.length / columns).ceil(),
           itemBuilder: (context, row) => Padding(
@@ -67,7 +70,7 @@ class PlayerCards extends StatelessWidget {
             child: Icon(
               done ? Icons.check_circle_outline : Icons.person_outline,
               size: 32,
-              color: done ? AppColors.teal : AppColors.charcoal,
+              color: done ? AppColors.success : AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -83,7 +86,7 @@ class PlayerCards extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.teal),
+              ).textTheme.bodySmall?.copyWith(color: AppColors.success),
             ),
           ],
         ],
