@@ -207,6 +207,10 @@ bước bắt buộc khi mở dự án.
 
 ### Dữ liệu mẫu và ảnh từ ngữ
 
+Đã có thêm [3 danh mục gia đình với 15 cặp câu hỏi Việt–Anh](family-question-mode.md).
+Xem hướng dẫn đó để nạp riêng vào DB local đang chạy, không cần reset.
+DB mới tự nạp cả hai file seed được khai báo trong `config.toml`.
+
 Sau khi áp dụng migrations, nạp 5 danh mục cho mỗi loại game, mỗi danh mục
 5 đề bài có bản tiếng Việt và tiếng Anh đã publish, cùng 25 ảnh minh họa từ ngữ:
 

@@ -2,6 +2,9 @@
 
 Hợp đồng hiện hành từ migration `20261027050239_category_family_mode.sql`.
 
+Nghiên cứu mở rộng cho trò câu hỏi và dữ liệu mẫu local:
+[Chế độ gia đình cho trò câu hỏi](family-question-mode.md).
+
 - `game_categories.is_family_friendly`: boolean, NOT NULL, mặc định false; CHECK chỉ cho `game_type = 'word'` bật cờ. Cờ dùng chung cho mọi bản dịch.
 - Migration giữ nguyên danh mục, prompt, bản dịch và ảnh. Mọi danh mục cũ đều tắt Family để admin duyệt lại; không chuyển cờ từ prompt lên danh mục.
 - `word_prompts` và `question_prompts` không còn `is_family_friendly`.
