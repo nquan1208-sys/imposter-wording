@@ -319,5 +319,11 @@
   "contentLanguageHelp": "This language is used for the interface, categories and game prompts.",
   "contentLanguageUnavailable": "The saved language is unavailable. Choose another language to play.",
   "cachedLanguages": "Using the language list saved on this device.",
-  "languageListError": "Could not load languages. Please retry."
+  "languageListError": "Could not load languages. Please retry.",
+  "rulesAdjusted": "The imposter count was reduced or the discussion-start restriction was turned off to fit the player count.",
+  "imposterNotFirstMinimum": "At least 4 players are required to enable this option.",
+  "imposterNotFirstWarning": "Everyone will know the starting player is a civilian. The imposter limit keeps civilians in the majority among the remaining suspects.",
+  "moreImpostersNeedSixPlayers": "At least 6 players are required for more than 1 imposter when imposters cannot start the discussion.",
+  "imposterCountAdjusted": "The imposter count was reduced from {before} to {after} to fit the new limit.",
+  "@imposterCountAdjusted": {"placeholders": {"before": {"type": "int"}, "after": {"type": "int"}}}
 }

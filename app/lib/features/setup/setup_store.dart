@@ -39,6 +39,7 @@ class SetupStore extends StoreBase {
   late final reading = signal(true).manageBy(_disposers);
   late final readFailed = signal(false).manageBy(_disposers);
   late final writeFailed = signal(false).manageBy(_disposers);
+  late final rulesAdjusted = signal(false).manageBy(_disposers);
   late final selectionRemoved = signal(false).manageBy(_disposers);
   Future<void> _writes = Future.value();
   Future<void>? _read;
@@ -89,13 +90,31 @@ class SetupStore extends StoreBase {
           : GameSetup.fromJson(data);
       setup.value = _committed;
       readFailed.value = false;
+      final migrated = data != null && _rulesChanged(data, _committed);
+      if (migrated) {
+        rulesAdjusted.value = true;
+      }
     } catch (_) {
       if (!isDispose) readFailed.value = true;
     } finally {
       if (!isDispose) reading.value = false;
     }
     await _writes;
+    if (!isDispose && !readFailed.value && rulesAdjusted.value) {
+      await _mutate((s) => s, retryable: true);
+      rulesAdjusted.value = true;
+    }
   }
+
+  bool _rulesChanged(JsonMap data, GameSetup value) =>
+      data['imposters'] != value.imposters ||
+      (data['imposterNotFirst'] ?? false) != value.imposterNotFirst ||
+      (data['presets'] as List? ?? []).asMap().entries.any(
+        (entry) => _rulesChanged(
+          entry.value as JsonMap,
+          value.presets[entry.key].setup,
+        ),
+      );
 
   GameSetup _committed = GameSetup.defaults();
   int _queued = 0;
@@ -118,7 +137,17 @@ class SetupStore extends StoreBase {
     final result = _writes.then((_) async {
       var validated = false;
       try {
-        final value = _validatedCategories(change(_committed));
+        final draft = _validatedCategories(change(_committed));
+        if (draft.imposters < 1) throw const FormatException('Invalid rules');
+        final normalized = draft.normalizedRules();
+        final value =
+            draft.imposters != normalized.imposters ||
+                draft.imposterNotFirst != normalized.imposterNotFirst
+            ? _updateActive(normalized)
+            : draft;
+        final adjusted =
+            draft.imposters != value.imposters ||
+            draft.imposterNotFirst != value.imposterNotFirst;
         if (skipUnchanged && identical(value, _committed)) return true;
         GameSetup.fromJson(value.toJson());
         images?.retain(imageOwner, value.localImageIds);
@@ -131,6 +160,7 @@ class SetupStore extends StoreBase {
         _committed = value;
         if (!isDispose) {
           setup.value = value;
+          rulesAdjusted.value = adjusted;
           writeFailed.value = false;
           _retry = null;
         }
@@ -175,7 +205,7 @@ class SetupStore extends StoreBase {
       current.copyWith(
         players: players,
         nextPlayerId: next,
-        imposters: current.imposters.clamp(1, (players.length - 1) ~/ 2),
+        imposters: current.imposters,
       ),
     );
   }, retryable: true);
@@ -187,16 +217,20 @@ class SetupStore extends StoreBase {
       final draft = current.copyWith(
         players: roster,
         nextPlayerId: nextPlayerId,
-        imposters: current.imposters.clamp(1, (roster.length - 1) ~/ 2),
+        imposters: current.imposters,
       );
-      if (!draft.validRoster) throw const FormatException('Invalid roster');
+      if (!draft.normalizedRules().validRoster) {
+        throw const FormatException('Invalid roster');
+      }
       return _updateActive(current.withRoster(draft));
     });
   }
 
   Future<bool> confirmDraft(GameSetup draft, String? presetId) =>
       _mutate((current) {
-        if (!draft.validRoster) throw const FormatException('Invalid roster');
+        if (!draft.normalizedRules().validRoster) {
+          throw const FormatException('Invalid roster');
+        }
         final exists = current.presets.any((p) => p.id == presetId);
         return _updateActive(
           current
@@ -228,8 +262,12 @@ class SetupStore extends StoreBase {
     bool? imposterNotFirst,
     bool? showCategory,
     bool? knowEachOther,
-  }) => _mutate(
-    (current) => _updateActive(
+  }) => _mutate((current) {
+    if (imposters != null &&
+        (imposters < 1 || imposters > (current.players.length - 1) ~/ 2)) {
+      throw const FormatException('Invalid count');
+    }
+    return _updateActive(
       current.copyWith(
         imposters: imposters,
         randomImposters: randomImposters,
@@ -237,9 +275,8 @@ class SetupStore extends StoreBase {
         showCategory: showCategory,
         knowEachOther: knowEachOther,
       ),
-    ),
-    retryable: true,
-  );
+    );
+  }, retryable: true);
 
   Future<bool> setContentLocale(String locale) {
     if (!supportsLocale(locale) ||
@@ -309,7 +346,7 @@ class SetupStore extends StoreBase {
           PlayerPreset(
             id!,
             name.trim(),
-            GameSetup.defaults().withRoster(draft),
+            GameSetup.defaults().withRoster(draft).normalizedRules(),
           ),
         ],
       );

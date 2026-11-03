@@ -94,7 +94,7 @@ void main() async {
   test(
     'fixed/random boundaries, duplicate names, exclusion and snapshot',
     () async {
-      for (final count in [3, 5, 100]) {
+      for (final count in [4, 5, 6, 7, 100]) {
         await setup.setPlayerCount(count);
         await setup.setRoster(
           setup.setup.value.players.reversed
@@ -103,7 +103,7 @@ void main() async {
           setup.setup.value.nextPlayerId,
         );
         await setup.setRules(
-          imposters: (count - 1) ~/ 2,
+          imposters: (count - 2) ~/ 2,
           imposterNotFirst: true,
           randomImposters: false,
         );
@@ -111,13 +111,13 @@ void main() async {
         final again = session();
         expect(first.imposterIds, again.imposterIds);
         expect(first.startingPlayerId, again.startingPlayerId);
-        expect(first.imposterIds, hasLength((count - 1) ~/ 2));
+        expect(first.imposterIds, hasLength((count - 2) ~/ 2));
         expect(first.imposterIds, isNot(contains(first.startingPlayerId)));
         await setup.setRules(randomImposters: true);
         for (final upper in [false, true]) {
           expect(
             session(random: BoundaryRandom(upper)).imposterIds,
-            hasLength(upper ? (count - 1) ~/ 2 : 1),
+            hasLength(upper ? (count - 2) ~/ 2 : 1),
           );
         }
         await setup.setPlayerCount(4);

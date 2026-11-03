@@ -40,7 +40,7 @@ void main() {
     bool knowEachOther = true,
     bool random = false,
     int imposters = 2,
-    int playerCount = 5,
+    int playerCount = 6,
   }) async {
     fetchData = fixture(locale: english ? 'en' : 'vi');
     content = ContentRepository(

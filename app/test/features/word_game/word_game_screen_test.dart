@@ -111,7 +111,7 @@ void main() {
     if (english) await setup.setContentLocale('en');
     await setup.setFamily(family);
     await setup.setShowWordImages(showWordImages);
-    await setup.setPlayerCount(advanced ? 5 : 3);
+    await setup.setPlayerCount(advanced ? 6 : 3);
     if (advanced) {
       await setup.setRules(
         imposters: 2,

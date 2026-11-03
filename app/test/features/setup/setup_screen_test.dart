@@ -709,6 +709,57 @@ void main() {
     expect(file.data!['players'], hasLength(4));
   });
 
+  for (final type in ['word', 'question']) {
+    testWidgets('$type restricts starter option and updates draft limits', (
+      tester,
+    ) async {
+      await pump(tester, english: true);
+      await store.setGameType(type);
+      await store.setPlayerCount(3);
+      await tester.pumpAndSettle();
+      await tap(tester, 'Imposters');
+      final toggle = find.widgetWithText(
+        SwitchListTile,
+        'Imposters never start the discussion',
+      );
+      expect(tester.widget<SwitchListTile>(toggle).onChanged, isNull);
+      expect(
+        find.text('At least 4 players are required to enable this option.'),
+        findsOneWidget,
+      );
+      await tap(tester, 'Cancel');
+      await store.setPlayerCount(5);
+      await store.setRules(imposters: 2);
+      await tester.pumpAndSettle();
+      await tap(tester, 'Imposters');
+      await tap(tester, 'Imposters never start the discussion');
+      expect(
+        find.text(
+          'The imposter count was reduced from 2 to 1 to fit the new limit.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<IconButton>(
+              find.byWidgetPredicate(
+                (w) => w is IconButton && w.tooltip == 'More imposters',
+              ),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(store.setup.value.imposters, 2);
+      await tap(tester, 'Cancel');
+      expect(store.setup.value.imposterNotFirst, isFalse);
+      await tap(tester, 'Imposters');
+      await tap(tester, 'Imposters never start the discussion');
+      await tap(tester, 'Confirm');
+      expect(store.setup.value.imposters, 1);
+      expect(store.setup.value.imposterNotFirst, isTrue);
+    });
+  }
+
   testWidgets('imposter sheet cancel/confirm and rule switches', (
     tester,
   ) async {

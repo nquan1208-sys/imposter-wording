@@ -118,7 +118,7 @@ void main() async {
       final restored = GameSetup.fromJson(file.data!);
       expect(restored.toJson(), store.setup.value.toJson());
       expect(restored.randomImposters, true);
-      expect(restored.imposterNotFirst, true);
+      expect(restored.imposterNotFirst, false);
       expect(restored.showCategory, true);
       expect(restored.knowEachOther, true);
     },

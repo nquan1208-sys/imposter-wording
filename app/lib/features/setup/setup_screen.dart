@@ -294,6 +294,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
+                    if (store.rulesAdjusted.value)
+                      AppNotice(message: l.rulesAdjusted),
                     if (store.selectionRemoved.value)
                       AppNotice(message: l.selectionRemoved),
                     if (store.reading.value) ...[
@@ -410,182 +412,207 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     var random = setup.randomImposters;
     var notFirst = setup.imposterNotFirst;
     var busy = false, failed = false;
+    String? adjustment;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       builder: (context) => StatefulBuilder(
-        builder: (context, update) => PopScope(
-          canPop: !busy,
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                24,
-                24,
-                24,
-                24 + MediaQuery.viewInsetsOf(context).bottom,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const ExcludeSemantics(child: Icon(Icons.tune, size: 32)),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    l.chooseImposters,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  for (final value in [false, true])
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                      child: AppSelectionCard(
-                        selected: random == value,
-                        onTap: busy ? null : () => update(() => random = value),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ExcludeSemantics(
-                              child: Icon(
-                                random == value
-                                    ? Icons.radio_button_checked
-                                    : Icons.radio_button_off,
+        builder: (context, update) {
+          final limit = setup.copyWith(imposterNotFirst: notFirst).maxImposters;
+          return PopScope(
+            canPop: !busy,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  24,
+                  24,
+                  24 + MediaQuery.viewInsetsOf(context).bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const ExcludeSemantics(child: Icon(Icons.tune, size: 32)),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      l.chooseImposters,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    for (final value in [false, true])
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: AppSelectionCard(
+                          selected: random == value,
+                          onTap: busy
+                              ? null
+                              : () => update(() => random = value),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ExcludeSemantics(
+                                child: Icon(
+                                  random == value
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_off,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    value ? l.randomCount : l.fixedCount,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
-                                  ),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  Text(
-                                    value
-                                        ? l.randomCountHelp
-                                        : l.fixedCountHelp,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
-                                  ),
-                                ],
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      value ? l.randomCount : l.fixedCount,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleMedium,
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    Text(
+                                      value
+                                          ? l.randomCountHelp
+                                          : l.fixedCountHelp,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  if (!random)
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        IconButton(
-                          tooltip: l.fewerImposters,
-                          onPressed: !busy && count > 1
-                              ? () => update(() => count--)
-                              : null,
-                          icon: const Icon(Icons.remove),
-                        ),
-                        Text(
-                          '$count',
-                          style: Theme.of(context).textTheme.headlineLarge,
-                        ),
-                        IconButton(
-                          tooltip: l.moreImposters,
-                          onPressed: !busy && count < setup.maxImposters
-                              ? () => update(() => count++)
-                              : null,
-                          icon: const Icon(Icons.add),
-                        ),
-                      ],
-                    ),
-                  if (!random && count == 1)
-                    Text(l.recommendedImposter, textAlign: TextAlign.center),
-                  Text(
-                    l.imposterRange(setup.maxImposters),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  if (setup.maxImposters == 1)
-                    Card(
-                      key: const Key('imposterLimitWarning'),
-                      color: AppColors.warningSurface,
-                      child: Padding(
-                        padding: AppEdgeInsets.all16,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const ExcludeSemantics(
-                              child: Icon(
-                                Icons.warning_amber_rounded,
-                                color: AppColors.warning,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                l.moreImpostersNeedPlayers,
-                                style: const TextStyle(
+                    if (!random)
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          IconButton(
+                            tooltip: l.fewerImposters,
+                            onPressed: !busy && count > 1
+                                ? () => update(() => count--)
+                                : null,
+                            icon: const Icon(Icons.remove),
+                          ),
+                          Text(
+                            '$count',
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          ),
+                          IconButton(
+                            tooltip: l.moreImposters,
+                            onPressed: !busy && count < limit
+                                ? () => update(() => count++)
+                                : null,
+                            icon: const Icon(Icons.add),
+                          ),
+                        ],
+                      ),
+                    if (!random && count == 1)
+                      Text(l.recommendedImposter, textAlign: TextAlign.center),
+                    Text(l.imposterRange(limit), textAlign: TextAlign.center),
+                    const SizedBox(height: AppSpacing.xl),
+                    if (limit == 1)
+                      Card(
+                        key: const Key('imposterLimitWarning'),
+                        color: AppColors.warningSurface,
+                        child: Padding(
+                          padding: AppEdgeInsets.all16,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const ExcludeSemantics(
+                                child: Icon(
+                                  Icons.warning_amber_rounded,
                                   color: AppColors.warning,
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Text(
+                                  notFirst
+                                      ? l.moreImpostersNeedSixPlayers
+                                      : l.moreImpostersNeedPlayers,
+                                  style: const TextStyle(
+                                    color: AppColors.warning,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  SwitchListTile(
-                    title: Text(l.imposterNotFirst),
-                    subtitle: Text(l.imposterNotFirstHelp),
-                    value: notFirst,
-                    onChanged: busy ? null : (v) => update(() => notFirst = v),
-                  ),
-                  if (failed)
-                    AppNotice(message: l.settingsWriteError, error: true),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      TextButton(
-                        onPressed: busy ? null : () => Navigator.pop(context),
-                        child: Text(l.cancel),
+                    SwitchListTile(
+                      title: Text(l.imposterNotFirst),
+                      subtitle: Text(
+                        setup.players.length < 4
+                            ? l.imposterNotFirstMinimum
+                            : l.imposterNotFirstHelp,
                       ),
-                      FilledButton(
-                        onPressed: busy
-                            ? null
-                            : () async {
-                                update(() {
-                                  busy = true;
-                                  failed = false;
-                                });
-                                final success = await store.setRules(
-                                  imposters: count,
-                                  randomImposters: random,
-                                  imposterNotFirst: notFirst,
+                      value: notFirst,
+                      onChanged: busy || setup.players.length < 4
+                          ? null
+                          : (v) => update(() {
+                              notFirst = v;
+                              final max = setup
+                                  .copyWith(imposterNotFirst: v)
+                                  .maxImposters;
+                              if (count > max) {
+                                adjustment = l.imposterCountAdjusted(
+                                  count,
+                                  max,
                                 );
-                                if (!context.mounted) return;
-                                if (success) {
-                                  Navigator.pop(context);
-                                } else {
+                                count = max;
+                              }
+                            }),
+                    ),
+                    if (notFirst) AppNotice(message: l.imposterNotFirstWarning),
+                    if (adjustment != null) AppNotice(message: adjustment!),
+                    if (failed)
+                      AppNotice(message: l.settingsWriteError, error: true),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        TextButton(
+                          onPressed: busy ? null : () => Navigator.pop(context),
+                          child: Text(l.cancel),
+                        ),
+                        FilledButton(
+                          onPressed: busy
+                              ? null
+                              : () async {
                                   update(() {
-                                    busy = false;
-                                    failed = true;
+                                    busy = true;
+                                    failed = false;
                                   });
-                                }
-                              },
-                        child: Text(l.confirm),
-                      ),
-                    ],
-                  ),
-                ],
+                                  final success = await store.setRules(
+                                    imposters: count,
+                                    randomImposters: random,
+                                    imposterNotFirst: notFirst,
+                                  );
+                                  if (!context.mounted) return;
+                                  if (success) {
+                                    Navigator.pop(context);
+                                  } else {
+                                    update(() {
+                                      busy = false;
+                                      failed = true;
+                                    });
+                                  }
+                                },
+                          child: Text(l.confirm),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

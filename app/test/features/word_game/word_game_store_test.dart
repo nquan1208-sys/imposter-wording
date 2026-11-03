@@ -51,9 +51,9 @@ void main() async {
   }
 
   test('fixed/random count boundaries and starting-player exclusion', () async {
-    for (final count in [3, 5, 100]) {
+    for (final count in [4, 5, 6, 7, 100]) {
       await setup.setPlayerCount(count);
-      final max = (count - 1) ~/ 2;
+      final max = (count - 2) ~/ 2;
       await setup.setRules(imposters: max, imposterNotFirst: true);
       final fixed = session();
       expect(fixed.imposterIds, hasLength(max));

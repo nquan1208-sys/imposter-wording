@@ -319,5 +319,11 @@
   "contentLanguageHelp": "Ngôn ngữ được dùng cho cả giao diện, danh mục và đề chơi.",
   "contentLanguageUnavailable": "Ngôn ngữ đã lưu không còn khả dụng. Hãy chọn ngôn ngữ khác để chơi.",
   "cachedLanguages": "Đang dùng danh sách ngôn ngữ đã lưu trên thiết bị.",
-  "languageListError": "Không tải được danh sách ngôn ngữ. Hãy thử lại."
+  "languageListError": "Không tải được danh sách ngôn ngữ. Hãy thử lại.",
+  "rulesAdjusted": "Đã tự điều chỉnh số kẻ mạo danh hoặc tắt tuỳ chọn không mở đầu để phù hợp với số người chơi.",
+  "imposterNotFirstMinimum": "Cần ít nhất 4 người chơi để bật tuỳ chọn này.",
+  "imposterNotFirstWarning": "Mọi người sẽ biết người mở đầu là người thường. Số kẻ mạo danh được giới hạn để người thường vẫn chiếm đa số trong nhóm còn lại.",
+  "moreImpostersNeedSixPlayers": "Cần ít nhất 6 người chơi để chọn nhiều hơn 1 kẻ mạo danh khi bật tuỳ chọn không mở đầu.",
+  "imposterCountAdjusted": "Đã giảm số kẻ mạo danh từ {before} xuống {after} để phù hợp với giới hạn mới.",
+  "@imposterCountAdjusted": {"placeholders": {"before": {"type": "int"}, "after": {"type": "int"}}}
 }

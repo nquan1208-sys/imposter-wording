@@ -60,7 +60,16 @@ class GameSetup {
   final bool family, showWordImages;
   final int imposters;
   final bool randomImposters, imposterNotFirst, showCategory, knowEachOther;
-  int get maxImposters => (players.length - 1) ~/ 2;
+  int get maxImposters => (players.length - (imposterNotFirst ? 2 : 1)) ~/ 2;
+  GameSetup normalizedRules() {
+    final draft = copyWith(
+      imposterNotFirst: imposterNotFirst && players.length >= 4,
+    );
+    return draft.copyWith(
+      imposters: draft.imposters.clamp(1, draft.maxImposters),
+    );
+  }
+
   bool get validRules => imposters >= 1 && imposters <= maxImposters;
   final Set<String> categoryIds;
   const GameSetup({
@@ -193,7 +202,9 @@ class GameSetup {
         )) {
       throw const FormatException('Invalid custom question categories');
     }
-    if (!setup.validRules) throw const FormatException('Invalid rules');
+    if (setup.imposters < 1 || setup.imposters > (players.length - 1) ~/ 2) {
+      throw const FormatException('Invalid rules');
+    }
     final custom = setup.customWordCategories;
     if (setup.nextCustomWordCategoryId < 1 ||
         custom.map((c) => c.id).toSet().length != custom.length ||
@@ -210,7 +221,7 @@ class GameSetup {
       throw const FormatException('Invalid custom categories');
     }
     if (activePresetId != null &&
-        jsonEncode(setup.rosterJson()) !=
+        jsonEncode(setup.normalizedRules().rosterJson()) !=
             jsonEncode(
               presets
                   .firstWhere((p) => p.id == activePresetId)
@@ -219,7 +230,7 @@ class GameSetup {
             )) {
       throw const FormatException('Active preset differs from setup');
     }
-    return setup;
+    return setup.normalizedRules();
   }
   GameSetup copyWith({
     List<CustomQuestionCategory>? customQuestionCategories,
@@ -273,7 +284,7 @@ class GameSetup {
         .map((p) => SetupPlayer(p.id, p.name.trim()))
         .toList(),
     nextPlayerId: draft.nextPlayerId,
-    imposters: draft.imposters.clamp(1, draft.maxImposters),
+    imposters: draft.imposters,
     randomImposters: draft.randomImposters,
     imposterNotFirst: draft.imposterNotFirst,
     showCategory: draft.showCategory,
