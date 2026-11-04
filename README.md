@@ -1,6 +1,8 @@
-# Imposter Wording
+# OddCue
 
-A pass-the-phone party game: share clues, compare answers, and find the player who received a different secret.
+<img src="app/assets/branding/oddcue-icon.png" alt="OddCue app icon: overlapping purple and lime secret cards" width="120">
+
+**Spot the odd cue.** A pass-the-phone party game: share clues, compare answers, and find the player who received a different secret.
 
 This repository contains the Flutter mobile app, a Vue content administration dashboard, and the Supabase backend. Players use one shared device; no player account is required.
 
