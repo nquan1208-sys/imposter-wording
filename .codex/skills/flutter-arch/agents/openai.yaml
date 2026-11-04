@@ -1,0 +1,7 @@
+interface:
+  display_name: "Flutter Architecture"
+  short_description: "Opt-in feature architecture for this Flutter repo"
+  default_prompt: "Use $flutter-arch to implement this feature like app/lib/features/counter with StoreBase, signals, Riverpod, and the existing router."
+
+policy:
+  allow_implicit_invocation: false

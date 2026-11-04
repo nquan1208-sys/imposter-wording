@@ -1,0 +1,153 @@
+import 'package:untitled/constants/app_radii.dart';
+import 'package:untitled/widgets/app_content.dart';
+import 'package:flutter/material.dart';
+import 'package:untitled/constants/app_edge_insets.dart';
+import 'package:untitled/constants/app_spacing.dart';
+import 'package:untitled/l10n/gen_l10n/app_localizations.dart';
+import 'package:untitled/theme/app_colors.dart';
+
+class HowToPlayScreen extends StatelessWidget {
+  const HowToPlayScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final steps = [
+      (Icons.settings_outlined, l10n.stepSetupTitle, l10n.stepSetupBody),
+      (Icons.visibility_outlined, l10n.stepRevealTitle, l10n.stepRevealBody),
+      (Icons.chat_bubble_outline, l10n.stepHintTitle, l10n.stepHintBody),
+      (Icons.search, l10n.stepFindTitle, l10n.stepFindBody),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.howToPlay)),
+      body: AppContent(
+        top: false,
+        child: ListView(
+          padding: AppEdgeInsets.pageFor(context),
+          children: [
+            for (final (index, (icon, title, body)) in steps.indexed) ...[
+              Card(
+                child: _StepContent(
+                  icon: icon,
+                  title: title,
+                  body: body,
+                  number: index + 1,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            Card(
+              child: Padding(
+                padding: AppEdgeInsets.all24,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.questionGame,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(l10n.questionInstructions),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Card(
+              key: const Key('proTipCard'),
+              color: AppColors.selection,
+              elevation: 0,
+              shape: const RoundedRectangleBorder(
+                side: BorderSide(color: AppColors.selectionBorder),
+                borderRadius: BorderRadius.all(Radius.circular(AppRadii.card)),
+              ),
+              child: _StepContent(
+                icon: Icons.lightbulb_outline,
+                title: l10n.proTipTitle,
+                body: l10n.proTipBody,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StepContent extends StatelessWidget {
+  const _StepContent({
+    required this.icon,
+    required this.title,
+    required this.body,
+    this.number,
+  });
+
+  final int? number;
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final iconWidget = ExcludeSemantics(
+      child: Container(
+        padding: AppEdgeInsets.all16,
+        decoration: BoxDecoration(
+          color: number == null ? AppColors.surface : AppColors.surfaceRaised,
+          borderRadius: BorderRadius.circular(AppRadii.card),
+        ),
+        child: Icon(
+          icon,
+          color: number == null ? AppColors.accentText : AppColors.textPrimary,
+        ),
+      ),
+    );
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (number != null) ...[
+          Text(
+            number.toString().padLeft(2, '0'),
+            style: textTheme.labelLarge?.copyWith(color: AppColors.textMuted),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        Text(title, style: textTheme.titleLarge),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          body,
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+        ),
+      ],
+    );
+    return Padding(
+      padding: AppEdgeInsets.all24,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 300 ||
+              MediaQuery.textScalerOf(context).scale(16) > 24) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                iconWidget,
+                const SizedBox(height: AppSpacing.lg),
+                content,
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              iconWidget,
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(child: content),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}

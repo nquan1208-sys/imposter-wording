@@ -1,0 +1,14 @@
+@import "tailwindcss" prefix(tw);
+@import "@nuxt/ui";
+@import "./theme.css";
+@import "./base.css";
+@import "../components/admin/AdminShell.css";
+@import "../views/login/LoginView.css";
+@import "../views/shared/AdminPlaceholder.css";
+@import "./admin-lists.css";
+
+@import "../views/dashboard/DashboardView.css";
+@import "../views/categories/CategoriesView.css";
+@import "../views/word-prompts/WordPromptsView.css";
+@import "../views/word-prompts/WordPromptFormView.css";
+@import "../views/question-prompts/QuestionPromptsView.css";

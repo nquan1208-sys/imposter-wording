@@ -1,0 +1,10 @@
+.word-prompts-page { min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.word-table { min-width: 1240px; }
+.word-table .word-column-image_path { min-width: 128px; }
+.word-table .word-column-text { min-width: 200px; }
+.word-table .word-column-category_id { min-width: 160px; }
+.word-table .word-column-updated_at { min-width: 170px; }
+.word-table .word-text-cell, .word-table .word-category-cell { max-width: 320px; white-space: normal; overflow-wrap: anywhere; }
+.word-table .word-text-link { display: block; max-width: 100%; padding: 0; white-space: normal; text-align: left; overflow-wrap: anywhere; }
+.word-table .word-text-link [data-slot="label"] { display: block; white-space: normal; overflow-wrap: anywhere; }
+.word-image { width: 96px; height: 96px; object-fit: contain; }

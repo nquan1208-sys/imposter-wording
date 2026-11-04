@@ -1,0 +1,150 @@
+import { testWindow, setupState } from './helpers.ts'
+import type { HostNode, TestApp, StubContext, ClientStub } from './helpers.ts'
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import { createServer } from 'vite'
+import { computed, createRenderer, h, nextTick, ssrContextKey } from 'vue'
+import { createI18n } from 'vue-i18n'
+import { createMemoryHistory, createRouter, matchedRouteKey } from 'vue-router'
+import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
+
+const vn = JSON.parse(await readFile(new URL('../src/i18n/locales/vn.json', import.meta.url), 'utf8'))
+
+// In-memory host mounts real Vue components without a browser or UI library DOM.
+const node = (text = ''): HostNode => ({ text, children: [], parent: null })
+const renderer = createRenderer<HostNode, HostNode>({
+  createElement: () => node(), createText: node, createComment: () => node(),
+  setText: (element, text) => { element.text = text },
+  setElementText: (element, text) => { element.text = text },
+  patchProp() {},
+  parentNode: element => element.parent,
+  nextSibling: element => element.parent?.children[element.parent.children.indexOf(element) + 1] ?? null,
+  insert(element, parent, anchor) {
+    if (element.parent) element.parent.children.splice(element.parent.children.indexOf(element), 1)
+    const index = anchor ? parent.children.indexOf(anchor) : -1
+    parent.children.splice(index < 0 ? parent.children.length : index, 0, element)
+    element.parent = parent
+  },
+  remove(element) { element.parent?.children.splice(element.parent.children.indexOf(element), 1) },
+})
+const stub = { setup: (_: unknown, { slots }: StubContext) => () => h('div', Object.values(slots).flatMap(slot => slot?.({}))) }
+
+test('mounted components react to locale changes and preserve delete/leave guards', async () => {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false, ws: false }, mode: 'localdev' })
+  const apps: TestApp[] = []
+  const originalWindow = globalThis.window
+  const queryClient = new QueryClient({ defaultOptions: { queries: { enabled: false, gcTime: Infinity } } })
+  try {
+    globalThis.window = testWindow({ addEventListener() {}, removeEventListener() {}, confirm: () => false })
+    const i18n = createI18n({ legacy: false, locale: 'vi', fallbackLocale: 'vi', messages: { vi: vn, en: {
+      dashboard: { title: 'Dashboard' },
+      common: { gameTypes: { word: 'Word' } },
+      categories: { fields: { name: 'Category name' }, messages: { statusUpdated: 'Status updated' }, errors: { nameRequired: 'Name required' } },
+      auth: { errors: { loginFailed: 'Login failed' } },
+    } }, missingWarn: false, fallbackWarn: false })
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', name: 'dashboard', meta: { titleKey: 'dashboard.title' }, component: stub }] })
+    await router.push('/')
+    const { provideUnsavedChanges } = await server.ssrLoadModule('/src/utils/unsavedChanges.ts')
+    const supabase = (await server.ssrLoadModule('/src/lib/supabase.ts')).supabase as ClientStub
+    const getUser = supabase.auth.getUser
+    supabase.auth.getUser = async () => ({ data: { user: null } })
+    async function mount(path: string, props: Record<string, unknown> = {}) {
+      const component = (await server.ssrLoadModule(path)).default
+      // SSR templates are covered by categoryComponents; mount setup for reactive state.
+      const child = { ...component, render: () => h('div') }
+      const root = { setup() { provideUnsavedChanges(); return () => h(child, props) } }
+      const app = renderer.createApp(root).use(i18n).use(router).use(VueQueryPlugin, { queryClient })
+      app.provide(ssrContextKey, {})
+      app.provide(matchedRouteKey, computed(() => router.currentRoute.value.matched[0]))
+      apps.push(app)
+      return setupState(app.mount(node()).$.subTree.component)
+    }
+    const shell = await mount('/src/components/admin/AdminShell.vue')
+    supabase.auth.getUser = getUser
+    const filters = await mount('/src/components/categories/CategoryFilters.vue', { languages: [], filters: { gameType: '', active: '', sort: 'sort_order' }, search: '' })
+    const form = await mount('/src/components/categories/CategoryForm.vue', { languages: [], translations: [], form: { name: 'Food', game_type: 'word', locale: 'vi' } })
+    const table = await mount('/src/components/categories/CategoryTable.vue', { rows: [], languages: [] })
+    const list = await mount('/src/views/categories/CategoriesView.vue')
+    const login = await mount('/src/views/login/LoginView.vue')
+    const editor = await mount('/src/views/categories/CategoryFormView.vue')
+    list.message = 'categories.messages.statusUpdated'
+    const signIn = supabase.auth.signInWithPassword
+    try {
+      supabase.auth.signInWithPassword = async () => ({ error: new Error('backend diagnostic') })
+      login.submitLogin({ data: { email: 'admin@example.com', password: 'password' } })
+      await new Promise(resolve => setTimeout(resolve, 0))
+    } finally { supabase.auth.signInWithPassword = signIn }
+    editor.submit()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    assert.equal(shell.navItems[0].label, 'Tổng quan')
+    assert.equal(filters.gameTypes[1].label, 'Từ ngữ')
+    assert.equal(form.gameTypes[0].label, 'Từ ngữ')
+    assert.equal(table.columns[0].header, 'Tên danh mục')
+    assert.equal(table.dateFormat.resolvedOptions().locale, 'vi-VN')
+    assert.equal(list.t(list.message), 'Đã cập nhật trạng thái.')
+    assert.equal(login.errorMessage, 'Đăng nhập không thành công.')
+    assert.equal(editor.mutation.error.value.message, 'categories.errors.nameRequired')
+    i18n.global.locale.value = 'en'
+    await nextTick()
+    assert.equal(shell.navItems[0].label, 'Dashboard')
+    assert.equal(shell.pageTitle, 'Dashboard')
+    assert.equal(filters.gameTypes[1].label, 'Word')
+    assert.equal(form.gameTypes[0].label, 'Word')
+    assert.equal(table.columns[0].header, 'Category name')
+    assert.equal(table.dateFormat.resolvedOptions().locale, 'en-US')
+    assert.equal(list.t(list.message), 'Status updated')
+    assert.equal(login.errorMessage, 'Login failed')
+    assert.equal(editor.t(editor.mutation.error.value.message), 'Name required')
+    assert.equal(editor.form.locale, 'vi')
+    editor.update('name', 'Food')
+    assert.equal(editor.canLeave(), false)
+    globalThis.window.confirm = () => true
+    assert.equal(editor.canLeave(), true)
+    editor.unsaved.busy = true
+    assert.equal(editor.canLeave(), false)
+    editor.unsaved.busy = false
+
+    const originalRpc = supabase.rpc
+    try {
+      const calls: string[] = []
+      supabase.rpc = async name => { calls.push(name); return { data: null } }
+      const wordList = await mount('/src/views/word-prompts/WordPromptsView.vue')
+      const questionList = await mount('/src/views/question-prompts/QuestionPromptsView.vue')
+      const id = '00000000-0000-4000-8000-000000000001'
+      const row = { id, category_id: id, updated_at: 'version', locale: 'en', status: 'published', difficulty: 'medium', text: 'Word', civilian_question: 'Best?', imposter_question: 'Worst?', is_active: true }
+      const prefixes = ['dashboard', 'categories', 'word-prompts', 'question-prompts']
+      for (const operation of [
+        () => list.statusMutation.mutateAsync(row),
+        () => list.deleteMutation.mutateAsync({ id, mode: 'transfer', targetId: id, version: 'snapshot' }),
+        () => list.deleteMutation.mutateAsync({ id, mode: 'purge', version: 'snapshot' }),
+        () => wordList.archiveMutation.mutateAsync(row),
+        () => wordList.deletion.mutateAsync({ id, updatedAt: 'version' }),
+        () => questionList.archiveMutation.mutateAsync(row),
+        () => questionList.deletion.mutateAsync({ id, updatedAt: 'version' }),
+      ]) {
+        for (const prefix of prefixes) for (const locale of ['vi', 'en', 'fr']) queryClient.setQueryData([prefix, 'invalidation-test', locale], {})
+        await operation()
+        for (const prefix of prefixes) for (const locale of ['vi', 'en', 'fr']) assert.equal(queryClient.getQueryState([prefix, 'invalidation-test', locale])!.isInvalidated, true, `${prefix}/${locale} invalidated`)
+      }
+      assert.deepEqual(calls, ['set_category_active', 'delete_category', 'delete_category', 'save_word_prompt', 'delete_word_prompt', 'save_question_prompt', 'delete_question_prompt'])
+    } finally { supabase.rpc = originalRpc }
+
+    const deletions: unknown[] = []
+    const dialog = await mount('/src/components/categories/CategoryDeleteDialog.vue', { onDelete: (input: unknown) => deletions.push(input), locale: 'vi', preview: { category: { id: 'source', slug: 'food' }, category_translations: [{ locale: 'vi', name: 'Food' }], counts: { originals: { total: 1, word: 1, question: 0 }, translations: { draft: 1, published: 0, archived: 0 } }, version: 'snapshot' }, targets: [{ id: 'target', slug: 'target', name: 'Target' }] })
+    assert.equal(dialog.canDelete, false)
+    dialog.targetId = 'target'
+    assert.equal(dialog.canDelete, true)
+    dialog.mode = 'purge'
+    assert.equal(dialog.canDelete, true)
+    dialog.submit()
+    assert.deepEqual(deletions, [{ id: 'source', mode: 'purge', targetId: 'target', version: 'snapshot' }])
+    dialog.refresh()
+    assert.equal(dialog.canDelete, true)
+  } finally {
+    for (const app of apps.reverse()) app.unmount()
+    queryClient.clear()
+    globalThis.window = originalWindow
+    await server.close()
+  }
+})

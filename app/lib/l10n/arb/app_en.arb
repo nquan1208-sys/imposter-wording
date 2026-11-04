@@ -1,0 +1,341 @@
+{
+  "appTitle": "Imposter",
+  "tagline": "Word game",
+  "appDescription": "A party game of secret words and clever hints. Find the imposter before they blend in!",
+  "start": "Start",
+  "startUnavailable": "Coming soon",
+  "howToPlay": "How to play",
+  "stepSetupTitle": "Set up the game",
+  "stepSetupBody": "Choose players, categories and a fixed or random number of imposters. Regular players always outnumber imposters.",
+  "stepRevealTitle": "Reveal the word",
+  "stepRevealBody": "Each player privately opens their card. Imposters see their role, the category if enabled, and fellow imposters if enabled; they never see the word.",
+  "stepHintTitle": "Give hints",
+  "stepHintBody": "Players take turns saying a word related to the secret word. Keep hints subtle so the word stays hidden.",
+  "stepFindTitle": "Find the imposter",
+  "stepFindBody": "Discuss and vote aloud. Select exactly as many suspects as there are imposters. The group wins only when the entire set is correct; otherwise the imposters win. Vote again if tied.",
+  "proTipTitle": "Pro tip",
+  "proTipBody": "Imposter: listen carefully, blend in, and give hints that fit the category.",
+  "backToHome": "Back to home",
+  "notFound": "Page not found",
+  "setupTitle": "Game setup",
+  "players": "Players",
+  "imposters": "Imposters",
+  "wordGameSummary": "Find who does not know the secret word.",
+  "questionGameSummary": "Find who received a different question.",
+  "wordGame": "Word game",
+  "gameMode": "Game mode",
+  "classicMode": "Classic",
+  "familyMode": "Family",
+  "categories": "Categories",
+  "allCategories": "All categories",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "retry": "Retry",
+  "loadingContent": "Loading content…",
+  "emptyContent": "No eligible content in this mode.",
+  "contentError": "Content could not be refreshed. Please retry.",
+  "cachedContent": "Using saved content.",
+  "cacheWarning": "Content is available, but the offline cache could not be read or saved.",
+  "selectionRemoved": "Unavailable categories were removed. An empty selection means All categories.",
+  "settingsLoading": "Restoring setup…",
+  "settingsReadError": "Saved setup could not be read. Retry to continue.",
+  "settingsWriteError": "Setup could not be saved. Your changes are still here.",
+  "resetSetup": "Reset setup",
+  "resetSetupConfirm": "Replace the unreadable saved setup with defaults?",
+  "startGame": "Start game",
+  "decreasePlayers": "Fewer players",
+  "increasePlayers": "More players",
+  "wordCount": "{count, plural, =1{1 eligible word} other{{count} eligible words}}",
+  "@wordCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedCategoryCount": "{count, plural, =1{1 selected category} other{{count} selected categories}}",
+  "@selectedCategoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerCount": "{count} players",
+  "@playerCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wordFor": "Word for {name}",
+  "@wordFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "endGame": "End game",
+  "endGameConfirm": "End this game and return to setup? Progress in this game will be lost.",
+  "voteTitle": "Choose the voted players",
+  "voteHelp": "Select exactly {count} voted player(s). Vote again if tied. The group wins only if all imposters are selected.",
+  "gameStartError": "Could not start a game. Return to setup and check eligible content.",
+  "discussionTitle": "Clues & discussion",
+  "gameResult": "Results",
+  "passPhone": "Pass the phone to each player to view their private card.",
+  "playerDone": "Viewed",
+  "youAreImposter": "You are the imposter",
+  "tapToReveal": "Tap to reveal",
+  "understood": "Got it!",
+  "startingPlayer": "Starting player: {name}",
+  "@startingPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@discussionHelp": {"placeholders": {"name": {"type": "String"}}},
+  "discussionHelp": "{name} gives the first clue, then continue clockwise. When discussion is over, tap “Start voting” to choose suspects.",
+  "groupWins": "The group wins!",
+  "imposterWins": "The imposters win!",
+  "actualImposter": "Imposters: {name}",
+  "@actualImposter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "votedPlayer": "Voted players: {name}",
+  "@votedPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "secretWord": "Secret word",
+  "startVoting": "Start voting",
+  "playAgain": "Play again",
+  "editPlayers": "Edit player names",
+  "playerName": "Player {count}",
+  "@playerName": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nameRequired": "Enter a name.",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
+  "removePlayer": "Remove player",
+  "addPlayer": "Add player",
+  "discardRoster": "Discard player changes?",
+  "discard": "Discard",
+  "randomCount": "Random",
+  "imposterRange": "1–{count} imposters, chosen uniformly at game start.",
+  "@imposterRange": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fewerImposters": "Fewer imposters",
+  "moreImposters": "More imposters",
+  "imposterNotFirstHelp": "The starting player is always a civilian. This does not affect the order of viewing cards.",
+  "imposterNotFirst": "Imposters never start the discussion",
+  "showWordImages": "Show images",
+  "showCategory": "Show category to imposters",
+  "knowEachOther": "Imposters know each other",
+  "fellowImposters": "Other imposters: {name}",
+  "@fellowImposters": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@voteHelp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerLimits": "3–100 players",
+  "questionGame": "Question game",
+  "questionCount": "{count, plural, =1{1 eligible question pair} other{{count} eligible question pairs}}",
+  "questionFor": "Question for {name}",
+  "everyonesAnswers": "Everyone’s answers",
+  "questionDiscussion": "Discussion",
+  "questionPassPhone": "Each player privately opens their question and submits an answer. Roles stay secret.",
+  "answersSubmitted": "{count} / {total} answers submitted",
+  "answerSent": "Submitted",
+  "yourAnswer": "Your answer",
+  "answerHint": "Enter your answer here…",
+  "submitAnswer": "Submit answer",
+  "commonQuestionHelp": "This is the common question. Next, read everyone’s answers and discuss who received a different question.",
+  "startRound": "Start round",
+  "findImposters": "Find the imposters",
+  "questionInstructions": "Open your private question and answer without showing anyone. Your role is not revealed. Unsent answers remain private until you reopen your card. After everyone submits, read the common question and discuss the answers. Reveal the imposters when ready; there is no scored vote. With “Imposters know each other” enabled and multiple imposters, teammates are visible only inside a revealed private card.",
+  "@questionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@questionFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@answersSubmitted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "unsavedGame": "Unsaved game",
+  "unsavedGameHelp": "Play quickly with the current players",
+  "savedLists": "Saved lists",
+  "saveList": "Save as a list…",
+  "manageLists": "Manage lists",
+  "newList": "Save as a new list…",
+  "listName": "List name",
+  "listNameHint": "Enter a list name",
+  "invalidListName": "Use a non-empty name that is not already taken.",
+  "save": "Save",
+  "rename": "Rename",
+  "delete": "Delete",
+  "details": "Details",
+  "listActions": "List actions",
+  "usingList": "In use",
+  "emptyLists": "Return to the player editor to save your first list.",
+  "deleteListConfirm": "Delete this list? Current players and rules will be kept.",
+  "savedRules": "Saved rules",
+  "listAutosave": "Rules save when changed in setup. Players save only when you confirm the editor.",
+  "fixedCount": "Fixed",
+  "recommendedImposter": "1 imposter recommended",
+  "enabled": "On",
+  "disabled": "Off",
+  "chooseImposters": "Choose imposters",
+  "fixedCountHelp": "Choose the exact number of imposters",
+  "randomCountHelp": "A random number of imposters each game",
+  "moreImpostersNeedPlayers": "At least 5 players are needed to choose more than 1 imposter.",
+  "refreshContent": "Refresh content",
+  "wordImageUnavailable": "Image unavailable",
+  "wordImage": "Image for {word}",
+  "@wordImage": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "familyCategories": "Family mode",
+  "emptyFamilyCategories": "No family categories have content yet. Choose All categories or try again later.",
+  "createCustomCategory": "Create custom category",
+  "customCategoryName": "Category name",
+  "customCategoryNameHint": "Example: Office words",
+  "customCategoryNameExists": "This category name already exists. Choose another name.",
+  "customWordList": "Word list",
+  "customWordsEmpty": "No words yet.",
+  "customWord": "Word",
+  "addCustomWord": "Add word",
+  "importCustomWords": "Import words",
+  "customOneWordPerLine": "One word per line",
+  "customWordInvalid": "Enter at least one new word.",
+  "removeCustomWord": "Remove {word}",
+  "saveCustomCategory": "Save category",
+  "customSaving": "Saving…",
+  "customFamilyConfirmation": "I confirm these words are suitable for family play.",
+  "discardCustomDraft": "Discard unsaved changes?",
+  "customSaveError": "Could not save. Your words are still here. Try saving again.",
+  "clearCustomContentTitle": "Remove custom content and leave?",
+  "clearCustomContentHelp": "Returning to the home screen permanently removes custom categories, words and question pairs for this setup.",
+  "clearCustomContentAction": "Remove and leave",
+  "@removeCustomWord": {"placeholders": {"word": {"type": "String"}}},
+  "customQuestionList": "Question pairs",
+  "customQuestionsEmpty": "No question pairs yet.",
+  "customCivilianQuestion": "Civilian question",
+  "customImposterQuestion": "Imposter question",
+  "addCustomQuestion": "Add question pair",
+  "importCustomQuestions": "Import question pairs",
+  "customQuestionLineHelp": "Enter one question per line in each field. Questions on the same row form a pair.",
+  "customQuestionSaveError": "Could not save. Your question pairs are still here. Try saving again.",
+  "removeCustomQuestion": "Remove pair {row}",
+  "customQuestionRowsError": "Check rows {rows}: questions must be nonempty, different, and pairs must not repeat.",
+  "customQuestionCountError": "The two fields must have the same number of rows. Check rows {rows}.",
+  "@removeCustomQuestion": {"placeholders": {"row": {"type": "int"}}},
+  "@customQuestionRowsError": {"placeholders": {"rows": {"type": "String"}}},
+  "@customQuestionCountError": {"placeholders": {"rows": {"type": "String"}}},
+  "addLocalImage": "Add image",
+  "replaceLocalImage": "Replace image",
+  "removeLocalImage": "Remove image",
+  "imageLibrary": "Photo library",
+  "imageCamera": "Camera",
+  "questionImage": "Question image",
+  "hasLocalImages": "Includes images",
+  "localImageUnavailable": "Image unavailable",
+  "localImageInvalid": "Cannot read this image. Choose another image.",
+  "localImageOversized": "Choose an image no larger than 5 MiB.",
+  "localImageDiskError": "Could not store the image. Free up device storage and try again.",
+  "localImagePermission": "Access denied or restricted. Allow Photos or Camera access for this app in system Settings.",
+  "localImageCameraUnavailable": "Camera unavailable. Choose an image from your library.",
+  "localImageDraftLost": "The app restarted while choosing an image. Your unsaved draft was lost. Please create it again.",
+  "localImagePreview": "Attached image",
+  "settingsTitle": "Settings",
+  "languageVietnamese": "Tiếng Việt",
+  "languageEnglish": "English",
+  "generalOptions": "General options",
+  "rateAndFeedback": "Rate and feedback",
+  "rateApp": "Rate this app",
+  "sendFeedback": "Send feedback",
+  "supportUnavailable": "Store or feedback destination is not configured yet.",
+  "appInformation": "App information",
+  "appVersion": "App version",
+  "installationId": "Installation ID",
+  "installationIdPrivacy": "This ID stays on this device unless you copy and share it.",
+  "copyFullId": "Copy full ID",
+  "installationIdCopied": "Installation ID copied.",
+  "installationIdCopyFailed": "Could not copy the ID. Please try again.",
+  "appSettingsLoading": "Restoring app settings…",
+  "appSettingsReadError": "Saved app settings could not be read. Please retry.",
+  "appSettingsWriteError": "Settings could not be saved. Your choice is still here.",
+  "appInfoUnavailable": "App information is unavailable.",
+  "contentLanguage": "Language",
+  "contentLanguageHelp": "This language is used for the interface, categories and game prompts.",
+  "contentLanguageUnavailable": "The saved language is unavailable. Choose another language to play.",
+  "cachedLanguages": "Using the language list saved on this device.",
+  "languageListError": "Could not load languages. Please retry.",
+  "rulesAdjusted": "The imposter count was reduced or the discussion-start restriction was turned off to fit the player count.",
+  "imposterNotFirstMinimum": "At least 4 players are required to enable this option.",
+  "imposterNotFirstWarning": "Everyone will know the starting player is a civilian. The imposter limit keeps civilians in the majority among the remaining suspects.",
+  "moreImpostersNeedSixPlayers": "At least 6 players are required for more than 1 imposter when imposters cannot start the discussion.",
+  "imposterCountAdjusted": "The imposter count was reduced from {before} to {after} to fit the new limit.",
+  "@imposterCountAdjusted": {"placeholders": {"before": {"type": "int"}, "after": {"type": "int"}}},
+  "editCustomCategory": "Edit category",
+  "customCategoryActions": "Category actions",
+  "deleteCustomCategory": "Delete category",
+  "deleteCustomCategoryConfirm": "Delete “{name}” and all its custom content? This cannot be undone.",
+  "customDeleteError": "Could not delete the category. Please try again.",
+  "@deleteCustomCategoryConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
+}
