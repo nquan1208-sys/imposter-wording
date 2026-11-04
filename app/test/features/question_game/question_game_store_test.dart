@@ -16,6 +16,7 @@ void main() async {
 
   setUp(() async {
     final data = fixture();
+    data['categories'][3]['is_family_friendly'] = true;
     data['categories'].add(category('q-adult', type: 'question'));
     final adult = question('adult', 'q-adult')..['is_family_friendly'] = false;
     data['questions'].add(adult);
@@ -58,15 +59,18 @@ void main() async {
             .keys
             .map((c) => c.id)
             .toSet(),
-        {'q', 'q-adult'},
+        {'q'},
       );
       await setup.setCategories({'q-adult'});
       expect(session().prompt.id, 'adult');
       await setup.setFamily(true);
-      expect(setup.setup.value.family, false);
-      expect(setup.setup.value.categoryIds, {'q-adult'});
-      expect(session().prompt.id, 'adult');
-      expect(content.eligibleQuestions(categoryIds: {'a'}), isEmpty);
+      expect(setup.setup.value.family, true);
+      expect(setup.setup.value.categoryIds, isEmpty);
+      expect(session().prompt.id, '4');
+      expect(
+        content.eligibleQuestions(family: false, categoryIds: {'a'}),
+        isEmpty,
+      );
       await setup.save();
       expect(GameSetup.fromJson(file.data!).gameType, 'question');
       expect(

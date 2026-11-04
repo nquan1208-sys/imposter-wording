@@ -386,7 +386,7 @@ class SetupStore extends StoreBase {
     final remote = _availableCategories[(current.gameType, current.family)];
     final available = {
       ...?remote,
-      if (current.gameType == 'question')
+      if (current.gameType == 'question' && !current.family)
         for (final c in _customQuestions(current)) c.id,
       if (current.gameType == 'word')
         for (final c in _custom(current))
@@ -419,12 +419,15 @@ class SetupStore extends StoreBase {
       .where((c) => c.contentLocale == current.contentLocale)
       .toList();
 
-  List<QuestionPair> eligibleQuestions({Set<String> categoryIds = const {}}) =>
-      [
-        ...content.eligibleQuestions(categoryIds: categoryIds),
-        for (final c in _customQuestions(setup.value))
-          if (categoryIds.isEmpty || categoryIds.contains(c.id)) ...c.prompts,
-      ];
+  List<QuestionPair> eligibleQuestions({
+    required bool family,
+    Set<String> categoryIds = const {},
+  }) => [
+    ...content.eligibleQuestions(family: family, categoryIds: categoryIds),
+    for (final c in _customQuestions(setup.value))
+      if (!family && (categoryIds.isEmpty || categoryIds.contains(c.id)))
+        ...c.prompts,
+  ];
 
   List<ContentCategory> get categories => [
     ..._customQuestions(setup.value).map((c) => c.category),
@@ -448,7 +451,7 @@ class SetupStore extends StoreBase {
     String gameType = 'word',
   }) => {
     ...content.categoryCounts(family: family, gameType: gameType),
-    if (gameType == 'question')
+    if (gameType == 'question' && !family)
       for (final c in _customQuestions(setup.value)) c.category: c.pairs.length,
     if (gameType == 'word')
       for (final c in _custom(setup.value))

@@ -31,7 +31,7 @@ export function slugFromName(name: string) {
 export function categoryPayload(form: unknown) {
   const result = categorySchema().safeParse(form)
   if (!result.success) throw new Error(result.error.issues[0].message)
-  return { ...result.data, is_family_friendly: result.data.game_type === 'word' && result.data.is_family_friendly }
+  return result.data
 }
 
 // Escape PostgREST quoted values and LIKE wildcards: search is literal substring matching.

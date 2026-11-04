@@ -1,5 +1,6 @@
 import 'package:untitled/widgets/app_selection_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:untitled/base/store/store_provider.dart';
@@ -13,6 +14,13 @@ import '../../data/fixtures.dart';
 import 'package:untitled/models/content.dart';
 
 void main() {
+  setUpAll(() async {
+    final fonts = FontLoader('BeVietnamPro');
+    for (final weight in ['Regular', 'Medium', 'SemiBold']) {
+      fonts.addFont(rootBundle.load('assets/fonts/BeVietnamPro-$weight.ttf'));
+    }
+    await fonts.load();
+  });
   late ContentRepository content;
   late SetupStore setup;
   late ProviderContainer container;
@@ -23,7 +31,12 @@ void main() {
       await tester.scrollUntilVisible(
         finder,
         160,
-        scrollable: find.byType(Scrollable).first,
+        scrollable: find
+            .byWidgetPredicate(
+              (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+            )
+            .hitTestable()
+            .first,
       );
     }
     await tester.ensureVisible(finder);
@@ -43,6 +56,7 @@ void main() {
     int playerCount = 6,
   }) async {
     fetchData = fixture(locale: english ? 'en' : 'vi');
+    fetchData['categories'][3]['is_family_friendly'] = true;
     content = ContentRepository(
       contentLocale: english ? 'en' : 'vi',
       cache: MemoryStorage(),
@@ -111,7 +125,13 @@ void main() {
     );
     await tap(tester, find.byKey(const Key('categoryPicker')));
     expect(find.text('Category a'), findsNothing);
-    await tap(tester, find.widgetWithText(AppSelectionCard, 'Category q'));
+    await tap(
+      tester,
+      find.descendant(
+        of: find.byKey(PageStorageKey(family)),
+        matching: find.text('Category q'),
+      ),
+    );
     await tap(
       tester,
       find.widgetWithText(FilledButton, english ? 'Confirm' : 'Xác nhận'),
@@ -392,7 +412,14 @@ void main() {
                   await tester.scrollUntilVisible(
                     find.byKey(ValueKey(p.id)),
                     160,
-                    scrollable: find.byType(Scrollable).first,
+                    scrollable: find
+                        .byWidgetPredicate(
+                          (w) =>
+                              w is Scrollable &&
+                              w.axisDirection == AxisDirection.down,
+                        )
+                        .hitTestable()
+                        .first,
                   );
                 }
                 await tester.ensureVisible(find.byKey(ValueKey(p.id)));
@@ -422,7 +449,14 @@ void main() {
               await tester.scrollUntilVisible(
                 find.text('answer ${p.id}'),
                 160,
-                scrollable: find.byType(Scrollable).first,
+                scrollable: find
+                    .byWidgetPredicate(
+                      (w) =>
+                          w is Scrollable &&
+                          w.axisDirection == AxisDirection.down,
+                    )
+                    .hitTestable()
+                    .first,
               );
               await tester.ensureVisible(find.text('answer ${p.id}'));
               await tester.pumpAndSettle();
@@ -444,7 +478,14 @@ void main() {
               await tester.scrollUntilVisible(
                 response,
                 160,
-                scrollable: find.byType(Scrollable).first,
+                scrollable: find
+                    .byWidgetPredicate(
+                      (w) =>
+                          w is Scrollable &&
+                          w.axisDirection == AxisDirection.down,
+                    )
+                    .hitTestable()
+                    .first,
               );
               await tester.ensureVisible(response);
               await tester.pumpAndSettle();

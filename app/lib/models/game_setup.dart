@@ -177,8 +177,7 @@ class GameSetup {
       gameType: json['gameType'] as String? ?? 'word',
       players: players,
       nextPlayerId: next,
-      family:
-          (json['gameType'] ?? 'word') == 'word' && json['mode'] == 'family',
+      family: json['mode'] == 'family',
       showWordImages: json['showWordImages'] as bool? ?? false,
       categoryIds: ids,
       imposters: json['imposters'] as int,
@@ -270,7 +269,7 @@ class GameSetup {
     gameType: gameType ?? this.gameType,
     players: players ?? this.players,
     nextPlayerId: nextPlayerId ?? this.nextPlayerId,
-    family: (gameType ?? this.gameType) == 'word' && (family ?? this.family),
+    family: family ?? this.family,
     showWordImages: showWordImages ?? this.showWordImages,
     imposters: imposters ?? this.imposters,
     randomImposters: randomImposters ?? this.randomImposters,

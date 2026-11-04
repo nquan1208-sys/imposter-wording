@@ -33,7 +33,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
     final setup = ref.read(setupStoreProvider).setup.value;
     contentLocale = setup.contentLocale;
     selected = Set.of(setup.categoryIds);
-    family = setup.gameType == 'word' && setup.family;
+    family = setup.family;
     showWordImages = setup.showWordImages;
     tabs = TabController(
       length: 2,
@@ -67,7 +67,10 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
       family = nextFamily;
       final available = ref
           .read(setupStoreProvider)
-          .categoryCounts(family: family)
+          .categoryCounts(
+            family: family,
+            gameType: ref.read(setupStoreProvider).setup.value.gameType,
+          )
           .keys
           .map((c) => c.id)
           .toSet();
@@ -107,6 +110,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
   Widget build(BuildContext context) {
     final store = ref.watch(setupStoreProvider);
     final l = AppLocalizations.of(context);
+    final scrollTabs = MediaQuery.sizeOf(context).height < 500;
     return SignalBuilder(
       builder: (context) {
         final counts = store.categoryCounts(
@@ -161,75 +165,71 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
             ),
           ),
           body: AppContent(
-            child: store.setup.value.gameType == 'word'
-                ? Column(
-                    children: [
-                      IgnorePointer(
-                        ignoring: !store.editable,
-                        child: Container(
-                          margin: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceRaised,
-                            borderRadius: BorderRadius.circular(
-                              AppRadii.control,
-                            ),
-                          ),
-                          child: TabBar(
-                            controller: tabs,
-                            onTap: (index) {
-                              if (MediaQuery.disableAnimationsOf(context)) {
-                                tabs.index = index;
-                              }
-                            },
-                            tabAlignment: TabAlignment.fill,
-                            labelPadding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 12,
-                            ),
-                            tabs: [
-                              for (final label in [
-                                l.allCategories,
-                                l.familyCategories,
-                              ])
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    minHeight: 24,
-                                  ),
-                                  child: Text(
-                                    label,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
+            child: Column(
+              children: [
+                IgnorePointer(
+                  ignoring: !store.editable,
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceRaised,
+                      borderRadius: BorderRadius.circular(AppRadii.control),
+                    ),
+                    child: TabBar(
+                      controller: tabs,
+                      onTap: (index) {
+                        if (MediaQuery.disableAnimationsOf(context)) {
+                          tabs.index = index;
+                        }
+                      },
+                      isScrollable: scrollTabs,
+                      tabAlignment: scrollTabs
+                          ? TabAlignment.start
+                          : TabAlignment.fill,
+                      labelPadding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 12,
                       ),
-                      Expanded(
-                        child: TabBarView(
-                          controller: tabs,
-                          physics: store.editable
-                              ? null
-                              : const NeverScrollableScrollPhysics(),
-                          children: [
-                            allCategories,
-                            FamilyCategoriesScreen(
-                              store: store,
-                              selected: selected,
-                              onChanged: updateSelection,
-                              selectionRemoved: selectionRemoved,
-                              saveFailed: saveFailed,
-                              showWordImages: showWordImages,
-                              onImagesChanged: (value) =>
-                                  setState(() => showWordImages = value),
-                              onCreateCustom: createCustom,
-                            ),
-                          ],
-                        ),
+                      tabs: [
+                        for (final label in [
+                          l.allCategories,
+                          l.familyCategories,
+                        ])
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 24),
+                            child: Text(label, textAlign: TextAlign.center),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: tabs,
+                    physics: store.editable
+                        ? null
+                        : const NeverScrollableScrollPhysics(),
+                    children: [
+                      allCategories,
+                      FamilyCategoriesScreen(
+                        store: store,
+                        selected: selected,
+                        onChanged: updateSelection,
+                        selectionRemoved: selectionRemoved,
+                        saveFailed: saveFailed,
+                        showWordImages: showWordImages,
+                        onImagesChanged: (value) =>
+                            setState(() => showWordImages = value),
+                        onCreateCustom: store.setup.value.gameType == 'word'
+                            ? createCustom
+                            : null,
                       ),
                     ],
-                  )
-                : allCategories,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

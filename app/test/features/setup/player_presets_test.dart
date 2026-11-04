@@ -110,6 +110,10 @@ void main() {
   test(
     'confirmation preserves type, mode, categories and selected group counters',
     () async {
+      final data = fixture();
+      data['categories'][3]['is_family_friendly'] = true;
+      content.snapshot.value = ContentSnapshot.fromJson(data, 'vi');
+      await store.pendingWrites;
       final small = GameSetup.defaults().copyWith(
         players: GameSetup.defaults().players.take(3).toList(),
         nextPlayerId: 4,
@@ -125,7 +129,7 @@ void main() {
       expect(s.nextPlayerId, 4);
       expect(s.activePresetId, id);
       expect(s.gameType, 'question');
-      expect(s.family, false);
+      expect(s.family, true);
       expect(s.showWordImages, true);
       expect(s.categoryIds, {'q'});
       expect(GameSetup.fromJson(file.data!).toJson(), s.toJson());

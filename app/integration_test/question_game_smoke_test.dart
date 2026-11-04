@@ -30,7 +30,9 @@ void main() {
         locale: 'vi',
         name: name,
       );
-      await local('snapshot').write(fixture());
+      final data = fixture();
+      data['categories'][3]['is_family_friendly'] = true;
+      await local('snapshot').write(data);
       await local('setup').write(
         GameSetup.defaults()
             .copyWith(gameType: 'question', family: family)

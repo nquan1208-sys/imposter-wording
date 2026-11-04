@@ -236,6 +236,50 @@ void main() {
     expect(store.setup.value.categoryIds, {'a'});
   });
 
+  testWidgets(
+    'question Family tab keeps drafts, cancels and retries failed confirmation',
+    (tester) async {
+      final data = fixture(locale: 'en');
+      data['categories'].add(
+        category('fq', type: 'question', family: true, locale: 'en'),
+      );
+      data['questions'].add(question('family', 'fq', locale: 'en'));
+      await pump(
+        tester,
+        english: true,
+        fetch: (t, l, f, e) => fixturePage(data, t, l, f, e),
+      );
+      await tap(tester, 'Question game');
+      await store.setCategories({'q'});
+      await tap(tester, 'Categories');
+      await tap(tester, 'Family mode');
+      expect(find.text('Category q'), findsNothing);
+      expect(find.widgetWithText(SwitchListTile, 'Show images'), findsNothing);
+      expect(find.byKey(const Key('createCustomCategory')), findsNothing);
+      await tap(tester, 'Category fq');
+      expect(store.setup.value.family, false);
+      expect(store.setup.value.categoryIds, {'q'});
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(store.setup.value.family, false);
+      expect(store.setup.value.categoryIds, {'q'});
+      await tap(tester, 'Categories');
+      await tap(tester, 'Family mode');
+      await tap(tester, 'Category fq');
+      file.failWrite = true;
+      await tap(tester, 'Confirm');
+      expect(find.byType(TabBar), findsOneWidget);
+      expect(store.setup.value.family, false);
+      expect(store.setup.value.categoryIds, {'q'});
+      file.failWrite = false;
+      await tap(tester, 'Confirm');
+      expect(store.setup.value.family, true);
+      expect(store.setup.value.categoryIds, {'fq'});
+      await tap(tester, 'Categories');
+      expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 1);
+    },
+  );
+
   for (final scale in [1.0, 2.0]) {
     testWidgets('category tabs fit a narrow screen at text scale $scale', (
       tester,
@@ -297,10 +341,10 @@ void main() {
         expect(toggle, findsNothing);
         await store.setGameType('question');
         await tester.pumpAndSettle();
-        expect(store.setup.value.family, false);
+        expect(store.setup.value.family, true);
         await tap(tester, english ? 'Categories' : 'Danh mục');
-        expect(find.byType(TabBar), findsNothing);
-        expect(find.byType(TabBarView), findsNothing);
+        expect(find.byType(TabBar), findsOneWidget);
+        expect(find.byType(TabBarView), findsOneWidget);
         expect(toggle, findsNothing);
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
@@ -310,7 +354,7 @@ void main() {
         expect(tester.widget<SwitchListTile>(toggle).value, true);
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
-        expect(store.setup.value.family, false);
+        expect(store.setup.value.family, true);
       },
     );
   }

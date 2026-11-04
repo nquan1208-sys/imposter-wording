@@ -72,7 +72,6 @@ function update(key: keyof CategoryFormState, value: string | number | boolean) 
   if (unsaved.busy || reloading.value) return
   if (key === 'name' || key === 'description' || key === 'status') Object.assign(drafts[selectedLocale.value]!, { [key]: value })
   else if (key !== 'locale') Object.assign(shared, { [key]: value })
-  if (key === 'game_type' && value === 'question') shared.is_family_friendly = false
   if (key === 'slug') slugEdited.value = true
   if (key === 'name' && !editing.value && !slugEdited.value) shared.slug = slugFromName(String(value))
   if (!conflict.value) mutation.reset()

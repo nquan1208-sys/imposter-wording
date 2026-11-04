@@ -26,7 +26,10 @@ class QuestionGameSession {
     if (setup.gameType != 'question' || !GameAssignment.validSetup(setup)) {
       return null;
     }
-    final pairs = store.eligibleQuestions(categoryIds: setup.categoryIds);
+    final pairs = store.eligibleQuestions(
+      family: setup.family,
+      categoryIds: setup.categoryIds,
+    );
     if (pairs.isEmpty) return null;
     final rng = random ?? Random();
     final prompt = pairs[rng.nextInt(pairs.length)];

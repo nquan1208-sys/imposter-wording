@@ -33,6 +33,35 @@ void main() {
   });
 
   test(
+    'Family excludes custom questions, prunes selections and blocks empty sessions',
+    () async {
+      final id = await store.createCustomQuestionCategory('Mine', pair());
+      await store.setCategories({id!});
+      expect(QuestionGameSession.create(store)!.prompt.categoryId, id);
+      file.failWrite = true;
+      expect(await store.setCategories({}, family: true), false);
+      expect(store.setup.value.family, false);
+      expect(store.setup.value.categoryIds, {id});
+      file.failWrite = false;
+      await store.save();
+      expect(store.setup.value.family, false);
+      expect(await store.setCategories({}, family: true), true);
+      expect(store.eligibleQuestions(family: true), isEmpty);
+      expect(store.eligibleQuestions(family: true, categoryIds: {id}), isEmpty);
+      expect(store.categoryCounts(family: true, gameType: 'question'), isEmpty);
+      expect(QuestionGameSession.create(store), isNull);
+      await store.setCategories({id});
+      expect(store.setup.value.categoryIds, isEmpty);
+      expect(store.setup.value.customQuestionCategories.single.id, id);
+      await store.restore();
+      expect(store.setup.value.family, true);
+      expect(QuestionGameSession.create(store), isNull);
+      await store.setFamily(false);
+      expect(store.eligibleQuestions(family: false), hasLength(2));
+    },
+  );
+
+  test(
     'single pairs trim, differ ignoring case, and allow shared counterparts',
     () {
       final entries = parseQuestionPairs('  A  ', 'B');
@@ -105,7 +134,10 @@ void main() {
         'custom-question-3',
       );
       expect(store.setup.value.nextCustomQuestionCategoryId, 4);
-      expect(store.eligibleQuestions().map((q) => q.id).toSet().length, 2);
+      expect(
+        store.eligibleQuestions(family: false).map((q) => q.id).toSet().length,
+        2,
+      );
     },
   );
 
@@ -186,7 +218,7 @@ void main() {
             .categoryCounts(family: false, gameType: 'question')
             .values
             .fold(0, (a, b) => a + b),
-        store.eligibleQuestions().length,
+        store.eligibleQuestions(family: false).length,
       );
       await store.setCategories({id});
       final session = QuestionGameSession.create(store, random: Random(1))!;
@@ -217,7 +249,7 @@ void main() {
         false,
       );
       await store.setGameType('question');
-      expect(store.eligibleQuestions().length, 1);
+      expect(store.eligibleQuestions(family: false).length, 1);
     },
   );
 
@@ -249,7 +281,9 @@ void main() {
       };
       await store.restore();
       expect(
-        store.eligibleQuestions().where((q) => q.contentLocale == 'en'),
+        store
+            .eligibleQuestions(family: false)
+            .where((q) => q.contentLocale == 'en'),
         isEmpty,
       );
       expect(

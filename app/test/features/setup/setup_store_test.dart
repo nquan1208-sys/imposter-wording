@@ -55,7 +55,7 @@ void main() async {
   );
 
   test(
-    'legacy question family setup restores in regular mode while remembering images',
+    'question family setup restores and stays enabled across game types',
     () async {
       file.data = {
         ...GameSetup.defaults().toJson(),
@@ -64,10 +64,10 @@ void main() async {
         'showWordImages': true,
       };
       await store.restore();
-      expect(store.setup.value.family, false);
+      expect(store.setup.value.family, true);
       expect(store.setup.value.showWordImages, true);
       await store.setGameType('word');
-      expect(store.setup.value.family, false);
+      expect(store.setup.value.family, true);
     },
   );
   setUp(() async {

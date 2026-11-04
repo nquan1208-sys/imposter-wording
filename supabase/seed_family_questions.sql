@@ -1,11 +1,10 @@
--- Original family question pairs, available through normal question categories.
--- The current schema reserves is_family_friendly for word categories.
+-- Original family question pairs, available in the Family tab.
 begin;
 
-insert into public.game_categories (id, game_type, slug, sort_order, is_active) values
-  ('5eed0003-0000-0000-0000-000000000001', 'question', 'family-mealtime', 20, true),
-  ('5eed0003-0000-0000-0000-000000000002', 'question', 'family-together', 21, true),
-  ('5eed0003-0000-0000-0000-000000000003', 'question', 'family-imagination', 22, true)
+insert into public.game_categories (id, game_type, slug, sort_order, is_active, is_family_friendly) values
+  ('5eed0003-0000-0000-0000-000000000001', 'question', 'family-mealtime', 20, true, true),
+  ('5eed0003-0000-0000-0000-000000000002', 'question', 'family-together', 21, true, true),
+  ('5eed0003-0000-0000-0000-000000000003', 'question', 'family-imagination', 22, true, true)
 on conflict (id) do nothing;
 
 insert into public.game_category_translations (category_id, locale, name, description, status) values

@@ -6,7 +6,7 @@ do $$
 begin
   if (select count(*) from public.game_categories
       where id::text like '5eed0003-%' and game_type = 'question' and is_active
-        and not is_family_friendly) <> 3 then
+        and is_family_friendly) <> 3 then
     raise exception 'Expected 3 visible family question categories';
   end if;
   if (select count(*) from public.game_category_translations

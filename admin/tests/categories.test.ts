@@ -88,7 +88,7 @@ test('category conflicts support current HTTP and legacy SQL codes', () => {
   for (const code of ['PT409', '40001']) assert.equal(categoryError({ code }), 'categories.errors.conflict')
 })
 
-test('family category payload is shared and question categories clear the flag', () => {
+test('family category payload is shared by both game types', () => {
   assert.equal(categoryPayload({ ...form, is_family_friendly: true }).is_family_friendly, true)
-  assert.equal(categoryPayload({ ...form, game_type: 'question', is_family_friendly: true }).is_family_friendly, false)
+  assert.equal(categoryPayload({ ...form, game_type: 'question', is_family_friendly: true }).is_family_friendly, true)
 })

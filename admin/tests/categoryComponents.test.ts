@@ -33,7 +33,7 @@ test('category components render backend rows, immutable fields and destructive 
     assert.match(formHtml, /<button[^>]*role="combobox"[^>]* disabled/)
     assert.match(formHtml, /Chế độ gia đình/)
     const questionForm = await render(form, { languages, translations: [], form: { ...row, game_type: 'question', is_family_friendly: false, status: 'draft', description: '', sort_order: 0 } })
-    assert.doesNotMatch(questionForm, /Chế độ gia đình/)
+    assert.match(questionForm, /Chế độ gia đình/)
     assert.match(formHtml, /role="alert"/)
     assert.equal((formHtml.match(/type="submit"/g) || []).length, 1)
     assert.doesNotMatch(formHtml, />Xuất bản<|>Lưu trữ</)

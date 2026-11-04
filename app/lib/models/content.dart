@@ -45,8 +45,7 @@ class ContentCategory {
       isFamilyFriendly = row['is_family_friendly'] as bool? ?? false,
       name = requiredText(translation(row, contentLocale), 'name'),
       description = translation(row, contentLocale)['description'] as String? {
-    if ((isFamilyFriendly && gameType != 'word') ||
-        !const ['word', 'question'].contains(gameType) ||
+    if (!const ['word', 'question'].contains(gameType) ||
         row['is_active'] != true ||
         sortOrder < 0 ||
         translation(row, contentLocale)['category_id'] != id) {

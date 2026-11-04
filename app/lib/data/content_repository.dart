@@ -184,13 +184,25 @@ class ContentRepository extends StoreBase {
         [];
   }
 
-  List<QuestionPair> eligibleQuestions({Set<String> categoryIds = const {}}) =>
-      snapshot.value?.questions
-          .where(
-            (q) => (categoryIds.isEmpty || categoryIds.contains(q.categoryId)),
-          )
-          .toList() ??
-      [];
+  List<QuestionPair> eligibleQuestions({
+    required bool family,
+    Set<String> categoryIds = const {},
+  }) {
+    final familyCategories =
+        snapshot.value?.categories
+            .where((c) => c.gameType == 'question' && c.isFamilyFriendly)
+            .map((c) => c.id)
+            .toSet() ??
+        <String>{};
+    return snapshot.value?.questions
+            .where(
+              (q) =>
+                  (!family || familyCategories.contains(q.categoryId)) &&
+                  (categoryIds.isEmpty || categoryIds.contains(q.categoryId)),
+            )
+            .toList() ??
+        [];
+  }
 
   Map<ContentCategory, int> categoryCounts({
     required bool family,
@@ -198,7 +210,7 @@ class ContentRepository extends StoreBase {
   }) {
     final counts = <String, int>{};
     final ids = gameType == 'question'
-        ? eligibleQuestions().map((q) => q.categoryId)
+        ? eligibleQuestions(family: family).map((q) => q.categoryId)
         : eligibleWords(family: family).map((w) => w.categoryId);
     for (final id in ids) {
       counts.update(id, (n) => n + 1, ifAbsent: () => 1);

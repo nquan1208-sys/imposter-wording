@@ -1,7 +1,8 @@
 # Nghiên cứu chế độ gia đình cho trò câu hỏi
 
-Ngày nghiên cứu: 03/11/2026. Phần đã triển khai: dữ liệu mẫu local và kiểm tra SQL.
-Đề xuất luật và mở rộng bộ lọc bên dưới chưa được triển khai.
+Ngày nghiên cứu: 03/11/2026. Cập nhật triển khai: 04/11/2026.
+Đã có dữ liệu mẫu, bộ lọc Family cho trò câu hỏi, điều khiển admin và kiểm tra tự động.
+Luật chơi giữ nguyên; đánh giá độ phù hợp và cân bằng bằng chơi thử vẫn đang chờ.
 
 ## Tham khảo và hướng chọn
 
@@ -35,9 +36,11 @@ khoảng 10 tuổi trở lên; đây là giả thuyết cần chơi thử, khôn
 | Gia đình · Tưởng tượng ngộ nghĩnh | `family-imagination` | 5 |
 
 Mỗi cặp và danh mục có bản Việt/Anh đã publish, dùng chung ID. Trong trò câu hỏi,
-chọn riêng các danh mục trên để chơi bộ gia đình. Nếu không chọn danh mục, app vẫn
-trộn với các câu hỏi khác. Cần kết nối backend local và tải mới nội dung; cache offline
-cũ chưa có dữ liệu vừa thêm.
+vào Danh mục → Chế độ gia đình → Xác nhận. Không chọn riêng danh mục nghĩa là
+chơi toàn bộ danh mục được gắn cờ Family; không trộn câu hỏi ngoài bộ lọc.
+Tab Tất cả danh mục vẫn cho chơi nội dung thông thường và nội dung tự tạo.
+Cần kết nối backend local và tải mới nội dung; cache cũ thiếu cờ Family sẽ cho
+kết quả rỗng trong Family thay vì dùng nội dung chưa được duyệt.
 
 Seed nằm ở `supabase/seed_family_questions.sql`, chạy trong một transaction,
 ID cố định và `ON CONFLICT ... DO NOTHING` để giữ chỉnh sửa đã có. File được khai
@@ -47,6 +50,7 @@ báo sau `seed.sql` trong `config.toml` nên DB mới cũng nhận dữ liệu n
 Nạp thêm vào stack local đang chạy, không reset và không nạp lại seed khác:
 
 ```bash
+rtk proxy supabase migration up --local
 rtk proxy sh -c 'docker exec -i supabase_db_imposter-wording psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/seed_family_questions.sql'
 rtk proxy sh -c 'docker exec -i supabase_db_imposter-wording psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/family_question_seed.sql'
 ```
@@ -54,24 +58,33 @@ rtk proxy sh -c 'docker exec -i supabase_db_imposter-wording psql -U postgres -d
 Kiểm tra SQL dùng role `anon`: 3 danh mục, mỗi mục 5 cặp easy, đủ bản dịch publish
 ở cả hai ngôn ngữ. Chạy lại seed không thêm trùng, không cập nhật nội dung cũ.
 
-## Phạm vi cần sửa nếu mở rộng thành bộ lọc Family
+## Bộ lọc Family đã triển khai
 
-Hiện `family_word_categories_only` cấm gắn cờ Family cho câu hỏi.
-Vì vậy các danh mục mới giữ `is_family_friendly = false`; tên/slug chỉ giúp chọn
-thủ công, không phải hợp đồng lọc. Không thể chỉ bật cờ trong DB.
+- DB: migration `20261104082852_question_family_mode.sql` bỏ CHECK
+  `family_word_categories_only`, bật cờ cho đúng 3 ID/slug seed nêu trên nếu đã tồn tại.
+  Seed mới tạo danh mục có cờ Family; chạy lại không ghi đè chỉnh sửa đã có.
+  RPC, RLS và cấu trúc types giữ nguyên vì đã hỗ trợ cờ ở cấp danh mục.
+- Admin: form cho bật/tắt Family với cả word và question, giữ cờ khi đổi loại game;
+  danh sách và bộ lọc dùng lại cột/RPC có sẵn.
+- App: hai loại game dùng chung tab Tất cả/Family và cơ chế bản nháp → xác nhận.
+  Lọc từ danh mục đã duyệt xuyên suốt số lượng, lựa chọn và tạo phiên chơi.
+  Family được lưu và giữ khi chuyển game hoặc đổi ngôn ngữ; danh mục không còn
+  hợp lệ được bỏ khỏi lựa chọn. Không có nội dung Family thì không bắt đầu ván.
+- Câu hỏi tự tạo không được tự gắn cờ; chỉ hiện và tham gia trò chơi ở chế độ
+  Tất cả. Tab Family của câu hỏi không có nút tạo danh mục. Nội dung đã lưu vẫn còn.
+  Tuỳ chọn hiển thị ảnh ở tab Family tiếp tục dành riêng cho trò từ.
 
-1. DB: bỏ hoặc thay CHECK giới hạn loại game; dùng lại cờ ở danh mục, không thêm
-   cờ từng prompt. Kiểm tra RPC danh mục, RLS và sinh lại types nếu cần.
-2. Admin: bỏ điều kiện ép cờ false khi `game_type = question` trong
-   `admin/src/utils/categories.ts`; cho hiển thị điều khiển Family ở form và danh sách.
-3. App: bỏ giới hạn Family chỉ ở word trong `GameSetup`, thêm lọc ở
-   `ContentRepository.eligibleQuestions` và các caller/count trong `SetupStore`;
-   mở chọn tab cho câu hỏi theo cơ chế bản nháp/xác nhận sẵn có.
-4. Quyết định cách xử lý danh mục câu hỏi tự tạo: hiện không có cờ Family;
-   không tự coi nội dung người dùng nhập là đã duyệt.
-5. Kiểm tra chuyển game, phục hồi cấu hình/cache cũ, đổi ngôn ngữ, danh mục rỗng,
-   hủy lựa chọn và lỗi lưu; Family phải không lọt câu hỏi ngoài danh mục được duyệt.
+Migration đã áp dụng trên DB local, không reset dữ liệu. Khi triển khai môi trường
+khác, phát hành app có model mới trước khi bật cờ Family cho câu hỏi: app cũ từ chối
+snapshot có danh mục question mang cờ này. Chưa triển khai remote/production.
 
-Trước khi mở rộng, chơi thử 15 cặp: ghi cặp khó hiểu, đáp án thường gặp và trường
-hợp người ẩn vai lộ chỉ vì kiểu đáp án. Đánh giá nội dung với cả trẻ em lẫn người lớn;
-không suy từ nhãn tuổi của game tham khảo rằng bộ câu hỏi đã phù hợp mọi gia đình.
+Các kiểm tra tự động bao gồm lọc category (không tin cờ prompt cũ), cache thiếu cờ,
+VI/EN, đổi ngôn ngữ, chuyển game, lưu/khôi phục Family, danh mục rỗng, loại câu hỏi
+tự tạo, hủy bản nháp, lỗi lưu và thử lại; SQL kiểm tra quyền anon/admin và RPC.
+
+## Chơi thử còn chờ
+
+Cần chơi thử 15 cặp với nhóm có trẻ em và người lớn: ghi cặp khó hiểu, đáp án thường
+gặp và trường hợp người ẩn vai lộ chỉ vì kiểu đáp án. Chưa có kết quả chơi thử để
+xác nhận độ cân bằng hoặc độ tuổi phù hợp; nhãn `easy` chỉ là đánh giá biên tập.
+Không suy từ nhãn tuổi của game tham khảo rằng bộ câu hỏi đã phù hợp mọi gia đình.

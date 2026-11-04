@@ -32,12 +32,14 @@ class FamilyCategoriesScreen extends StatelessWidget {
     saveFailed: saveFailed,
     family: true,
     onCreateCustom: onCreateCustom,
-    header: Card(
-      child: SwitchListTile(
-        title: Text(AppLocalizations.of(context).showWordImages),
-        value: showWordImages,
-        onChanged: store.editable ? onImagesChanged : null,
-      ),
-    ),
+    header: store.setup.value.gameType == 'word'
+        ? Card(
+            child: SwitchListTile(
+              title: Text(AppLocalizations.of(context).showWordImages),
+              value: showWordImages,
+              onChanged: store.editable ? onImagesChanged : null,
+            ),
+          )
+        : null,
   );
 }

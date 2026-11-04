@@ -27,7 +27,7 @@ void main() {
       expect(repo.cached.value, true);
       expect(repo.eligibleWords(family: false), hasLength(3));
       expect(repo.eligibleWords(family: true), isEmpty);
-      expect(repo.eligibleQuestions(), hasLength(1));
+      expect(repo.eligibleQuestions(family: false), hasLength(1));
     },
   );
 
@@ -43,6 +43,56 @@ void main() {
     );
     addTearDown(repo.dispose);
     return repo;
+  }
+
+  for (final locale in ['vi', 'en']) {
+    test(
+      'question Family filters category approval in live and cached $locale content',
+      () async {
+        final data = fixture(locale: locale);
+        data['categories'].add(
+          category('fq', type: 'question', family: true, locale: locale),
+        );
+        data['categories'].add(
+          category('empty-fq', type: 'question', family: true, locale: locale),
+        );
+        data['questions'].add(question('family', 'fq', locale: locale));
+        data['questions'][0]['is_family_friendly'] = true;
+        final cache = MemoryStorage();
+        final repo = ContentRepository(
+          contentLocale: locale,
+          cache: cache,
+          fetchPage: (t, l, f, e) => fixturePage(data, t, l, f, e),
+        );
+        addTearDown(repo.dispose);
+        await repo.load();
+        final offline = ContentRepository(
+          contentLocale: locale,
+          cache: cache,
+          fetchPage: (t, l, f, e) async =>
+              throw const SocketException('offline'),
+        );
+        addTearDown(offline.dispose);
+        await offline.load();
+        for (final source in [repo, offline]) {
+          expect(source.eligibleQuestions(family: false), hasLength(2));
+          expect(source.eligibleQuestions(family: true).map((q) => q.id), [
+            'family',
+          ]);
+          expect(
+            source.eligibleQuestions(family: true, categoryIds: {'q'}),
+            isEmpty,
+          );
+          expect(
+            source
+                .categoryCounts(family: true, gameType: 'question')
+                .keys
+                .map((c) => c.id),
+            ['fq'],
+          );
+        }
+      },
+    );
   }
 
   test(

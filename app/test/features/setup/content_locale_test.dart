@@ -80,6 +80,27 @@ void main() {
   });
 
   test(
+    'question Family stays filtered when a translated category loses approval',
+    () async {
+      data['vi']!['categories'][3]['is_family_friendly'] = true;
+      await store.content.load();
+      await store.setGameType('question');
+      await store.setCategories({'q'}, family: true);
+      expect(QuestionGameSession.create(store)!.prompt.categoryId, 'q');
+      await store.setContentLocale('en');
+      await store.content.load();
+      await store.pendingWrites;
+      expect(store.setup.value.family, true);
+      expect(store.setup.value.categoryIds, isEmpty);
+      expect(QuestionGameSession.create(store), isNull);
+      await store.setContentLocale('vi');
+      await store.content.load();
+      await store.pendingWrites;
+      expect(QuestionGameSession.create(store)!.prompt.categoryId, 'q');
+    },
+  );
+
+  test(
     'write failure preserves complete setup and repository; retry commits locale',
     () async {
       await store.setPlayerCount(6);
@@ -184,6 +205,7 @@ void main() {
         expect(session.categoryName, startsWith('en '));
       }
       await store.setGameType('question');
+      await store.setFamily(false);
       await store.createCustomQuestionCategory('VI draft question', [
         CustomQuestionEntry('A', 'B'),
       ], contentLocale: 'vi');

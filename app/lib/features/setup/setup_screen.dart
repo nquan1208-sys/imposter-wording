@@ -82,7 +82,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         final setup = store.setup.value;
         final content = store.content;
         final count = setup.gameType == 'question'
-            ? store.eligibleQuestions(categoryIds: setup.categoryIds).length
+            ? store
+                  .eligibleQuestions(
+                    family: setup.family,
+                    categoryIds: setup.categoryIds,
+                  )
+                  .length
             : store
                   .eligibleWords(
                     family: setup.family,
