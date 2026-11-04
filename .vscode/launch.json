@@ -8,7 +8,10 @@
       "program": "${workspaceFolder}/app/lib/main.dart",
       "cwd": "${workspaceFolder}/app",
       "flutterMode": "debug",
-      "toolArgs": ["--dart-define=APP_ENV=local"]
+      "toolArgs": [
+        "--flavor",
+        "local"
+      ]
     },
     {
       "name": "Flutter Dev",
@@ -17,7 +20,10 @@
       "program": "${workspaceFolder}/app/lib/main.dart",
       "cwd": "${workspaceFolder}/app",
       "flutterMode": "debug",
-      "toolArgs": ["--dart-define=APP_ENV=dev"]
+      "toolArgs": [
+        "--flavor",
+        "dev"
+      ]
     },
     {
       "name": "Flutter Prod",
@@ -26,7 +32,10 @@
       "program": "${workspaceFolder}/app/lib/main.dart",
       "cwd": "${workspaceFolder}/app",
       "flutterMode": "debug",
-      "toolArgs": ["--dart-define=APP_ENV=prod"]
+      "toolArgs": [
+        "--flavor",
+        "prod"
+      ]
     }
   ]
 }

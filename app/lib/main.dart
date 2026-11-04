@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:untitled/data/game_providers.dart';
-import 'package:untitled/base/store/store_provider.dart';
 import 'package:untitled/config/app_config.dart';
 import 'package:untitled/base/dependency/app_service.dart';
 import 'package:untitled/base/dependency/router/utils/route_name.dart';
@@ -42,7 +41,6 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    unawaited(ref.read(StoreProvider.app).restore());
     if (Platform.isAndroid) recoverPicker();
   }
 
@@ -95,7 +93,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         ),
         onGenerateRoute: RoutePage.onGenerateRoute,
         navigatorKey: routerService.navigatorKey,
-        initialRoute: RouteName.landing,
+        initialRoute: RouteName.splash,
       ),
     );
   }

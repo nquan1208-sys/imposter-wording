@@ -1,5 +1,6 @@
 {
   "appTitle": "OddCue",
+  "startupError": "Unable to finish loading. Try again or continue to home.",
   "tagline": "Word game",
   "appDescription": "A party game of secret words and clever hints. Find the imposter before they blend in!",
   "start": "Start",

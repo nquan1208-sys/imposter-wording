@@ -80,6 +80,7 @@ flutter_gen:
 
 # The following section is specific to Flutter packages.
 flutter:
+  default-flavor: local
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -94,6 +95,7 @@ flutter:
           weight: 600
   uses-material-design: true
   assets:
+    - assets/branding/oddcue-icon.png
     - env/.env.local
     - env/.env.dev
     - env/.env.prod
