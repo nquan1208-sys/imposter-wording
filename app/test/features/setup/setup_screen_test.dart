@@ -1161,6 +1161,15 @@ void main() {
       (data['words'] as List).removeWhere((w) => w['category_id'] == 'b');
       content.snapshot.value = ContentSnapshot.fromJson(data, 'en');
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.textContaining('Unavailable categories were removed.'),
+        -180,
+        scrollable: find
+            .byWidgetPredicate(
+              (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+            )
+            .last,
+      );
       expect(
         find.textContaining('Unavailable categories were removed.'),
         findsOneWidget,

@@ -32,6 +32,48 @@ void main() {
     content.dispose();
   });
 
+  test('question editing and deletion are atomic and retain IDs', () async {
+    final id = (await store.createCustomQuestionCategory('Mine', pair()))!;
+    await store.setCategories({id});
+    expect(
+      await store.updateCustomQuestionCategory(
+        id,
+        'Mine',
+        pair('New?', 'Other?'),
+      ),
+      isTrue,
+    );
+    expect(store.setup.value.categoryIds, {id});
+    expect(await store.updateCustomQuestionCategory(id, 'Mine', []), isFalse);
+    file.failWrite = true;
+    expect(
+      await store.updateCustomQuestionCategory(id, 'Changed', pair()),
+      isFalse,
+    );
+    expect(await store.deleteCustomCategory(id), isFalse);
+    expect(
+      store
+          .setup
+          .value
+          .customQuestionCategories
+          .single
+          .pairs
+          .single
+          .civilianQuestion,
+      'New?',
+    );
+    file.failWrite = false;
+    await store.restore();
+    expect(store.setup.value.customQuestionCategories.single.id, id);
+    expect(await store.deleteCustomCategory(id), isTrue);
+    expect(store.setup.value.categoryIds, isEmpty);
+    expect(GameSetup.fromJson(file.data!).customQuestionCategories, isEmpty);
+    expect(
+      await store.createCustomQuestionCategory('Mine', pair()),
+      'custom-question-2',
+    );
+  });
+
   test(
     'Family excludes custom questions, prunes selections and blocks empty sessions',
     () async {

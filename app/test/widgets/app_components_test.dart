@@ -250,6 +250,37 @@ void main() {
     },
   );
 
+  testWidgets('uniform grid height applies across every row', (tester) async {
+    await tester.pumpWidget(
+      app(
+        const Scaffold(
+          body: SingleChildScrollView(
+            child: AppCardGrid(
+              itemHeight: 260,
+              children: [
+                SizedBox(key: Key('shortCard'), child: Text('Short')),
+                SizedBox(
+                  key: Key('longCard'),
+                  child: Text(
+                    'A long category name that needs truncation across multiple lines',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SizedBox(key: Key('lastCard'), child: Text('Last')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    final first = tester.getSize(find.byKey(const Key('shortCard')));
+    expect(first.height, 260);
+    expect(tester.getSize(find.byKey(const Key('longCard'))), first);
+    expect(tester.getSize(find.byKey(const Key('lastCard'))), first);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final config in [
     (320.0, 1.0, true),
     (375.0, 1.0, false),

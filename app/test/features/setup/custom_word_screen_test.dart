@@ -28,6 +28,7 @@ import '../../data/memory_app_settings_storage.dart';
 class FakeImagePicker extends ImagePicker {
   XFile? selected = XFile('/library/photo.png');
   Object? error;
+  (double?, double?, int?)? requestedSize;
   Completer<XFile?>? pending;
   @override
   Future<XFile?> pickImage({
@@ -39,6 +40,7 @@ class FakeImagePicker extends ImagePicker {
     bool requestFullMetadata = true,
   }) async {
     assert(!requestFullMetadata);
+    requestedSize = (maxWidth, maxHeight, imageQuality);
     if (error != null) throw error!;
     return pending == null ? selected : pending!.future;
   }
@@ -216,6 +218,42 @@ void main() {
     await tap(tester, english ? 'Confirm' : 'Xác nhận');
   }
 
+  testWidgets('edit keeps selection and delete requires confirmation', (
+    tester,
+  ) async {
+    await pump(tester);
+    final id = (await store.createCustomWordCategory('Office', [
+      'Apple',
+    ], family: false))!;
+    await store.setCategories({id});
+    await picker(tester);
+    final menu = find.byTooltip('Category actions');
+    await Scrollable.ensureVisible(tester.element(menu), alignment: 0.3);
+    await tester.pumpAndSettle();
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+    await tap(tester, 'Edit category');
+    expect(find.text('Office'), findsOneWidget);
+    expect(find.text('Apple'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, 'Renamed');
+    await tap(tester, 'Save category');
+    expect(store.setup.value.customWordCategories.single.id, id);
+    expect(store.setup.value.categoryIds, {id});
+    await Scrollable.ensureVisible(tester.element(menu), alignment: 0.3);
+    await tester.pumpAndSettle();
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+    await tap(tester, 'Delete');
+    await tap(tester, 'Cancel');
+    expect(store.setup.value.customWordCategories, hasLength(1));
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+    await tap(tester, 'Delete');
+    await tap(tester, 'Delete');
+    expect(store.setup.value.customWordCategories, isEmpty);
+    expect(store.setup.value.categoryIds, isEmpty);
+  });
+
   testWidgets('late import after forced disposal releases its orphan', (
     tester,
   ) async {
@@ -245,10 +283,12 @@ void main() {
       await tap(tester, 'Add image');
       await tap(tester, 'Photo library');
       expect(find.byType(LocalPromptImage), findsOneWidget);
+      expect(imagePicker.requestedSize, (1280.0, 1280.0, 85));
       imagePicker.selected = null;
       await tap(tester, 'Replace image');
       await tap(tester, 'Camera');
       expect(images.next, 1);
+      expect(imagePicker.requestedSize, (1280.0, 1280.0, 85));
       imagePicker.selected = XFile('/library/photo.png');
       images.error = const LocalImageException(oversized: true);
       await tap(tester, 'Replace image');
@@ -272,7 +312,7 @@ void main() {
         store.setup.value.customWordCategories.single.imageIds['Apple'],
         '00000000000000000000000000000002.img',
       );
-      expect(find.text('Includes images'), findsOneWidget);
+      expect(find.byTooltip('Includes images'), findsOneWidget);
       await tap(tester, 'Create custom category');
       await word(tester, 'Other');
       await tap(tester, 'Add image');

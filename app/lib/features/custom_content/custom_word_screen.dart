@@ -39,10 +39,12 @@ Future<bool> _discard(BuildContext context) async {
 class CustomWordScreen extends ConsumerStatefulWidget {
   final bool family;
   final String gameType;
+  final String? categoryId;
   const CustomWordScreen({
     super.key,
     required this.family,
     this.gameType = 'word',
+    this.categoryId,
   });
 
   @override
@@ -64,20 +66,48 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
   });
   final pairs = <CustomQuestionEntry>[];
   bool get question => widget.gameType == 'question';
-  bool get needsFamily => !question && widget.family;
+  bool get needsFamily =>
+      !question && widget.family && widget.categoryId == null;
   bool get hasEntries => question ? pairs.isNotEmpty : words.isNotEmpty;
   bool suitable = false,
       busy = false,
       failed = false,
       exiting = false,
       asking = false;
-  bool get dirty => name.text.isNotEmpty || hasEntries || suitable;
+  late String initialDraft;
+  String get draft => jsonEncode([
+    name.text,
+    words,
+    imageIds,
+    pairs.map((p) => p.toJson()).toList(),
+    suitable,
+  ]);
+  bool get dirty => draft != initialDraft;
 
   @override
   void initState() {
     super.initState();
     images = ref.read(localImageStoreProvider);
-    contentLocale = ref.read(setupStoreProvider).setup.value.contentLocale;
+    final setup = ref.read(setupStoreProvider).setup.value;
+    contentLocale = setup.contentLocale;
+    if (widget.categoryId != null) {
+      if (question) {
+        final c = setup.customQuestionCategories.firstWhere(
+          (c) => c.id == widget.categoryId,
+        );
+        name.text = c.name;
+        pairs.addAll(c.pairs);
+      } else {
+        final c = setup.customWordCategories.firstWhere(
+          (c) => c.id == widget.categoryId,
+        );
+        name.text = c.name;
+        words.addAll(c.words);
+        imageIds.addAll(c.imageIds);
+      }
+      retainImages();
+    }
+    initialDraft = draft;
   }
 
   @override
@@ -148,6 +178,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
           name.text,
           gameType: widget.gameType,
           contentLocale: contentLocale,
+          excludingId: widget.categoryId,
         ) ||
         (needsFamily && !suitable)) {
       setState(() {});
@@ -157,6 +188,31 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
       busy = true;
       failed = false;
     });
+    if (widget.categoryId != null) {
+      final saved = question
+          ? await store.updateCustomQuestionCategory(
+              widget.categoryId!,
+              name.text,
+              pairs,
+            )
+          : await store.updateCustomWordCategory(
+              widget.categoryId!,
+              name.text,
+              words,
+              imageIds: imageIds,
+            );
+      if (!mounted) return;
+      if (saved) {
+        close(widget.categoryId);
+      } else {
+        setState(() {
+          busy = false;
+          failed = true;
+        });
+        scroll.jumpTo(0);
+      }
+      return;
+    }
     final id = question
         ? await store.createCustomQuestionCategory(
             name.text,
@@ -191,6 +247,7 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
           name.text,
           gameType: widget.gameType,
           contentLocale: contentLocale,
+          excludingId: widget.categoryId,
         );
     return PopScope(
       canPop: exiting,
@@ -199,7 +256,11 @@ class _CustomWordScreenState extends ConsumerState<CustomWordScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l.createCustomCategory),
+          title: Text(
+            widget.categoryId == null
+                ? l.createCustomCategory
+                : l.editCustomCategory,
+          ),
           leading: BackButton(onPressed: leave),
         ),
         bottomNavigationBar: AppActionBar(

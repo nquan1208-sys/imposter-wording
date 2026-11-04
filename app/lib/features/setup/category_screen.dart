@@ -99,6 +99,57 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
     }
   }
 
+  Future<void> editCustom(String id) async {
+    final store = ref.read(setupStoreProvider);
+    if (!store.editable) return;
+    await ref
+        .read(AppService.router)
+        .push<String>(
+          RouteInput.customWords(
+            family: family,
+            gameType: store.setup.value.gameType,
+            categoryId: id,
+          ),
+        );
+  }
+
+  Future<void> deleteCustom(String id) async {
+    final store = ref.read(setupStoreProvider);
+    if (!store.editable) return;
+    final name = store.categories.firstWhere((c) => c.id == id).name;
+    final l = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l.deleteCustomCategory),
+        content: Text(l.deleteCustomCategoryConfirm(name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted || !store.editable) return;
+    final saved = await store.deleteCustomCategory(id);
+    if (!mounted) return;
+    if (saved) {
+      setState(() {
+        selected.remove(id);
+        saveFailed = false;
+      });
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l.customDeleteError)));
+    }
+  }
+
   @override
   void dispose() {
     stopLocaleEffect();
@@ -126,6 +177,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
           selectionRemoved: selectionRemoved,
           saveFailed: saveFailed,
           onCreateCustom: createCustom,
+          onEditCustom: editCustom,
+          onDeleteCustom: deleteCustom,
         );
         return Scaffold(
           appBar: AppBar(title: Text(l.categories)),
@@ -221,6 +274,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen>
                         showWordImages: showWordImages,
                         onImagesChanged: (value) =>
                             setState(() => showWordImages = value),
+                        onEditCustom: editCustom,
+                        onDeleteCustom: deleteCustom,
                         onCreateCustom: store.setup.value.gameType == 'word'
                             ? createCustom
                             : null,

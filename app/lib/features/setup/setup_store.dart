@@ -471,6 +471,7 @@ class SetupStore extends StoreBase {
     GameSetup? candidate,
     String gameType = 'word',
     String? contentLocale,
+    String? excludingId,
   }) {
     final normalized = name.trim().toLowerCase();
     final current = candidate ?? setup.value;
@@ -483,6 +484,7 @@ class SetupStore extends StoreBase {
     return normalized.isNotEmpty &&
         !catalog.any(
           (c) =>
+              c.id != excludingId &&
               c.gameType == gameType &&
               c.contentLocale == locale &&
               c.name.trim().toLowerCase() == normalized,
@@ -581,6 +583,91 @@ class SetupStore extends StoreBase {
     }, pinnedImages: attachments.values);
     return saved ? id : null;
   }
+
+  Future<bool> updateCustomWordCategory(
+    String id,
+    String name,
+    List<String> words, {
+    Map<String, String> imageIds = const {},
+  }) {
+    final entries = uniqueWords(words);
+    final attachments = Map<String, String>.of(imageIds);
+    return _mutate((current) {
+      final old = current.customWordCategories.firstWhere((c) => c.id == id);
+      if (!validCustomCategoryName(
+        name,
+        candidate: current,
+        contentLocale: old.contentLocale,
+        excludingId: id,
+      )) {
+        throw const FormatException('Invalid custom category');
+      }
+      final updated = CustomWordCategory(
+        id: id,
+        name: name.trim(),
+        contentLocale: old.contentLocale,
+        isFamilyFriendly: old.isFamilyFriendly,
+        words: entries,
+        imageIds: attachments,
+      );
+      return current.copyWith(
+        customWordCategories: [
+          for (final c in current.customWordCategories)
+            c.id == id ? updated : c,
+        ],
+      );
+    }, pinnedImages: attachments.values);
+  }
+
+  Future<bool> updateCustomQuestionCategory(
+    String id,
+    String name,
+    List<CustomQuestionEntry> pairs,
+  ) {
+    final entries = List<CustomQuestionEntry>.of(pairs);
+    return _mutate((current) {
+      final old = current.customQuestionCategories.firstWhere(
+        (c) => c.id == id,
+      );
+      if (!validCustomCategoryName(
+        name,
+        candidate: current,
+        gameType: 'question',
+        contentLocale: old.contentLocale,
+        excludingId: id,
+      )) {
+        throw const FormatException('Invalid custom category');
+      }
+      final updated = CustomQuestionCategory(
+        id: id,
+        name: name.trim(),
+        contentLocale: old.contentLocale,
+        pairs: entries,
+      );
+      return current.copyWith(
+        customQuestionCategories: [
+          for (final c in current.customQuestionCategories)
+            c.id == id ? updated : c,
+        ],
+      );
+    }, pinnedImages: entries.map((p) => p.imageId).whereType<String>());
+  }
+
+  Future<bool> deleteCustomCategory(String id) => _mutate((current) {
+    if (!current.customWordCategories.any((c) => c.id == id) &&
+        !current.customQuestionCategories.any((c) => c.id == id)) {
+      throw const FormatException('Unknown custom category');
+    }
+    return current.copyWith(
+      customWordCategories: current.customWordCategories
+          .where((c) => c.id != id)
+          .toList(),
+      customQuestionCategories: current.customQuestionCategories
+          .where((c) => c.id != id)
+          .toList(),
+      categoryIds: current.categoryIds.where((value) => value != id).toSet(),
+    );
+  });
 
   Future<bool> clearCustomCategories() => _mutate(
     (current) => current.copyWith(

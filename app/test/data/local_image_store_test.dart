@@ -92,6 +92,78 @@ void main() {
     },
   );
 
+  test(
+    'edit and delete prune only unreferenced committed attachments',
+    () async {
+      final file = MemoryStorage();
+      images = LocalImageStore(
+        directory: () async => root,
+        inventory: () async => file.data == null
+            ? {}
+            : GameSetup.fromJson(file.data!).localImageIds,
+      );
+      final content = ContentRepository(
+        cache: MemoryStorage(),
+        fetchPage: (t, l, f, e) async => [],
+      );
+      final setup = SetupStore(content: content, file: file, images: images);
+      addTearDown(() {
+        setup.dispose();
+        content.dispose();
+      });
+      await setup.restore();
+      final owner = Object(), session = Object();
+      final oldImage = await images.import(source, owner);
+      final id = (await setup.createCustomWordCategory(
+        'Local',
+        ['A'],
+        family: false,
+        imageIds: {'A': oldImage},
+      ))!;
+      images.release(owner);
+      final newImage = await images.import(source, owner);
+      file.failWrite = true;
+      expect(
+        await setup.updateCustomWordCategory(
+          id,
+          'Local',
+          ['B'],
+          imageIds: {'B': newImage},
+        ),
+        isFalse,
+      );
+      await images.cleanup();
+      expect(await (await images.file(oldImage)).exists(), isTrue);
+      expect(await (await images.file(newImage)).exists(), isTrue);
+      file.failWrite = false;
+      expect(
+        await setup.updateCustomWordCategory(
+          id,
+          'Local',
+          ['B'],
+          imageIds: {'B': newImage},
+        ),
+        isTrue,
+      );
+      images.release(owner);
+      await images.cleanup();
+      expect(await (await images.file(oldImage)).exists(), isFalse);
+      expect(await (await images.file(newImage)).exists(), isTrue);
+      images.retain(session, {newImage});
+      file.failWrite = true;
+      expect(await setup.deleteCustomCategory(id), isFalse);
+      await images.cleanup();
+      expect(await (await images.file(newImage)).exists(), isTrue);
+      file.failWrite = false;
+      expect(await setup.deleteCustomCategory(id), isTrue);
+      await images.cleanup();
+      expect(await (await images.file(newImage)).exists(), isTrue);
+      images.release(session);
+      await images.cleanup();
+      expect(await (await images.file(newImage)).exists(), isFalse);
+    },
+  );
+
   test('queued save pins attachments before the draft is released', () async {
     final file = MemoryStorage();
     final gate = Completer<void>();

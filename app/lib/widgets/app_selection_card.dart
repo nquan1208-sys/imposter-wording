@@ -10,10 +10,12 @@ class AppSelectionCard extends StatefulWidget {
     required this.selected,
     required this.child,
     required this.onTap,
+    this.padding = AppEdgeInsets.all24,
   });
 
   final bool selected;
   final Widget child;
+  final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
 
   @override
@@ -56,7 +58,7 @@ class _AppSelectionCardState extends State<AppSelectionCard> {
               decoration: BoxDecoration(
                 color: widget.selected ? AppColors.selection : null,
               ),
-              child: Padding(padding: AppEdgeInsets.all24, child: widget.child),
+              child: Padding(padding: widget.padding, child: widget.child),
             ),
           ),
         ),

@@ -112,6 +112,10 @@ class _ImageAttachmentState extends ConsumerState<ImageAttachment> {
             source: choice == 'camera'
                 ? ImageSource.camera
                 : ImageSource.gallery,
+            // Attachments are displayed as previews; avoid storing full camera resolution.
+            maxWidth: 1280,
+            maxHeight: 1280,
+            imageQuality: 85,
             requestFullMetadata: false,
           );
       if (!mounted || picked == null) return;

@@ -19,10 +19,18 @@ class RouteScreen {
       MaterialPageRoute(
         settings: settings,
         builder: (_) => CustomWordScreen(
+          categoryId:
+              (settings.arguments
+                      as ({bool family, String gameType, String? categoryId}))
+                  .categoryId,
           family:
-              (settings.arguments as ({bool family, String gameType})).family,
+              (settings.arguments
+                      as ({bool family, String gameType, String? categoryId}))
+                  .family,
           gameType:
-              (settings.arguments as ({bool family, String gameType})).gameType,
+              (settings.arguments
+                      as ({bool family, String gameType, String? categoryId}))
+                  .gameType,
         ),
       );
   static PageRoute questionGamePageRoute(RouteSettings settings) =>

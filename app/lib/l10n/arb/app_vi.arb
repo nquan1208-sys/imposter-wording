@@ -325,5 +325,17 @@
   "imposterNotFirstWarning": "Mọi người sẽ biết người mở đầu là người thường. Số kẻ mạo danh được giới hạn để người thường vẫn chiếm đa số trong nhóm còn lại.",
   "moreImpostersNeedSixPlayers": "Cần ít nhất 6 người chơi để chọn nhiều hơn 1 kẻ mạo danh khi bật tuỳ chọn không mở đầu.",
   "imposterCountAdjusted": "Đã giảm số kẻ mạo danh từ {before} xuống {after} để phù hợp với giới hạn mới.",
-  "@imposterCountAdjusted": {"placeholders": {"before": {"type": "int"}, "after": {"type": "int"}}}
+  "@imposterCountAdjusted": {"placeholders": {"before": {"type": "int"}, "after": {"type": "int"}}},
+  "editCustomCategory": "Sửa danh mục",
+  "customCategoryActions": "Thao tác danh mục",
+  "deleteCustomCategory": "Xoá danh mục",
+  "deleteCustomCategoryConfirm": "Xoá “{name}” và toàn bộ nội dung tuỳ chỉnh bên trong? Không thể hoàn tác.",
+  "customDeleteError": "Không thể xoá danh mục. Vui lòng thử lại.",
+  "@deleteCustomCategoryConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -325,5 +325,17 @@
   "imposterNotFirstWarning": "Everyone will know the starting player is a civilian. The imposter limit keeps civilians in the majority among the remaining suspects.",
   "moreImpostersNeedSixPlayers": "At least 6 players are required for more than 1 imposter when imposters cannot start the discussion.",
   "imposterCountAdjusted": "The imposter count was reduced from {before} to {after} to fit the new limit.",
-  "@imposterCountAdjusted": {"placeholders": {"before": {"type": "int"}, "after": {"type": "int"}}}
+  "@imposterCountAdjusted": {"placeholders": {"before": {"type": "int"}, "after": {"type": "int"}}},
+  "editCustomCategory": "Edit category",
+  "customCategoryActions": "Category actions",
+  "deleteCustomCategory": "Delete category",
+  "deleteCustomCategoryConfirm": "Delete “{name}” and all its custom content? This cannot be undone.",
+  "customDeleteError": "Could not delete the category. Please try again.",
+  "@deleteCustomCategoryConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

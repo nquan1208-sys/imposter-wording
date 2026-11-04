@@ -42,6 +42,47 @@ void main() {
   });
 
   test(
+    'edit and delete preserve identity and commit only successful writes',
+    () async {
+      final id = (await store.createCustomWordCategory('Office', [
+        'A',
+      ], family: true))!;
+      await store.setCategories({id}, family: false);
+      expect(await store.updateCustomWordCategory(id, 'Office', ['B']), isTrue);
+      expect(store.setup.value.categoryIds, {id});
+      expect(
+        store.setup.value.customWordCategories.single.isFamilyFriendly,
+        isTrue,
+      );
+      expect(store.setup.value.nextCustomWordCategoryId, 2);
+      expect(
+        await store.updateCustomWordCategory(id, 'category B', ['B']),
+        isFalse,
+      );
+      expect(await store.updateCustomWordCategory(id, 'Office', []), isFalse);
+      file.failWrite = true;
+      expect(
+        await store.updateCustomWordCategory(id, 'Changed', ['C']),
+        isFalse,
+      );
+      expect(await store.deleteCustomCategory(id), isFalse);
+      expect(store.setup.value.customWordCategories.single.words, ['B']);
+      file.failWrite = false;
+      expect(await store.deleteCustomCategory(id), isTrue);
+      expect(store.setup.value.categoryIds, isEmpty);
+      expect(GameSetup.fromJson(file.data!).customWordCategories, isEmpty);
+      expect(
+        await store.updateCustomWordCategory(id, 'Office', ['D']),
+        isFalse,
+      );
+      expect(
+        await store.createCustomWordCategory('Office', ['E'], family: false),
+        'custom-word-2',
+      );
+    },
+  );
+
+  test(
     'batch trims, skips blanks and keeps the first case-preserving word',
     () {
       expect(uniqueWords(['  Táo ', '', 'TÁO', ' Bánh mì ', '  ', 'bánh mì']), [
