@@ -1,1 +1,12 @@
 .worktrees/
+
+# Flutter artifacts generated from the repository root.
+/.dart_tool/
+/build/
+/android/local.properties
+/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/Flutter/ephemeral/
+/ios/Runner/GeneratedPluginRegistrant.[hm]
+/lib/l10n/gen_l10n/
