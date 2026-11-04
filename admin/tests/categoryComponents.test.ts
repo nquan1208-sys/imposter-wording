@@ -15,7 +15,7 @@ test('category components render backend rows, immutable fields and destructive 
     const render = async (component: import('vue').Component, props: Record<string, unknown>) => (await renderToString(createSSRApp(component, props).use(router).use(ui).use(i18n))).replace(/<!--[\s\S]*?-->/g, '')
     const table = (await server.ssrLoadModule('/src/components/categories/CategoryTable.vue')).default
     const languages = [{ code: 'vi', display_name: 'Tiếng Việt', sort_order: 0 }, { code: 'en', display_name: 'English', sort_order: 1 }]
-    const row = { id: 'id', name: 'Đồ ăn', slug: 'do-an', game_type: 'word', locale: 'vi', is_active: true, updated_at: '2026-10-12T10:00:00Z', word_count: 3, question_count: 0, translations: [{ locale: 'vi', name: 'Đồ ăn', status: 'published' }] }
+    const row = { id: 'id', name: 'Đồ ăn', slug: 'do-an', game_type: 'word', is_family_friendly: true, locale: 'vi', is_active: true, updated_at: '2026-10-12T10:00:00Z', word_count: 3, question_count: 0, translations: [{ locale: 'vi', name: 'Đồ ăn', status: 'published' }] }
     const html = await render(table, { languages, rows: [row], pending: false })
     assert.match(html, /Đồ ăn/)
     assert.match(html, /Chưa có bản dịch/)
@@ -26,11 +26,14 @@ test('category components render backend rows, immutable fields and destructive 
     assert.equal((pageHtml.match(/class="category-slug"/g) || []).length, 20)
     const filters = (await server.ssrLoadModule('/src/components/categories/CategoryFilters.vue')).default
     const filterHtml = await render(filters, { languages, filters: { locale: 'vi', gameType: '', active: '', sort: 'sort_order' }, search: '' })
-    assert.equal((filterHtml.match(/>Tất cả</g) || []).length, 2)
+    assert.equal((filterHtml.match(/>Tất cả</g) || []).length, 3)
     const form = (await server.ssrLoadModule('/src/components/categories/CategoryForm.vue')).default
     const formHtml = await render(form, { languages, translations: row.translations, form: { ...row, status: 'draft', description: '', sort_order: 0 }, editing: true, pending: true, error: 'Lỗi lưu' })
     assert.match(formHtml, /<fieldset[^>]* disabled/)
     assert.match(formHtml, /<button[^>]*role="combobox"[^>]* disabled/)
+    assert.match(formHtml, /Chế độ gia đình/)
+    const questionForm = await render(form, { languages, translations: [], form: { ...row, game_type: 'question', is_family_friendly: false, status: 'draft', description: '', sort_order: 0 } })
+    assert.match(questionForm, /Chế độ gia đình/)
     assert.match(formHtml, /role="alert"/)
     assert.equal((formHtml.match(/type="submit"/g) || []).length, 1)
     assert.doesNotMatch(formHtml, />Xuất bản<|>Lưu trữ</)

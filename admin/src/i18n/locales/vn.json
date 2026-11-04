@@ -118,7 +118,6 @@
       "empty": "Không có cảnh báo dữ liệu.",
       "emptyCategories": "Danh mục không có nội dung: {count}",
       "duplicateQuestions": "Cặp câu hỏi dân thường và kẻ mạo danh bị trùng: {count}",
-      "nonFamilyEasyPrompts": "Nội dung mức dễ chưa được đánh dấu phù hợp với chế độ gia đình: {count}",
       "wordPrompts": "Từ ngữ",
       "questionPrompts": "Câu hỏi"
     }
@@ -145,7 +144,8 @@
       "name": "Tên danh mục",
       "slug": "Slug",
       "sortOrder": "Thứ tự hiển thị",
-      "description": "Mô tả"
+      "description": "Mô tả",
+      "isFamilyFriendly": "Chế độ gia đình"
     },
     "filters": {
       "all": "Tất cả",
@@ -213,7 +213,9 @@
       "confirmPurge": "Xóa tất cả vĩnh viễn",
       "originals": "Đề gốc: {total} (từ: {word}, câu hỏi: {question})",
       "translations": "Bản dịch đề theo trạng thái"
-    }
+    },
+    "yes": "Có",
+    "no": "Không"
   },
   "wordPrompts": {
     "title": "Nội dung từ ngữ",
@@ -227,7 +229,6 @@
     "fields": {
       "categoryId": "Danh mục",
       "difficulty": "Độ khó",
-      "isFamilyFriendly": "Phù hợp với gia đình",
       "locale": "Ngôn ngữ nội dung",
       "imagePath": "Ảnh",
       "status": "Trạng thái",
@@ -313,7 +314,6 @@
     "fields": {
       "categoryId": "Danh mục",
       "difficulty": "Độ khó",
-      "isFamilyFriendly": "Phù hợp với gia đình",
       "locale": "Ngôn ngữ nội dung",
       "status": "Trạng thái",
       "updatedAt": "Cập nhật",

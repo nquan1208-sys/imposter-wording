@@ -1,74 +1,74 @@
-# Phase 2 — Schema, bảo mật và API DB
+# Phase 2 — Schema, Security, and DB API
 
-Hoàn tất local ngày 2026-10-24. Migration: [20261024045640_content_translations.sql](../../../supabase/migrations/20261024045640_content_translations.sql).
+Completed locally on 2026-10-24. Migration: [20261024045640_content_translations.sql](../../../supabase/migrations/20261024045640_content_translations.sql).
 
-## Kết quả chuyển đổi
+## Conversion results
 
-| Loại | Dòng nguồn | Bản gốc thực tế | Bản dịch thực tế |
+| Type | Source rows | Actual base records | Actual translations |
 | --- | ---: | ---: | ---: |
-| Danh mục | 3 | 3 | 3 |
-| Đề từ | 1 | 1 | 1 |
-| Đề câu hỏi | 1 | 1 | 1 |
+| Categories | 3 | 3 | 3 |
+| Word prompts | 1 | 1 | 1 |
+| Question prompts | 1 | 1 | 1 |
 
-- Đủ `vi`, `en` trong `content_languages`; dữ liệu hiện chỉ có bản dịch `vi`. Không tạo bản dịch rỗng, ghép ID hoặc đổi liên kết danh mục.
-- Cả ba bản dịch danh mục là `published`; hai bản dịch đề giữ `published`. Không đổi slug trong baseline local.
-- Giữ ba Storage objects, một ảnh đang tham chiếu và hai ảnh chưa được tham chiếu. Không upload, xóa hoặc di chuyển bytes ảnh.
-- Dựng lại cả năm dòng nguồn từ bản gốc và bản dịch: toàn bộ MD5 JSON khớp manifest Phase 1. Migration kiểm tra riêng metadata trên cả hai bản, counts, ID/locale, slug mapping và tập Storage objects trước khi bỏ cột cũ.
-- Migration có transaction và khóa dữ liệu nguồn; blocker hoặc đối chiếu sai sẽ rollback. Không sửa migration lịch sử hoặc dùng `DROP ... CASCADE` trong migration.
-- Đã tạo backup local trước khi áp dụng tại `/tmp/imposter-wording-phase2-before.dump`, quyền file `0600`. Đây là backup tạm ngoài repo; quy trình backup/rollback triển khai vẫn thuộc Phase 6.
+- `content_languages` includes `vi` and `en`; current data has only `vi` translations. No empty translations, merged IDs, or changed category links.
+- All three category translations are `published`; both prompt translations retain `published`. No slug changes in the local baseline.
+- Preserved three Storage objects: one referenced image and two unreferenced images. No image bytes uploaded, deleted, or moved.
+- Reconstructed all five source rows from base records and translations: every JSON MD5 matches the Phase 1 manifest. Before dropping old columns, the migration separately checks metadata on both sides, counts, ID/locale, slug mapping, and Storage objects.
+- Migration uses a transaction and source-data locks; blockers or reconciliation failures roll back. No historical migrations modified or `DROP ... CASCADE` used.
+- Created a local pre-migration backup at `/tmp/imposter-wording-phase2-before.dump`, file permissions `0600`. This temporary backup is outside the repo; deployment backup/rollback procedures remain in Phase 6.
 
-## Schema và quyền đọc
+## Schema and read permissions
 
-`content_languages(code, display_name, sort_order)` là nguồn danh sách ngôn ngữ; đọc theo `sort_order, code`. Thêm ngôn ngữ bằng dữ liệu do người vận hành có quyền DB thực hiện.
+`content_languages(code, display_name, sort_order)` supplies languages, ordered by `sort_order, code`. Operators with DB permissions add languages as data.
 
-Ba bảng bản dịch dùng khóa ghép `(category_id, locale)` hoặc `(prompt_id, locale)`, FK đến danh sách ngôn ngữ và cascade khi xóa bản gốc. Bản gốc giữ các trường chung; cả hai phía có `created_by`, `created_at`, `updated_at`.
+The three translation tables use composite keys `(category_id, locale)` or `(prompt_id, locale)`, language-list FKs, and cascade on base-record deletion. Base records retain shared fields; both sides have `created_by`, `created_at`, `updated_at`.
 
-- `anon` và `authenticated` có SELECT rõ ràng, không có direct INSERT/UPDATE/DELETE/TRUNCATE trên bảy bảng nội dung. Admin đang hoạt động đọc tất cả nội dung qua RLS.
-- Đọc công khai bản dịch đề yêu cầu đề `published`, danh mục bật và bản dịch danh mục cùng locale `published`. Bản gốc chỉ hiện nếu có ít nhất một bản dịch đủ điều kiện. Không fallback locale.
-- Helper trong schema `private` chỉ trả boolean eligibility và tránh vòng lặp RLS giữa bản gốc/bản dịch. RPC ghi dùng `SECURITY DEFINER`, search path rỗng và kiểm/khóa grant admin từ `admin_users`, không tin quyền cũ trong JWT.
-- Ảnh được đọc công khai khi đề có ít nhất một bản dịch đủ điều kiện. Giữ bucket private, giới hạn 5 MiB, JPEG/PNG/WebP, quy tắc path, upload và cleanup. Signed URL đã phát vẫn có thể tồn tại đến hết hạn.
+- `anon` and `authenticated` have explicit SELECT, with no direct INSERT/UPDATE/DELETE/TRUNCATE on the seven content tables. Active admins read all content through RLS.
+- Public prompt translations require `published`, an enabled category, and a `published` category translation in the same locale. Base records appear only with at least one eligible translation. No locale fallback.
+- `private` helpers return only boolean eligibility and avoid RLS recursion between base/translation tables. Write RPCs use `SECURITY DEFINER`, empty search paths, and checked/locked admin grants from `admin_users`, ignoring stale JWT privileges.
+- Images are publicly readable when a prompt has at least one eligible translation. Preserve the private bucket, 5 MiB limit, JPEG/PNG/WebP, paths, uploads, and cleanup. Issued signed URLs may remain valid until expiry.
 
-## Hợp đồng RPC cho Phase 3–5
+## RPC contract for Phases 3–5
 
-### Lưu
+### Saving
 
-Ba RPC đều nhận UUID `p_id` do caller cung cấp, `p_locale`, `p_status`, `p_expected_updated_at` và các trường dưới đây:
+All three RPCs accept caller-provided UUID `p_id`, `p_locale`, `p_status`, `p_expected_updated_at`, and these fields:
 
-| RPC | Trường chung | Trường bản dịch |
+| RPC | Shared fields | Translation fields |
 | --- | --- | --- |
 | `save_category` | `p_game_type`, `p_slug`, `p_sort_order`, `p_is_active` | `p_name`, `p_description` |
 | `save_word_prompt` | `p_category_id`, `p_difficulty`, `p_is_family_friendly`, `p_image_path` | `p_text` |
 | `save_question_prompt` | `p_category_id`, `p_difficulty`, `p_is_family_friendly` | `p_civilian_question`, `p_imposter_question` |
 
-- Truyền đầy đủ args. `p_expected_updated_at = null` chỉ tạo mới; cập nhật phải truyền chính xác phiên bản bản gốc. `p_description` và `p_image_path` nhận null.
-- Response JSON là `{ original, translation }`, chứa row đã lưu; dùng `original.updated_at` trả về cho lần lưu tiếp theo. Không dùng timestamp tự tạo ở browser.
-- Lưu phần chung và đúng một bản dịch trong transaction. Mọi thay đổi bản dịch tăng phiên bản bản gốc; không sửa nội dung/metadata các bản dịch khác. Không tự tạo bản dịch cho tab chưa nhập.
-- RPC đặt metadata server-side, giữ metadata tạo khi sửa; game type của danh mục không đổi. Trim Unicode whitespace, chặn nội dung rỗng, câu hỏi trùng sau trim/lowercase, locale không tồn tại, ảnh sai chủ sở hữu/path hoặc object thiếu.
-- Lưu bản dịch đề ở trạng thái `published` yêu cầu danh mục đang bật và bản dịch danh mục cùng locale đã xuất bản. Chuyển category trên đề kiểm tất cả locale đang `published`.
-- Thứ tự khóa: grant admin → categories theo UUID → bản gốc → bản dịch. Các thay đổi cùng danh mục được tuần tự hóa để ổn định điều kiện xuất bản và delete preview; chỉ cần khóa nhỏ hơn nếu đo được contention admin.
-- SQLSTATE: `42501` thiếu quyền; `40001` phiên bản cũ hoặc tạo trùng ID; `P0002` không còn bản ghi; `23514` sai điều kiện/nội dung; `23503` FK sai; `23502` thiếu trường bắt buộc; `23505` trùng khóa/slug. Locale lạ khi yêu cầu publish có thể bị chặn bởi điều kiện xuất bản trước FK.
+- Supply every argument. `p_expected_updated_at = null` is creation-only; updates require the exact base-record version. `p_description` and `p_image_path` accept null.
+- JSON response is `{ original, translation }`, containing saved rows; use returned `original.updated_at` for subsequent saves, never a browser-generated timestamp.
+- Save shared fields and exactly one translation transactionally. Every translation change advances the base version without changing other translations' content/metadata. Do not create records for untouched tabs.
+- RPCs set metadata server-side and preserve creation metadata on edits; category game type is immutable. Trim Unicode whitespace and reject empty content, identical questions after trim/lowercase, unknown locales, incorrect image ownership/path, and missing objects.
+- Saving a `published` prompt translation requires an enabled category and published category translation in the same locale. Changing a prompt's category checks every `published` locale.
+- Lock order: admin grant → categories by UUID → base record → translation. Changes in the same category are serialized for stable publication conditions and delete previews; reduce lock scope only after measuring admin contention.
+- SQLSTATE: `42501` unauthorized; `40001` stale version or duplicate creation ID; `P0002` missing record; `23514` invalid conditions/content; `23503` invalid FK; `23502` missing required field; `23505` duplicate key/slug. Publication conditions may reject unknown locales before the FK does.
 
-TypeScript types đã sinh lại bằng script hiện có. CLI không thể hiện nullability của RPC args; khi cập nhật `AdminDatabase` ở các phase admin, cần mở rộng nullable args theo pattern `delete_category` đang có, không sửa tay generated types hoặc ép null thành chuỗi.
+TypeScript types were regenerated using the existing script. CLI types do not express RPC argument nullability; extend nullable arguments in `AdminDatabase` during admin phases following the existing `delete_category` pattern, without editing generated types or converting null to strings.
 
-### Xóa, preview và dashboard
+### Deletion, preview, and dashboard
 
-- Giữ `delete_word_prompt(uuid,timestamptz)` và `delete_question_prompt(uuid,timestamptz)`: yêu cầu version bản gốc, cascade mọi bản dịch, giữ file Storage.
-- `preview_category_delete(p_id)` trả `{ category, category_translations, counts, version }`. `counts.originals` có `total`, `word`, `question`; `counts.translations` đếm **bản dịch đề** theo `draft`, `published`, `archived`.
-- Version preview bao gồm toàn bộ row danh mục, các bản dịch danh mục, đề gốc và các bản dịch đề. Sửa bất kỳ thành phần nào làm preview cũ không còn hợp lệ.
-- Giữ `delete_category(p_id,p_mode,p_target_id default null,p_expected_version default null)`. `transfer` và `purge` bắt buộc version preview; `empty` có thể bỏ version, nhưng nếu truyền thì phải khớp. Transfer yêu cầu danh mục đích khác nguồn, đang bật, cùng game type và đã xuất bản mọi locale đề đang xuất bản. Purge cascade đủ bản dịch, giữ ảnh.
-- Thay SQL dashboard ngay trong Phase 2 vì routine cũ phụ thuộc các cột bị bỏ: `admin_dashboard_summary(p_locale text default 'vi')`. Chỉ đếm bản dịch locale đang chọn; items có `locale`, category name không fallback và có thể null nếu thiếu bản dịch. Active-category count tính danh mục bật với bản dịch locale đã xuất bản; empty-category warning tính các danh mục có bản dịch locale nhưng chưa có bản dịch đề locale đó. Locale không tồn tại trả `22023`. UI/cache dashboard vẫn thuộc Phase 5.
+- Keep `delete_word_prompt(uuid,timestamptz)` and `delete_question_prompt(uuid,timestamptz)`: require the base version, cascade all translations, retain Storage files.
+- `preview_category_delete(p_id)` returns `{ category, category_translations, counts, version }`. `counts.originals` has `total`, `word`, `question`; `counts.translations` counts **prompt translations** by `draft`, `published`, `archived`.
+- Preview versions include complete category rows, category translations, base prompts, and prompt translations. Any change invalidates an old preview.
+- Keep `delete_category(p_id,p_mode,p_target_id default null,p_expected_version default null)`. `transfer`/`purge` require preview versions; `empty` may omit one, but supplied versions must match. Transfer targets must differ from the source, be enabled, have the same game type, and publish every published prompt locale. Purge cascades translations and retains images.
+- Replace dashboard SQL in Phase 2 because the old routine depends on removed columns: `admin_dashboard_summary(p_locale text default 'vi')`. Count only selected-locale translations; items include `locale`, with no category-name fallback and nullable names when missing. Active-category counts require enabled categories with published locale translations; empty-category warnings cover categories with that locale but no prompt translations in it. Unknown locales return `22023`. Dashboard UI/cache remains Phase 5.
 
-## Kiểm thử đã chạy
+## Tests run
 
-Rehearsal trên DB copies độc lập trong container local, không reset DB đang dùng:
+Rehearsed on independent DB copies in the local container without resetting the active DB:
 
 ```bash
 rtk proxy python3 supabase/tests/content_translations.py
 ```
 
-Đạt 4 nhóm unittest: replay lịch sử trên DB nội dung rỗng; backfill nhiều locale/trạng thái/metadata và slug trùng; sáu loại blocker rollback cả schema/data; bản sao dữ liệu local và concurrency. Runner tạo và tự xóa DB copies, chạy SQL suites trên các bản migrated.
+Passed 4 unittest groups: historical replay on an empty content DB; backfill across locales/statuses/metadata and duplicate slugs; six blocker types rolling back schema/data; local data copy and concurrency. The runner creates/removes copies and runs SQL suites on migrated copies.
 
-SQL suites dùng fixtures rollback: `category_management.sql`, `word_prompt_management.sql`, `question_prompt_management.sql`, `admin_dashboard.sql`, `content_translations.sql`. Chạy riêng từ repo root, với connection DB local đã cấu hình trong `DB_URL`:
+SQL suites use rollback fixtures: `category_management.sql`, `word_prompt_management.sql`, `question_prompt_management.sql`, `admin_dashboard.sql`, `content_translations.sql`. Run separately from the repository root with a local connection in `DB_URL`:
 
 ```bash
 rtk proxy psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f supabase/tests/content_translations.sql
@@ -78,14 +78,14 @@ rtk proxy supabase db advisors --local --type all --level warn --fail-on warn
 rtk proxy supabase migration list --local
 ```
 
-- Năm SQL suites đạt trên bản sao và DB local sau migration. Bao phủ save nguyên tử, validation, uniqueness, quyền trực tiếp/RPC, RLS nhiều locale, thu hồi admin với JWT cũ, image eligibility, preview, transfer/purge và thêm ngôn ngữ bằng dữ liệu.
-- Bảy race đạt: xóa category/tạo đề; hai save khác locale cùng version cho từng loại đề; sửa translation/purge preview cũ; publish/archive category translation; transfer/archive đích; revoke admin/save đang chờ. Không có deadlock.
-- DB lint không có lỗi; advisors không có warning/error. Migration ledger local khớp file mới.
-- Đã chạy lại sáu Phase 1 audit tests trước migration. Script audit cũ cần schema cũ; không chạy trực tiếp trên schema Phase 2.
-- Đã chạy `yarn types:database`; generated types phản ánh đúng tables và RPC mới.
+- Five SQL suites passed on copies and the migrated local DB. Coverage includes atomic saves, validation, uniqueness, direct/RPC permissions, multilingual RLS, admin revocation with stale JWTs, image eligibility, previews, transfer/purge, and adding languages as data.
+- Seven races passed: category deletion/prompt creation; different-locale saves with the same version for each prompt type; translation edit/stale purge preview; publish/archive category translation; transfer/archive target; admin revocation/waiting save. No deadlocks.
+- DB lint had no errors; advisors had no warnings/errors. Local migration ledger matches the new file.
+- Reran six Phase 1 audit tests before migration. The old audit script requires the old schema and must not run directly on Phase 2 schema.
+- Ran `yarn types:database`; generated types reflect new tables and RPCs.
 
-## Phần chuyển tiếp
+## Transitional work
 
-Theo ranh giới được chốt, Phase 2 chỉ hoàn tất DB contract. Admin API/forms/types dẫn xuất và TypeScript fixtures cũ sẽ được chuyển ở Phase 3–5. Đã chạy `yarn typecheck`: exit 2 với 90 diagnostics do callers/types cũ còn tham chiếu các cột đã bỏ. Chưa chạy admin build/browser UAT hay Storage HTTP integration; đã kiểm Storage policies trực tiếp trên DB. Chưa triển khai hoặc thay đổi cloud.
+As agreed, Phase 2 completes only the DB contract. Admin APIs/forms/derived types and old TypeScript fixtures migrate in Phases 3–5. `yarn typecheck` exited 2 with 90 diagnostics from old callers/types referencing removed columns. Admin build/browser UAT and Storage HTTP integration were not run; Storage policies were checked directly in DB. No cloud changes/deployment.
 
-Không dùng admin cũ để ghi với schema mới. Triển khai DB và admin hoàn chỉnh cùng đợt ở Phase 6; chạy lại audit/rehearsal trên dữ liệu đích trước khi triển khai.
+Do not write to the new schema using old admin versions. Deploy the completed DB and admin together in Phase 6; repeat audit/rehearsal against target data first.

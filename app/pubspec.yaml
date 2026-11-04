@@ -46,6 +46,11 @@ dependencies:
   riverpod: ^3.2.1
   flutter_svg: ^2.0.14
   flutter_dotenv: ^6.0.1
+  supabase_flutter: 2.18.3
+  image_picker: 1.2.4
+  path_provider: 2.1.6
+  hive_ce: ^2.22.0
+  package_info_plus: ^10.2.2
 dev_dependencies:
   analyzer: ^10.2.0
   flutter_test:
@@ -62,6 +67,8 @@ dev_dependencies:
   change_app_package_name: ^1.4.0
   freezed: ^3.2.5
   flutter_gen: ^5.7.0
+  integration_test:
+    sdk: flutter
 dependency_overrides:
   meta: ^1.15.0
 
@@ -76,6 +83,15 @@ flutter:
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
+  fonts:
+    - family: BeVietnamPro
+      fonts:
+        - asset: assets/fonts/BeVietnamPro-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/BeVietnamPro-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/BeVietnamPro-SemiBold.ttf
+          weight: 600
   uses-material-design: true
   assets:
     - env/.env.local

@@ -1,47 +1,48 @@
-# Hướng dẫn môi trường Admin và Supabase
+# Admin and Supabase Environment Guide
 
-> Cập nhật 2026-10-24: local đã có schema bản gốc + bản dịch, dashboard và Storage private
-> `word-prompt-images`; Dev cloud INACTIVE, chưa cutover. Hợp đồng hiện tại xem
-> [schema và quyền API](./admin-supabase-new-device-guide.md#8-những-gì-migration-hiện-tại-tạo-ra),
-> [DBML](./database-schema.dbml) và [Phase 6 / cutover](./plans/admin-content-translations/admin-content-translations-phase-6.md).
-> Không push migrations translations theo quickstart; phải backup và rehearsal trước.
+Current Family Mode contract and local upgrade procedure: [Category-Based Family Mode](family-mode.md).
+> Update 2026-10-24: local has the base + translation schema, dashboard, and private Storage
+> `word-prompt-images`; Dev cloud is INACTIVE, with no cutover yet. For the current contract, see
+> [schema and API permissions](./admin-supabase-new-device-guide.md#8-what-current-migrations-create),
+> [DBML](./database-schema.dbml) and [Phase 6 / cutover](./plans/admin-content-translations/admin-content-translations-phase-6.md).
+> Do not push translation migrations using the quickstart; back up and rehearse first.
 
 
-> Nếu đang setup trên một thiết bị mới, hãy đọc
+> If setting up a new device, read
 > [`admin-supabase-new-device-guide.md`](./admin-supabase-new-device-guide.md).
-> Tài liệu này là bản tham khảo ngắn cho việc chuyển đổi giữa các environment.
+> This document is a quick reference for switching environments.
 
-Tài liệu này hướng dẫn chạy Admin Vue với ba môi trường:
+This guide runs Vue Admin with three environments:
 
-- Local: Supabase chạy trên máy.
-- Development: Supabase cloud project dùng chung cho Dev.
-- Production: Supabase cloud project thật, chưa cấu hình.
+- Local: Supabase running on your machine.
+- Development: Shared Supabase cloud project for Dev.
+- Production: the live Supabase cloud project, not configured yet.
 
-## 1. Các file environment
+## 1. Environment files
 
-Các file nằm trong thư mục `admin/`:
+Files are located in `admin/`:
 
 ```text
 admin/.env.local                  # Supabase local
 admin/.env.development.local      # Supabase cloud Dev
 admin/.env.production.local       # Supabase cloud Production
-admin/.env.production             # file guard, đang để trống
-admin/.env.example                # file mẫu
+admin/.env.production             # guard file, currently empty
+admin/.env.example                # example file
 ```
 
-`*.local` là file riêng trên máy và đã được Git ignore. Hậu tố `.local`
-không có nghĩa là Supabase local; ví dụ `.env.development.local` là file
-credential Dev cloud trên máy cá nhân.
+`*.local` files are machine-specific and Git-ignored. The `.local` suffix
+does not mean local Supabase; for example, `.env.development.local` stores
+Dev cloud credentials on your personal machine.
 
-Mỗi file cần có:
+Each file needs:
 
 ```env
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 ```
 
-Chỉ dùng `Project URL` và `Publishable key` lấy từ Supabase Dashboard →
-Connect. Không dùng các giá trị sau trong Vue frontend:
+Use only the `Project URL` and `Publishable key` from Supabase Dashboard →
+Connect. Never use the following in the Vue frontend:
 
 ```text
 service_role key
@@ -50,70 +51,70 @@ database password
 JWT secret
 ```
 
-`VITE_*` được bundle vào browser, nên publishable key phải đi kèm RLS và
-quyền Data API đúng.
+`VITE_*` values are bundled into the browser, so publishable keys require RLS and
+correct Data API permissions.
 
-### Giá trị hiện tại
+### Current values
 
 - Local URL: `http://127.0.0.1:54321`.
 - Dev project: `imposter-word`.
 - Dev project ref: `pxycsjwjakzehcuygngv`.
-- Production: chưa có project/credential.
+- Production: no project/credentials yet.
 
-## 2. Chạy Admin với Local Supabase
+## 2. Run Admin with Local Supabase
 
-Mở terminal thứ nhất ở thư mục gốc repository:
+Open the first terminal at the repository root:
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
 supabase start
 ```
 
-Kiểm tra local stack có đang chạy không:
+Check whether the local stack is running:
 
 ```bash
 supabase status
 ```
 
-Nếu thấy `API URL: http://127.0.0.1:54321` thì local stack đang chạy.
+If `API URL: http://127.0.0.1:54321` appears, the local stack is running.
 
-Mở terminal thứ hai:
+Open a second terminal:
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording/admin
 yarn dev:local
 ```
 
-Admin sẽ dùng `admin/.env.local`.
+Admin uses `admin/.env.local`.
 
-## 3. Dừng Local Supabase
+## 3. Stop Local Supabase
 
-Từ thư mục gốc repository:
+From the repository root:
 
 ```bash
 supabase stop
 ```
 
-Lệnh này dừng local stack nhưng giữ lại dữ liệu local. Khi cần chạy lại:
+This stops the local stack while preserving local data. To restart:
 
 ```bash
 supabase start
 ```
 
-## 4. Chạy Admin với Development cloud
+## 4. Run Admin with Development cloud
 
-Không cần chạy `supabase start`. Chỉ cần:
+No `supabase start` is needed. Simply run:
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording/admin
 yarn dev:development
 ```
 
-Admin sẽ dùng `admin/.env.development.local` và kết nối project cloud Dev.
+Admin uses `admin/.env.development.local` to connect to the Dev cloud project.
 
-## 5. Link Supabase CLI với project Dev
+## 5. Link Supabase CLI to the Dev project
 
-Chỉ cần làm một lần trên máy:
+Run once per machine:
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
@@ -122,58 +123,58 @@ supabase login
 supabase link --project-ref pxycsjwjakzehcuygngv
 ```
 
-`supabase link` có thể hỏi database password của project Dev. Đây là
-database password, không phải publishable key và không được lưu vào Git.
+`supabase link` may request the Dev project's database password. This is the
+database password, not the publishable key, and must not be stored in Git.
 
-## 6. Push migration lên Development cloud
+## 6. Push migrations to Development cloud
 
-`supabase db push` chỉ push database migrations; nó không deploy Vue app.
+`supabase db push` only pushes database migrations; it does not deploy the Vue app.
 
-### Khi nào cần push nhiều lần?
+### When are repeated pushes needed?
 
-Có thể cần push nhiều lần trong quá trình phát triển, nhưng chỉ khi có thay
-đổi database hoặc quyền Supabase, ví dụ:
+Multiple pushes may be needed during development, but only for database
+or Supabase permission changes, such as:
 
-- Tạo bảng, enum hoặc cột mới.
-- Sửa RLS policy.
-- Thêm function, trigger hoặc Storage policy.
-- Tạo migration schema ban đầu.
+- Creating tables, enums, or columns.
+- Updating RLS policies.
+- Adding functions, triggers, or Storage policies.
+- Creating the initial schema migration.
 
-Không cần `supabase db push` khi chỉ sửa Vue component, CSS, frontend logic,
-màn hình login hoặc file `admin/.env.development.local`. Những thay đổi đó
-được kiểm tra bằng:
+No `supabase db push` is needed for changes only to Vue components, CSS, frontend logic,
+the login screen, or `admin/.env.development.local`. Check those changes
+with:
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording/admin
 yarn dev:development
 ```
 
-### Quy trình local → Dev cloud
+### Local → Dev cloud workflow
 
-Với migrations translations, chỉ push trong cửa sổ cutover theo [Phase 6](./plans/admin-content-translations/admin-content-translations-phase-6.md), sau backup/restore rehearsal và khóa ghi.
+For translation migrations, push only during the [Phase 6](./plans/admin-content-translations/admin-content-translations-phase-6.md) cutover window, after backup/restore rehearsal and blocking writes.
 
-Sau mỗi thay đổi database có ý nghĩa và đã kiểm tra local:
+After each meaningful database change tested locally:
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
 
-# Kiểm tra trên bản sao, giữ nguyên DB local
+# Test on a copy, preserving the local DB
 rtk proxy python3 supabase/tests/content_translations.py
 
-# Xem trước migration sẽ áp dụng trên Dev
+# Preview migrations to be applied on Dev
 supabase db push --linked --dry-run
 
-# Áp dụng migration lên Dev cloud
+# Apply migrations to Dev cloud
 supabase db push --linked
 ```
 
-Không cần push sau mỗi lần lưu file. Nên gom một thay đổi database hoàn chỉnh
-thành một migration rồi push khi cần cho Dev dùng hoặc kiểm thử.
+Do not push after every file save. Group a complete database change into
+one migration and push when needed for Dev use or testing.
 
-### Không sửa migration đã push
+### Do not edit pushed migrations
 
-Sau khi một migration đã được áp dụng trên Dev, không sửa nội dung file cũ.
-Tạo migration mới cho thay đổi tiếp theo:
+After a migration is applied on Dev, do not change its file.
+Create a new migration for subsequent changes:
 
 ```text
 supabase/migrations/
@@ -182,59 +183,59 @@ supabase/migrations/
 └── 202610050001_update_rls.sql
 ```
 
-### Git commit khác với database push
+### Git commits and database pushes differ
 
-- `git commit`: lưu code và migration vào repository.
-- `supabase db push`: áp dụng migration vào database Dev.
+- `git commit`: stores code and migrations in the repository.
+- `supabase db push`: applies migrations to the Dev database.
 
-Thông thường cần commit migration để lưu lịch sử, sau đó push migration lên
-Dev khi muốn database Dev được cập nhật.
+Normally commit migrations to preserve history, then push them
+when you want to update the Dev database.
 
-Sau khi có file migration trong `supabase/migrations/`, kiểm tra trước:
+After creating migration files in `supabase/migrations/`, check first:
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
 supabase db push --linked --dry-run
 ```
 
-Nếu danh sách migration đúng, push thật:
+If the migration list is correct, apply it:
 
 ```bash
 supabase db push --linked
 ```
 
-Kiểm tra lịch sử migration trên cloud:
+Check cloud migration history:
 
 ```bash
 supabase migration list --linked
 ```
 
-Kiểm tra migration trên bản sao local trước khi push:
+Test migrations on a local copy before pushing:
 
 ```bash
 rtk proxy python3 supabase/tests/content_translations.py
 ```
 
-`db reset --local` sẽ xóa và tạo lại database local, vì vậy không dùng nếu
-cần giữ dữ liệu local.
+`db reset --local` deletes and recreates the local database; do not use it
+when local data must be preserved.
 
-Repository hiện có `supabase/config.toml` và các migration schema trong
-`supabase/migrations/`. Sau khi kiểm tra local, dùng `supabase db push
---linked --dry-run` để xem các migration còn pending trên project Dev trước
-khi push thật.
+The repository already has `supabase/config.toml` and schema migrations in
+`supabase/migrations/`. After local checks, use `supabase db push
+--linked --dry-run` to inspect pending migrations on Dev
+before applying them.
 
-## 7. Phân biệt dev và build
+## 7. Development versus build
 
-### Chạy trong lúc lập trình
+### Run during development
 
 ```bash
 yarn dev:local
 yarn dev:development
 ```
 
-Các lệnh này chạy Vite development server và hỗ trợ hot reload.
+These commands start the Vite development server with hot reload.
 
-### Build để deploy
+### Build for deployment
 
 ```bash
 yarn build:local
@@ -242,36 +243,36 @@ yarn build:development
 yarn build:production
 ```
 
-Các lệnh này tạo thư mục `admin/dist/`. Chúng chỉ đóng gói frontend, không
-tự deploy lên hosting.
+These commands create `admin/dist/`. They only bundle the frontend;
+they do not automatically deploy to hosting.
 
-Kiểm tra bản build đã tạo:
+Preview the generated build:
 
 ```bash
 yarn preview
 ```
 
-## 8. Quy trình làm việc thường ngày
+## 8. Daily workflow
 
-### Làm việc local
+### Working locally
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
 supabase status
-supabase start                 # chỉ cần nếu stack chưa chạy
+supabase start                 # only if the stack is not already running
 
 cd admin
 yarn dev:local
 ```
 
-### Làm việc với Dev cloud
+### Working with Dev cloud
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording/admin
 yarn dev:development
 ```
 
-### Sau khi sửa database schema
+### After changing database schema
 
 ```bash
 cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
@@ -279,7 +280,7 @@ supabase db push --linked --dry-run
 supabase db push --linked
 ```
 
-## Tài liệu tham khảo
+## References
 
 - [Vite env variables and modes](https://vite.dev/guide/env-and-mode)
 - [Supabase Vue quickstart](https://supabase.com/docs/guides/getting-started/quickstarts/vue)

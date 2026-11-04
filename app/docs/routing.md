@@ -17,7 +17,7 @@ base/dependency/router/
     route_screen.dart      # PageRoute builders per screen
 ```
 
-Current routes: `RouteName.landing` (initial), `RouteName.howToPlay`, `RouteName.unknown`.
+Current routes: `RouteName.landing` (initial), `RouteName.howToPlay`, `RouteName.setup`, `RouteName.settings`, `RouteName.settingsLanguage`, `RouteName.categories`, `RouteName.playerNames`, `RouteName.playerPresets`, `RouteName.wordGame`, `RouteName.questionGame`, and `RouteName.unknown`. Game routes accept a typed session via `RouteInput.wordGame(session)` or `RouteInput.questionGame(session)`; the route owns one store across all game stages. Settings pushes language selection and the existing how-to-play route, so Back returns to Settings and then to setup.
 
 ---
 
@@ -53,3 +53,5 @@ Static screens skip the store step (see `howToPlayPageRoute`).
 ## Unknown Route
 
 Unrecognized names fall back to `UnknownScreen` (`lib/features/unknown/unknown_screen.dart`).
+
+`RouteInput.playerPresets()` pushes list management above the player editor, preserving its roster/rule/selection draft when returning.

@@ -19,13 +19,13 @@ const identifier = ref(routeId.value || crypto.randomUUID())
 const id = computed(() => identifier.value)
 const editing = computed(() => Boolean(routeId.value || saved.value))
 const selectedLocale = ref(typeof route.query.locale === 'string' ? route.query.locale : 'vi')
-const form = reactive<WordForm>({ text: '', category_id: '', difficulty: 'medium', is_family_friendly: false, locale: selectedLocale.value, image_path: '' })
+const form = reactive<WordForm>({ text: '', category_id: '', difficulty: 'medium', locale: selectedLocale.value, image_path: '' })
 const saved = ref<WordDetail | null>(null)
 type Draft = { text: string; status: PromptStatus }
 const drafts = reactive<Record<string, Draft>>(Object.create(null)), baselines = reactive<Record<string, string>>(Object.create(null))
 const currentStatus = ref<PromptStatus>('draft'), replacing = ref(false), message = ref('')
 function translationDraft(): Draft { return { text: form.text, status: currentStatus.value } }
-function sharedDraft() { return { category_id: form.category_id, difficulty: form.difficulty, is_family_friendly: form.is_family_friendly, image_path: form.image_path } }
+function sharedDraft() { return { category_id: form.category_id, difficulty: form.difficulty, image_path: form.image_path } }
 const sharedBaseline = ref(JSON.stringify(sharedDraft()))
 function ensureDraft(locale: string) {
   if (!drafts[locale]) { drafts[locale] = { text: '', status: 'draft' }; baselines[locale] = JSON.stringify(drafts[locale]) }
@@ -43,7 +43,7 @@ const detail = useQuery({ queryKey: computed(() => ['word-prompts', 'detail', ro
 function clearFile() { if (localUrl.value) URL.revokeObjectURL(localUrl.value); localUrl.value = ''; file.value = null; if (imageInput.value) imageInput.value.value = '' }
 function load(row: WordDetail) {
   clearFile()
-  Object.assign(form, { category_id: row.category_id, difficulty: row.difficulty, is_family_friendly: row.is_family_friendly, image_path: row.image_path ?? '' })
+  Object.assign(form, { category_id: row.category_id, difficulty: row.difficulty, image_path: row.image_path ?? '' })
   saved.value = row; identifier.value = row.id
   for (const key of Object.keys(drafts)) { delete drafts[key]; delete baselines[key] }
   for (const rowTranslation of row.translations) {
@@ -73,7 +73,7 @@ watch(routeId, next => {
   if (next === saved.value?.id) return
   clearFile()
   saved.value = null; identifier.value = next || crypto.randomUUID()
-  Object.assign(form, { text: '', category_id: '', difficulty: 'medium', is_family_friendly: false, image_path: '' })
+  Object.assign(form, { text: '', category_id: '', difficulty: 'medium', image_path: '' })
   for (const key of Object.keys(drafts)) { delete drafts[key]; delete baselines[key] }
   ensureDraft(selectedLocale.value); currentStatus.value = 'draft'; sharedBaseline.value = JSON.stringify(sharedDraft())
   saveConflict.value = false; message.value = ''; localError.value = null; uploadState.value = ''; saving.reset(); deletion.reset(); deleting.value = false
@@ -115,7 +115,7 @@ const saving = useMutation({ retry: false,
       ?? (saved.value?.game_categories?.id === result.original.category_id ? saved.value.game_categories : null),
       translations: [...(saved.value?.translations || []).filter(row => row.locale !== translation.locale), translation] }
     identifier.value = result.original.id
-    Object.assign(form, { category_id: result.original.category_id, difficulty: result.original.difficulty, is_family_friendly: result.original.is_family_friendly, image_path: result.original.image_path ?? '' })
+    Object.assign(form, { category_id: result.original.category_id, difficulty: result.original.difficulty, image_path: result.original.image_path ?? '' })
     clearFile()
     sharedBaseline.value = JSON.stringify(sharedDraft())
     Object.assign(form, translation); currentStatus.value = translation.status; stash(); baselines[translation.locale] = JSON.stringify(drafts[translation.locale])
@@ -182,7 +182,6 @@ onBeforeUnmount(() => { disposed = true; clearFile(); window.removeEventListener
             <UFormField :label="t('wordPrompts.fields.categoryId')" required><USelectMenu :model-value="form.category_id" :items="categoryItems" value-key="value" :loading="categoryOptions.isFetching.value" :placeholder="t('wordPrompts.preview.selectCategory')" class="tw:w-full" @update:model-value="update('category_id', $event)" /></UFormField>
 
             <UFormField :label="t('wordPrompts.fields.difficulty')"><USelect :model-value="form.difficulty" :items="difficultyItems" class="tw:w-full" @update:model-value="update('difficulty', $event)" /></UFormField>
-            <div class="word-family-field"><UCheckbox :model-value="form.is_family_friendly" :label="t('wordPrompts.fields.isFamilyFriendly')" @update:model-value="update('is_family_friendly', $event === true)" /></div>
           </div>
         </fieldset>
         <fieldset :disabled="unsaved.busy" class="category-form-fields word-form-section">

@@ -1,3 +1,5 @@
+import 'package:untitled/constants/app_radii.dart';
+import 'package:untitled/widgets/app_content.dart';
 import 'package:flutter/material.dart';
 import 'package:untitled/constants/app_edge_insets.dart';
 import 'package:untitled/constants/app_spacing.dart';
@@ -19,25 +21,47 @@ class HowToPlayScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.howToPlay)),
-      body: SafeArea(
+      body: AppContent(
         top: false,
         child: ListView(
-          padding: AppEdgeInsets.all24,
+          padding: AppEdgeInsets.pageFor(context),
           children: [
-            for (final (icon, title, body) in steps) ...[
+            for (final (index, (icon, title, body)) in steps.indexed) ...[
               Card(
-                child: _StepContent(icon: icon, title: title, body: body),
+                child: _StepContent(
+                  icon: icon,
+                  title: title,
+                  body: body,
+                  number: index + 1,
+                ),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
             ],
             const SizedBox(height: AppSpacing.sm),
             Card(
+              child: Padding(
+                padding: AppEdgeInsets.all24,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.questionGame,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(l10n.questionInstructions),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Card(
               key: const Key('proTipCard'),
-              color: AppColors.tealSurface,
+              color: AppColors.selection,
               elevation: 0,
               shape: const RoundedRectangleBorder(
-                side: BorderSide(color: AppColors.tealBorder),
-                borderRadius: BorderRadius.all(Radius.circular(12)),
+                side: BorderSide(color: AppColors.selectionBorder),
+                borderRadius: BorderRadius.all(Radius.circular(AppRadii.card)),
               ),
               child: _StepContent(
                 icon: Icons.lightbulb_outline,
@@ -57,8 +81,10 @@ class _StepContent extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.body,
+    this.number,
   });
 
+  final int? number;
   final IconData icon;
   final String title;
   final String body;
@@ -66,34 +92,61 @@ class _StepContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final iconWidget = ExcludeSemantics(
+      child: Container(
+        padding: AppEdgeInsets.all16,
+        decoration: BoxDecoration(
+          color: number == null ? AppColors.surface : AppColors.surfaceRaised,
+          borderRadius: BorderRadius.circular(AppRadii.card),
+        ),
+        child: Icon(
+          icon,
+          color: number == null ? AppColors.accentText : AppColors.textPrimary,
+        ),
+      ),
+    );
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (number != null) ...[
+          Text(
+            number.toString().padLeft(2, '0'),
+            style: textTheme.labelLarge?.copyWith(color: AppColors.textMuted),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        Text(title, style: textTheme.titleLarge),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          body,
+          style: textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+        ),
+      ],
+    );
     return Padding(
       padding: AppEdgeInsets.all24,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: AppEdgeInsets.all8,
-            decoration: const BoxDecoration(
-              color: AppColors.yellow,
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            child: Icon(icon, color: AppColors.charcoal),
-          ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 300 ||
+              MediaQuery.textScalerOf(context).scale(16) > 24) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: textTheme.titleLarge),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  body,
-                  style: textTheme.bodyMedium?.copyWith(color: AppColors.gray),
-                ),
+                iconWidget,
+                const SizedBox(height: AppSpacing.lg),
+                content,
               ],
-            ),
-          ),
-        ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              iconWidget,
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(child: content),
+            ],
+          );
+        },
       ),
     );
   }

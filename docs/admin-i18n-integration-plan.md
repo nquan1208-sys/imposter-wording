@@ -1,14 +1,14 @@
-# Nghiên cứu tích hợp ngôn ngữ cho Admin
+# Admin Language Integration Research
 
-Ngày: 2026-10-12. Phạm vi: giao diện admin Vue 3 + Vite + Nuxt UI 4; tài liệu đề xuất, chưa triển khai.
+Date: 2026-10-12. Scope: Vue 3 + Vite + Nuxt UI 4 admin UI; proposal only, not implemented.
 
-## 1. Phương án
+## 1. Approach
 
-Dùng `vue-i18n@11` cho chữ của ứng dụng và locale có sẵn của `@nuxt/ui/locale` cho chữ nội bộ của Nuxt UI. Đây là cách tích hợp được tài liệu Nuxt UI dành cho Vue hướng dẫn.
+Use `vue-i18n@11` for application text and built-in `@nuxt/ui/locale` locales for Nuxt UI internal text. This follows Nuxt UI's Vue integration documentation.
 
-Admin hiện không chạy Nuxt: `src/main.js` tạo ứng dụng Vue, dùng Vue Router và plugin `@nuxt/ui/vue-plugin`. Vì vậy dùng hướng dẫn Vue, không thêm module `@nuxtjs/i18n` hay chuyển framework.
+Admin does not run Nuxt: `src/main.js` creates a Vue application using Vue Router and `@nuxt/ui/vue-plugin`. Follow the Vue guide without adding `@nuxtjs/i18n` or changing frameworks.
 
-Hai file ngôn ngữ:
+Two language files:
 
 ```text
 admin/src/i18n/index.js
@@ -16,78 +16,78 @@ admin/src/i18n/locales/vn.json
 admin/src/i18n/locales/en.json
 ```
 
-- `vn.json`: chứa đầy đủ chữ tiếng Việt; mọi key và tên placeholder bằng tiếng Anh.
-- `en.json`: ban đầu là `{}` hợp lệ, không phải file JSON trắng hoặc các key có giá trị `""`.
-- Mã locale chạy: `vi` và `en`. Tên file `vn.json` ánh xạ vào `messages.vi`; không dùng `vn` làm mã ngôn ngữ cho Nuxt UI, HTML hay Intl.
-- Ngôn ngữ mặc định và fallback: `vi`.
-- Khi chọn `en` mà thiếu key, chữ ứng dụng dùng tiếng Việt. Chữ nội bộ Nuxt UI dùng locale `en`, nên giao diện có thể trộn hai ngôn ngữ trong thời gian chưa dịch.
-- Chưa cần nút đổi ngôn ngữ khi `en.json` còn trống. Kiểm tra locale `en` qua test; chỉ thêm bộ chọn khi có nhu cầu sử dụng.
+- `vn.json`: complete Vietnamese text; all keys and placeholder names are English.
+- `en.json`: initially valid `{}`, not a blank JSON file or keys with `""` values.
+- Runtime locale codes: `vi` and `en`. Map `vn.json` to `messages.vi`; do not use `vn` as the Nuxt UI, HTML, or Intl language code.
+- Default and fallback language: `vi`.
+- When `en` lacks a key, application text falls back to Vietnamese. Nuxt UI internal text uses `en`, so the interface may mix languages until translations are complete.
+- No language switcher is needed while `en.json` is empty. Test `en` through tests; add a selector only when needed.
 
-Nuxt UI locale không thay thế từ điển ứng dụng: `UApp :locale="vi"` hiện có chỉ cung cấp locale cho các component của thư viện, không dịch label do admin tự truyền vào.
+Nuxt UI locales do not replace the application dictionary: the existing `UApp :locale="vi"` only provides locales to library components; it does not translate admin-supplied labels.
 
-## 2. Quy tắc keyword thống nhất
+## 2. Consistent key rules
 
-Keyword là đường dẫn ngữ nghĩa: `<namespace>.<group>.<name>`. Có thể ngắn hơn với nhóm dùng chung, ví dụ `common.actions.save`. JSON dùng object lồng nhau, không dùng key phẳng có dấu chấm.
+Keys are semantic paths: `<namespace>.<group>.<name>`. Shared groups may be shorter, such as `common.actions.save`. Use nested JSON objects, not flat dotted keys.
 
-1. Mỗi đoạn dùng chữ tiếng Anh, `lowerCamelCase`, bắt đầu bằng chữ thường: `^[a-z][a-zA-Z0-9]*$`.
-2. Không dùng tiếng Việt, dấu cách, dấu gạch ngang, snake_case hay nguyên câu hiển thị làm key.
-3. Không gắn mã ngôn ngữ vào key: dùng `auth.login.title`, không dùng `vn.login.title` hoặc `loginTitleVi`.
-4. Đặt tên theo ý nghĩa và ngữ cảnh, không theo câu chữ: sửa bản dịch không đổi key.
-5. Hai ngôn ngữ dùng cùng đường dẫn key và cùng placeholder. Khi EN chưa hoàn thiện, tập key EN được phép là tập con của VN; không tạo key chỉ có ở EN.
-6. Chỉ dùng `common` khi cùng ý nghĩa ở nhiều màn hình. Không gom hai câu khác ngữ cảnh chỉ vì bản tiếng Việt giống nhau.
-7. Dùng nguyên câu và placeholder `{name}`, `{count}`, `{page}`, `{pages}`; không ghép các mảnh câu bằng toán tử cộng.
-8. Key lỗi mô tả nguyên nhân, ví dụ `slugExists`, `sessionExpired`; không dùng `error1` hoặc toàn bộ câu lỗi backend.
-9. Key không chứa ID dữ liệu hay tên danh mục. Các giá trị đó được truyền vào placeholder.
+1. Each segment uses English `lowerCamelCase`, starting lowercase: `^[a-z][a-zA-Z0-9]*$`.
+2. Do not use Vietnamese, spaces, hyphens, snake_case, or full display sentences as keys.
+3. Do not embed locale codes: use `auth.login.title`, not `vn.login.title` or `loginTitleVi`.
+4. Name by meaning and context rather than wording; changing translations must not change keys.
+5. Both languages use identical key paths and placeholders. While EN is incomplete, its keys may be a subset of VN; no EN-only keys.
+6. Use `common` only for shared meaning across screens. Do not merge different contexts merely because their Vietnamese wording matches.
+7. Use complete sentences and `{name}`, `{count}`, `{page}`, `{pages}` placeholders; do not concatenate sentence fragments.
+8. Error keys describe causes, such as `slugExists` or `sessionExpired`; do not use `error1` or full backend error sentences.
+9. Keys must not contain data IDs or category names. Pass those through placeholders.
 
-Namespace và nhóm được thống nhất như sau:
+Agreed namespaces and groups:
 
-| Namespace | Nội dung |
+| Namespace | Content |
 | --- | --- |
-| `common` | `actions`, `fields`, `status`, `gameTypes`, `errors`, `confirmations` dùng chung |
+| `common` | Shared `actions`, `fields`, `status`, `gameTypes`, `errors`, `confirmations` |
 | `navigation` | `items`, `accessibility`, `account`, `contentManagement` |
 | `auth` | `login`, `logout`, `errors` |
 | `dashboard` | `title`, `description` |
 | `categories` | `title`, `description`, `fields`, `help`, `actions`, `filters`, `table`, `pagination`, `form`, `deleteDialog`, `messages`, `errors`, `confirmations` |
-| `wordPrompts` | `title`, `description`, các nhóm của màn hình khi triển khai |
-| `questionPrompts` | `title`, `description`, các nhóm của màn hình khi triển khai |
+| `wordPrompts` | `title`, `description`, screen-specific groups when implemented |
+| `questionPrompts` | `title`, `description`, screen-specific groups when implemented |
 | `placeholder` | `eyebrow`, `title`, `description` |
 
-Ví dụ một phần của `vn.json`:
+Example structure for part of `vn.json` (values shown in English here for readability; the actual VN dictionary uses Vietnamese):
 
 ```json
 {
   "common": {
     "actions": {
-      "save": "Lưu",
-      "cancel": "Hủy",
-      "retry": "Thử lại"
+      "save": "Save",
+      "cancel": "Cancel",
+      "retry": "Retry"
     },
     "gameTypes": {
-      "word": "Từ ngữ",
-      "question": "Câu hỏi"
+      "word": "Words",
+      "question": "Questions"
     }
   },
   "categories": {
-    "title": "Danh mục",
+    "title": "Categories",
     "fields": {
-      "name": "Tên danh mục"
+      "name": "Category name"
     },
     "pagination": {
-      "summary": "{count} danh mục · Trang {page} / {pages}"
+      "summary": "{count} categories · Page {page} / {pages}"
     },
     "errors": {
-      "slugExists": "Slug đã tồn tại trong loại trò chơi và ngôn ngữ này."
+      "slugExists": "This slug already exists for this game type and language."
     },
     "confirmations": {
-      "deactivateNamed": "Tắt danh mục “{name}”? Nội dung bên trong sẽ được giữ nguyên."
+      "deactivateNamed": "Disable category “{name}”? Its content will be preserved."
     }
   }
 }
 ```
 
-`en.json` ban đầu chỉ chứa `{}`. Khi bổ sung bản dịch, ví dụ `categories.fields.name` phải vẫn là `categories.fields.name`; không đổi thành một keyword khác để dịch cùng nội dung.
+`en.json` initially contains only `{}`. When adding translations, `categories.fields.name` must remain `categories.fields.name`; do not change the key to translate the same content.
 
-## 3. Cấu hình dự kiến
+## 3. Proposed configuration
 
 ```js
 // admin/src/i18n/index.js
@@ -103,66 +103,66 @@ export const i18n = createI18n({
 })
 ```
 
-Đăng ký `.use(i18n)` trong `main.js` trước khi mount. Component dùng `const { t, locale } = useI18n({ useScope: 'global' })` và `t('categories.fields.name')`.
+Register `.use(i18n)` in `main.js` before mounting. Components use `const { t, locale } = useI18n({ useScope: 'global' })` and `t('categories.fields.name')`.
 
-Trong `App.vue`, import tường minh `{ vi, en }` từ `@nuxt/ui/locale`, tạo `const uiLocales = { vi, en }` rồi truyền `<UApp :locale="uiLocales[locale]">`. Không import toàn bộ các locale. Đồng bộ `<html lang>` với locale bằng Vue watch; giai đoạn đầu đặt HTML mặc định `vi`. Hai ngôn ngữ đều LTR, không cần thêm thư viện quản lý head.
+In `App.vue`, explicitly import `{ vi, en }` from `@nuxt/ui/locale`, define `const uiLocales = { vi, en }`, and pass `<UApp :locale="uiLocales[locale]">`. Do not import every locale. Synchronize `<html lang>` through a Vue watch; initially default HTML to `vi`. Both languages are LTR; no head-management library is needed.
 
-Giữ cảnh báo thiếu bản dịch trong development để tìm key sai. Trong test fallback EN, có thể tắt warning trên instance test riêng; không tắt toàn bộ cảnh báo ứng dụng để che thiếu key VN.
+Keep missing-translation warnings in development to find incorrect keys. EN fallback tests may disable warnings on a dedicated test instance; do not disable application-wide warnings to hide missing VN keys.
 
-## 4. Phạm vi chuyển đổi trong code hiện tại
+## 4. Migration scope in existing code
 
-| Vị trí | Việc cần làm |
+| Location | Required work |
 | --- | --- |
-| `admin/package.json`, `admin/yarn.lock` | Thêm Vue I18n 11 và cập nhật lockfile bằng Yarn |
-| `src/main.js`, `src/App.vue`, `index.html` | Đăng ký plugin, đồng bộ locale Nuxt UI và `lang` HTML |
-| `src/router/index.js` | Thay literal `meta.title` / `description` bằng `titleKey` / `descriptionKey`; không dịch ngay lúc định nghĩa route |
-| `src/components/admin/AdminShell.vue` | Dịch menu, breadcrumb, tiêu đề, logout, account fallback, tooltip và aria-label |
-| `src/views/login/LoginView.vue` | Dịch tiêu đề, hướng dẫn, label, placeholder, footer và lỗi đăng nhập |
-| `src/views/shared/AdminPlaceholder.vue` | Dịch placeholder và đọc `route.meta.descriptionKey` |
-| `src/views/categories/*.vue` | Dịch toolbar, loading, trạng thái, phân trang, xác nhận tắt, lỗi detail và thông báo thành công |
-| `src/components/categories/*.vue` | Dịch form, filter, header bảng, empty/caption, badge, dialog xóa, cảnh báo mất dữ liệu và accessibility |
-| `src/utils/categories.js` | Thay label/lỗi Việt bằng key; giữ validation và giá trị enum nguyên trạng |
-| `src/utils/adminAuth.js`, `src/api/categories.js` | Lỗi do app tạo dùng key/cause ổn định; không dịch lỗi backend bằng cách sửa nguyên object lỗi |
-| `src/utils/unsavedChanges.js` | Truyền chuỗi đã dịch vào `confirmDiscard(message)`; cập nhật cả AdminShell và CategoryFormView |
-| `admin/tests/*.test.js` | Đăng ký i18n khi render SSR component; cập nhật assert lỗi nội bộ từ câu Việt sang key/code ổn định |
-| `admin/README.md` | Mô tả cấu trúc từ điển, quy tắc key và fallback |
+| `admin/package.json`, `admin/yarn.lock` | Add Vue I18n 11 and update the lockfile with Yarn |
+| `src/main.js`, `src/App.vue`, `index.html` | Register the plugin, synchronize Nuxt UI locale and HTML `lang` |
+| `src/router/index.js` | Replace literal `meta.title` / `description` with `titleKey` / `descriptionKey`; do not translate during route definition |
+| `src/components/admin/AdminShell.vue` | Translate menus, breadcrumbs, titles, logout, account fallback, tooltips, and aria-labels |
+| `src/views/login/LoginView.vue` | Translate titles, instructions, labels, placeholders, footer, and login errors |
+| `src/views/shared/AdminPlaceholder.vue` | Translate placeholders and read `route.meta.descriptionKey` |
+| `src/views/categories/*.vue` | Translate toolbars, loading, statuses, pagination, deactivation confirmations, detail errors, and success messages |
+| `src/components/categories/*.vue` | Translate forms, filters, table headers, empty/caption text, badges, delete dialogs, data-loss warnings, and accessibility text |
+| `src/utils/categories.js` | Replace Vietnamese labels/errors with keys; preserve validation and enum values |
+| `src/utils/adminAuth.js`, `src/api/categories.js` | Use stable keys/causes for app-created errors; do not translate backend errors by modifying the entire error object |
+| `src/utils/unsavedChanges.js` | Pass translated strings to `confirmDiscard(message)`; update AdminShell and CategoryFormView |
+| `admin/tests/*.test.js` | Register i18n for SSR component rendering; change internal error assertions from Vietnamese sentences to stable keys/codes |
+| `admin/README.md` | Describe dictionary structure, key rules, and fallback |
 
-Các lưu ý triển khai:
+Implementation notes:
 
-- Menu, columns của bảng, options của select/radio và date formatter phải tính trong `computed` nếu phụ thuộc locale. Gọi `t()` một lần trong mảng cố định sẽ giữ ngôn ngữ cũ khi đổi locale.
-- Thông báo thành công/lỗi đang lưu trong ref nên lưu key cùng params hoặc object lỗi; dịch trong computed/template để không giữ chuỗi của locale cũ.
-- `gameTypeLabels` hiện còn được dùng để xác thực `game_type`. Có thể đổi thành map key (`word: 'common.gameTypes.word'`, `question: 'common.gameTypes.question'`) và giữ kiểm tra membership theo `word`/`question`; cập nhật tất cả callers.
-- Lỗi validation do ứng dụng tạo có thể dùng `Error('categories.errors.nameRequired')`, hoặc giữ `message` kỹ thuật và thêm `messageKey` nếu cần. Quy ước phải thống nhất trong auth/categories và được test; không gọi `useI18n` trong helper JS ngoài setup.
-- `categoryError` và lỗi auth cần map từ code ổn định sang key ở lớp hiển thị. Không truyền tùy ý `error.message` vào `t()`, không dựa vào câu Việt để nhận dạng lỗi.
-- Các RPC hiện có lỗi tiếng Việt và một số trường hợp dùng chung code (`23514`, `22023`). Giai đoạn này map thông báo khái quát đúng code; nếu cần giữ chi tiết từng nguyên nhân trong cả hai ngôn ngữ, cần bổ sung identifier lỗi ổn định từ backend ở một thay đổi riêng. Lỗi không nhận diện dùng thông báo chung đã dịch và giữ lỗi gốc để chẩn đoán.
-- Ngày cập nhật trong CategoryTable hiện dùng `Intl.DateTimeFormat('vi-VN')`. Tạo formatter theo locale (`vi-VN` / `en-US`), giữ timezone hiện có; không gắn format ngày với fallback của bản dịch.
-- Dịch đầy đủ cảnh báo xóa vĩnh viễn, nội dung published và việc giữ file ảnh; không làm yếu điều kiện xác nhận hay guard thay đổi chưa lưu.
-- Hộp thoại `beforeunload` và validation HTML gốc có chữ do trình duyệt/OS quyết định. `window.confirm` do app gọi có thể truyền chữ đã dịch; không bảo đảm đổi ngôn ngữ của mọi thông báo trình duyệt bằng Vue I18n.
-- Nội dung nhập từ database (tên, mô tả, slug) vẫn là dữ liệu. `game_type`, `locale` của nội dung, URL route, query filter, query cache key và payload không đổi theo ngôn ngữ giao diện. Đặc biệt không thay `locale: 'vi'` trong payload tạo danh mục bằng locale UI.
-- Email mẫu có ký tự `@` nên giữ dưới dạng dữ liệu minh họa hoặc dùng literal interpolation đúng cú pháp Vue I18n nếu đưa vào message; kiểm tra render để tránh lỗi compiler message.
+- Menus, table columns, select/radio options, and date formatters must use `computed` if locale-dependent. Calling `t()` once in a static array retains the old language after locale changes.
+- Success/error refs should store keys with params or error objects; translate in computed/template so visible messages follow locale changes.
+- `gameTypeLabels` also validates `game_type`. It can become a key map (`word: 'common.gameTypes.word'`, `question: 'common.gameTypes.question'`) while retaining `word`/`question` membership checks; update all callers.
+- App validation errors may use `Error('categories.errors.nameRequired')`, or retain technical `message` with a `messageKey` if needed. Use and test one convention across auth/categories; do not call `useI18n` in JS helpers outside setup.
+- Map `categoryError` and auth errors from stable codes to keys in the presentation layer. Do not pass arbitrary `error.message` to `t()` or identify errors by Vietnamese wording.
+- Existing RPCs have Vietnamese errors and sometimes share codes (`23514`, `22023`). Initially map accurate general messages by code; detailed bilingual causes require stable backend identifiers in a separate change. Use translated generic messages for unknown errors and retain originals for diagnosis.
+- CategoryTable currently uses `Intl.DateTimeFormat('vi-VN')`. Create locale-based formatters (`vi-VN` / `en-US`), preserving the current timezone; date formatting must not depend on translation fallback.
+- Fully translate permanent deletion warnings, published-content warnings, and image-retention notices; preserve confirmation requirements and unsaved changes guards.
+- `beforeunload` and native HTML validation text depend on the browser/OS. App-called `window.confirm` accepts translated text; Vue I18n cannot guarantee the language of every browser message.
+- Database content (names, descriptions, slugs) remains data. Content `game_type`/`locale`, route URLs, filter queries, cache keys, and payloads do not change with UI language. In particular, do not replace `locale: 'vi'` in category creation payloads with the UI locale.
+- Sample emails contain `@`; retain them as sample data or use valid Vue I18n literal interpolation in messages, and test rendering to avoid message compiler errors.
 
-## 5. Thứ tự thực hiện và tiêu chí hoàn thành
+## 5. Implementation order and completion criteria
 
-1. Thêm plugin và hai file JSON; gom bản dịch Việt đầy đủ theo quy tắc trên.
-2. Chuyển shell/login/router/placeholder, sau đó toàn bộ categories và helper liên quan.
-3. Cập nhật test hiện có, bổ sung kiểm tra contract từ điển và fallback; cập nhật README.
-4. Chạy `yarn test` và `yarn build:local` trong `admin`, kiểm tra trực quan các màn hình và dialog.
+1. Add the plugin and two JSON files; collect complete Vietnamese translations following the rules above.
+2. Migrate shell/login/router/placeholder, then all categories and related helpers.
+3. Update existing tests, add dictionary contract/fallback checks, and update README.
+4. Run `yarn test` and `yarn build:local` in `admin`; visually check screens and dialogs.
 
-Các kiểm tra cần có khi triển khai:
+Required implementation checks:
 
-- Mỗi đoạn key khớp regex, leaf là string không rỗng trong VN; EN được thiếu key nhưng key đã có không được rỗng.
-- Không có key chỉ nằm trong EN; placeholder mỗi bản EN phải khớp bản VN.
-- Với `en.json = {}`, dịch `categories.fields.name` ở locale EN trả về `Tên danh mục`, không trả về keyword.
-- Duyệt các key literal trong `t(...)`, meta route và map enum/error để phát hiện key không tồn tại; regex không chứng minh được mọi key động, nên key động cần test riêng hoặc map tường minh.
-- Chuyển locale trong test component làm menu, options, columns, ngày và thông báo đang hiện cập nhật; dùng một bản EN mẫu trong instance test riêng, không cần điền `en.json` production.
-- Test auth, validation payload, unsaved changes và xóa danh mục vẫn giữ hành vi; UI locale EN không thay payload nội dung `vi`.
-- Rà soát label, aria-label, tooltip, placeholder, confirm và cảnh báo để không bỏ sót chữ giao diện nằm trong source. Dữ liệu mẫu, brand và thông báo do trình duyệt sinh không bị tính là bản dịch thiếu.
+- Each key segment matches the regex; VN leaves are nonempty strings. EN may omit keys but existing values cannot be empty.
+- No EN-only keys; EN placeholders match VN.
+- With `en.json = {}`, translating `categories.fields.name` in EN returns the Vietnamese category-name label rather than the key.
+- Inspect literal keys in `t(...)`, route metadata, and enum/error maps for missing keys; regex cannot prove all dynamic keys, so test these separately or use explicit maps.
+- Switching locale in component tests updates menus, options, columns, dates, and visible messages; use sample EN in a separate test instance without populating production `en.json`.
+- Auth, payload validation, unsaved changes, and category deletion retain behavior; EN UI locale does not change content payload `vi`.
+- Review labels, aria-labels, tooltips, placeholders, confirmations, and warnings for untranslated source text. Sample data, branding, and browser-generated messages do not count as missing translations.
 
-Tài liệu này chưa thêm dependency, chưa đổi runtime, chưa chạy test/build. Không sửa các thay đổi đang có của admin hay migration.
+This document adds no dependency, changes no runtime, and has not run tests/builds. Existing admin or migration changes are untouched.
 
-## 6. Tài liệu chính thức
+## 6. Official documentation
 
-- [Nuxt UI i18n — Nuxt, link tham khảo ban đầu](https://ui.nuxt.com/docs/getting-started/integrations/i18n/nuxt): nhánh Nuxt sử dụng module `@nuxtjs/i18n`.
-- [Nuxt UI i18n — Vue, áp dụng cho admin hiện tại](https://ui.nuxt.com/docs/getting-started/integrations/i18n/vue): Vue I18n 11, plugin registration và liên kết locale với UApp.
-- [Vue I18n — Composition API](https://vue-i18n.intlify.dev/guide/advanced/composition): `legacy: false`, `useI18n`, global scope và computed translation.
-- [Vue I18n — Fallback](https://vue-i18n.intlify.dev/guide/essentials/fallback): `fallbackLocale`, key bị thiếu và cảnh báo development.
+- [Nuxt UI i18n — Nuxt, initial reference](https://ui.nuxt.com/docs/getting-started/integrations/i18n/nuxt): the Nuxt branch uses `@nuxtjs/i18n`.
+- [Nuxt UI i18n — Vue, applicable to this admin](https://ui.nuxt.com/docs/getting-started/integrations/i18n/vue): Vue I18n 11, plugin registration, and locale binding with UApp.
+- [Vue I18n — Composition API](https://vue-i18n.intlify.dev/guide/advanced/composition): `legacy: false`, `useI18n`, global scope, and computed translation.
+- [Vue I18n — Fallback](https://vue-i18n.intlify.dev/guide/essentials/fallback): `fallbackLocale`, missing keys, and development warnings.

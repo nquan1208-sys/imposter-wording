@@ -1,47 +1,47 @@
-# Kế hoạch triển khai màn hình Admin
+# Admin Screen Implementation Plan
 
-> Bố cục và trường dữ liệu từng màn được mô tả trong [Bố cục màn hình Admin](layout/admin-screen-layout.md).
+> Layouts and data fields for each screen are described in [Admin Screen Layout](layout/admin-screen-layout.md).
 
-## Thứ tự triển khai sau đăng nhập/đăng xuất
+## Implementation order after login/logout
 
-**Màn hình nên làm tiếp theo: Tổng quan.** Danh mục, Word Prompts và Question Prompts đã có luồng quản lý nội dung.
+**Next screen to implement: Overview.** Categories, Word Prompts, and Question Prompts already have content management flows.
 
-Hiện đã có tích hợp Supabase, đăng nhập/đăng xuất, admin shell và route cho bốn màn hình. Màn `Tổng quan` vẫn đang dùng placeholder; các màn danh mục, từ ngữ và câu hỏi đã có danh sách và form quản lý. Tái sử dụng shell và route hiện có khi triển khai.
+Supabase integration, login/logout, the admin shell, and routes for four screens are in place. `Overview` still uses a placeholder; category, word, and question screens already have lists and management forms. Reuse the existing shell and routes.
 
-| Thứ tự | Màn hình / phạm vi | Kết quả cần đạt | Lý do ưu tiên |
+| Order | Screen / scope | Expected outcome | Priority rationale |
 | --- | --- | --- | --- |
-| 1 | Danh mục: danh sách → form tạo/sửa | Xem, lọc, tạo, sửa và bật/tắt danh mục; dữ liệu được lưu và tải lại từ backend. | Là dữ liệu nền cho cả hai loại content. |
-| 2 | Nội dung từ ngữ: danh sách → form tạo/sửa → ảnh và preview → publish/archive | Hoàn thành luồng tạo nháp, sửa, gắn danh mục, quản lý ảnh, kiểm tra preview và thay đổi trạng thái. | Hoàn thiện một luồng quản lý content từ đầu đến cuối trước khi làm loại còn lại. |
-| 3 | Nội dung câu hỏi: danh sách → form tạo/sửa và preview → publish/archive | Hoàn thành luồng quản lý cặp câu hỏi, kiểm tra câu hỏi rỗng/trùng và đúng loại danh mục. | Tái sử dụng cách lọc, phân trang và hiển thị trạng thái đã làm ở màn từ ngữ. |
-| 4 | Tổng quan | Hiển thị thống kê, nội dung gần đây, nháp cần xử lý và cảnh báo từ dữ liệu thật; liên kết đến màn xử lý tương ứng. | Các màn quản lý đã tạo ra dữ liệu và luồng xử lý để dashboard tổng hợp. |
+| 1 | Categories: list → create/edit form | View, filter, create, edit, and enable/disable categories; save and reload backend data. | Foundation for both content types. |
+| 2 | Word content: list → create/edit form → images and preview → publish/archive | Complete draft creation, editing, category assignment, image management, preview checks, and status changes. | Complete one content management flow end to end before implementing the other. |
+| 3 | Question content: list → create/edit form and preview → publish/archive | Manage question pairs, reject empty/identical questions, and enforce category type. | Reuse filtering, pagination, and status display from word content. |
+| 4 | Overview | Show statistics, recent content, pending drafts, and warnings from real data; link to the relevant management screens. | Management screens provide the data and workflows summarized by the dashboard. |
 
-Thứ tự triển khai khác với thứ tự menu: `Tổng quan` vẫn là màn đầu sau đăng nhập, nhưng hoàn thiện sau các màn quản lý content.
+Implementation order differs from menu order: `Overview` remains the first screen after login but is completed after content management screens.
 
-### Phạm vi đã triển khai: Danh mục
+### Implemented scope: Categories
 
-1. Danh sách `/categories`: tìm kiếm backend theo tên/slug (debounce 300 ms), lọc loại game/trạng thái, phân trang 20 dòng và sắp xếp. Giữ bộ lọc trong URL.
-2. Form `/categories/new` và `/categories/:id/edit`: tạo tiếng Việt; khi sửa giữ nguyên ngôn ngữ và khóa loại trò chơi.
-3. Backend đọc/ghi qua `admin/src/api/categories.js`; component hiển thị, utils và CSS tách riêng. Vue Query tải lại dữ liệu sau thao tác.
-4. Xóa rỗng; chuyển toàn bộ content sang danh mục đang hoạt động cùng loại/locale rồi xóa; hoặc xóa toàn bộ content và danh mục. RPC xử lý nguyên tử, kiểm tra quyền admin, khóa dữ liệu và xác nhận phiên bản content trước purge.
-5. Xóa toàn bộ phải nhập đúng tên và xem số content theo trạng thái. File Storage được giữ lại; chưa có luồng dọn ảnh.
-6. Tắt danh mục cần xác nhận; cảnh báo thay đổi chưa lưu khi điều hướng, tải lại hoặc đăng xuất.
+1. `/categories` list: backend name/slug search (300 ms debounce), game type/status filters, 20-row pagination, and sorting. Keep filters in the URL.
+2. `/categories/new` and `/categories/:id/edit` forms: create in Vietnamese; preserve language and lock game type when editing.
+3. Backend reads/writes through `admin/src/api/categories.js`; separate display components, utilities, and CSS. Vue Query refreshes data after actions.
+4. Delete empty categories; transfer all content to an active category of the same type/locale and delete; or delete all content and the category. The RPC is atomic, checks admin permissions, locks data, and verifies the content version before purging.
+5. Full deletion requires the exact name and shows content counts by status. Storage files are retained; image cleanup is not implemented.
+6. Disabling a category requires confirmation; warn about unsaved changes on navigation, reload, or logout.
 
-### Kiểm thử và triển khai danh mục
+### Category testing and deployment
 
-- `cd admin && yarn test` và `yarn build:local`.
-- Áp dụng migration mới bằng `supabase migration up --local`; không reset dữ liệu.
-- Chạy `supabase/tests/category_management.sql` bằng psql với `ON_ERROR_STOP=1`; script rollback fixture.
-- Chạy `python3 supabase/tests/category_concurrency.py` để kiểm tra thêm content đồng thời trên container local.
-- Deployment backend phải áp dụng migration `20261012155821_category_management.sql` trước khi phát hành frontend; bản triển khai này không tự push lên remote.
+- `cd admin && yarn test` and `yarn build:local`.
+- Apply new migrations with `supabase migration up --local`; do not reset data.
+- Run `supabase/tests/category_management.sql` through psql with `ON_ERROR_STOP=1`; the script rolls back fixtures.
+- Run `python3 supabase/tests/category_concurrency.py` to check concurrent content additions on the local container.
+- Backend deployment must apply `20261012155821_category_management.sql` before releasing the frontend; this implementation does not automatically push to remote.
 
-### Tiêu chí hoàn thành mỗi màn
+### Completion criteria for each screen
 
-- Có trạng thái loading, danh sách rỗng, lỗi tải/lưu và cách thử lại.
-- Chặn gửi form nhiều lần khi đang lưu; giữ dữ liệu đã nhập nếu lưu thất bại.
-- Form có validation và cảnh báo khi rời trang hoặc đăng xuất với thay đổi chưa lưu.
-- Hoàn thành các thao tác chính với dữ liệu backend trước khi chuyển sang màn tiếp theo.
-- Kiểm tra quyền truy cập dữ liệu: phiên hết hạn hoặc tài khoản không có quyền admin không được đọc/ghi dữ liệu quản trị trái phép.
+- Loading, empty list, load/save error, and retry states are available.
+- Prevent duplicate submissions while saving; preserve entered data if saving fails.
+- Forms include validation and warn before leaving or logging out with unsaved changes.
+- Complete core actions with backend data before moving to the next screen.
+- Check data permissions: expired sessions and non-admin accounts must not read/write admin data without authorization.
 
-### Question Prompts đã triển khai
+### Implemented Question Prompts
 
-Danh sách có tìm kiếm hai câu hỏi (debounce 300 ms), bộ lọc URL và phân trang 20 dòng. Form tạo/sửa có hai textarea, preview từng vai trò, lưu nháp/publish/archive/xóa, kiểm tra phiên bản và guard thay đổi chưa lưu. Không lưu hint. Xem [kế hoạch Question Prompts](admin-question-prompts-implementation-plan.md) cho migration, kiểm thử và giới hạn xác minh giao diện.
+The list searches both questions (300 ms debounce), with URL filters and 20-row pagination. Create/edit forms include two textareas, role previews, draft/publish/archive/delete actions, version checks, and an unsaved changes guard. No hint is saved. See the [Question Prompts plan](admin-question-prompts-implementation-plan.md) for migrations, tests, and UI verification limits.

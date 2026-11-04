@@ -14,6 +14,8 @@ Flutter mobile app with Signals state management, Riverpod DI, and a feature-bas
 | JSON serialization | json_serializable / json_annotation | ^6.8.0 / ^4.9.0 |
 | Asset code gen | flutter_gen | ^5.7.0 |
 | Localization | flutter_localizations + intl | ^0.20.0 |
+| Backend content | supabase_flutter | 2.18.3 (pinned) |
+| Local file location | path_provider | 2.1.6 (pinned) |
 
 ---
 
@@ -28,15 +30,21 @@ lib/
     store/                # StoreBase, createAutoDisposeStore, AutoDisposeManager, StoreProvider
   config/                 # Environment config (AppConfig)
   constants/              # AppSpacing, AppEdgeInsets, ...
+  data/                   # Supabase content, scoped atomic JSON files, global DI
+  models/                 # ContentSnapshot, AppSettings, categories/prompts, GameSetup/players
   features/               # One folder per feature
     landing/              # Start screen (initial route)
     how_to_play/          # Rules screen
+    setup/                # Setup/preset persistence, setup/category screens and content notices
+    settings/             # App settings and UI language picker
+    player_presets/       # Saved-list management, details and name dialogs
     unknown/              # Fallback for unknown routes
   l10n/
     arb/                  # app_en.arb (template), app_vi.arb
     gen_l10n/             # Generated output (do not edit)
-  store/app_store.dart    # Global AppStore (locale)
+  store/app_store.dart    # Global AppStore (UI locale and app settings)
   theme/                  # AppColors tokens + AppTheme (light/dark)
+  widgets/                # Shared content, action bars, notices, selection/grid/player cards
 ```
 
 ---
@@ -55,7 +63,7 @@ Core infrastructure that features depend on but do not own.
 Each feature folder contains its screen(s) and, when it has state, a store. Static screens (landing, how-to-play) have no store.
 
 ### `theme/`
-`AppColors` holds design tokens from `docs/support.bumble.com-DESIGN.md` (repo root). `AppTheme.light` maps them to `ThemeData` (color scheme, text theme, buttons, cards, app bar). `AppTheme.dark` currently mirrors light until a dark design exists. Screens use `Theme.of(context)` and `AppColors`; do not hardcode hex values.
+`AppColors` holds design tokens from `docs/support.bumble.com-DESIGN.md` (repo root). `AppTheme.light` maps them to `ThemeData` (color scheme, text theme, buttons, cards, app bar). `AppTheme.dark` currently mirrors light until a dark design exists. Screens use `Theme.of(context)` and `AppColors`; do not hardcode hex values. Radii come from `AppRadii`. Shared presentation widgets live in `widgets/`; they receive callbacks/state and do not own stores. `AppActionBar` owns the keyboard inset and safe area for scaffold footers. `AppCardGrid` uses two columns on ordinary phones, one below 280 content px or above 1.5 text scale; `PlayerCards` renders matching lazy rows.
 
 ### `l10n/`
 Template is `app_en.arb`; every key must also exist in `app_vi.arb`. Default locale is `vi`, held by `AppStore.locale` and passed to `MaterialApp.locale`. Read strings with `AppLocalizations.of(context)`. Never edit generated files.
@@ -69,6 +77,8 @@ Riverpod is the DI container. State lives in signals on stores, not in Riverpod 
 - `AppProvider` — raw providers for router and i18n
 - `AppService` — derived providers that compose `AppProvider` dependencies
 - `StoreProvider` — store providers; feature stores use `createAutoDisposeStore`
+- `data/game_providers.dart` — app-lifetime content repository and setup store,
+  watched at startup; share pending loads and committed settings across routes
 
 ---
 

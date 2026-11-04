@@ -1,15 +1,16 @@
-# Thiết lập Supabase local thủ công trên máy mới
+# Manual Local Supabase Setup on a New Machine
 
-Hướng dẫn cho macOS, chạy Supabase và Vue Admin của repository
-`imposter-wording`. Mọi lệnh Supabase chạy tại **thư mục gốc repository**;
-lệnh Yarn chạy trong **`admin/`**.
+Current Family Mode contract and local upgrade procedure: [Category-Based Family Mode](family-mode.md).
+macOS guide for running Supabase and Vue Admin from the
+`imposter-wording` repository. Run all Supabase commands at the **repository root**;
+run Yarn commands in **`admin/`**.
 
-## 1. Chuẩn bị công cụ
+## 1. Prepare tools
 
-Cần Git, Node.js 22.12 trở lên, Yarn 1.22.22, Supabase CLI và một Docker
-runtime đang chạy. Các lệnh Homebrew dưới đây cần Homebrew đã được cài.
+Requires Git, Node.js 22.12 or later, Yarn 1.22.22, Supabase CLI, and a running Docker
+runtime. The Homebrew commands below require Homebrew to be installed.
 
-Kiểm tra trước:
+Check first:
 
 ```bash
 git --version
@@ -20,49 +21,49 @@ docker --version
 docker info
 ```
 
-Chỉ cài những công cụ còn thiếu:
+Install only missing tools:
 
 ```bash
-# Node.js, nếu chưa có phiên bản phù hợp
+# Node.js, if a suitable version is not installed
 brew install node
 
-# Yarn, nếu chưa có
+# Yarn, if missing
 npm install --global yarn@1.22.22
 
-# Supabase CLI, nếu chưa có
+# Supabase CLI, if missing
 brew install supabase/tap/supabase
 ```
 
-Nếu chưa có Docker runtime, có thể cài OrbStack:
+If no Docker runtime is installed, you can install OrbStack:
 
 ```bash
 brew install --cask orbstack
 open -a OrbStack
 ```
 
-Nếu đã có Docker Desktop, mở Docker Desktop. Đợi runtime khởi động và kiểm
-tra lại `docker info` trước khi tiếp tục.
+If Docker Desktop is installed, open it. Wait for the runtime to start and
+check `docker info` again before continuing.
 
-## 2. Lấy repository
+## 2. Get the repository
 
-Nếu chưa clone, thay `<REPOSITORY_URL>` bằng URL Git của dự án:
+If not yet cloned, replace `<REPOSITORY_URL>` with the project's Git URL:
 
 ```bash
 git clone <REPOSITORY_URL>
 cd imposter-wording
 ```
 
-Nếu đã clone:
+If already cloned:
 
 ```bash
 cd /path/to/imposter-wording
 ```
 
-Repository đã có `supabase/config.toml` và migrations; không cần chạy
-`supabase init`. Chạy local không cần `supabase login`, `supabase link` hoặc
-push migration lên cloud.
+The repository includes `supabase/config.toml` and migrations; no
+`supabase init` is needed. Local use requires no `supabase login`, `supabase link`, or
+cloud migration pushes.
 
-## 3. Khởi động Supabase local
+## 3. Start local Supabase
 
 ```bash
 supabase start
@@ -70,57 +71,57 @@ supabase status
 supabase migration list --local
 ```
 
-Lần đầu cần tải Docker images nên có thể mất vài phút. Khi tạo database mới,
-Supabase áp dụng migrations của repository. `supabase start` kết thúc khi
-stack sẵn sàng; các container tiếp tục chạy nền.
+The first run downloads Docker images and may take a few minutes. When creating a new database,
+Supabase applies repository migrations. `supabase start` finishes when
+the stack is ready; containers continue running in the background.
 
-Các địa chỉ mặc định:
+Default addresses:
 
-| Dịch vụ | URL |
+| Service | URL |
 | --- | --- |
 | API | http://127.0.0.1:54321 |
 | Studio | http://127.0.0.1:54323 |
 | Mailpit, xem email test | http://127.0.0.1:54324 |
 
-## 4. Cài Admin và tạo environment
+## 4. Install Admin and configure the environment
 
 ```bash
 cd admin
 yarn install --frozen-lockfile
 ```
 
-Nếu chưa có `admin/.env.local`, tạo từ file mẫu:
+If `admin/.env.local` does not exist, create it from the example:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Mở để chỉnh sửa:
+Open it for editing:
 
 ```bash
 nano .env.local
 ```
 
-Điền URL và **Publishable key** từ kết quả `supabase status`. Nếu CLI chỉ
-hiển thị `anon key`, dùng key đó:
+Fill in the URL and **Publishable key** from `supabase status`. If the CLI only
+shows an `anon key`, use that:
 
 ```env
 VITE_SUPABASE_URL=http://127.0.0.1:54321
-VITE_SUPABASE_PUBLISHABLE_KEY=<PUBLISHABLE_KEY_HOAC_ANON_KEY_LOCAL>
+VITE_SUPABASE_PUBLISHABLE_KEY=<LOCAL_PUBLISHABLE_KEY_OR_ANON_KEY>
 ```
 
-Thay toàn bộ placeholder bằng key thực tế. Không dùng `service_role`, Secret
-key hoặc database password trong biến `VITE_*`. File `.env.local` đã được
-Git ignore. Nếu chạy `supabase status` lại, quay về root bằng `cd ..`.
+Replace the entire placeholder with the actual key. Do not use `service_role`, Secret
+keys, or database passwords in `VITE_*`. `.env.local` is
+Git-ignored. To rerun `supabase status`, return to the root with `cd ..`.
 
-## 5. Tạo tài khoản admin local
+## 5. Create a local admin account
 
-Mở http://127.0.0.1:54323:
+Open http://127.0.0.1:54323:
 
-1. Vào **Authentication → Users → Add user**.
-2. Tạo email `admin.local@example.com` và password test bạn chọn.
-3. Bật **Auto Confirm** để đăng nhập ngay.
-4. Mở **SQL Editor** và chạy câu lệnh sau.
+1. Open **Authentication → Users → Add user**.
+2. Create `admin.local@example.com` with a test password of your choice.
+3. Enable **Auto Confirm** for immediate login.
+4. Open **SQL Editor** and run the following.
 
 ```sql
 insert into public.admin_users (user_id, role, is_active)
@@ -136,21 +137,21 @@ join auth.users u on u.id = au.user_id
 where u.email = 'admin.local@example.com';
 ```
 
-Nếu chọn email khác, thay email trong cả hai câu SQL. Kết quả phải có một
-dòng với `role = admin` và `is_active = true`. Tài khoản này chỉ tồn tại trong
-local stack của máy đang thiết lập.
+If using another email, replace it in both SQL statements. The result must contain one
+row with `role = admin` and `is_active = true`. This account exists only in
+the local stack on the machine being configured.
 
-## 6. Chạy và kiểm tra Admin
+## 6. Run and check Admin
 
 ```bash
 cd /path/to/imposter-wording/admin
 yarn dev:local
 ```
 
-Mở URL Vite in ra, thường là http://localhost:5173. Đăng nhập bằng tài khoản
-vừa tạo và mở trang quản lý category để kiểm tra kết nối.
+Open the URL printed by Vite, usually http://localhost:5173. Log in with the
+new account and open category management to verify connectivity.
 
-Có thể kiểm tra build và các test sẵn có trong terminal khác, sau khi đã tạo
+You can check builds and existing tests in another terminal after creating
 `.env.local`:
 
 ```bash
@@ -159,34 +160,34 @@ yarn build:local
 yarn test
 ```
 
-## 7. Lệnh dùng hằng ngày
+## 7. Daily commands
 
-Khởi động backend:
+Start the backend:
 
 ```bash
 cd /path/to/imposter-wording
 supabase start
 ```
 
-Chạy frontend:
+Run the frontend:
 
 ```bash
 cd /path/to/imposter-wording/admin
 yarn dev:local
 ```
 
-Dừng frontend bằng `Ctrl+C`. Dừng backend nhưng giữ dữ liệu:
+Stop the frontend with `Ctrl+C`. Stop the backend while preserving data:
 
 ```bash
 cd /path/to/imposter-wording
 supabase stop
 ```
 
-Không cần cài dependencies hoặc tạo lại tài khoản mỗi lần chạy.
+Dependencies and accounts do not need to be recreated on every run.
 
-## 8. Khi cần áp dụng migration mới hoặc dựng lại database
+## 8. Applying new migrations or rebuilding the database
 
-Nếu database đã tồn tại và có migration mới, kiểm tra rồi áp dụng trên local:
+If the database exists and new migrations are available, inspect and apply them locally:
 
 ```bash
 cd /path/to/imposter-wording
@@ -195,25 +196,43 @@ supabase db push --local --dry-run
 supabase db push --local
 ```
 
-Chỉ khi muốn **xoá dữ liệu local và dựng lại từ migrations**, chạy:
+Only when you intend to **delete local data and rebuild from migrations**, run:
 
 ```bash
 supabase db reset --local
 ```
 
-Sau reset, cần tạo lại tài khoản admin theo bước 5. Không dùng reset như một
-bước bắt buộc khi mở dự án.
+After resetting, recreate the admin account using step 5. Resetting is not
+a required step when opening the project.
 
-## 9. Lỗi thường gặp
+### Sample data and word images
 
-- **Không kết nối Docker daemon:** mở Docker Desktop/OrbStack và chạy lại
+Added [3 Family categories with 15 Vietnamese–English question pairs](family-question-mode.md).
+See that guide to load them separately into a running local DB without resetting.
+New databases automatically load both seed files listed in `config.toml`.
+
+After applying migrations, load 5 categories per game type, each containing
+5 prompts with published Vietnamese and English translations, plus 25 word illustrations:
+
+```bash
+python3 supabase/scripts/seed_local_images.py
+```
+
+The script runs only against the default local stack, preserves existing data, and checks player
+read access to prompts/images. Reruns do not duplicate records. During resets,
+`supabase/seed.sql` loads automatically; rerun the script to upload and link
+images. Image sources and licenses: [seed-images](../supabase/seed-images/README.md).
+
+## 9. Common errors
+
+- **Cannot connect to Docker daemon:** open Docker Desktop/OrbStack and rerun
   `docker info`.
-- **Port đang được dùng:** kiểm tra `docker ps` và dừng stack đang chiếm các
-  port `54321`–`54324`; tránh đổi port khi chưa cập nhật environment.
-- **Thiếu `VITE_SUPABASE_*`:** kiểm tra `admin/.env.local`, dùng đúng
-  `yarn dev:local` và khởi động lại Vite sau khi sửa env.
-- **Đăng nhập được nhưng không có quyền admin:** kiểm tra kết quả SQL ở
-  bước 5 và chắc chắn frontend đang trỏ đến API local.
+- **Ports in use:** check `docker ps` and stop the stack occupying
+  ports `54321`–`54324`; avoid changing ports without updating the environment.
+- **Missing `VITE_SUPABASE_*`:** check `admin/.env.local`, use
+  `yarn dev:local`, and restart Vite after environment changes.
+- **Login works but admin access is denied:** check the SQL result from
+  step 5 and ensure the frontend points to the local API.
 
-Tham khảo: [Supabase CLI và local development](https://supabase.com/docs/guides/local-development/cli/getting-started),
-[hướng dẫn đầy đủ của dự án](./admin-supabase-new-device-guide.md).
+References: [Supabase CLI and local development](https://supabase.com/docs/guides/local-development/cli/getting-started),
+[full project guide](./admin-supabase-new-device-guide.md).

@@ -6,14 +6,336 @@
   "startUnavailable": "Sắp ra mắt",
   "howToPlay": "Cách chơi",
   "stepSetupTitle": "Thiết lập trò chơi",
-  "stepSetupBody": "Chọn danh sách người chơi và danh mục từ. Một người chơi sẽ được bí mật chọn làm kẻ mạo danh.",
+  "stepSetupBody": "Chọn người chơi, danh mục và số kẻ mạo danh cố định hoặc ngẫu nhiên. Người thường luôn chiếm đa số.",
   "stepRevealTitle": "Tiết lộ từ",
-  "stepRevealBody": "Mỗi người lần lượt xem thông tin của mình. Người chơi bình thường thấy từ bí mật; kẻ mạo danh chỉ thấy vai trò, và tên danh mục nếu bật hiển thị danh mục.",
+  "stepRevealBody": "Mỗi người mở thẻ riêng. Kẻ mạo danh thấy vai, danh mục nếu bật và tên đồng vai nếu bật; không được thấy từ bí mật.",
   "stepHintTitle": "Đưa ra gợi ý",
   "stepHintBody": "Người chơi lần lượt nói một từ liên quan đến từ bí mật. Gợi ý không nên quá rõ ràng để tránh lộ từ.",
   "stepFindTitle": "Tìm kẻ mạo danh",
-  "stepFindBody": "Cả nhóm thảo luận rồi bỏ phiếu cho người có vẻ không biết từ bí mật. Nếu nhóm bỏ phiếu sai, kẻ mạo danh thắng.",
+  "stepFindBody": "Thảo luận và bầu bằng lời. Chọn số người bằng số kẻ mạo danh. Nhóm chỉ thắng khi chọn đúng toàn bộ; nếu sai, phe mạo danh thắng. Hòa thì bầu lại.",
   "proTipTitle": "Mẹo chuyên nghiệp",
   "proTipBody": "Kẻ mạo danh nên lắng nghe cẩn thận, hòa nhập và đưa ra gợi ý phù hợp với danh mục.",
-  "notFound": "Không tìm thấy trang"
+  "backToHome": "Về trang chủ",
+  "notFound": "Không tìm thấy trang",
+  "setupTitle": "Thiết lập trò chơi",
+  "players": "Người chơi",
+  "imposters": "Kẻ mạo danh",
+  "wordGameSummary": "Tìm người không biết từ bí mật.",
+  "questionGameSummary": "Tìm người nhận câu hỏi khác.",
+  "wordGame": "Trò chơi từ ngữ",
+  "gameMode": "Chế độ trò chơi",
+  "classicMode": "Cổ điển",
+  "familyMode": "Gia đình",
+  "categories": "Danh mục",
+  "allCategories": "Tất cả danh mục",
+  "confirm": "Xác nhận",
+  "cancel": "Hủy",
+  "retry": "Thử lại",
+  "loadingContent": "Đang tải nội dung…",
+  "emptyContent": "Chưa có nội dung phù hợp trong chế độ này.",
+  "contentError": "Không thể tải nội dung mới. Vui lòng thử lại.",
+  "cachedContent": "Đang dùng nội dung đã lưu.",
+  "cacheWarning": "Nội dung vẫn dùng được nhưng không thể đọc hoặc lưu bộ nhớ ngoại tuyến.",
+  "selectionRemoved": "Đã bỏ danh mục không còn phù hợp. Nếu không còn lựa chọn, tất cả danh mục sẽ được dùng.",
+  "settingsLoading": "Đang khôi phục thiết lập…",
+  "settingsReadError": "Không đọc được thiết lập đã lưu. Thử lại để tiếp tục.",
+  "settingsWriteError": "Không thể lưu thiết lập. Các thay đổi vẫn được giữ trên màn hình.",
+  "resetSetup": "Đặt lại thiết lập",
+  "resetSetupConfirm": "Thay thiết lập không đọc được bằng thiết lập mặc định?",
+  "startGame": "Bắt đầu ván chơi",
+  "decreasePlayers": "Giảm số người",
+  "increasePlayers": "Tăng số người",
+  "wordCount": "{count} từ phù hợp",
+  "@wordCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedCategoryCount": "Đã chọn {count} danh mục",
+  "@selectedCategoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerCount": "{count} người chơi",
+  "@playerCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wordFor": "Từ dành cho {name}",
+  "@wordFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "endGame": "Kết thúc ván",
+  "endGameConfirm": "Kết thúc ván và quay về thiết lập? Tiến độ ván này sẽ bị mất.",
+  "voteTitle": "Chọn người bị bầu",
+  "voteHelp": "Chọn đúng {count} người bị bầu. Nếu hòa, hãy bầu lại. Nhóm chỉ thắng khi chọn đúng toàn bộ kẻ mạo danh.",
+  "gameStartError": "Không thể tạo ván. Hãy quay về thiết lập và kiểm tra nội dung phù hợp.",
+  "discussionTitle": "Gợi ý & thảo luận",
+  "gameResult": "Kết quả",
+  "passPhone": "Chuyển máy cho từng người để xem thẻ riêng.",
+  "playerDone": "Đã xem",
+  "youAreImposter": "Bạn là kẻ mạo danh",
+  "tapToReveal": "Nhấn để hiển thị",
+  "understood": "Hiểu rồi!",
+  "startingPlayer": "Người mở đầu: {name}",
+  "@startingPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@discussionHelp": {"placeholders": {"name": {"type": "String"}}},
+  "discussionHelp": "{name} đưa gợi ý trước, sau đó lần lượt theo chiều kim đồng hồ. Thảo luận xong, bấm “Bắt đầu bầu chọn” để chọn nghi phạm.",
+  "groupWins": "Nhóm chiến thắng!",
+  "imposterWins": "Kẻ mạo danh chiến thắng!",
+  "actualImposter": "Kẻ mạo danh là: {name}",
+  "@actualImposter": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "votedPlayer": "Người bị bầu: {name}",
+  "@votedPlayer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "secretWord": "Từ bí mật",
+  "startVoting": "Bắt đầu bầu chọn",
+  "playAgain": "Chơi lại",
+  "editPlayers": "Chỉnh sửa người chơi",
+  "playerName": "Người chơi {count}",
+  "@playerName": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nameRequired": "Vui lòng nhập tên.",
+  "moveUp": "Di chuyển lên",
+  "moveDown": "Di chuyển xuống",
+  "removePlayer": "Xóa người chơi",
+  "addPlayer": "Thêm người chơi",
+  "discardRoster": "Bỏ thay đổi danh sách người chơi?",
+  "discard": "Bỏ thay đổi",
+  "randomCount": "Ngẫu nhiên",
+  "imposterRange": "1–{count} kẻ mạo danh, chọn ngẫu nhiên đều khi bắt đầu ván.",
+  "@imposterRange": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fewerImposters": "Giảm kẻ mạo danh",
+  "moreImposters": "Tăng kẻ mạo danh",
+  "imposterNotFirstHelp": "Người mở đầu luôn là người thường. Không ảnh hưởng thứ tự xem thẻ.",
+  "imposterNotFirst": "Kẻ mạo danh không mở đầu thảo luận",
+  "showWordImages": "Hiển thị ảnh",
+  "showCategory": "Hiển thị tên danh mục cho kẻ mạo danh",
+  "knowEachOther": "Kẻ mạo danh biết nhau",
+  "fellowImposters": "Kẻ mạo danh cùng vai: {name}",
+  "@fellowImposters": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@voteHelp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playerLimits": "3–100 người chơi",
+  "questionGame": "Trò chơi câu hỏi",
+  "questionCount": "{count} cặp câu hỏi phù hợp",
+  "questionFor": "Câu hỏi cho {name}",
+  "everyonesAnswers": "Câu trả lời của mọi người",
+  "questionDiscussion": "Giai đoạn thảo luận",
+  "questionPassPhone": "Mỗi người chơi mở câu hỏi và gửi câu trả lời riêng tư. Vai trò được giữ kín.",
+  "answersSubmitted": "{count} / {total} câu trả lời đã gửi",
+  "answerSent": "Đã gửi",
+  "yourAnswer": "Câu trả lời của bạn",
+  "answerHint": "Nhập câu trả lời của bạn ở đây…",
+  "submitAnswer": "Gửi câu trả lời",
+  "commonQuestionHelp": "Đây là câu hỏi chung. Tiếp theo, xem tất cả câu trả lời và thảo luận xem ai đã nhận câu hỏi khác.",
+  "startRound": "Bắt đầu vòng",
+  "findImposters": "Tìm kẻ giả mạo",
+  "questionInstructions": "Mở câu hỏi riêng và trả lời kín đáo. Không ai được báo vai. Câu trả lời chưa gửi được giữ riêng và chỉ hiện khi mở lại thẻ. Khi mọi người gửi xong, xem câu hỏi chung và thảo luận các câu trả lời. Công bố khi đã sẵn sàng; không ghi nhận phiếu hay tính bên thắng. Khi bật “Kẻ mạo danh biết nhau” và có nhiều kẻ mạo danh, họ thấy tên đồng vai chỉ trong thẻ riêng đã mở.",
+  "@questionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@questionFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@answersSubmitted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "unsavedGame": "Trò chơi chưa lưu",
+  "unsavedGameHelp": "Chơi nhanh với danh sách hiện tại",
+  "savedLists": "Danh sách đã lưu",
+  "saveList": "Lưu thành danh sách…",
+  "manageLists": "Quản lý danh sách",
+  "newList": "Lưu thành danh sách mới…",
+  "listName": "Tên danh sách",
+  "listNameHint": "Nhập tên danh sách",
+  "invalidListName": "Tên không được trống hoặc trùng danh sách khác.",
+  "save": "Lưu",
+  "rename": "Đổi tên",
+  "delete": "Xóa",
+  "details": "Chi tiết",
+  "listActions": "Tùy chọn danh sách",
+  "usingList": "Đang dùng",
+  "emptyLists": "Quay về chỉnh sửa người chơi và lưu nhóm đầu tiên.",
+  "deleteListConfirm": "Xóa danh sách này? Người chơi và luật hiện tại vẫn được giữ.",
+  "savedRules": "Luật đã lưu",
+  "listAutosave": "Luật tự lưu khi thay đổi ở thiết lập. Người chơi chỉ lưu sau khi xác nhận chỉnh sửa.",
+  "fixedCount": "Cố định",
+  "recommendedImposter": "1 kẻ mạo danh được đề xuất",
+  "enabled": "Bật",
+  "disabled": "Tắt",
+  "chooseImposters": "Chọn kẻ mạo danh",
+  "fixedCountHelp": "Chọn số kẻ mạo danh chính xác",
+  "randomCountHelp": "Số kẻ mạo danh ngẫu nhiên mỗi ván",
+  "moreImpostersNeedPlayers": "Cần ít nhất 5 người chơi để chọn nhiều hơn 1 kẻ mạo danh.",
+  "refreshContent": "Làm mới nội dung",
+  "wordImageUnavailable": "Ảnh chưa khả dụng",
+  "wordImage": "Ảnh cho từ {word}",
+  "@wordImage": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "familyCategories": "Chế độ gia đình",
+  "emptyFamilyCategories": "Chưa có danh mục gia đình có nội dung. Vui lòng chọn Tất cả danh mục hoặc thử lại sau.",
+  "createCustomCategory": "Tạo danh mục tùy chỉnh",
+  "customCategoryName": "Tên danh mục",
+  "customCategoryNameHint": "Ví dụ: Từ ngữ công ty",
+  "customCategoryNameExists": "Tên danh mục đã tồn tại. Hãy chọn tên khác.",
+  "customWordList": "Danh sách từ",
+  "customWordsEmpty": "Chưa có từ nào.",
+  "customWord": "Từ",
+  "addCustomWord": "Thêm từ",
+  "importCustomWords": "Nhập nhiều từ",
+  "customOneWordPerLine": "Mỗi dòng một từ",
+  "customWordInvalid": "Nhập ít nhất một từ mới.",
+  "removeCustomWord": "Xóa từ {word}",
+  "saveCustomCategory": "Lưu danh mục",
+  "customSaving": "Đang lưu…",
+  "customFamilyConfirmation": "Tôi xác nhận các từ này phù hợp để chơi cùng gia đình.",
+  "discardCustomDraft": "Hủy thay đổi chưa lưu?",
+  "customSaveError": "Không thể lưu. Các từ vẫn được giữ lại. Hãy thử lưu lại.",
+  "clearCustomContentTitle": "Xóa nội dung tùy chỉnh và rời thiết lập?",
+  "clearCustomContentHelp": "Quay về trang đầu sẽ xóa vĩnh viễn danh mục, từ và cặp câu hỏi tùy chỉnh của bộ thiết lập này.",
+  "clearCustomContentAction": "Xóa và rời đi",
+  "@removeCustomWord": {"placeholders": {"word": {"type": "String"}}},
+  "customQuestionList": "Danh sách cặp câu hỏi",
+  "customQuestionsEmpty": "Chưa có cặp câu hỏi nào.",
+  "customCivilianQuestion": "Câu hỏi thường dân",
+  "customImposterQuestion": "Câu hỏi kẻ mạo danh",
+  "addCustomQuestion": "Thêm cặp câu hỏi",
+  "importCustomQuestions": "Nhập nhiều cặp câu hỏi",
+  "customQuestionLineHelp": "Nhập mỗi câu hỏi trên một dòng trong mỗi ô. Hai câu hỏi cùng dòng tạo thành một cặp.",
+  "customQuestionSaveError": "Không thể lưu. Các cặp câu hỏi vẫn được giữ lại. Hãy thử lưu lại.",
+  "removeCustomQuestion": "Xóa cặp {row}",
+  "customQuestionRowsError": "Kiểm tra dòng {rows}: câu hỏi không được trống, phải khác nhau và cặp không được trùng.",
+  "customQuestionCountError": "Hai ô phải có cùng số dòng. Kiểm tra dòng {rows}.",
+  "@removeCustomQuestion": {"placeholders": {"row": {"type": "int"}}},
+  "@customQuestionRowsError": {"placeholders": {"rows": {"type": "String"}}},
+  "@customQuestionCountError": {"placeholders": {"rows": {"type": "String"}}},
+  "addLocalImage": "Thêm ảnh",
+  "replaceLocalImage": "Thay ảnh",
+  "removeLocalImage": "Xóa ảnh",
+  "imageLibrary": "Thư viện ảnh",
+  "imageCamera": "Máy ảnh",
+  "questionImage": "Ảnh câu hỏi",
+  "hasLocalImages": "Có hình ảnh",
+  "localImageUnavailable": "Không thể hiển thị ảnh",
+  "localImageInvalid": "Không thể đọc ảnh này. Vui lòng chọn ảnh khác.",
+  "localImageOversized": "Chọn ảnh có dung lượng tối đa 5 MiB.",
+  "localImageDiskError": "Không thể lưu ảnh. Hãy giải phóng bộ nhớ thiết bị và thử lại.",
+  "localImagePermission": "Quyền truy cập bị từ chối hoặc hạn chế. Hãy cho phép ứng dụng truy cập Ảnh hoặc Máy ảnh trong Cài đặt hệ thống.",
+  "localImageCameraUnavailable": "Máy ảnh không khả dụng. Hãy chọn ảnh từ thư viện.",
+  "localImageDraftLost": "Ứng dụng đã khởi động lại khi chọn ảnh. Bản nháp chưa lưu đã mất. Vui lòng tạo lại.",
+  "localImagePreview": "Ảnh đính kèm",
+  "settingsTitle": "Cài đặt",
+  "languageVietnamese": "Tiếng Việt",
+  "languageEnglish": "English",
+  "generalOptions": "Tùy chọn chung",
+  "rateAndFeedback": "Đánh giá và phản hồi",
+  "rateApp": "Đánh giá ứng dụng",
+  "sendFeedback": "Gửi phản hồi",
+  "supportUnavailable": "Chưa cấu hình đích cửa hàng hoặc kênh phản hồi.",
+  "appInformation": "Thông tin ứng dụng",
+  "appVersion": "Phiên bản ứng dụng",
+  "installationId": "ID cài đặt",
+  "installationIdPrivacy": "Mã chỉ lưu trên thiết bị và chỉ được chia sẻ khi bạn sao chép.",
+  "copyFullId": "Sao chép ID đầy đủ",
+  "installationIdCopied": "Đã sao chép ID cài đặt.",
+  "installationIdCopyFailed": "Không thể sao chép ID. Vui lòng thử lại.",
+  "appSettingsLoading": "Đang khôi phục cài đặt ứng dụng…",
+  "appSettingsReadError": "Không đọc được cài đặt ứng dụng. Hãy thử lại.",
+  "appSettingsWriteError": "Không thể lưu cài đặt. Lựa chọn vẫn được giữ trên màn hình.",
+  "appInfoUnavailable": "Thông tin ứng dụng chưa khả dụng.",
+  "contentLanguage": "Ngôn ngữ",
+  "contentLanguageHelp": "Ngôn ngữ được dùng cho cả giao diện, danh mục và đề chơi.",
+  "contentLanguageUnavailable": "Ngôn ngữ đã lưu không còn khả dụng. Hãy chọn ngôn ngữ khác để chơi.",
+  "cachedLanguages": "Đang dùng danh sách ngôn ngữ đã lưu trên thiết bị.",
+  "languageListError": "Không tải được danh sách ngôn ngữ. Hãy thử lại.",
+  "rulesAdjusted": "Đã tự điều chỉnh số kẻ mạo danh hoặc tắt tuỳ chọn không mở đầu để phù hợp với số người chơi.",
+  "imposterNotFirstMinimum": "Cần ít nhất 4 người chơi để bật tuỳ chọn này.",
+  "imposterNotFirstWarning": "Mọi người sẽ biết người mở đầu là người thường. Số kẻ mạo danh được giới hạn để người thường vẫn chiếm đa số trong nhóm còn lại.",
+  "moreImpostersNeedSixPlayers": "Cần ít nhất 6 người chơi để chọn nhiều hơn 1 kẻ mạo danh khi bật tuỳ chọn không mở đầu.",
+  "imposterCountAdjusted": "Đã giảm số kẻ mạo danh từ {before} xuống {after} để phù hợp với giới hạn mới.",
+  "@imposterCountAdjusted": {"placeholders": {"before": {"type": "int"}, "after": {"type": "int"}}},
+  "editCustomCategory": "Sửa danh mục",
+  "customCategoryActions": "Thao tác danh mục",
+  "deleteCustomCategory": "Xoá danh mục",
+  "deleteCustomCategoryConfirm": "Xoá “{name}” và toàn bộ nội dung tuỳ chỉnh bên trong? Không thể hoàn tác.",
+  "customDeleteError": "Không thể xoá danh mục. Vui lòng thử lại.",
+  "@deleteCustomCategoryConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

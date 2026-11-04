@@ -29,14 +29,14 @@ def races():
 
     def save_category(identifier, locale='vi', status='published'):
         kind = 'question' if identifier == question_category else 'word'
-        return (f"select public.save_category('{identifier}','{kind}','{identifier}',0,true,'{locale}',"
+        return (f"select public.save_category('{identifier}','{kind}','{identifier}',0,true,false,'{locale}',"
                 f"'Category',null,'{status}',(select updated_at from public.game_categories where id='{identifier}'));")
 
     def save_prompt(identifier, parent, locale='vi', version='null'):
         content = "null,'vi','Word'" if identifier == word else "'vi','Best?','Worst?'"
         content = content.replace("'vi'", f"'{locale}'")
         kind = 'word' if identifier == word else 'question'
-        return f"select public.save_{kind}_prompt('{identifier}','{parent}','medium',true,{content},'published',{version});"
+        return f"select public.save_{kind}_prompt('{identifier}','{parent}','medium',{content},'published',{version});"
 
     def race(first, second, expected_error):
         # The first transaction has completed its mutation before the competitor starts.

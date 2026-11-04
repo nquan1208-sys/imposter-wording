@@ -1,285 +1,591 @@
-# Kế hoạch triển khai ứng dụng
+# Application Implementation Plan
 
-> Nguồn yêu cầu: [Bố cục màn hình ứng dụng](layout/screen-layout.md). Đối chiếu code và migration trong repository ngày 22/10/2026. Đây là kế hoạch, chưa phải xác nhận các tính năng đã triển khai.
+> Requirements: [Application Screen Layout](layout/screen-layout.md). Checked against repository code/migrations on 2026-10-24, including the new multilingual content schema. Status and evidence are recorded per phase below; Phases 1–5 have analyzer/tests and iOS Simulator smoke checks. Dev/Production backend acceptance is pending.
 
-## 1. Mục tiêu và cách chia PR
+## 1. Goals and PR breakdown
 
-Triển khai app Flutter chơi chung trên một thiết bị, gồm game từ ngữ và game câu hỏi. Ưu tiên có một ván chơi hoàn chỉnh sớm, sau đó thêm các khả năng cấu hình và quản lý nội dung.
+Build a shared-device Flutter app with word and question games. Prioritize a complete Vietnamese game early, then add configuration, content management, and DB-driven content-language selection.
 
-**Một phase tương ứng một PR.** Mỗi PR có đầu ra sử dụng được, đường vào từ giao diện, kiểm thử riêng và không cần merge một PR đang dở để chạy. Các phase có thể phụ thuộc những PR **đã merge**; độc lập không có nghĩa là tất cả PR đều làm từ cùng một baseline hoặc merge theo thứ tự bất kỳ.
+**One phase equals one PR.** Each PR delivers usable functionality, a UI entry point, and its own tests without requiring unfinished PRs to run. Phases may depend on **merged** PRs; independence does not mean identical baselines or arbitrary merge order.
 
-- Mỗi PR gồm UI, store, dữ liệu/validation, route, bản dịch và test cần cho chính tính năng đó.
-- Các chức năng chưa triển khai được ẩn hoặc có trạng thái chưa khả dụng rõ ràng; không có nút dẫn tới màn trống hay route không tồn tại.
-- Phase 1–2 tạo nền và luồng thiết lập sử dụng được; **phase 3 là mốc đầu tiên chơi trọn một ván**.
-- Tính năng đang hoạt động phải tiếp tục chạy sau mỗi lần merge. Không tách một tính năng thành PR UI chỉ có mock và PR logic bắt buộc phải merge cùng lúc.
-- Không đưa thay đổi kiến trúc toàn app, làm lại admin hoặc dịch vụ backend mới vào PR tính năng nếu chưa cần.
+- Each PR includes its feature's UI, stores, data/validation, routes, translations, and tests.
+- Unimplemented features are hidden or clearly unavailable; no buttons leading to empty screens or missing routes.
+- Phases 1–2 deliver foundations and usable setup; **Phase 3 is the first complete playable game**.
+- Working features remain functional after every merge. Do not split features into mock-only UI and logic PRs that must merge together.
+- Avoid whole-app architecture changes, admin rewrites, or new backend services in feature PRs before needed.
 
-## 2. Baseline đã kiểm tra
+## 2. Verified baseline
 
-| Khu vực | Hiện trạng trong repository | Hệ quả với kế hoạch |
+| Area | Repository state | Planning consequence |
 | --- | --- | --- |
-| App | `app/lib/main.dart`; Home, Counter, Settings demo và shell bottom navigation | Chưa có màn hình hay luật chơi trong layout. Thay luồng demo bằng luồng game. |
-| State và DI | `StoreBase`, `StoreProvider`, Signals, `AutoDisposeManager`, Riverpod | Tái sử dụng code hiện tại; không đưa thêm một cơ chế state management. |
-| Điều hướng | `RouterService`, `RouteName`, `RouteInput`, `RoutePage`, `RouteScreen` | Dùng Navigator/service hiện có; layout không yêu cầu bottom navigation. |
-| Tài liệu app | README và `app/docs/` còn mô tả RxDart/BLoC, khác code Signals/Store | Sửa các hướng dẫn liên quan trong PR nền để tránh triển khai theo pattern đã cũ. |
-| Ngôn ngữ | Có hạ tầng localization và ARB tiếng Anh; chưa có ARB tiếng Việt | Thêm tiếng Việt ngay phase 1; mọi màn sau bổ sung chuỗi vào ARB. |
-| Backend nội dung | Có `game_categories`, `word_prompts`, `question_prompts`, quản trị và RLS đọc published | Tái sử dụng schema và API đọc hiện có; không tạo API quản trị cho mobile. |
-| Schema hiện tại | Word dùng `text`, `image_path`; question có `civilian_question`, `imposter_question`; các cột hint đã bị bỏ | Không dùng `civilian_text`, `imposter_text`, `imposter_hint` từ migration lịch sử. Question chưa có trường ảnh. |
-| Dữ liệu trên thiết bị | Chưa có repository content, lưu thiết lập/danh sách, ảnh tùy chỉnh hoặc session game | Thêm khi phase sử dụng tới; không giả định những phần này đã có. |
-| Kiểm thử | Có test Signals, demo navigation và auto-dispose | Giữ test nền còn phù hợp, thay assertion demo khi đổi luồng; thêm test luật chơi theo từng PR. |
+| App | `LandingScreen` entry, `HowToPlayScreen`, light/dark themes; Start disabled | Phase 1 foundations exist; continue setup in Phase 2, no gameplay yet. |
+| State/DI | `StoreBase`, `StoreProvider`, Signals, `AutoDisposeManager`, Riverpod | Reuse existing code; no additional state management. |
+| Navigation | `RouterService`, `RouteName`, `RouteInput`, `RoutePage`, `RouteScreen`; landing/instructions/unknown routes | Use existing Navigator/service; product flow no longer has demo bottom navigation. |
+| App docs | README and `app/docs/` describe Signals/Store, routing, VI/EN | Reuse and update for new features. |
+| UI language | VI/EN ARB, default `vi`; `AppStore.setLocale` updates MaterialApp in memory only | Phase 12 now uses one shared UI/content language choice. |
+| Backend config | `AppConfig` reads/validates URL/publishable key by `APP_ENV`; no client/API calls yet | Phase 2 reuses config, adds client/repository and anon reads without rebuilding environments. |
+| Content backend | Three base tables, `content_languages`, three translation tables; public grants/RLS now translation-based | Mobile reads Data API as anon, never admin `admin_*`/`save_*` RPCs. |
+| Current schema | Base records retain shared IDs/metadata; category names, words, question pairs, `locale`, status live in translations | Do not select `text`/`status`/`locale` from base prompts or `name` from base categories. Words share `image_path`; questions have no remote images yet. |
+| Device data | No content repository, saved setup/lists, custom images, or game sessions yet | Add when used; do not assume these exist. |
+| Tests | Onboarding/back/VI–EN/config/theme/auto-dispose tests; clean analyzer, 27/27 passed at Phase 1 acceptance | Preserve foundations and add per-PR data/game-rule tests; results do not validate unimplemented phases. |
 
-Nguồn kỹ thuật chính: [pubspec](../app/pubspec.yaml), [store mẫu](../app/lib/features/counter/counter_store.dart), [routing](../app/lib/base/dependency/router/utils/route_page.dart), [schema](database-schema.dbml), [RLS](../supabase/migrations/20261003072909_rls_and_policies.sql), [đổi tên trường word](../supabase/migrations/20261021032252_rename_word_prompt_text.sql), [question hiện tại](../supabase/migrations/20261021045906_question_prompt_management.sql).
+Primary technical sources: [pubspec](../app/pubspec.yaml), [AppStore](../app/lib/store/app_store.dart), [routing](../app/lib/base/dependency/router/utils/route_page.dart), [AppConfig](../app/lib/config/app_config.dart), [schema](database-schema.dbml), [translation migration and current RLS/Storage](../supabase/migrations/20261024045640_content_translations.sql), [multilingual read-permission tests](../supabase/tests/content_translations.sql), [backend cutover procedure](plans/admin-content-translations/admin-content-translations-phase-6.md).
 
-Các nhận định backend ở đây dựa trên file trong repo; chưa xác minh migration hoặc nội dung trên môi trường đang chạy.
+Backend statements here come from repository files. Cutover reports local tests, without cloud deployment; before Phase 2 verify the target has the new schema and anon reads. Do not assume Dev/Production matches local; the app does not support both old/new schemas.
 
-## 3. Những quyết định cần chốt trước phase liên quan
+## 3. Decisions required before related phases
 
-Các phương án dưới đây là **đề xuất triển khai**, không tự thay thế yêu cầu trong layout. Khi chốt, cập nhật layout và test trong cùng PR liên quan.
+These are **implementation proposals**, not automatic replacements for layout requirements. Final decisions update layout/tests in the same feature PR.
 
-| Điểm chưa rõ | Đề xuất nhỏ nhất | Cần chốt trước |
+| Ambiguity | Smallest proposal | Decide before |
 | --- | --- | --- |
-| Mục 3 có `Hiển thị gợi ý`, nhưng mục 7 cấm lộ hint và backend đã bỏ hint | Chỉ giữ `Hiển thị danh mục cho kẻ mạo danh`; không dựng một nguồn hint mới. Nếu cần gợi ý khác danh mục, phải có đặc tả nội dung và dữ liệu riêng. | Phase 4 |
-| Phạm vi số kẻ mạo danh chưa có công thức; `1–4` chỉ là ví dụ | Với N người, dùng 1…floor((N−1)/2), bảo đảm phe thường chiếm đa số; random đều trong phạm vi đó. Với tùy chọn không đi trước, chọn người bắt đầu trước rồi loại người đó khỏi tập gán vai. | Phase 4; phase 3 chỉ dùng 1 kẻ mạo danh |
-| Layout vừa nói không đi trước theo người chơi đầu tiên, vừa nói chọn người bắt đầu | Dùng một `startingPlayerId` làm nguồn duy nhất cho luật gán vai và tên người bắt đầu trên màn thảo luận. | Phase 4 |
-| Chưa có UI ghi nhận người bị bầu, xử lý hòa hoặc luật thắng khi có nhiều kẻ mạo danh | Nhóm bầu bằng lời nói; nút công bố mở sheet chọn người bị nhóm bầu rồi xác nhận. Một imposter: chọn đúng thì nhóm thắng, sai thì imposter thắng. Nhiều imposter: đề xuất chọn đúng K người và nhóm chỉ thắng khi chọn đúng toàn bộ tập imposter. Nếu hòa, nhóm bầu lại trước khi xác nhận; chưa làm hệ thống thu từng phiếu. | Sheet ở phase 3; luật nhiều imposter phải chốt trước phase 4 |
-| Game câu hỏi chưa rõ có báo vai cho người nhận câu hỏi khác hay không | Chỉ hiện câu hỏi riêng, không tự báo vai. Các công tắc tiết lộ danh mục/biết nhau chỉ áp dụng word trong bản đầu; question cần duyệt riêng nếu muốn dùng. | Phase 5 |
-| Tùy chỉnh chỉ dùng cho ván hiện tại nhưng cũng nói lưu local và các ván; sau lưu lại về tab `Cổ điển` không tồn tại ở màn danh mục | Giữ nội dung tùy chỉnh cho bộ thiết lập hiện tại và `Chơi lại`, không làm thư viện lâu dài. Sau lưu trở về picker theo đúng loại game/mode hiện tại. Không tự đổi từ Gia đình sang Cổ điển. | Phase 8 |
-| Một field `Câu hỏi` không đủ tạo game với hai nhóm nhận câu hỏi khác nhau | Form question tùy chỉnh phải nhập một cặp câu hỏi khác nhau. Nhập nhiều dùng hai ô nhiều dòng, ghép cặp theo dòng, kiểm tra số dòng bằng nhau. | Phase 9 |
-| Tùy chỉnh chưa có thuộc tính phù hợp gia đình | Khi tạo trong mode Gia đình, yêu cầu người tạo xác nhận nội dung phù hợp; không mặc định mọi nội dung tự nhập là phù hợp gia đình. | Phase 8–9 |
-| Chi tiết danh sách đã lưu có `Hiển thị số kẻ mạo danh`, nhưng setup chưa có công tắc tương ứng | Cần quyết định thêm công tắc ở bảng chọn kẻ mạo danh hoặc bỏ dòng này ở chi tiết. Không tạo một setting không thể chỉnh từ UI. | Phase 6 |
-| Chưa có thiết kế màu/font, ảnh cho mọi trạng thái, danh sách ngôn ngữ, store URL và kênh phản hồi | Dùng theme tối thiểu nhất quán từ phase 1; không hứa khớp pixel. Đề xuất giao diện VI/EN; nội dung game vẫn theo locale dữ liệu, không tự dịch. URL/ID phát hành phải được cung cấp trước phase 11–12. | Theo phase tương ứng |
+| Section 3 has `Show hints`, but section 7 forbids hints and backend removed them | **Agreed Phase 4:** keep only `Show category to imposters`; no new hint source. Other hints require separate content/data specifications. | Phase 4 |
+| No imposter-count formula; `1–4` is only an example | **Agreed Phase 4:** for N players use 1…floor((N−1)/2), preserving civilian majority; uniformly random in range. Never-start chooses starter first, then excludes them from roles. | Phase 4; Phase 3 uses one imposter |
+| Layout refers both to first-player exclusion and selecting a starter | **Agreed Phase 4:** one `startingPlayerId` drives role assignment and displayed discussion starter. | Phase 4 |
+| No voted-player UI, tie handling, or multiple-imposter win rules | Vote verbally; reveal opens selection/confirmation sheet. One imposter: correct selection means group victory, otherwise imposter victory. **Agreed Phase 4:** select exactly K players; group wins only if the complete imposter set matches. Ties require revoting before confirmation; no individual-ballot system. | Phase 3 agreed single selection/win rules; multiple-imposter rules finalized in Phase 4 |
+| Unclear whether alternate-question recipients know their role | **Agreed Phase 5:** show private question only, no role; locked cards identical. **Phase 6 addition:** question `Imposters know each other`; with at least two imposters, only revealed imposter cards show teammates. Disabled/single-imposter cases retain Phase 5. Questions retain RAM-only drafts and direct reveal without voting/win calculation; `showCategory` also applies to questions per Phase 6. | Phase 5; extended in Phase 6 |
+| Custom content is current-game-only but also locally saved across games; return mentions nonexistent `Classic` category tab | **Agreed Phase 8:** save with device setup across replay/restart; delete only after confirmed setup → landing navigation. Save retains picker tab and adds category to draft selection; `Confirm` applies, Back discards only selection, preserving saved categories. No permanent library. | Phase 8 |
+| One `Question` field cannot provide different questions to two groups | Custom question forms require two different questions. Bulk entry pairs two multiline fields by line, requiring equal counts. | Phase 9 |
+| No custom Family suitability field | **Agreed Phase 8:** Family-tab creation requires suitability confirmation and appears in both tabs; All-tab creation is not implicitly Family-friendly. Tab/game changes never delete categories. | Phases 8–9 |
+| Saved-list details show `Show imposter count`, absent from setup | **Agreed Phase 6:** omit it; show only existing rules and fixed/random count. No new setting/rule. | Phase 6 |
+| Section 16 has one Language row, while DB translations are independent | Agreed: one `Language` for UI/content, default `vi`; DB list restricted to existing UI ARB codes. Missing prompts are empty, without fallback. | Phases 11–12 |
+| Not all state illustrations, store URLs, or feedback channels exist | Reuse theme; no pixel-match promise. Release URLs/IDs required before Phases 11/13. | Relevant phase |
 
-Nếu một quyết định chưa được chốt, giữ chức năng liên quan chưa khả dụng và ghi rõ trong PR; không báo phase đó hoàn tất toàn bộ đặc tả.
+Unresolved decisions leave related features unavailable and documented in PRs; do not claim complete specification delivery.
 
-## 4. Quy tắc dữ liệu và vòng đời dùng xuyên suốt
+## 4. Shared data and lifecycle rules
 
-### Nội dung game
+### Game content
 
-- Dùng một repository nội dung cho cả picker, số lượng content và random. Giao diện không tự lọc lại bằng một bộ luật khác.
-- Content hợp lệ phải đúng loại game/locale, `status = published`, thuộc category `is_active = true`; Gia đình thêm `is_family_friendly = true`. Cổ điển lấy cả content phù hợp và không phù hợp gia đình.
-- Không chọn category nghĩa là tất cả content hợp lệ; chọn nhiều category là hợp của chúng. Mỗi prompt có cơ hội được chọn như nhau trong tập hợp đó; không random category trước khiến category ít đề được ưu tiên.
-- Picker chỉ hiện category có content hợp lệ và hiển thị số lượng từ cùng tập dữ liệu dùng để bắt đầu ván.
-- Đổi loại/mode phải loại lựa chọn category không còn hợp lệ và thông báo; nếu không còn category nào thì về `Tất cả danh mục`. Không có content hợp lệ thì chặn bắt đầu, chỉ rõ cách sửa.
-- Content lấy qua API Supabase ngay từ phase 2; không seed database, không đóng gói content/ảnh vào bản build. Repository lưu cache lần tải thành công gần nhất để chơi khi mất mạng; lần mở đầu không có mạng thì báo lỗi và cho thử lại. Fixture JSON chứa draft/archived chỉ nằm trong test.
-- Phase 7 hoàn thiện đồng bộ: đủ phân trang, refresh từ setup, ảnh Storage và các lỗi cache. Chưa cần manifest, delta sync, RPC random, Realtime hoặc một hệ thống content release mới.
+Read the new schema starting in Phase 2, initially only `vi`:
 
-### Thiết lập và session
-
-- Thiết lập chứa người chơi có ID ổn định, game type, mode, category IDs và các tùy chọn. Chỉ thêm trường khi phase đó bắt đầu dùng.
-- Session chụp một bản thiết lập và prompt tại thời điểm bắt đầu, gồm vai, người bắt đầu, tiến độ đã xem/trả lời và stage hiện tại. Không random lại khi rebuild, quay lại hoặc resume app.
-- `Chơi lại` tạo session mới và random lại từ tập hợp lệ, giữ thiết lập/người chơi. Có thể trùng prompt khi tập nhỏ; không thêm lịch sử chống lặp ở bản đầu.
-- Session sống xuyên các màn của ván, không bị dispose theo màn reveal. Khi kết thúc/rời ván có xác nhận thì hủy session; quay lại không mở được bí mật đã xác nhận xong.
-- Tên người chơi, vai, câu trả lời và kết quả bầu chọn chỉ nằm trên thiết bị, không gửi vào Supabase hoặc log. Thiết lập và danh sách đã lưu tồn tại qua lần mở app; ván đang chơi không bắt buộc khôi phục sau khi hệ điều hành đóng tiến trình.
-- Khi app ra nền hoặc chuyển người chơi, che nội dung bí mật trước khi hiển thị lại. Không hứa chặn screenshot ở cấp hệ điều hành trong phạm vi này.
-- Settings/locale và nội dung cache có dữ liệu lưu riêng; lỗi đọc không được âm thầm ghi đè dữ liệu người dùng. Lưu thất bại phải giữ form và có đường thử lại.
-
-### Cấu trúc code dự kiến
-
-- Giữ `app/lib/features/<feature>/` với screen/store theo code hiện có; nhóm nhiều màn khi cùng một luồng và cùng session.
-- DI và các dịch vụ dùng chung vào `base/dependency/`; đăng ký store theo hạ tầng `base/store/` hiện có. Session dùng chung có vòng đời riêng, không đăng ký lại ở từng route.
-- Chỉ tạo `app/lib/data/` cho content/local storage và `app/lib/models/` cho model thực sự dùng chung khi phase tương ứng cần. Không tạo sẵn mọi file của các phase sau.
-- Tái sử dụng constants, Signals, Riverpod và l10n hiện có. Khi cần plugin đọc/lưu file, lấy ảnh hoặc mở liên kết, chọn plugin tối thiểu lúc triển khai và commit lockfile; không thêm trước toàn bộ dependency.
-
-## 5. Tổng quan phase và dependency
-
-| Phase / PR | Kết quả có thể demo sau merge | Phụ thuộc |
+| Source | App fields | Rules |
 | --- | --- | --- |
-| 1. Khung ứng dụng và hướng dẫn | Mở app tiếng Việt, xem Cách chơi, điều hướng/quay lại đúng | — |
-| 2. Thiết lập word và danh mục từ backend | Chọn số người, mode, nhiều danh mục từ content API/cache; thấy đúng số đề | 1 |
-| 3. Một ván word hoàn chỉnh | Thiết lập → chuyển máy xem từ/vai → thảo luận → công bố → chơi lại | 2 |
-| 4. Người chơi và luật nâng cao | Đổi tên/thứ tự người chơi; fixed/random imposters, không đi trước, biết nhau | 3 |
-| 5. Một ván question hoàn chỉnh | Nhập câu trả lời riêng → câu hỏi chung → thảo luận → công bố → chơi lại | 4 |
-| 6. Danh sách người chơi đã lưu | Lưu/nạp/đổi tên/xóa bộ người chơi và thiết lập liên quan | 4 |
-| 7. Hoàn thiện đồng bộ content và ảnh | Đủ phân trang, refresh từ setup, ảnh word từ Storage; lỗi mạng vẫn dùng cache hợp lệ trước đó | 5 |
-| 8. Tùy chỉnh word bằng văn bản | Tạo danh mục/từ, nhập nhiều, dùng ngay trong ván word | 4 |
-| 9. Tùy chỉnh question bằng văn bản | Tạo cặp câu hỏi tùy chỉnh và chơi trọn ván question | 5, 8 |
-| 10. Ảnh cho nội dung tùy chỉnh | Chọn/chụp/thay/xóa ảnh, hiện đúng cho người có quyền xem | 9 |
-| 11. Cài đặt và hỗ trợ | Đổi ngôn ngữ, lưu lựa chọn, xem phiên bản/ID, đánh giá và phản hồi | 5 |
-| 12. Hoàn thiện bản phát hành | Hai game và mọi tính năng đã chọn chạy trên Android/iOS release | 1–11 |
+| `content_languages` | `code`, `display_name`, `sort_order` | Content language catalog; listed codes do not guarantee published prompts. Phase 12 picker uses it. |
+| `game_categories` + `game_category_translations` | Base: `id`, `game_type`, `sort_order`, `is_active`, `is_family_friendly`; translation: `category_id`, `locale`, `name`, `description`, `status` | Join `category_id = id`; require published content-locale translation and active category. `slug` unique by `(game_type, slug)`, not locale; select/store by ID. |
+| `word_prompts` + `word_prompt_translations` | Base: `id`, `category_id`, `difficulty`, `image_path`; translation: `prompt_id`, `locale`, `text`, `status` | One translation per `(prompt_id, locale)`; base images shared across locales. |
+| `question_prompts` + `question_prompt_translations` | Base: `id`, `category_id`, `difficulty`; translation: `prompt_id`, `locale`, `civilian_question`, `imposter_question`, `status` | Both questions come from one translation row; never combine locales or invent missing questions. |
 
-Thứ tự mặc định là 1 → 12. Sau phase 4, phase 6 và 8 có thể làm trước phase 5 nếu ưu tiên sản phẩm thay đổi. Phase 7 không phải điều kiện để chơi: phase 2 đã đọc content từ backend và cache. Các nhánh đều đi qua cùng giao diện repository/session, không duy trì hai bộ game logic.
+- One content repository drives pickers/counts/randomization; joined models retain base ID and `contentLocale`. UI must not apply a separate eligibility rule set.
+- Eligible content matches game type, has **prompt/category translations in the same locale with `status = published`**, and category `is_active = true`. Family is word-only and requires `game_categories.is_family_friendly = true`, including all eligible words in those categories. Classic includes Family/non-Family. Base prompts no longer have `locale`/`status` or historical hint columns.
+- RLS permits base reads with any public locale; a readable base does not establish selected-locale eligibility. Explicitly filter translation locale/status and join full parent/child data; missing translations in nested left joins are not eligible content.
+- No categories means all eligible content; multiple categories mean their union. Every prompt has equal probability; do not randomize categories first and favor smaller ones.
+- Pickers show only categories with eligible content and counts from the same start-game dataset. Fetch all needed pages in stable order from Phase 2; never count/randomize only the first page or count translations as separate prompts.
+- Type/mode/content-locale changes or refresh remove invalid selections with notice; none remaining means `All categories`. No eligible content blocks start with recovery guidance. Retain eligible IDs and update translated names.
+- Fetch through Supabase API from Phase 2; no DB seeds or bundled content/images. Scope cache by backend, format version, content locale; atomically replace only after complete fetch/validation, including valid empty results. Failures use latest good cache **for the same backend/locale**, otherwise error/retry. Draft/archived fixtures exist only in tests.
+- Phase 7 completes setup refresh, Storage images, and sync recovery; Phase 12 adds content-language selection. No manifest, delta sync, random RPC, Realtime, or new release system yet.
 
-Đối chiếu phạm vi layout:
+### UI and content languages
 
-| Mục trong layout | Phase chịu trách nhiệm |
+- Since the Phase 12 revision, `GameSetup.contentLocale` drives ARB/MaterialApp and queries/cache/categories/prompts. One Language choice; legacy `ui_locale` remains only for storage compatibility.
+- Phase 12 lists `content_languages` by `sort_order`, then `code`, restricted to matching UI ARB support. The list has no active/status flag or translation-completeness guarantee.
+- Never automatically translate/copy/fallback VI↔EN content. Listed languages without eligible prompts are empty. Offline uses only selected-locale cache, showing language/staleness clearly.
+- Persist one `GameSetup.contentLocale`, change only outside games, and preserve active snapshots. Custom content keeps its creation locale without automatic translation.
+
+### Setup and sessions
+
+- Setup includes stable player IDs, game type, mode, category IDs, `contentLocale` (initially `vi`), and options. Add fields only when used. UI locale is not a game rule and presets cannot overwrite it.
+- Sessions snapshot setup, locale, translated category names/prompts, roles, starter, reveal/answer progress, and stage at start. Rebuild/back/refresh/resume never rerandomizes or changes translations.
+- `Play again` ends sessions and returns to setup with settings/players retained for edits. Only setup start creates/rerandomizes from current eligible content. Repeats are allowed for small sets; no initial anti-repeat history.
+- Sessions outlive individual game screens, not disposed with reveal routes. Confirmed exit/end destroys them; back cannot reopen completed secrets.
+- Player names, roles, answers, and votes remain on-device, never sent to Supabase/logs. Setup/saved lists survive restart; ongoing sessions need not survive OS process termination.
+- Backgrounding/handoffs conceal secrets before redisplay. No OS screenshot-blocking promise in scope.
+- Settings/locale and content cache persist separately; read failures must not silently overwrite user data. Failed saves retain forms with retries.
+- Phase 8 custom words persist in setup with creation locale, outside remote cache/presets. Launching on landing does not delete them; only confirmed setup → landing clears them atomically with matching category IDs. Failures retain content/setup.
+
+### Planned code structure
+
+- Keep `app/lib/features/<feature>/` screens/stores; group related screens sharing flows/sessions.
+- Shared services/DI go in `base/dependency/`; use existing `base/store/` registration. Shared sessions have independent lifecycles, never registered per route.
+- Add `app/lib/data/` for content/local storage and `app/lib/models/` for genuinely shared models only when needed. Do not precreate future-phase files.
+- Reuse constants, Signals, Riverpod, l10n. Choose minimal file/image/link plugins at implementation time and commit lockfiles; do not preload every dependency.
+
+## 5. Phase overview and dependencies
+
+| Phase / PR | Demonstrable result after merge | Dependencies |
+| --- | --- | --- |
+| 1. App shell/instructions | Vietnamese startup, instructions, correct navigation/back; already in source | — |
+| 2. Word setup/backend categories | Player count, mode, multiple `vi` API/cache categories with correct counts | 1; target translation schema |
+| 3. Complete word game | Setup → private handoff/word/role → discussion → reveal → replay | 2 |
+| 4. Players/advanced rules | Rename/reorder; fixed/random imposters, never-start, teammates | 3 |
+| 5. Complete question game | Private answers → common question → discussion → reveal → replay | 4 |
+| 6. Saved players/imposter options | Save/select/details/rename/delete presets; imposter modal; question teammates; retain mode/categories/language | 4, 5 |
+| 7. Content/image sync | Setup refresh, Storage word images, sync/cache recovery | 5 |
+| 8. Custom word text | Create categories/words, bulk entry, immediate gameplay | 4 |
+| 9. Custom question text | Create pairs and play complete question games | 5, 8 |
+| 10. Custom images | Choose/capture/replace/remove, visible only to eligible viewers | 9 |
+| 11. Settings/support | Persist VI/EN UI, version/ID, rating/feedback | 5 |
+| 12. Content languages | DB language selection, correctly translated games, locale-specific cache/offline | 6, 7, 10, 11 |
+| 13. Release readiness | Both games/all selected features in Android/iOS release | 1–12 |
+
+Default order: 1 → 13. Preserve Phases 1–11; new Phase 12 covers content languages, old release phase becomes 13. After Phase 4, Phase 8 may precede Phase 5 if priorities change; Phase 6 needs Phase 5 for question teammates. Phase 7 is not required for play: Phase 2 already fully reads/caches `vi`. Phase 12 extends the same repository across locales without separate game logic.
+
+Layout scope mapping:
+
+| Layout sections | Responsible phase |
 | --- | --- |
-| 1–2: bắt đầu, cách chơi | 1; cập nhật hướng dẫn theo luật mới ở 4–5 |
-| 3–4: setup, picker và bottom sheet imposter | 2, 4; bật question ở 5 và content backend ở 7 |
-| 5: tạo tùy chỉnh | 8–10 |
-| 6–9: luồng word và kết quả | 3–4 |
-| 10–14: luồng question và kết quả | 5 |
-| 15: người chơi và danh sách đã lưu | 4, 6 |
-| 16: cài đặt | 11 |
-| 17–19: bố cục chung, điều hướng, ảnh/trạng thái còn thiếu | Áp dụng trong từng PR; đối chiếu tổng thể ở 12 |
+| 1–2: start/instructions | 1; updated rules in 4–5 |
+| 3–4: setup/picker/imposter sheet | 2, 4; questions in 5; modal/question teammates in 6; sync/images in 7; content locale in 12 |
+| 5: custom creation | 8–10 |
+| 6–9: word/results | 3–4 |
+| 10–14: questions/results | 5; private teammates in 6 |
+| 15: players/saved lists | 4, 6 |
+| 16: settings | 11; unified language in 12 |
+| 17–19: shared layout/navigation/missing images/states | Every PR; overall reconciliation in 13 |
 
-## 6. Chi tiết từng phase
+## 6. Phase details
 
-### Phase 1 — Khung ứng dụng và hướng dẫn
+### Phase 1 — App shell and instructions
 
-**PR đề xuất:** `feat(app): replace demo entry with game onboarding`
+**Proposed PR:** `feat(app): replace demo entry with game onboarding`
 
-- Phạm vi: màn 1, 2 và quy tắc chung ở mục 17; theme cơ bản, SafeArea, nội dung cuộn và nút chính cuối màn.
-- Chuyển entry sang màn bắt đầu; thêm màn Cách chơi và back về đúng màn gọi. Bỏ bottom navigation khỏi luồng sản phẩm, giữ RouterService; xóa code demo chỉ sau khi hết caller.
-- Thêm ARB tiếng Việt, cập nhật chuỗi tiếng Anh hiện có và hướng dẫn Signals/Store trong `app/README.md`, `app/docs/`. Không sửa tay file localization generated.
-- Điểm chạm: `main.dart`, `features/home`, `features/root`, router/utils, ARB, constants/theme nếu cần, test navigation hiện có.
-- **Nghiệm thu:** cold start mở đúng trang; Cách chơi cuộn được; back hệ thống và back UI hoạt động. `Bắt đầu` có trạng thái chưa khả dụng rõ trong PR nền, chưa mở một trang setup giả.
-- **Kiểm tra:** widget test entry → hướng dẫn → back; màn nhỏ và text scale lớn không che nút. PR cập nhật các test cũ đang phụ thuộc `Home Screen`/bottom bar.
+**Acceptance status 2026-10-24:** landing, instructions, theme, VI/EN, routing, and onboarding tests exist since `c77108b`; README/docs describe Signals/Store. Retain code, extend tests, and accept the behavior below rather than rebuilding features.
 
-### Phase 2 — Thiết lập word và danh mục từ backend
+- Scope: screens 1/2, shared section 17; basic theme, SafeArea, scrollable content, bottom primary actions.
+- Set entry to landing; add How to Play returning to its caller. Remove demo bottom navigation, keep RouterService; delete demo code only after callers are gone.
+- Add Vietnamese ARB, update English strings and Signals/Store guides in `app/README.md`, `app/docs/`. Never manually edit generated localization.
+- Touchpoints: `main.dart`, `features/landing`, `features/how_to_play`, router/utils, ARB, constants/theme, existing onboarding tests.
+- **Acceptance:** cold start opens correctly; instructions scroll; system/UI Back work. `Start` clearly unavailable in foundation PR, without fake setup pages.
+- **Checks:** preserve entry → instructions → back widget tests, VI/EN switching, small screens/large text in `app/test/features/onboarding_test.dart`.
 
-**PR đề xuất:** `feat(app): add word setup with remote content`
+**Acceptance results:**
 
-- Phạm vi: phần word của màn 3–4; chọn 3–100 người với tên mặc định, 1 kẻ mạo danh cố định, Cổ điển/Gia đình, tất cả hoặc nhiều danh mục.
-- Cấu hình URL/publishable key theo môi trường; dùng quyền đọc anon hiện có, không đăng nhập admin hoặc nhúng service-role key. Thêm model đúng schema hiện tại; repository gọi API lấy category active và word/question published, chỉ select trường game cần, validate liên kết rồi thay cache local nguyên tử. Dữ liệu có cặp question để phase 5 tái sử dụng, nhưng chưa hiện lựa chọn question.
-- Tải content nền ngay khi mở app (từ landing/Cách chơi), không chờ vào setup, để cache có sẵn trước khi nhóm chơi ở nơi mạng yếu. Một lần tải tại một thời điểm; setup dùng lại kết quả đang tải thay vì gọi lặp.
-- Mất mạng/lỗi API dùng cache gần nhất; chưa có cache thì hiện lỗi và nút thử lại, không có content dự phòng trong build. Setup có trạng thái loading/lỗi/rỗng.
-- Bật `Bắt đầu` ở landing để vào setup; picker dùng bản chọn tạm, `Xác nhận` mới áp dụng, back hủy chỉnh sửa. Lưu thiết lập cơ bản local và xử lý lỗi đọc/ghi.
-- Điểm chạm: feature setup/categories, data/content, DI/config, local cache/settings, router, ARB, Android internet permission, `pubspec.yaml`/lockfile khi cần.
-- **Nghiệm thu:** số lượng category và content khớp bộ lọc trên backend Dev/local; đổi mode không giữ ID không hợp lệ; nhớ thiết lập sau mở lại; mất mạng sau lần tải đầu vẫn cấu hình được. Nút bắt đầu ván ghi rõ chưa khả dụng cho tới phase 3; mọi thao tác cấu hình khác dùng được.
-- **Kiểm tra:** unit test ma trận loại/mode/locale/status/category active, nhiều category và tập rỗng; payload lỗi/không tương thích báo lỗi và không ghi đè cache; dùng simulation cho HTTP khi kiểm tra lỗi mạng/không có cache; read-only check trên backend local/dev xác minh quyền anon và bộ lọc. Widget test xác nhận/hủy picker, thử lại và khôi phục thiết lập.
+- `flutter analyze --no-pub`: no issues; `flutter test --no-pub`: 27/27 passed, including 5 onboarding tests. Checked `Coming soon` in both languages and disabled Start; English instructions scroll to tips then return; 320×568, text scale 2 scrolls the tips heading into view without overflow. Widget tests cover UI/system Back.
+- Debug smoke on iPhone 17 Pro Simulator, iOS 26.5, `APP_ENV=local`: temporary external script calls real `main()`, inspects widget tree, invokes navigation callbacks. Local config → Vietnamese landing → disabled Start → instructions → scroll to tips → `Navigator.maybePop()` back all passed without framework errors. No dependencies/product-code changes; automated, not manual physical-device use.
+- Agreed acceptance scope excludes image capture/verification and demo images/videos for Phase 1. Android, physical devices, Release, and API calls remain unchecked; no image-based design matching. Existing illustrations retained, dark theme uses light palette, locale remains memory-only.
 
-### Phase 3 — Ván word hoàn chỉnh đầu tiên
+### Phase 2 — Word setup and backend categories
 
-**PR đề xuất:** `feat(app): ship playable word game loop`
+**Implementation status 2026-10-24:** Word setup supports 3–100 players,
+All categories/Family mode tabs with draft selections, shared background loading,
+snapshots, and separate JSON setup in Application Support by backend/locale.
+Refresh failures preserve cache; setup read failures block writes until retry or
+confirmed reset. Game start remains unavailable until Phase 3.
 
-- Phạm vi: màn 6–9; dùng setup ở phase 2 và một kẻ mạo danh. Nâng nút bắt đầu từ chưa khả dụng thành tạo session thực.
-- Chọn ngẫu nhiên prompt và vai một lần; danh sách tên mặc định → thẻ che → xem từ hoặc vai → `Hiểu rồi!`. Chỉ người thường được xem từ và ảnh word nếu có; tùy chọn hiển thị danh mục không được rò qua heading khi đang che.
-- Khi tất cả hoàn tất mới sang hướng dẫn thảo luận; hiện người bắt đầu. `Thông báo kết quả` mở sheet chọn đúng một người nhóm đã bầu, xác nhận rồi mới công bố vai thật/từ và bên thắng. Không thu từng phiếu; sheet là phần bổ sung cần chốt vào layout theo mục 3.
-- `Chơi lại` giữ setup và thay session. Back trong ván chỉ trở về danh sách khi an toàn hoặc hỏi kết thúc ván; không pop về một reveal đã hoàn tất. App ra nền che bí mật khi trở lại.
-- Điểm chạm: feature word_game, session dùng chung, content repository, routes, ARB; không thêm bảng lưu ván backend.
-- **Nghiệm thu:** 3 người trở lên chơi được từ đầu đến cuối, kể cả ở chế độ máy bay sau khi đã tải content thành công ít nhất một lần; không mở lại thẻ đã xong; rebuild không đổi vai/từ; chạm nhanh không xác nhận hai người hoặc tạo hai ván.
-- **Kiểm tra:** unit test gán đúng một vai, chặn chuyển stage sớm và xác định thắng khi bầu đúng/sai bằng random có seed/fake; widget/integration test trọn ván, hủy sheet bầu chọn, back, pause/resume, giữ setup khi chơi lại. Không kiểm tra phân phối random bằng test xác suất dễ chập chờn.
+**Phase 2 evidence:**
 
-### Phase 4 — Tên người chơi và các luật cấu hình
+- `flutter gen-l10n`, `flutter analyze`: successful, no issues.
+- `flutter test`: **63 tests passed**, including pagination, eligibility, translation
+  validation, duplicate IDs, empty replacement, cache/settings failures, serialized
+  writes, picker confirm/back, retry, 320×568 at text scale 2.
+- `flutter build ios --simulator --debug --dart-define=APP_ENV=local`: successful.
+- `flutter test integration_test/setup_smoke_test.dart -d <iPhone-17-Pro-simulator-id>
+  --dart-define=APP_ENV=local`: **1 test passed**, iOS 26.5 Simulator.
+  Reads Local Supabase with publishable key, verifies no auth session, opens setup,
+  selects category/count, recreates repository/store from real files with simulated
+  offline networking. Not process kill/relaunch or actual airplane-mode testing.
+- Read-only `supabase db query --local`: Vietnamese Food has **1 Classic / 0 Family**;
+  Fictional Characters has **0 / 0** and is hidden. UI matches **1 / 0**; Family/multipage
+  coverage uses fixtures without seeding/modifying DB.
+- `flutter build apk --debug --dart-define=APP_ENV=local`: successful,
+  output `app/build/app/outputs/flutter-apk/app-debug.apk`. Updated Kotlin 2.3.0,
+  AGP 8.13.2, Gradle 8.13 for new native plugins; first build with old
+  Kotlin 1.8.10 failed in `shared_preferences_android`.
+- Normal iOS Simulator `flutter run`: startup/background loading succeeded;
+  setup opened with 4 default players and 1 eligible word.
+- Dev/Production, physical devices, Android runtime, gameplay not accepted yet.
+  No images, player renaming, advanced rules, or manual refresh in this phase.
 
-**PR đề xuất:** `feat(app): add roster editing and imposter options`
+**Proposed PR:** `feat(app): add word setup with remote content`
 
-- Phạm vi: màn 15 phần danh sách hiện tại và phần còn lại của màn 3/bottom sheet, chưa gồm danh sách đã lưu.
-- Đổi tên, thêm/xóa, sắp xếp người chơi; 3–100 người, trim tên, tên trống không được lưu. Dùng ID riêng để tên trùng không làm gán nhầm vai/câu trả lời; thêm người sinh tên mặc định theo danh sách hiện tại.
-- Fixed/random số kẻ mạo danh, validation theo N, cập nhật lại cấu hình khi giảm người chơi; tùy chọn không đi trước, hiển thị danh mục, biết nhau. `Biết nhau` chỉ hiện tên đồng vai sau khi mở thẻ và không lộ từ/ảnh.
-- Chốt xử lý công tắc hint và luật nhiều kẻ mạo danh trước khi bật UI; cập nhật Cách chơi cho đúng luật đã duyệt. Mở rộng sheet ghi nhận người bị bầu và kết quả theo số imposter; không bỏ tính thắng/thua của phase 3.
-- Điểm chạm: setup, player_names, session assignment, local settings, word reveal, ARB và test phase 3.
-- **Nghiệm thu:** đổi cấu hình rồi chơi trọn ván; người bắt đầu được hiển thị đúng và không là imposter khi bật ràng buộc; cấu hình không thể tạo ván không hợp lệ.
-- **Kiểm tra:** unit test biên 3/100 người, fixed/random, giảm N, tên trùng, thứ tự, không đi trước và tập người bị bầu đúng/sai/thiếu theo luật đã chốt; widget test thêm/xóa/sửa, hiển thị đồng vai đúng thời điểm.
+- Scope: word portions of screens 3–4; 3–100 default-named players, one fixed imposter, Classic/Family, all/multiple categories.
+- Reuse `AppConfig.current`/`APP_ENV`; initialize clients with validated URL/publishable key and existing anon reads, without admin login/service-role keys. Verify target translation schema first.
+- Add section 4 models/repository: active categories + published `vi` category translations, base prompts + published `vi` word/question translations; select gameplay fields only. Filter translations at API, validate links/locale, fetch all pages stably, then atomically replace cache. No admin RPCs/dropped columns. Include question pairs for Phase 5 without exposing question selection yet.
+- Start background fetch at landing/instructions, before setup, for weak-network situations. One fetch at a time; setup reuses pending results.
+- Network/API failures use same-backend/locale cache, otherwise error/retry; no bundled fallback. Mid-page failures cannot partially write cache; successful empty results replace old snapshots. Setup shows loading/error/empty and Vietnamese content until Phase 12.
+- Enable landing Start to setup; picker drafts apply only on `Confirm`, Back discards. Persist basic setup with read/write error handling.
+- Touchpoints: setup/categories, data/content, DI/config, cache/settings, router, ARB, Android internet permission, `pubspec.yaml`/lockfile if needed.
+- **Acceptance:** `vi` category/prompt counts match new-schema backend filters across pages; mode changes remove invalid IDs; setup survives restart; offline after first fetch remains configurable. Game-start button clearly unavailable until Phase 3, other setup actions work.
+- **Checks:** unit tests for type/mode/status/active categories, unions, pages, empty sets. Fixtures include shared base IDs with VI published/EN draft and reverse; VI-hidden/EN-public categories; missing translations; no duplicate IDs or EN leakage. Invalid/incompatible payloads and middle-page errors preserve cache; HTTP simulation covers network/no-cache errors; read-only local/dev checks verify anon base/translation access. Widget picker confirm/cancel/retry/setup restore.
 
-### Phase 5 — Ván question hoàn chỉnh
+### Local storage update — Hive CE (2026-10-25)
 
-**PR đề xuất:** `feat(app): add private question game loop`
+- Setup/players and content snapshots now use `settings` / `content_cache` boxes
+  at `<ApplicationSupport>/hive/`. Each record is JSON with `version: 1`, `scope`,
+  `data`; scope keys retain environment + normalized backend URL + content locale (`vi`).
+  Signals owns state; Riverpod provides shared `HiveLocalStorage`; no adapters,
+  generators, or box opening that blocks `runApp`.
+- `SetupStore`/`ContentRepository` use `LocalJsonStore`. Storage lazily opens boxes,
+  shares opening, retries failures, serializes operations, and awaits `put()`.
+  Riverpod disposal hands setup writes to storage; storage drains before closing.
+  Cache read errors can retry immediately offline.
+- Missing Hive keys read legacy `content/<scope-base64>/setup.json` or
+  `snapshot.json`, validate version/scope and `GameSetup.fromJson` /
+  `ContentSnapshot.fromJson`, then write Hive. Only successful writes establish
+  migration; no marker. Existing Hive always wins; corrupt Hive reports errors,
+  without JSON fallback. Read/write failures never automatically delete/reset.
+- Retain old JSON for manual recovery, without updating after migration. JSON-only
+  app rollback sees migration-time data, missing newer Hive changes. No multiple
+  rosters, saved games, UI locale, accounts, sync, or encryption added.
+- Fakes now use interface-based `MemoryStorage`. Real temporary Hive tests cover
+  restart/scopes/open retry, valid/missing/invalid version/scope/data/JSON migration,
+  failed `put()` then restart, Hive priority over JSON, corruption, drain-on-close,
+  and Riverpod lifecycle.
+- Checks: clean `flutter analyze`; **110/110 unit/widget tests passed**. `word_game_smoke_test.dart`
+  **2/2 passed** on iPhone 17 Pro Simulator iOS 26.5: import both old JSON files,
+  close/reopen, restore players/rules, offline play, vote/replay/back for normal/advanced
+  settings. No signal-after-disposal warnings in the final run.
+- `setup_smoke_test.dart` now uses Hive with setup migration and close/reopen before
+  offline restore; not rerun because local backend fixtures were unconfirmed
+  (1 Classic word, 0 Family, fixed category name). No backend seeds/changes.
+  Phase 2–4 JSON/smoke evidence below predates Hive.
+- Retained existing merged Players tile changes. No UI images; physical devices,
+  Android runtime, Release, process kill/relaunch, actual airplane mode unchecked.
 
-- Phạm vi: màn 10–14; bật chọn question ở setup và picker đúng loại/mode. Tái sử dụng roster, session, random và lớp nội dung hiện có.
-- Chọn một cặp câu hỏi; người thường nhận `civilian_question`, imposter nhận `imposter_question`. Thẻ bí mật che trước khi mở, form trả lời chỉ thuộc người hiện tại, submit trim và chặn rỗng/gửi lặp.
-- Gửi xong khóa người chơi đó, tăng counter, không cho sửa hoặc xem lại; chỉ khi đủ câu trả lời mới hiện câu hỏi chung.
-- Thảo luận công khai tên/câu trả lời nhưng giữ kín câu hỏi khác; công bố mới đánh dấu mọi imposter và hiện câu hỏi riêng. Chơi lại tạo câu trả lời và vai mới.
-- Điểm chạm: feature question_game, setup/category mapping, session stages, ARB, local content fixtures; không gửi câu trả lời lên backend.
-- **Nghiệm thu:** cả Cổ điển/Gia đình chơi được từ setup tới replay; chưa gửi đủ không thể vào thảo luận; đổi loại game không mang theo câu trả lời/session cũ.
-- **Kiểm tra:** unit test assignment/stage, answer validation; widget/integration test chuyển máy nhiều người, pause che câu hỏi, double submit, riêng tư trước công bố và reset khi replay.
+### Phase 3 — First complete word game
 
-### Phase 6 — Danh sách người chơi đã lưu
+**Implementation status 2026-10-24:** connected setup → player list → secret card
+→ discussion → vote sheet → results → replay. Session lives in one route,
+snapshots setup/content, assigns exactly one imposter and randomizes starter once
+from all players. Imposter category display is disabled in this phase.
 
-**PR đề xuất:** `feat(app): persist and manage player presets`
+**Agreed decision:** group votes verbally; sheet records exactly one person.
+Correct imposter means group wins, otherwise imposter wins; ties require revoting
+before confirmation. Cancel reveals no roles. Layout/VI–EN instructions updated.
 
-- Phạm vi: phần Danh sách đã lưu, Lưu thành danh sách mới, Quản lý, Chi tiết và Đổi tên/Xóa của màn 15.
-- Lưu ID/tên danh sách, roster và các tùy chọn liên quan theo layout; bản đầu không gắn category tùy chỉnh tạm thời vào preset. Chốt trường hiển thị số imposter trước khi hoàn thành chi tiết.
-- Chọn preset nạp dữ liệu và validate lại; thay đổi lúc đang dùng tự lưu đúng như ghi chú layout. `Trò chơi chưa lưu` không bị ghi đè sang preset đang có.
-- Hủy modal không làm đổi dữ liệu; tên trống/trùng báo rõ, xóa có xác nhận; xóa preset đang dùng giữ roster hiện tại thành trò chơi chưa lưu. Lưu lỗi giữ nội dung và báo chưa lưu thành công.
-- Điểm chạm: player_names, feature player_presets, local storage, setup/store, ARB; không thêm đồng bộ tài khoản.
-- **Nghiệm thu:** lưu/nạp/đổi tên/xóa hoạt động qua lần mở lại app; chi tiết khớp setup và không mất các danh sách khác.
-- **Kiểm tra:** unit test serialize/validate, auto-save và lỗi lưu; widget test các sheet/modal, hủy/xóa danh sách hiện tại, khôi phục dữ liệu hỏng mà không ghi đè bản cũ.
+Card Back returns without completion; in-game Back confirms ending;
+results Back returns to setup. Backgrounding conceals, return requires reveal.
+`Play again` destroys session and retains setup; starting again uses current
+eligible content. No disk sessions; word images remain Phase 7.
 
-### Phase 7 — Hoàn thiện đồng bộ content và ảnh
+**Phase 3 evidence:**
 
-**PR đề xuất:** `feat(app): harden content sync and word images`
+- `flutter gen-l10n`, `flutter analyze`: successful, no issues.
+- `flutter test`: **72 tests passed**: seeded roles, immutable snapshots,
+  stage guards, correct/incorrect voting, sheet cancel, back/cancel, duplicate start,
+  replay with empty content, lifecycle/semantics, VI/EN, 100 players,
+  320×568 at text scale 2 through voting/results.
+- `flutter test integration_test/word_game_smoke_test.dart -d <iPhone-17-Pro-simulator-id>
+  --dart-define=APP_ENV=local`: **1 passed**, iOS 26.5 Simulator.
+  Real JSON cache fixtures in a test directory, simulated offline source,
+  full game → vote → results → replay/setup → start new game → exit/setup.
+  No backend calls, seeds, actual airplane mode, or process kill/relaunch.
+- `flutter build apk --debug --dart-define=APP_ENV=local` and
+  `flutter build ios --simulator --debug --dart-define=APP_ENV=local`: successful.
+- No UI image capture/verification per project rules. Physical-device gameplay,
+  Android runtime, Release unchecked; multiple imposters/advanced rules remain Phase 4.
 
-- Phạm vi: hoàn thiện repository API/cache có từ phase 2; không thay UI hoặc luật của hai game. Chỉ lấy trường cần cho game, không lấy thông tin người tạo/quản trị.
-- Đọc category active và content published đúng locale; lấy đủ các trang theo thứ tự ổn định trước khi tính số lượng/random, không coi giới hạn trang API là toàn bộ dữ liệu.
-- Lỗi mạng, timeout, lỗi trang giữa hoặc payload lỗi không được ghi đè cache tốt; fallback cache gần nhất, chưa có cache thì báo lỗi và thử lại. Không có content đóng gói trong build. Một kết quả hợp lệ nhưng rỗng được xử lý là rỗng, không đánh đồng với lỗi mạng.
-- Cập nhật khi mở app/refresh từ setup; đang chơi giữ nguyên session và prompt. Content bị archive/xóa/category bị tắt biến mất khỏi cache mới cho các ván sau. Nội dung offline có thể cũ cho tới lần đồng bộ thành công; không hứa thu hồi ngay trên máy mất mạng.
-- Ảnh word: bucket private và signed URL đổi mỗi lần xin, nên không dựa vào cache ảnh theo URL. Sau khi đồng bộ content, app xin signed URL và tải file ảnh của đề published về vùng lưu của app, đặt tên theo `image_path` (path đổi khi thay ảnh nên không cần kiểm tra phiên bản). Ảnh đã có file thì không tải lại; ảnh không còn trong cache mới thì xóa file.
-- Tải ảnh chạy nền, lỗi từng ảnh không làm hỏng đồng bộ content. Thiếu file khi chơi thì hiện placeholder; không bắt tải đủ ảnh mới cho bắt đầu ván.
-- Điểm chạm: data/content, local cache, setup refresh/error/retry, hiển thị ảnh word. Không tự sửa RLS nếu quyền đọc hiện có đã đủ.
-- **Nghiệm thu:** hai game dùng content thật; không lọt draft/archived/sai mode/category inactive; mất mạng vẫn chơi bằng cache; không gán vai hoặc đổi prompt lại khi dữ liệu cập nhật.
-- **Kiểm tra:** test repository với nhiều trang, lỗi một phần, cache hỏng/rỗng, xóa/archive và ảnh lỗi. Dùng simulation cho HTTP khi kiểm tra lỗi; chạy thêm read-only check trên backend local/dev để xác minh quyền anonymous và bộ lọc. Không dùng production để tạo/xóa fixture.
+**Proposed PR:** `feat(app): ship playable word game loop`
 
-### Phase 8 — Tùy chỉnh word bằng văn bản
+- Scope: screens 6–9 using Phase 2 setup and one imposter. Enable real session creation.
+- Randomize prompt/roles once; default player list → concealed card → word/role → `Got it!`. Only revealed civilians see word/category; hidden headings/semantics leak nothing. Images in Phase 7.
+- Advance only when all complete; show starter. `Announce results` selects exactly one verbally voted person, confirms, then reveals roles/word/winner. No individual ballots; sheet/single-imposter rules finalized in layout per section 3.
+- Replay destroys session, retaining setup; only setup start creates another. In-game Back safely returns to list or confirms ending, never reopening completed reveals. Backgrounding conceals.
+- Touchpoints: word_game, shared session, content repository, routes, ARB; no backend game tables.
+- **Acceptance:** 3+ players complete games, including airplane mode after successful content fetch; no reopened cards, rebuild randomization, rapid taps confirming two people/creating two games.
+- **Checks:** seeded/fake random tests for one role, early-stage rejection, correct/incorrect wins; full widget/integration flow, canceled voting, back, pause/resume, replay retention. No flaky probabilistic distribution tests.
 
-**PR đề xuất:** `feat(app): create local custom word categories`
+### Phase 4 — Player names and configurable rules
 
-- Phạm vi: màn 5 phần văn bản cho word; bật thẻ `Tạo tùy chỉnh` khi đang chọn word.
-- Tên category, thêm/xóa từ, nhập nhiều dòng; trim, bỏ dòng trống, chống trùng theo giá trị trim/không phân biệt hoa thường, giữ nguyên nội dung hiển thị. Chặn tên trùng thay vì ghi đè và chặn lưu nếu không còn từ hợp lệ.
-- Form có draft, rời khi thay đổi phải xác nhận; lưu thành công mới đưa vào picker và chọn category mới. Luật chọn một/nhiều category và random áp dụng cả nguồn remote/cache lẫn nguồn tùy chỉnh mà không trộn trùng ID.
-- Áp dụng vòng đời và kiểm tra Gia đình sau khi chốt mục 3; không đưa nội dung tự nhập lên backend. Chưa hiện thao tác ảnh.
-- Điểm chạm: feature custom_content, picker, repository/local session content, ARB, word reveal/replay.
-- **Nghiệm thu:** tạo category và chơi ngay một ván word, replay giữ đúng nội dung theo vòng đời đã chốt; hủy form không thêm category nửa chừng.
-- **Kiểm tra:** unit test nhập nhiều, trùng/trim/tên, category IDs và lọc Gia đình; widget test unsaved guard, lỗi lưu, picker chọn sau lưu, category chỉ có một từ.
+**Implementation status 2026-10-25:** roster editor supports trim, add/delete,
+up/down ordering, drafts/discard confirmation, stable IDs, persistence, and
+Phase 2–3 compatibility. Saved lists remain Phase 6.
 
-### Phase 9 — Tùy chỉnh question bằng văn bản
+**Agreed with user:** no separate hints; uniform fixed/random in
+1…floor((N−1)/2); choose starter first and exclude under never-start; group wins
+only by selecting all K imposters exactly. Category/teammate names appear only
+on revealed imposter cards. VI/EN instructions/layout updated.
 
-**PR đề xuất:** `feat(app): create local custom question pairs`
+**Phase 4 evidence:**
 
-- Phạm vi: mở rộng form phase 8 cho question, giữ chung tên category/validation/draft; chưa có ảnh.
-- Nhập hai câu hỏi bắt buộc khác nhau sau trim/so sánh không phân biệt hoa thường; không dùng một câu hỏi cho cả hai vai hoặc tự sinh câu còn lại.
-- Sau khi duyệt UX ở mục 3, nhập nhiều bằng hai ô nhiều dòng ghép theo chỉ số; số dòng không bằng nhau hoặc có cặp không hợp lệ phải báo dòng lỗi và không lưu một phần âm thầm.
-- Giữ cùng vòng đời/category selection/Gia đình như phase 8; kết nối vào ván question và màn kết quả đang có.
-- Điểm chạm: custom_content, model cặp câu hỏi, picker, question assignment/reveal, ARB. Không thêm cột backend cho dữ liệu local.
-- **Nghiệm thu:** category question tùy chỉnh không xuất hiện trong word; cả hai nhóm nhận đúng câu hỏi; kết quả hiện đúng câu hỏi khác sau công bố.
-- **Kiểm tra:** unit test cặp rỗng/trùng, batch thiếu dòng/dòng trống/trùng cặp; widget test form → lưu → chơi hết ván → replay, hồi quy word tùy chỉnh.
+- `flutter gen-l10n`, `flutter analyze`: successful, no issues.
+- `flutter test`: **89 passed**: fixed/random boundaries 3/100, reduced N,
+  legacy/corrupt data, duplicate names/trim/IDs/order, draft cancel/confirm,
+  never-start, incomplete/correct/wrong sets, teammate privacy.
+- Editor/settings sheet widget tests at 320×568, 844×390, 1024×768,
+  text scale 2; one-imposter regression and full two-imposter game.
+- `flutter test integration_test/word_game_smoke_test.dart -d <iPhone-17-Pro-simulator-id>
+  --dart-define=APP_ENV=local`: **2 passed**, iOS 26.5 Simulator.
+  One/two imposters (never-start, category display, teammates), full vote/results/
+  replay/new game/exit. Real test JSON cache with simulated offline networking;
+  no backend, seeds, process kill/relaunch, or actual airplane mode.
+- No UI images. Physical devices, Android runtime, Release unchecked;
+  no schema/plugin/native configuration changes in Phase 4.
+- After merging player controls: clean `flutter analyze`, **90 tests passed**;
+  setup integration now uses the roster editor but was not rerun on simulator.
 
-### Phase 10 — Ảnh cho nội dung tùy chỉnh
+**Proposed PR:** `feat(app): add roster editing and imposter options`
 
-**PR đề xuất:** `feat(app): attach local images to custom prompts`
+- Scope: current roster in screen 15 and remaining setup/sheet, excluding saved lists.
+- Setup **Players** opens the roster editor directly; remove separate **Edit players** and count increment/decrement sheet. Display confirmed roster count; canceled drafts keep it unchanged. Reducing players clamps imposter count.
+- Rename/add/delete/order 3–100 players; trim/reject empty names. Stable IDs prevent duplicate-name role/answer mixups; default new names depend on current roster.
+- Fixed/random counts, N-dependent validation/clamping, never-start, category display, teammates. Teammates appear after reveal without words/images.
+- Finalize hint/multiple-imposter rules before exposing UI; update instructions. Extend voting/results for K imposters without dropping Phase 3 win/loss behavior.
+- Touchpoints: setup, player_names, assignment, local settings, word reveal, ARB, Phase 3 tests.
+- **Acceptance:** configured full games, correct displayed starter never imposter under constraint, no invalid sessions.
+- **Checks:** 3/100 boundaries, fixed/random/reduced N, duplicate names/order/never-start, correct/incorrect/incomplete vote sets; editor CRUD and timely teammate visibility widget tests.
 
-- Phạm vi: thumbnail từng item, thêm/thay/xóa ảnh, chọn thư viện và chụp mới cho cả hai loại game; nhập nhiều chỉ tạo văn bản.
-- Sao chép ảnh đã chọn vào vùng lưu do app quản lý, không chỉ giữ URI/file tạm; hủy picker không đổi ảnh. Xử lý quyền bị từ chối, camera không khả dụng, file lỗi/quá lớn và preview lỗi.
-- Gắn ảnh sau khi lưu thành công; thay/xóa/hủy draft chỉ dọn file thuộc app khi không còn tham chiếu. Lỗi ghi giữ bản cũ. Dọn file hết vòng đời category tùy chỉnh theo quyết định phase 8.
-- Word: ảnh chỉ đi cùng từ cho người thường. Question: ảnh chỉ hiện cho người đang trả lời và chỉ công khai sau mốc đã duyệt; mặc định không thêm ảnh vào danh sách thảo luận. Không để ảnh lộ bí mật qua màn chuyển người, heading hoặc semantics khi thẻ còn che.
-- Điểm chạm: custom_content, local file handling, word/question reveal, native permissions iOS/Android, plugin và lockfile. Không upload ảnh vào Supabase, không mở rộng schema question remote.
-- **Nghiệm thu:** chọn/chụp/thay/xóa ảnh rồi chơi được; từ/câu hỏi không có ảnh vẫn hoạt động; ảnh còn đúng trong suốt vòng đời nội dung.
-- **Kiểm tra:** test file save/replace thất bại không mất ảnh cũ; kiểm tra quyền, thư viện và camera trên thiết bị thật của hai nền tảng. Widget test placeholder và che ảnh; simulator không đủ để xác nhận camera.
+### Phase 5 — Complete question game
 
-### Phase 11 — Cài đặt, ngôn ngữ và hỗ trợ
+**Implementation status 2026-10-27:** question setup/picker uses existing repository/
+cache pairs, persists game type in Hive, and supports players → private questions/
+answers → common question → discussion → reveal → replay. Phase 4 roster,
+fixed/random counts, never-start are shared; word voting/wins remain unchanged.
 
-**PR đề xuất:** `feat(app): add settings and support actions`
+**Agreed Phase 5 scope:** no role/teammate disclosure; identical locked cards.
+Pre-submit Back retains ID-scoped RAM drafts visible only after that player's
+reveal; submit trims/rejects empties and locks completion. Backgrounding conceals
+question/input and dismisses focus. Questions directly reveal all imposters and
+alternate questions, without vote sheets/winner calculation. No backend answers
+or disk sessions/drafts. Old word settings preserved; default type is word.
 
-- Phạm vi: màn 16 và màn chọn ngôn ngữ; mở từ setup, tái sử dụng Cách chơi từ cả landing/settings.
-- Cho chọn VI/EN sau khi chốt danh sách ngôn ngữ, cập nhật MaterialApp và strings ngay, lưu lựa chọn local; không sửa generated l10n thủ công. Chọn ngôn ngữ UI không tự dịch content: nếu chưa có content cùng locale, phải hiển thị rõ nguồn ngôn ngữ đang dùng hoặc trạng thái không có dữ liệu theo quyết định sản phẩm.
-- Hiện phiên bản/build thực tế; tạo ID cài đặt ẩn danh local một lần, hiển thị rút gọn và copy toàn bộ. Không tạo tài khoản hay thu thập định danh thiết bị.
-- Dùng store URL/app ID và kênh phản hồi đã được cung cấp; mở ứng dụng ngoài có xử lý lỗi/không có app nhận. Chưa có cấu hình thì ẩn hành động hoặc giải thích rõ, không gắn URL giả.
-- Điểm chạm: settings, i18n, `main.dart`, local settings, app metadata, nền tảng/link config, ARB. Không thay đổi cấu hình của session đang chơi.
-- **Nghiệm thu:** đổi ngôn ngữ tồn tại qua mở lại, Cách chơi back đúng màn gọi, ID ổn định và clipboard đủ giá trị; link mở đúng đích trên từng nền tảng.
-- **Kiểm tra:** widget test locale/restart/copy với service giả; kiểm tra thiết bị thật việc mở store/kênh phản hồi; nguồn content không bị đổi ngầm sang sai locale.
+**Planned Phase 6 extension:** question teammate option/revealed-card disclosure
+under conditions below. Phase 5 evidence does not validate this extension.
 
-### Phase 12 — Hoàn thiện và kiểm tra bản phát hành
+**Phase 5 evidence:**
 
-**PR đề xuất:** `chore(app): prepare mobile release and verify game flows`
+- `flutter gen-l10n`, `flutter analyze`: successful, no issues.
+- `flutter test`: **118 passed**: game type/legacy setup, type/mode filtering/
+  counts/categories, fixed/random 3/100 boundaries, IDs/duplicate names, snapshots,
+  private drafts, trim/empty rejection, repeated submit, stage guards.
+- Full Classic/Family question widgets, VI/EN, light/dark, 320×568/844×390,
+  text scale 2; keyboard insets/semantics, pause concealment, per-player drafts,
+  submission locks, multiple-imposter reveal, back/cancel/end, replay/word switch.
+- iPhone 17 Pro, iOS 26.5 Simulator:
+  `flutter test integration_test/question_game_smoke_test.dart -d <simulator-id>
+  --dart-define=APP_ENV=local`: **2 passed**, both modes using real Hive after
+  close/reopen and simulated offline source → answers → discussion → reveal →
+  replay → new session → exit/setup.
+- Same-simulator `integration_test/word_game_smoke_test.dart`: **2 passed**,
+  one/multiple imposters, voting/wins/replay preserved.
+- No UI images or schema/plugin/native changes. Dev/Production, physical devices,
+  Android runtime, Release pending. Smoke offline is simulated, not airplane mode
+  or process kill/relaunch. Target needs published Vietnamese questions for real-content acceptance.
 
-- Đối chiếu toàn bộ màn/trạng thái đã chốt với layout; rà soát từ ngữ thống nhất, SafeArea, cuộn, bàn phím, focus, screen reader, text scale và nút cuối màn. Các phase trước vẫn phải có accessibility cơ bản, không dồn toàn bộ tới đây.
-- Thay nhãn `untitled`/nhận diện demo bằng tên và assets được duyệt; cấu hình application/bundle ID, version/build và môi trường release. Nếu đổi package ID thì cập nhật Kotlin package/MainActivity, Gradle và iOS settings liên quan cùng PR.
-- Build Android/iOS release, kiểm tra network permission/TLS với backend mục tiêu, plugin ảnh/link hoạt động trong release và không vô tình để cấu hình HTTP dev trong bản phát hành.
-- Kiểm tra không có khóa đặc quyền trong source/bundle, không log vai/đáp án; build không chứa content và trỏ đúng backend release. Giữ dữ liệu local khi nâng version, đặc biệt preset và thiết lập.
-- Điểm chạm: lỗi tích hợp thực tế, native config/assets, test/integration_test và hướng dẫn build/UAT. Không dùng PR cuối để chứa tính năng còn thiếu của phase trước.
-- **Nghiệm thu:** VI/EN theo phạm vi đã chốt; hai game, cả hai mode, preset, tùy chỉnh, ảnh, replay, offline/cập nhật content đều qua checklist trên Android/iOS. Không còn route/nút demo trong luồng sản phẩm.
-- **Kiểm tra:** `flutter analyze`, `flutter test`, integration smoke và cài release build trên thiết bị. Nếu thiếu signing/tài khoản, ghi rõ bước chưa xác minh; build unsigned không thay thế kiểm tra cài/phân phối. Upload store/phát hành là bước vận hành sau PR, không được coi là đã làm.
+**Proposed PR:** `feat(app): add private question game loop`
 
-## 7. Điều kiện hoàn thành cho mỗi PR
+- Scope: screens 10–14; enable correct type/mode in setup/picker. Reuse roster/session/random/content layers.
+- Choose one pair from the same selected-locale `question_prompt_translations` row joined through repository. Civilians get `civilian_question`, imposters `imposter_question`. Conceal first; current-player-only input; trim/reject empty/repeated submits.
+- Submitted players lock, counter advances, no edits/review; common question appears only after all answers.
+- Discussion reveals names/answers, hiding alternate question until results; reveal marks all imposters and their questions. Replay retains setup; new start regenerates roles/answers.
+- Touchpoints: question_game, setup/category mapping, session stages, ARB, local fixtures; no backend answers.
+- **Acceptance:** complete Classic/Family setup-to-replay; no early discussion; game switches retain no old answers/session.
+- **Checks:** assignment/stage/answer validation units; multi-player handoff, pause concealment, double submit, pre-reveal privacy, replay reset widget/integration tests.
 
-1. Ghi rõ phase, dependency đã merge, chức năng mới nhìn thấy từ đâu và cách demo với dữ liệu nào.
-2. Có test nhỏ cho luật mới; thao tác nhập/lưu có validation và giữ dữ liệu khi lỗi. Test regression tập trung vào phần đã đổi, không tạo lại mọi test ở mọi phase.
-3. Chạy `flutter analyze` và `flutter test` trong `app/`; chạy codegen/l10n khi nguồn tương ứng thay đổi. PR đụng native/plugin phải có build/check đúng nền tảng.
-4. Mỗi luồng đã mở cho người dùng có back/cancel/loading/empty/error/retry thích hợp; nút chưa làm không dẫn vào đường cụt.
-5. Không lộ thông tin người chơi trước thời điểm cho phép; xác nhận khi thao tác làm mất form/danh sách hoặc kết thúc ván.
-6. Có ảnh/video demo và kết quả kiểm tra thực tế trong PR; phân biệt unit/widget, simulation, backend local/dev và thiết bị thật.
-7. Cập nhật tài liệu nếu chốt một điểm khác layout. Mỗi PR tự hoạt động sau merge; rollback code không yêu cầu xóa dữ liệu local của người dùng.
+### Phase 6 — Saved player lists and imposter options
 
-## 8. Mốc bàn giao và phần không tự mở rộng
+**Proposed PR:** `feat(app): manage player presets and imposter options`
 
-- **Sau phase 3:** bản thử nội bộ game word, nội dung từ backend Dev, một imposter.
-- **Sau phase 5:** cả hai game chơi trọn ván, cấu hình và người chơi cơ bản đầy đủ.
-- **Sau phase 7:** đồng bộ content đầy đủ phân trang, ảnh word và cache offline ổn định.
-- **Sau phase 10:** hoàn tất nhóm tùy chỉnh văn bản/ảnh đã chốt.
-- **Sau phase 12:** ứng viên phát hành, kèm bằng chứng kiểm tra và các giới hạn còn lại.
+**Implemented 2026-10-27; evidence below:** keep Phase 6, depending on Phases 4–5; no Phase 4.1 or renumbering. Scope: screen 15/preset management, imposter setup modal for both games, and question teammates. References supply structure/interactions; colors, typography, components, code follow current app rules.
 
-Không tự thêm Premium, thanh toán, quảng cáo, đăng nhập người chơi, chơi online, đồng bộ danh sách nhiều thiết bị, bảng xếp hạng, timer, AI sinh nội dung, thư viện tùy chỉnh vĩnh viễn hoặc hệ thống thu từng phiếu/loại người nhiều vòng. Vẫn ghi nhận lựa chọn chung của nhóm và tính bên thắng trong game word. Nếu luật bầu chọn/thắng hoặc vòng đời nội dung được chốt khác đề xuất, điều chỉnh phase liên quan trước khi triển khai.
+#### Imposter modal and question options
 
-Phần xác minh hiện tại chỉ là đọc repository và đối chiếu tài liệu. Chưa chạy app/test, gọi API thật, xác minh dữ liệu Dev/Production hoặc kiểm tra thiết bị. Kế hoạch không đưa ước lượng ngày khi thiết kế và các quyết định ở mục 3 còn chưa chốt.
+- **App style rules:** references guide layout/interactions only. Colors, typography, spacing, radii, icons, selection, modal overlays, light/dark use `AppTheme`/`AppColors`, constants, existing components; no copied or separate reference styles.
+- Setup `How many imposters?` opens `Choose imposters` bottom sheet with dim backdrop and icon/title as in `IMG_2987.PNG`. Reuse existing word/question entry without a separate route.
+- Replace random switch with mutually exclusive radio cards: `Fixed` — `Choose the exact number of imposters`; `Random` — `Random imposter count each game`.
+- Selected Fixed shows `−`, large count, `+`, range. Use 1…floor((N−1)/2), disable boundaries, never hardcode reference `1–3`. For 3–4 players, warn that 5+ are needed for multiple imposters. Mark `1` as `Recommended`, without another recommendation formula. Random collapses controls but retains fixed draft count; randomize once at game start.
+- Move `Imposters never start` to modal bottom, removing setup duplicate. Reuse `imposterNotFirst`/Phase 4 `startingPlayerId`. Count/method/switch share a draft: Confirm saves together; Back/drag/outside dismiss discards. Active presets update only after successful confirmed persistence; errors retain drafts.
+- Following `IMG_2986.PNG`, show `Imposters know each other` in category/options for **both word/question**, Classic/Family. Share `knowEachOther` across game switches/presets/replay, legacy default `false`. User update 2026-10-27: `Show category to imposters` also supports both games. Question civilians see category; imposters only with enabled option and revealed private card. Snapshot at game start.
+- With question `knowEachOther` and 2+ imposters, only revealed imposters see other imposter names, excluding self by ID even for duplicate names. Civilians, locked cards, handoff lists, discussion expose no roles/teammates. Never expose opposing questions or others' private answers. Disabled/single-imposter retains Phase 5 no-disclosure behavior.
+- Background, Back/player switch, submit conceal teammates with question/input; only the correct revealed card reopens them. Session snapshots `knowEachOther`, unaffected by later setup. VI/EN instructions explain private teammate disclosure; preserve question direct-reveal/no-vote/no-winner flow.
 
-Tham chiếu cho phase backend: quyền Data API cần cả grants và RLS theo [hướng dẫn bảo vệ API của Supabase](https://supabase.com/docs/guides/api/securing-your-api). Trước triển khai phase 7 và phát hành, kiểm tra lại [changelog](https://supabase.com/changelog) và khả năng kết nối trên các phiên bản hệ điều hành mục tiêu.
+#### UI flow
+
+- **Player editor:** top preset card before count/roster, folder icon, selected name or `Unsaved game`, sheet affordance; full card tappable. Keep Phase 4 rename/add/delete/up/down, 3–100, Confirm.
+- **Preset sheet:** `Saved lists`, `Unsaved game` quick-play description, saved names/counts/checks reflecting draft. Bottom `Save as list…` / `Manage lists`. Selection loads draft and closes; dismiss keeps draft.
+- **Save as list:** close sheet before `Save as new list…`; `List name`, `Enter list name`, Cancel/Save. Use draft roster/rules, not old setup. Trim/reject empty/case-insensitive duplicate names. Validate roster first, never save empty player names.
+- **Management:** close sheet then route to `Manage lists`; Back retains editor draft. Cards show icon/name/count/`In use` from confirmed setup/vertical ellipsis. Empty guidance returns to editor to save the first preset; no dead-end buttons.
+- **Ellipsis:** anchored popover with Details/Rename list/divider/error-colored Delete. Menu taps must not trigger cards; close before opening sheets/dialogs.
+- **Details:** card tap or Details opens the same read-only sheet without switching. Summary name/count, ordered player chips, saved rules/autosave note. Show fixed count or Random, never session's sampled count.
+- **Rename:** prefilled dialog, creation validation excluding itself. Cancel preserves data; successful persistence updates editor/selection/management/details names without changing ID/roster/rules.
+- **Delete:** named confirmation, cancel/delete. Delete only after successful confirmation/persistence; retain other presets.
+- Reuse `AppTheme`/`AppColors`, `AppContent`, constants, Material widgets; no reference purple/dark palette or separate hardcoded style. Scrollable, keyboard-safe, SafeArea, accessible icon labels; footer wraps when narrow. Selected/in-use uses text/checks, not color alone.
+
+#### Data and application timing
+
+- Presets store stable ID/name, roster IDs/names/order, next player-ID counter, `imposters`, `randomImposters`, `imposterNotFirst`, `showCategory`, `knowEachOther`. Reuse N-based validation/clamping after player reductions.
+- Exclude game type/mode/category IDs/UI/content locale/custom content/session. Selection changes only roster/rules, preserving setup's remaining choices. Since Phase 6 both `knowEachOther` and `showCategory` apply to word/question.
+- Details show fixed/random count, never-start, category display, teammates. Omit `Show imposter count`; no extra switch to match references.
+- Editor drafts roster/rules/preset ID. Choosing presets only changes drafts, never setup/old presets. Confirm applies setup and updates selected preset if still present. Dirty Back asks to discard, preserving prior confirmed setup/preset.
+- `Unsaved game` retains draft roster/rules, clears linkage only on Confirm, never deletes/overwrites the departed preset.
+- Save as list immediately persists a new preset and selects it in draft without switching setup. Later discard leaves the new library entry and prior setup selection.
+- Setup rule changes autosave to the confirmed active preset. Player changes update only on Confirm, never each keystroke/add/delete/reorder.
+- Deleting active presets preserves setup roster/rules and switches to Unsaved game. Drafts retain content but clear deleted linkage; old confirmation cannot resurrect deleted presets. Renaming preserves drafts.
+- Active sessions retain role/prompt/progress snapshots independently of library actions.
+
+#### Storage, errors, integration
+
+- Reuse Hive CE, `LocalJsonStore`, write queues, storage lifecycle; no new dependency/backend/state mechanism. Follow feature model/store structure, Signals/Riverpod DI, existing `RouterService` registry.
+- Atomically persist setup/active-preset ID/library when related; restarts cannot show deleted active presets or mismatched rules. Serialize old/new writes; drain before closing storage.
+- Phase 2–4 setups without library/link restore empty library/Unsaved game and original roster/rules. Keep JSON → Hive migration without deleting legacy files or resetting users.
+- Explicit loading/read-error/retry; missing differs from corrupt. Read failures never silently reset/overwrite; block dependent writes until read/validation succeeds.
+- Write failures retain forms/drafts/retry data; no success/closing before persistence. Prevent repeated submissions; failed rule autosaves report unsaved/retry, not durable memory-only changes.
+- Touchpoints: player_names, preset feature, setup_screen/store/model, question_game snapshot/teammates, Hive/storage/migration, providers/routes, instructions, VI/EN ARB/tests/fixtures. Never manually edit generated localization; keep layout/instructions consistent.
+
+#### Acceptance and checks
+
+- **Acceptance:** editor create → confirm → edit rules → switch → details → rename/delete → close/reopen storage preserves correct data. Presets do not alter type/mode/categories/language; details do not switch; no loss of other presets or active-session changes.
+- **Unit:** serialization/validation, trimmed/empty/case-insensitive duplicate preset names, duplicate player names with distinct IDs, order/counters/3–100 limits. Fixed/random/reduced N, draft selection/confirm/cancel, unsaved mode, create then discard, correct preset autosave.
+- **Storage:** old setup/JSON → Hive; actual close/reopen with library/link/rules. Read/write failures/retry/duplicates/serialization/dispose; corrupt data preserved, deleted presets not restored by stale drafts.
+- **Widgets:** preset card → sheet → create/select/unsaved → management → popover → details/rename/delete. Cancel, active deletion, rename with open draft, empty/error/loading, keyboard/labels/small screens/text scale 2. Menu must not also open details.
+- **Modal:** both game entry points, Fixed/Random, count boundaries/reduced N/method retention, never-start, confirm/cancel/autosave. Small/large-text layouts scroll to Confirm with readable selection.
+- **Question teammates:** on/off, one/multiple, fixed/random, duplicate names/distinct IDs, correct revealed card only, no civilian disclosure; pause/resume/back/submit/player changes conceal. Persist/load presets, game switches, snapshots/replay; full Classic/Family VI/EN without early alternate questions.
+- Run `flutter gen-l10n`, `flutter analyze`, `flutter test`; regress both games after preset loads and replay retention. No screenshots/image verification required for Phase 6; evidence is code inspection/static analysis/automated tests.
+- No login, cross-device sync, extra rules, or saved games. Implementation evidence below.
+
+**Phase 6 verification (2026-10-27):**
+
+- Added same-record preset library, stable IDs/counters, roster/rule/link drafts, management route/details/rename/delete, active-rule autosave.
+- Queue derives operations from committed data and publishes only after successful writes; read errors allow retry without reset. Disposal drains queue; JSON migration preserves old files and validates library/link.
+- Fixed/Random modal drafts count/never-start; teammates/category display support both games. Questions render ID-filtered teammates only on revealed imposter cards; background/back/submit conceal; snapshots/replay retained.
+- `flutter gen-l10n`, `flutter analyze`, `flutter test` succeeded (current counts in `app/README.md`). Coverage: complete preset lifecycle, failures/retries/serialized writes/disposal, migration/real Hive reopen, small/large-text/keyboard, semantics/question privacy, both games after preset loading.
+- No image checks, device smoke, or real-backend integration; automated tests do not establish physical-device behavior.
+
+### Phase 7 — Complete content and image synchronization
+
+**Proposed PR:** `feat(app): harden content sync and word images`
+
+**Implementation/evidence 2026-10-27 (`app-phase-7`):**
+
+- Added shared `load()` setup refresh, 15-second/page timeout, snapshots retained on failure, stale marking even after previous success. Valid empty replaces cache; cache-write failure warns about persistence only. Cache reread cannot replace newer memory content after a subsequent download failure.
+- `WordImageCache` uses Application Support, normalized backend + path, independent of locale without stored signed URLs. Restore existing images before queueing missing downloads; 300-second signing, timeout, 5 MiB, MIME/decode, temp + rename, one expiry/unauthorized renewal. Individual failures wait for next startup/refresh.
+- Hive read-only inventory covers all backend snapshots/legacy JSON. Cleanup serializes with downloads and rechecks inventory/current snapshot/session pins before deletion; inventory errors skip pruning. Pin before navigation, release on route failure too. No setup/preset/migration/RLS/schema changes.
+- Revealed civilians/results show local word images, stable placeholders on errors, text-only without paths. Hidden/imposter/player-list/discussion expose no image semantics. Refresh never changes either game's prompt/locale/category/roles/progress.
+- Successful `flutter gen-l10n`, clean `flutter analyze`, **175 tests passed**, 10 HTTP/live opt-in skips. Coverage: pages/middle failure/late responses/corrupt-empty cache/write failure/recovery, backend separation/locale sharing/restart/cleanup/pins, late/file/decode images/concealment, route failures, category removal, both themes/small/text scale 2.
+- Postman local HTTP simulation: **8/8 cases, 57 requests** final run. Real client exercises REST offsets 0/2, JSON 500, HTML 502, malformed payloads, timeout/late response, 300-second signing, expired GET → resign → GET 200, Storage GET 500. Code/instructions: `postman/simulations/phase-7.context.md`; env `SUPABASE_SIMULATION_URL`, no hardcoded backend test address.
+- Anonymous local read-only: **14 categories, 52 words, 52 question pairs**; valid `vi`, all returned translations published, nonexistent path signing rejected. Current data has no image paths, so eligible-image downloads/other-locale eligibility remain unverified on real backend. **Dev inaccessible/denied**, unverified; no backend writes.
+- Remaining: physical devices/Release/screenshots not run. Valid image permissions and other-locale scenarios need available backend/data. Offline content may remain stale until successful sync.
+
+- Scope: harden Phase 2 repository/API/cache without game UI/rule changes. Fetch gameplay fields only, no creator/admin information.
+- Preserve base + same-locale published translation contract; regress complete pagination before counts/randomization. No old-schema queries or extra locales on sync.
+- Network/timeout/mid-page/invalid-payload failures preserve good cache; latest cache fallback or error/retry, without bundled content. Valid empty results are empty, not network failures.
+- Refresh at startup/setup; ongoing sessions retain locale/names/prompts. Archived/deleted translations/prompts, disabled categories, or unpublished category translations disappear from refreshed locale caches for future games. Other published locales do not keep hidden translations eligible. No immediate offline revocation promise.
+- Word images: private `word-prompt-images`; public eligibility requires at least one published prompt translation with public category in that locale, not base status. Shared image access does not establish selected-locale gameplay eligibility.
+- Never cache by signed URL. After valid content sync, sign/download to app storage using backend + `image_path`, changed on replacement. Skip existing files; delete only when no locale cache/current session references them. Renew expired URLs online; archiving cannot immediately revoke issued URLs/offline bytes.
+- Download in background; image failures do not break content sync. Missing gameplay files show placeholders, without blocking game start until all images arrive.
+- Touchpoints: data/content, cache, setup refresh/error/retry, word images. Do not change RLS when existing reads suffice.
+- **Acceptance:** both games use real `vi` without drafts/archived/wrong-locale/mode/inactive-category leakage; offline cache works; updates never rerandomize active sessions.
+- **Checks:** multipage/partial failure/corrupt-empty cache/hidden translation-prompt-category/image tests; pinned session images retained. HTTP simulations for errors plus read-only local/dev anon/filter checks, including images public through other locales. No production fixture writes.
+
+### Phase 8 — Custom word text
+
+**Proposed PR:** `feat(app): create local custom word categories`
+
+**Implemented 2026-10-27:**
+
+- Creation available from both word tabs without backend snapshots. Last grid tile matches dimensions/borders/spacing with light-blue action background. Name/add/delete/bulk form trims, ignores blanks, deduplicates case-insensitively retaining first spelling. Reject same-locale remote/custom word names including outside Family. No custom images/questions yet.
+- Stable local category/prompt IDs, `contentLocale = vi`, no uploads. Atomically persist with setup through Hive/queue; legacy defaults empty, excluded from presets/remote cache. SetupStore combined catalog drives picker/count/random and word session name/text snapshots; refresh neither changes sessions nor deletes custom content.
+- Saving only adds ID to current-tab picker draft while retaining selections. Confirm applies; picker Back discards selections but retains saved category. Dirty form exit confirms; failures retain for retry.
+- Family creation requires checkbox, usable in both tabs; All-created categories stay outside Family. Game/tab switches preserve content across restart/replay; only confirmed setup → landing clears content/matching IDs. Clear failures retain screen/data; other players/presets/settings remain.
+- Successful l10n, clean analyzer, **206 tests passed**, 10 opt-in skips. Added 20 tests: parse/validation/IDs/filter/selection/preset/save errors, Hive reopen, forms/dialog guards, picker drafts, suitability/tabs, custom-only offline full game/replay, setup-exit clearing, VI/EN layout/semantics at 320×568/text scale 2/keyboard/both themes. No screenshots, physical/Release checks, or new backend verification; no API/backend/dependency changes.
+
+- Scope: screen 5 word text; enable `Create custom`. Record creation `contentLocale` (currently `vi`), never treat user input as translated for every language.
+- Name/add/delete/bulk; trim/ignore blanks/deduplicate case-insensitively while preserving display. Reject duplicate names rather than overwrite; no saving without valid words.
+- Drafts/discard confirmation; only successful saves add/select in picker. One/multiple/random rules combine remote/cache/custom without duplicate IDs.
+- Apply finalized lifecycle/Family decisions in section 3; no backend input or image actions yet.
+- Touchpoints: custom_content, picker, local repository/session content, ARB, word reveal/replay.
+- **Acceptance:** create and immediately play words; replay follows lifecycle; canceled forms leave no partial categories.
+- **Checks:** bulk/duplicates/trim/names/IDs/Family units; unsaved guard/save errors/post-save selection/single-word category widgets.
+
+### Phase 9 — Custom question text
+
+**Proposed PR:** `feat(app): create local custom question pairs`
+
+**Implemented 2026-10-27:**
+
+- Extend Phase 8 route/form by game type, including offline creation. Pair lists show both role labels/count/delete/single-pair/two-multiline import. Shared name/save/error/discard/layout; no question Family.
+- Immutable `CustomQuestionEntry`/`CustomQuestionCategory`, JSON, `custom-question-N` IDs; old setup defaults empty/counter 1. Parser preserves blank rows, accepts LF/CRLF/trailing newline, identifies empty/identical/mismatched/ordered-duplicate lines, never partially imports.
+- `SetupStore.eligibleQuestions` combines sources for picker/count/start/random; session resolves catalog names without remote snapshots. Recheck names by game/locale and allocate IDs in queue; failures preserve counter/draft. Exclude from presets/cache; clear both types atomically on confirmed setup exit.
+- Evidence: `app/test/features/setup/custom_question_categories_test.dart` (parser, JSON/legacy, IDs, queues, name/game/locale, catalog/session, preset, atomic clear); `custom_word_screen_test.dart` (form/errors/discard/draft, offline full game/replay VI/EN, privacy/semantics/layout/keyboard, word regression); `app/test/data/hive_local_storage_test.dart` (reopen).
+- Final: successful l10n, clean analyzer, **219 tests passed**, 10 opt-in skips (13 added since Phase 8). No images, new APIs/backend/dependencies, or screenshots; physical devices pending.
+
+
+- Scope: extend Phase 8 forms with shared name/validation/draft, no images.
+- Require two different trimmed, case-insensitive questions; never reuse one for both roles or invent the other.
+- After section 3 UX agreement, bulk pairs by line index; mismatched/invalid rows show errors without silent partial saves.
+- Same lifecycle/selections as Phase 8; standard question picker, Family confirmation/filter word-only. Connect existing question game/results.
+- Touchpoints: custom_content, pair model, picker, assignment/reveal, ARB. No backend columns for local data.
+- **Acceptance:** custom questions never appear in words; groups receive correct questions; alternate questions reveal only in results.
+- **Checks:** empty/duplicate pairs, missing/blank/duplicate batch rows; form → save → complete game → replay widgets, custom-word regression.
+
+### Phase 10 — Custom content images
+
+**PR:** `feat(app): attach local images to custom prompts` — implemented, physical-device acceptance pending.
+
+- Creation uses `image_picker: 1.2.4` via Riverpod: library/camera add/replace, source-sheet removal, canceled picks retain old images. Single word/pair dialogs have optional images; bulk is text-only with later per-item images. Thumbnails sit below content for narrow screens. Category tiles only say `Has images`, exposing no secrets.
+- Preserve `CustomWordCategory.words`; add immutable `imageIds` map keyed by exact saved text, rejecting unknown keys. `CustomQuestionEntry.imageId` shares one image per pair; duplicates compare question text only. Local prompts use `localImageId`, separate from remote `imagePath`; legacy defaults empty/null without ID/counter/preset/cache changes.
+- `LocalImageStore` copies decodable images ≤5 MiB into `Application Support/custom-images` via temp/rename. Random relative IDs reject absolute/traversal paths; never delete library source files. Canceled/failed picks/decode/write preserve old images. Category/image references persist in one setup record; failed saves retain full drafts.
+- Import/setup writes/cleanup share queue. Inventory covers all Hive scopes/backends/locales and unsuperseded legacy JSON; unsafe inventory skips pruning. Retain open-draft/pending-save/session images until routes exit. Replace/delete/discard/successful category clear release references; failed clear retains files. Orphan-delete failure does not fail save; retry next startup/cleanup.
+- Words honor session **Family + Show images**: revealed civilians/results only. Questions show shared images below revealed current-player questions; **results only** publicly show once below civilian question. Handoff/hidden/common-question/discussion have no image widgets/semantics. Conceal/background/submit/Back/player changes remove private content. Generic question-image labels reveal no role/opposing question. Missing/corrupt files show placeholders without blocking play.
+- Lock editing/navigation during picker/import/save; post-disposal results cannot attach to other items and release orphan files. VI/EN errors distinguish denied/restricted permission with system Settings guidance, unavailable camera, unreadable/oversized images, storage writes. iOS Photos/Camera descriptions; Android plugin system picker, startup `retrieveLostData()` discards orphan results and reports lost drafts without attaching to new items.
+- Drafts are RAM-only; Android process death does not restore them. Saved categories/images survive offline/replay/restart under Phases 8/9; no uploads/backend/schema changes.
+- **Automated evidence (2026-10-27):** model legacy/round-trip/invalid IDs/immutable maps/image-independent pair duplicates; Hive reopen/multi-scope-locale-legacy inventory; file copy/replace/oversize/corruption/disk failures/cleanup races/draft-save-session pins/category clear failure-success. Word/question widgets include dialog images, replace/delete/cancel/permissions/save retry/late disposal; offline reveal/results/replay, three word Family/image configurations, question VI/EN stage/lifecycle privacy, 320×568/text scale 2/keyboard/light-dark through widgets/semantics without screenshots. l10n complete, analyzer clean, **237 passed / 10 existing skips**. Android debug/release APK and iOS release `--no-codesign` built successfully.
+- **Incomplete acceptance:** real Android/iOS required for library/camera/permissions/cancel/restart persistence; Android also needs picker interruption by process death. Builds/simulators cannot replace these.
+- Out of scope: editing saved categories, cropping, uploads, backend/schema, draft recovery, screenshots.
+
+### Phase 11 — Settings, UI language, and support
+
+**Proposed PR:** `feat(app): add settings and support actions`
+
+**Implemented 2026-10-27; real store/feedback configuration pending:**
+
+- Settings opens from setup; `AppStore` selects/persists/restores VI/EN without changing
+  content locale `vi`. Existing instructions route returns to the correct caller.
+- UI locale and anonymous installation ID use versioned records in separate Hive box;
+  read failures preserve data, write failures retain values/retry. Generate local 128-bit
+  ID once, abbreviate display/copy full. Version/build from `package_info_plus`.
+- Missing URLs/app IDs/feedback channels leave both actions disabled with reasons;
+  no fake URL/link launcher. Actual device link launching not accepted yet.
+- l10n and `flutter analyze --no-pub` succeeded; `flutter test --no-pub`:
+  **256 passed**, 10 opt-in skips. Android debug APK/iOS Simulator debug built.
+  No backend/physical devices/screenshots; worktree builds use separate placeholder env.
+
+- Scope: screen 16/language screen from setup; reuse instructions from landing/settings.
+- Choose VI/EN from `AppLocalizations.supportedLocales`, update `AppStore.locale`/MaterialApp/strings immediately, persist/restore locally; no manual generated l10n edits. This is `UI language`; game stays `vi` until Phase 12 with clear setup label. Never use UI locale as API/cache filter.
+- Actual version/build, one local anonymous ID with abbreviated display/full copy; no account/device identifier collection.
+- Use supplied store URLs/app IDs/feedback, handling launch failure/no receiving app. Without config hide/explain; never fake URLs.
+- Touchpoints: settings, i18n, `main.dart`, local settings, metadata, platform/link config, ARB. Active sessions unchanged.
+- **Acceptance:** UI language survives restart, instructions return correctly, stable/full clipboard ID, correct platform links. English UI still plays labeled Vietnamese content.
+- **Checks:** locale/restart/copy widgets with fakes; physical store/feedback launch; UI changes do not alter content queries/cache/sessions.
+
+### Phase 12 — Shared UI and content language
+
+**User-requested revision 2026-10-28:** merge UI/content into **one Language option**, superseding separate choices.
+
+- English changes UI/categories/prompts to EN; Vietnamese changes both to VI. DB `content_languages` supplies names/codes/order, restricted to `AppLocalizations.supportedLocales`. DB locales without UI ARB remain hidden, preventing unusable UI choices.
+- `GameSetup.contentLocale` is the persisted source for MaterialApp/repository. Legacy `ui_locale` stays with installation-ID data for storage compatibility but no longer controls UI. Change both only after successful setup write; errors retain old selection/retry.
+- Remove separate UI-language row/screen. Language links in Settings/setup/picker. No in-game changes; sessions retain names/prompts/locale; replay uses persisted setup.
+- Keep old setup key to retain players/presets/custom/images; presets never store/overwrite locale. Language cache by environment/backend, snapshots by environment/backend/locale. `SetupStore` survives switching; late responses cannot replace current-locale data.
+- Await correct-locale snapshots before confirm/start. Offline uses same-locale cache, never fallback for missing/empty. Retain eligible IDs/update names; remove invalid IDs with notice, none means All categories. Picker drafts cancel even VI→EN→VI before a frame.
+- Custom content/drafts keep creation/form locale. Images share backend/path caches; inventory all locales/session before cleanup. No dependencies/migrations/seeds/admin APIs added.
+- Phase 12 read-only anon evidence: local `http://127.0.0.1:54321`: `vi` 13 categories/27 words (25 Family)/26 question pairs, `en` 13/25 (25 Family)/25. Dev `https://pxycsjwjakzehcuygngv.supabase.co` inaccessible/denied within 5 seconds; unaccepted. No DB test writes.
+- Updated checks: one selection changes UI/game, failed saves change neither, picker discard, session/replay, cache/restart, small/large-text/semantics. Repository still tests a third DB locale via fixtures; picker hides unsupported UI locales. No screenshots.
+- After revision: l10n successful, clean analyzer, **274 passed / 12 opt-in skipped**. Debug build/start on iPhone 17 Pro Simulator succeeded without screenshots. Physical devices pending.
+
+### Phase 13 — Release preparation and verification
+
+**Proposed PR:** `chore(app): prepare mobile release and verify game flows`
+
+- Reconcile every agreed screen/state with layout; review consistent wording, SafeArea, scrolling, keyboard, focus, screen readers, text scaling, bottom actions. Earlier phases still need basic accessibility.
+- Replace `untitled`/demo branding with approved name/assets; configure application/bundle IDs, version/build, release environments. Package-ID changes update Kotlin package/MainActivity, Gradle, related iOS settings together.
+- Build Android/iOS Release; verify permissions/TLS against target backend, image/link plugins in Release, no accidental dev HTTP config.
+- Verify no privileged source/bundle keys or role/answer logs; no bundled content and correct release backend. Preserve local data across upgrades, especially presets/setup.
+- Touchpoints: actual integration bugs, native config/assets, test/integration_test, build/UAT guides. Do not defer missing earlier features into this PR.
+- **Acceptance:** VI/EN and DB content languages; both games/modes, presets/custom/images/replay/offline/refresh pass Android/iOS checklists. Release backend has translation schema/eligible published data; no demo routes/buttons.
+- **Checks:** analyzer/tests/integration smoke and installed Release on devices. Missing signing/accounts must be explicit; unsigned builds do not prove installation/distribution. Store upload/publication is an operational step after PR, never assumed complete.
+
+## 7. Completion conditions for every PR
+
+1. Identify phase, merged dependencies, UI entry, demo steps/data.
+2. Small tests for new rules; input/save validation and data retention on errors. Focus regression on changes without recreating every suite in every phase.
+3. Run `flutter analyze`/`flutter test` in `app/`; codegen/l10n after source changes. Native/plugin PRs need relevant platform builds/checks.
+4. Every exposed flow has appropriate back/cancel/loading/empty/error/retry; unimplemented buttons cannot create dead ends.
+5. No premature player information exposure; confirm destructive form/list actions or ending games.
+6. Include demo images/video and actual check results in PRs; distinguish unit/widget, simulation, local/dev backends, physical devices.
+7. Update docs when decisions differ from layout. Every merged PR works independently; code rollback does not require deleting local user data. Content readers preserve same-locale translations, backend/locale-scoped caches, and active-session snapshots.
+
+## 8. Handoff milestones and excluded expansion
+
+- **After Phase 3:** internal word game, Dev content, one imposter.
+- **After Phase 5:** complete games with core players/configuration.
+- **After Phase 7:** stable refresh, word images, offline cache; pagination mandatory since Phase 2.
+- **After Phase 10:** agreed custom text/images complete.
+- **After Phase 11:** persistent VI/EN UI and support actions.
+- **After Phase 12:** DB content-language selection, correct translations, locale-safe offline/cache/custom data.
+- **After Phase 13:** release candidate with evidence and remaining limits.
+
+Do not add Premium, payments, ads, player login, online multiplayer, cross-device lists, leaderboards, timers, AI content, permanent custom libraries, individual-ballot systems, or multi-round elimination. Still record group selections and word-game winners. If voting/win rules or content lifecycles differ from proposals, adjust the related phase before implementation.
+
+Analyzer/test, local read-only, and Simulator evidence are recorded per implemented phase. Dev/Production data and physical devices remain unverified; fixtures/simulated offline do not establish target backend or actual airplane-mode acceptance. No date estimates while section 3 design/decisions remain open.
+
+Backend-phase reference: Data API requires grants and RLS per [Supabase API security guidance](https://supabase.com/docs/guides/api/securing-your-api). Before Phases 2/7/12 and release, recheck the [changelog](https://supabase.com/changelog) and target OS connectivity.

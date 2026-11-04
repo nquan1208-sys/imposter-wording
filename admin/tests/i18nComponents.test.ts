@@ -112,7 +112,7 @@ test('mounted components react to locale changes and preserve delete/leave guard
       const wordList = await mount('/src/views/word-prompts/WordPromptsView.vue')
       const questionList = await mount('/src/views/question-prompts/QuestionPromptsView.vue')
       const id = '00000000-0000-4000-8000-000000000001'
-      const row = { id, category_id: id, updated_at: 'version', locale: 'en', status: 'published', difficulty: 'medium', is_family_friendly: false, text: 'Word', civilian_question: 'Best?', imposter_question: 'Worst?', is_active: true }
+      const row = { id, category_id: id, updated_at: 'version', locale: 'en', status: 'published', difficulty: 'medium', text: 'Word', civilian_question: 'Best?', imposter_question: 'Worst?', is_active: true }
       const prefixes = ['dashboard', 'categories', 'word-prompts', 'question-prompts']
       for (const operation of [
         () => list.statusMutation.mutateAsync(row),

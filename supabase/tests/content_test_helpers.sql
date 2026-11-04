@@ -24,7 +24,7 @@ create function pg_temp.save_category(
   status public.content_status default 'published', active boolean default true
 )
 returns jsonb language sql as $$
-  select public.save_category(id,game_type,id::text,0,active,locale,' Category ',null,status,
+  select public.save_category(id,game_type,id::text,0,active,false,locale,' Category ',null,status,
     (select updated_at from public.game_categories where game_categories.id = $1));
 $$;
 create function pg_temp.save_word(
@@ -32,7 +32,7 @@ create function pg_temp.save_word(
   text text default ' Word ', image_path text default null
 )
 returns jsonb language sql as $$
-  select public.save_word_prompt(id,category_id,'medium',true,image_path,locale,text,status,
+  select public.save_word_prompt(id,category_id,'medium',image_path,locale,text,status,
     (select updated_at from public.word_prompts where word_prompts.id = $1));
 $$;
 create function pg_temp.save_question(
@@ -40,7 +40,7 @@ create function pg_temp.save_question(
   civilian text default ' Best? ', imposter text default ' Worst? '
 )
 returns jsonb language sql as $$
-  select public.save_question_prompt(id,category_id,'medium',true,locale,civilian,imposter,status,
+  select public.save_question_prompt(id,category_id,'medium',locale,civilian,imposter,status,
     (select updated_at from public.question_prompts where question_prompts.id = $1));
 $$;
 do $$

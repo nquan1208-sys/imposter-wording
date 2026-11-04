@@ -11,6 +11,7 @@ const dateFormat = computed(() => new Intl.DateTimeFormat(locale.value === 'en' 
 const columns = computed(() => [
   { accessorKey: 'name', header: t('categories.fields.name'), meta: { class: { td: 'category-name-cell' } } },
   { accessorKey: 'game_type', header: t('common.fields.gameType') },
+  { accessorKey: 'is_family_friendly', header: t('categories.fields.isFamilyFriendly') },
   { id: 'content', header: t('categories.table.content') },
   { id: 'translations', header: t('common.fields.locale') },
   { accessorKey: 'is_active', header: t('common.fields.status') },
@@ -25,6 +26,7 @@ const columns = computed(() => [
       <small class="category-slug" :title="row.original.slug">{{ row.original.slug }}</small>
     </template>
     <template #game_type-cell="{ row }">{{ t(gameTypeLabels[row.original.game_type]) }}</template>
+    <template #is_family_friendly-cell="{ row }">{{ t(row.original.is_family_friendly ? 'categories.yes' : 'categories.no') }}</template>
     <template #content-cell="{ row }">{{ n(row.original.word_count + row.original.question_count) }}</template>
     <template #translations-cell="{ row }"><div class="translation-statuses"><ContentStatusBadge v-for="language in languages" :key="language.code" :locale="language.code" :status="row.original.translations.find(item => item.locale === language.code)?.status" /></div></template>
     <template #is_active-cell="{ row }"><UBadge :color="row.original.is_active ? 'success' : 'neutral'" variant="subtle">{{ row.original.is_active ? t('common.status.active') : t('common.status.inactive') }}</UBadge></template>

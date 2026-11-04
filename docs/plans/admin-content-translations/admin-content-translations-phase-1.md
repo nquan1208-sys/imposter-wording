@@ -1,59 +1,59 @@
-# Phase 1 — Kiểm kê và chốt migration nội dung đa ngôn ngữ
+# Phase 1 — Inventory and Finalize Multilingual Content Migration
 
-Ngày kiểm kê: 2026-10-24. Phạm vi: local Supabase của repo `imposter-wording`.
+Inventory date: 2026-10-24. Scope: this `imposter-wording` repository's local Supabase.
 
-## Kết quả và cách chạy lại
+## Results and rerun instructions
 
-Đã chạy [audit SQL](../../../supabase/scripts/audit_content_translations.sql) bằng role `postgres`, transaction `REPEATABLE READ READ ONLY`, kết thúc bằng `ROLLBACK`. Không thay schema, nội dung, quyền hoặc file Storage. Audit trả hai dòng JSON: dữ liệu/ánh xạ dự kiến và catalog dependencies. Chạy từ thư mục gốc:
+Ran the [audit SQL](../../../supabase/scripts/audit_content_translations.sql) as `postgres` in a `REPEATABLE READ READ ONLY` transaction ending in `ROLLBACK`. No schema, content, permission, or Storage changes. Audit returns two JSON rows: data/projected mappings and catalog dependencies. Run from the repository root:
 
 ```bash
-# Local: nhập password DB local khi psql yêu cầu.
+# Local: enter the local DB password when psql prompts.
 rtk proxy psql -X -qAt -h 127.0.0.1 -p 54322 -U postgres -d postgres \
   -v ON_ERROR_STOP=1 -f supabase/scripts/audit_content_translations.sql
 
-# Tự lấy connection local từ supabase status; không in credential.
+# Read the local connection from supabase status without printing credentials.
 rtk proxy python3 supabase/tests/audit_content_translations.py
 ```
 
-Với DB khác, dùng connection qua `DB_URL` đã cấu hình riêng:
+For other DBs, use a separately configured `DB_URL` connection:
 
 ```bash
 rtk proxy psql "$DB_URL" -X -qAt -v ON_ERROR_STOP=1 \
   -f supabase/scripts/audit_content_translations.sql
-# Tests cũng nhận DB_URL; fixtures chỉ tồn tại trong CTE, không ghi vào DB.
+# Tests also accept DB_URL; fixtures exist only in CTEs and do not write to the DB.
 rtk proxy python3 supabase/tests/audit_content_translations.py
 ```
 
-Chỉ nhận kết quả audit khi `rls_bypassed = true`, `read_only = on`, `isolation = repeatable read`, và `blockers = []`. Nếu có blocker, dừng chốt migration; không loại dòng lỗi khỏi backfill. Audit cần schema cũ với đủ migration đến `20261021163720`; không dùng lại nguyên script sau khi Phase 2 bỏ cột cũ. Catalog của SQL/PLpgSQL không ghi đủ mọi dependency trong thân hàm, vì vậy audit xuất toàn bộ routines `public`/`private`, cộng routines của trigger trên các bảng được kiểm kê.
+Accept audit results only with `rls_bypassed = true`, `read_only = on`, `isolation = repeatable read`, and `blockers = []`. Blockers stop migration finalization; do not exclude invalid rows from backfill. Audit requires the old schema through migration `20261021163720`; do not reuse unchanged after Phase 2 removes old columns. SQL/PLpgSQL catalogs do not capture every function-body dependency, so audit exports all `public`/`private` routines plus trigger routines for inventoried tables.
 
-### Số lượng nguồn và đích dự kiến
+### Source and projected target counts
 
-| Loại | Nguồn hiện tại | Bản gốc dự kiến | Bản dịch dự kiến | Locale nguồn | Trạng thái bản dịch dự kiến |
+| Type | Current source | Projected base records | Projected translations | Source locale | Projected translation status |
 | --- | ---: | ---: | ---: | --- | --- |
-| Danh mục | 3 | 3 | 3 | `vi` | 3 `published` (quy tắc backfill mới) |
-| Đề từ | 1 | 1 | 1 | `vi` | 1 `published` (giữ nguyên) |
-| Đề câu hỏi | 1 | 1 | 1 | `vi` | 1 `published` (giữ nguyên) |
+| Categories | 3 | 3 | 3 | `vi` | 3 `published` (new backfill rule) |
+| Word prompts | 1 | 1 | 1 | `vi` | 1 `published` (preserved) |
+| Question prompts | 1 | 1 | 1 | `vi` | 1 `published` (preserved) |
 
-Đây là **số lượng đích dự kiến**, chưa phải kết quả migration. Cả ba danh mục đang bật: hai loại `word`, một loại `question`. Không có bản nháp/lưu trữ trong baseline; các trạng thái này được kiểm tra bằng CTE fixtures.
+These are **projected target counts**, not migration results. All three categories are enabled: two `word`, one `question`. The baseline has no draft/archived rows; CTE fixtures test those statuses.
 
-| Category ID | Loại | Đề từ | Đề câu hỏi | Tham chiếu ảnh |
+| Category ID | Type | Word prompts | Question prompts | Image references |
 | --- | --- | ---: | ---: | ---: |
 | `05e3818b-1a72-45d2-94e0-b2ab68d14512` | question | 0 | 1 | 0 |
 | `55660f48-084b-4a10-9fcc-383858bd73ec` | word | 1 | 0 | 1 |
 | `78abddb8-12a6-4da2-b49a-a24515336446` | word | 0 | 0 | 0 |
 
-- Locale thực tế: chỉ `vi`; danh sách ngôn ngữ đích: `vi`, `en`. Chưa tạo bản dịch `en` rỗng.
-- Không trùng slug khi bỏ locale; không có slug phải đổi trong baseline này.
-- Không phát hiện nội dung rỗng, câu hỏi giống nhau, liên kết sai loại/locale, hoặc ảnh tham chiếu bị thiếu/sai đường dẫn.
-- Bucket `word-prompt-images` có 3 objects, một object đang được tham chiếu và **2 objects không có tham chiếu hiện tại**. Giữ nguyên cả ba; không suy đoán hai object còn lại là rác.
-- Bucket private, giới hạn 5 MiB, MIME JPEG/PNG/WebP. Audit kiểm tra metadata object và đường dẫn, chưa tải/giải mã bytes ảnh.
-- Lịch sử local có đủ 10 migrations từ `20261003072606` đến `20261021163720`. Đây là đối chiếu ledger và catalog hiện tại, không phải chứng minh mọi migration đã được áp dụng giống hệt nội dung file.
+- Actual locale: only `vi`; target language list: `vi`, `en`. No empty `en` translations created.
+- No duplicate slugs after removing locale; no baseline slug changes needed.
+- No empty content, identical questions, incorrect type/locale links, or missing/invalid image paths found.
+- `word-prompt-images` contains 3 objects: one referenced and **2 without current references**. Preserve all three; do not assume the others are garbage.
+- Bucket is private, 5 MiB, JPEG/PNG/WebP. Audit checks object metadata/paths without downloading/decoding image bytes.
+- Local history includes all 10 migrations from `20261003072606` through `20261021163720`. This reconciles current ledger/catalog, without proving every migration was applied byte-for-byte as its file.
 
-### Manifest nguồn
+### Source manifest
 
-`source_md5` được tính bằng `md5(to_jsonb(row)::text)`, bao gồm toàn bộ trường nguồn và metadata; dùng kiểm tra toàn vẹn, không dùng làm cơ chế bảo mật. Không xuất nội dung đề hay ID người tạo vào báo cáo.
+`source_md5` is `md5(to_jsonb(row)::text)`, including all source fields and metadata; it checks integrity, not security. Reports omit prompt contents and creator IDs.
 
-| Loại | ID nguồn = ID bản gốc đích | source_md5 |
+| Type | Source ID = target base ID | source_md5 |
 | --- | --- | --- |
 | category | `05e3818b-1a72-45d2-94e0-b2ab68d14512` | `530c3f4e712561449d30d6bc38e4b992` |
 | category | `55660f48-084b-4a10-9fcc-383858bd73ec` | `e435410e60f74a95d49ca39b6172cee9` |
@@ -61,82 +61,82 @@ Chỉ nhận kết quả audit khi `rls_bypassed = true`, `read_only = on`, `iso
 | question | `0adbb3fb-1498-48dd-972f-a6baf26a6a36` | `cd307a4814867d2ccd40af8f98e500b0` |
 | word | `fa776d42-af60-437f-b488-2fe0f70b84c1` | `f2959d0d605d63f22e71b1de1d0e3754` |
 
-Đề câu hỏi thuộc category `05e3818b-1a72-45d2-94e0-b2ab68d14512`; đề từ thuộc `55660f48-084b-4a10-9fcc-383858bd73ec`. Audit trả mapping đầy đủ theo `(kind, id, locale, category_id, status)` để chạy lại trên dữ liệu khác.
+The question belongs to category `05e3818b-1a72-45d2-94e0-b2ab68d14512`; the word belongs to `55660f48-084b-4a10-9fcc-383858bd73ec`. Audit returns full `(kind, id, locale, category_id, status)` mappings for reruns on other data.
 
-## Hợp đồng backfill cho Phase 2
+## Phase 2 backfill contract
 
-| Nguồn | Giữ trên bản gốc | Chuyển sang bản dịch |
+| Source | Keep on base | Move to translation |
 | --- | --- | --- |
-| `game_categories` | `id`, `game_type`, slug sau ánh xạ, `sort_order`, `is_active` | `name`, `description`, `locale`; thêm `status = published` |
+| `game_categories` | `id`, `game_type`, mapped slug, `sort_order`, `is_active` | `name`, `description`, `locale`; add `status = published` |
 | `word_prompts` | `id`, `category_id`, `difficulty`, `is_family_friendly`, `image_path` | `text`, `locale`, `status` |
 | `question_prompts` | `id`, `category_id`, `difficulty`, `is_family_friendly` | `civilian_question`, `imposter_question`, `locale`, `status` |
 
-- Mỗi dòng nguồn thành một bản gốc và đúng một bản dịch. Hai dòng khác ID vẫn là hai nội dung độc lập dù văn bản giống nhau hoặc locale khác nhau.
-- Giữ nguyên `created_by`, `created_at`, `updated_at` trên bản gốc; sao chép các giá trị này sang bản dịch ban đầu, kể cả `created_by = null`. Backfill phải hoàn thành trước khi bật trigger mới có thể sửa timestamps.
-- Không di chuyển/đổi tên/upload lại ảnh. Không đổi liên kết category hay difficulty/family flag. Không phục hồi các cột đã bị migration cũ xóa (`imposter_text`, `imposter_hint`, `civilian_text`).
-- Danh mục cũ chưa có status: **mọi bản dịch danh mục nhận `published`**, kể cả khi bản gốc `is_active = false`. Bật lại danh mục sau này vẫn chịu quy tắc công khai của schema mới.
-- Seed ngôn ngữ `vi`/`en` với tên `Tiếng Việt`/`English`; lấy hợp tất cả locale thực tế của ba bảng. Mã khác giữ nguyên và dùng mã làm tên hiển thị ban đầu; không tự đổi `vn` thành `vi`, lowercase hay trim. Locale rỗng hoặc có khoảng trắng ngoài phải được báo blocker để xử lý có chủ đích.
-- Slug duy nhất theo `(game_type, slug)`. Sắp UUID tăng dần trong mỗi nhóm trùng: dòng đầu giữ slug, mỗi dòng còn lại nhận `<slug>-<UUID đầy đủ>`. Audit trả từng đổi tên trong `slug_changes`. Kiểm tra lại toàn bộ slug kết quả; nếu hậu tố đụng slug sẵn có, báo `resulting_slug_collision` và dừng, không tự đặt thêm hậu tố.
-- Không sửa migration cũ. Phase 1 không thay public API/types; các thay đổi schema, RPC và quyền được thực hiện cùng migration ở Phase 2, admin chuyển theo các phase kế tiếp.
+- Each source row becomes one base record and exactly one translation. Different IDs remain independent even with identical text or different locales.
+- Preserve base `created_by`, `created_at`, `updated_at`; copy them to the initial translation, including `created_by = null`. Finish backfill before enabling new timestamp-changing triggers.
+- Do not move/rename/reupload images, change category links or difficulty/Family flags, or restore previously dropped columns (`imposter_text`, `imposter_hint`, `civilian_text`).
+- Old categories lack status: **every category translation gets `published`**, including base `is_active = false`. Re-enabling later remains subject to new public-read rules.
+- Seed `vi`/`en` with display names meaning Vietnamese/English (the `vi` name remains localized); union all actual locales from the three tables. Preserve other codes and initially use codes as display names; do not convert `vn` to `vi`, lowercase, or trim automatically. Empty/surrounding-whitespace locales are blockers requiring deliberate resolution.
+- Slugs are unique by `(game_type, slug)`. Sort UUIDs ascending within duplicate groups: first retains slug, others get `<slug>-<full UUID>`. Audit returns every rename in `slug_changes`. Recheck all resulting slugs; suffix collisions with existing slugs raise `resulting_slug_collision` and stop, without inventing more suffixes.
+- Do not edit old migrations. Phase 1 does not change public APIs/types; Phase 2 changes schema, RPCs, and permissions together, with admin migration in later phases.
 
-## Dependencies và hành động ở các phase sau
+## Dependencies and later-phase actions
 
-### Database hiện tại
+### Current database
 
-Catalog local có 11 constraints, 21 indexes (13 nội dung, 8 Storage), 7 user triggers, 16 policies và 13 routines được xuất. Không thấy view/materialized view phụ thuộc nội dung. Audit cũng xuất table/column grants, RLS flags, columns/defaults và `pg_depend`; cần kiểm tra lại trên DB triển khai.
+Local catalog exports 11 constraints, 21 indexes (13 content, 8 Storage), 7 user triggers, 16 policies, and 13 routines. No content-dependent views/materialized views found. Audit also exports table/column grants, RLS flags, columns/defaults, and `pg_depend`; recheck the deployment DB.
 
-| Dependency | Hiện trạng và hành động bắt buộc |
+| Dependency | Current state and required action |
 | --- | --- |
-| `game_categories_slug_locale_key` | Unique `(game_type, slug, locale)`; thay bằng unique `(game_type, slug)` sau mapping. |
-| PK, `*_created_by_fkey`, `*_category_id_fkey` | Giữ ID/FK gốc và `ON DELETE SET NULL` của người tạo; thêm FK/unique của bản dịch, cascade cho xóa bản gốc. Không đổi FK Storage. |
-| `game_categories_active_sort_order_idx`, `*_created_by_idx`, PK indexes, `word_prompts_image_path_idx` | Giữ các index trên trường chung; tạo index metadata bản dịch khi cần. |
-| `*_category_status_difficulty_idx`, `*_status_locale_idx` | Đang dùng status/locale trên đề gốc; thay index phù hợp cho shared fields và bảng dịch trước khi bỏ cột. Giữ indexes Storage do Supabase quản lý. |
-| `private.category_before_write` / trigger cùng tên | Đang trim tên/mô tả, kiểm slug/sort_order, cấm đổi game type/locale và set timestamp. Tách validation bản gốc/bản dịch; giữ game type bất biến, chuyển kiểm nội dung và locale sang bảng dịch. |
-| `private.word_prompt_before_write`, `private.question_prompt_before_write` / triggers cùng tên | Đang xác nhận category cùng loại/locale và điều kiện publish. Chuyển kiểm nội dung/status sang bản dịch; giữ kiểm ảnh/ownership/path/tồn tại object ở đề gốc, Unicode trim và hai câu khác nhau ở câu hỏi. |
-| `private.validate_prompt_category_game_type` / `validate_word_prompt_category_game_type`, `validate_question_prompt_category_game_type` | Giữ kiểm game type trên FK bản gốc; không dùng locale cũ của category. |
-| `private.category_content_snapshot(uuid)` | Đang đếm status và hash JSON của đề gốc. Thêm nội dung/bản dịch danh mục và đề vào snapshot; tách số đề gốc khỏi số bản dịch theo status. |
-| `public.preview_category_delete(uuid)` | Trả category + snapshot cũ; đổi shape và cập nhật callers/types/fixtures đồng thời. |
-| `public.delete_category(uuid,text,uuid,text)` | Bỏ so sánh locale giữa category gốc; transfer kiểm mọi locale đề đã publish ở category đích; purge xóa đủ bản dịch. Giữ khóa admin/parent/children và kiểm snapshot, bổ sung khóa bản dịch. |
-| `public.delete_word_prompt(uuid,timestamptz)`, `public.delete_question_prompt(uuid,timestamptz)` | Giữ kiểm active admin/phiên bản/khóa hàng; xóa bản dịch cùng bản gốc. Giữ file Storage. |
-| `public.admin_dashboard_summary()` | Đang đếm/title/category name trực tiếp từ bảng cũ. Chuyển sang locale ở Phase 5, thêm `p_locale` và locale cho item trả về. |
-| `private.is_admin()` | Giữ tra cứu `admin_users` active thay vì tin quyền JWT cũ. RPC ghi mới phải giữ khóa grant admin như delete RPC hiện có. |
-| `storage.protect_delete`, `storage.update_updated_at_column` / hai trigger Storage | Giữ nguyên; không thay code hệ thống của Supabase. |
+| `game_categories_slug_locale_key` | Unique `(game_type, slug, locale)`; replace with `(game_type, slug)` after mapping. |
+| PK, `*_created_by_fkey`, `*_category_id_fkey` | Preserve base IDs/FKs and creator `ON DELETE SET NULL`; add translation FKs/uniques with cascade on base deletion. Do not change Storage FKs. |
+| `game_categories_active_sort_order_idx`, `*_created_by_idx`, PK indexes, `word_prompts_image_path_idx` | Preserve shared-field indexes; add translation metadata indexes as needed. |
+| `*_category_status_difficulty_idx`, `*_status_locale_idx` | Depend on base status/locale; replace with suitable shared/translation indexes before dropping columns. Preserve Supabase-managed Storage indexes. |
+| `private.category_before_write` / same-name trigger | Trims name/description, checks slug/sort_order, forbids game type/locale changes, sets timestamp. Separate base/translation validation; preserve immutable game type, move content/locale checks to translations. |
+| `private.word_prompt_before_write`, `private.question_prompt_before_write` / same-name triggers | Check category type/locale and publication. Move content/status checks to translations; retain base image/ownership/path/object checks, Unicode trim, and different-question validation. |
+| `private.validate_prompt_category_game_type` / `validate_word_prompt_category_game_type`, `validate_question_prompt_category_game_type` | Retain game-type checks on base FKs without old category locale. |
+| `private.category_content_snapshot(uuid)` | Counts statuses and hashes base prompt JSON. Include category/prompt content/translations; separate base-prompt counts from translation statuses. |
+| `public.preview_category_delete(uuid)` | Returns old category + snapshot; change shape together with callers/types/fixtures. |
+| `public.delete_category(uuid,text,uuid,text)` | Remove base-category locale comparison; transfer checks every published prompt locale in target; purge all translations. Preserve admin/parent/child locks and snapshot checks; add translation locks. |
+| `public.delete_word_prompt(uuid,timestamptz)`, `public.delete_question_prompt(uuid,timestamptz)` | Preserve active-admin/version/row-lock checks; delete translations with bases. Retain Storage files. |
+| `public.admin_dashboard_summary()` | Counts/titles/category names come from old tables. Add `p_locale` and returned item locales in Phase 5. |
+| `private.is_admin()` | Keep active `admin_users` lookup rather than stale JWT roles. New save RPCs must lock admin grants like existing delete RPCs. |
+| `storage.protect_delete`, `storage.update_updated_at_column` / both Storage triggers | Preserve unchanged; do not modify Supabase system code. |
 
-### Quyền và Storage
+### Permissions and Storage
 
-- Ba bảng nội dung đều bật RLS. Hiện có bốn policies mỗi bảng: public/authenticated read và admin insert/update. Client authenticated đang có quyền insert/update trực tiếp; delete đã bị thu hồi. Phase 2 thu hồi direct writes và chuyển ghi sang save RPC có kiểm admin, version, validation và transaction.
-- Policies đọc danh mục hiện kiểm `is_active`; đọc đề hiện chỉ kiểm `status = published`, chưa ràng buộc category còn bật. Schema mới cố ý siết điều kiện: bản dịch đề publish + category bật + bản dịch category cùng locale publish. Không diễn giải việc siết quyền này thành mất dữ liệu.
-- `Word image admin read`, `Word image admin upload`: giữ kiểm admin, path, bucket, MIME/kích thước. `Word image admin cleanup`: giữ cấm xóa file đang được đề gốc tham chiếu. `Word image published read`: thay kiểm status cũ bằng tồn tại ít nhất một bản dịch đủ điều kiện công khai.
-- Bucket vẫn private; giữ signed URL 300 giây và hành vi cleanup khi upload/save lỗi. URL đã cấp có thể dùng đến hết hạn; thay policy không thu hồi URL đã phát.
-- Audit xuất ACL của routine: năm public RPC hiện chỉ cấp cho authenticated/service_role/postgres; `private.is_admin` cho authenticated/postgres. Hai trigger functions cũ có ACL mặc định (`category_before_write`, `validate_prompt_category_game_type`); rà quyền thực thi rõ ràng khi thay chúng. Không cấp quyền public mặc định cho save RPC mới.
+- All three content tables have RLS. Each has four policies: public/authenticated read and admin insert/update. Authenticated clients currently have direct insert/update; delete is revoked. Phase 2 revokes direct writes in favor of save RPCs checking admin, version, validation, and transactions.
+- Current category reads check `is_active`; prompt reads only check `status = published`, without category activation. New schema deliberately tightens eligibility: published prompt translation + enabled category + published same-locale category translation. This is not data loss.
+- `Word image admin read`, `Word image admin upload`: preserve admin/path/bucket/MIME/size checks. `Word image admin cleanup`: preserve prohibition on deleting files referenced by base prompts. `Word image published read`: replace old status checks with existence of at least one publicly eligible translation.
+- Bucket stays private; retain 300-second signed URLs and cleanup after upload/save failures. Issued URLs remain valid until expiry; policy changes do not revoke them.
+- Audit exports routine ACLs: five current public RPCs grant only authenticated/service_role/postgres; `private.is_admin` grants authenticated/postgres. Two old trigger functions have default ACLs (`category_before_write`, `validate_prompt_category_game_type`); explicitly review execution grants when replacing them. Do not grant default public access to new save RPCs.
 
-### Admin, tests và tài liệu
+### Admin, tests, and documentation
 
-| Nhóm | Những nơi phải cập nhật |
+| Group | Locations to update |
 | --- | --- |
-| Queries / mutations | `admin/src/api/{categories,wordPrompts,questionPrompts,dashboard}.ts`: direct writes, joins tên category, search/sort/filter/count, category options/transfer targets, version check, upload/cleanup và delete preview. Dùng translations và save RPC; phân trang/count theo bản gốc. |
-| Forms / UI | Các list/form views trong `admin/src/views/{categories,word-prompts,question-prompts}`; components category table/form/delete và hai prompt delete dialogs. Thêm tabs ngôn ngữ từ DB, giữ drafts theo tab, ghi rõ tác động shared fields/xóa cả translations. Dashboard view thêm locale ở Phase 5. |
-| Validation / types | `admin/src/utils/{categories,wordPrompts,questionPrompts}.ts`, `admin/src/types/{admin,database}.ts`: tách shared/translation fields; category hiện hardcode `vi`. Sinh lại database types bằng script hiện có sau schema ổn định. Giữ shared unsaved-changes helper. |
-| Cache | Keys hiện có: `categories` list/detail/delete-preview/transfer-targets/word-options/question-options; `word-prompts`, `question-prompts` list/detail; `dashboard/summary`; `word-images` theo path. Thêm locale cho query phụ thuộc ngôn ngữ; invalidate các nhóm liên quan khi sửa category/shared/translation, kể cả dashboard và delete preview. |
-| SQL / concurrency fixtures | `supabase/tests/{category_management,word_prompt_management,question_prompt_management,admin_dashboard}.sql`, `category_concurrency.py`: đang insert/query trực tiếp các cột cũ; đổi fixtures và expectations cho translations/RPC, quyền mới và khóa bản dịch. Không sửa lịch sử migration để chiều fixtures. |
-| Admin fixtures | `admin/tests/{categories,wordPrompts,questionPrompts,dashboard}.test.ts`, các `*Components.test.ts`, `navigation.test.ts`, `wordStorage.local.ts`: đổi query mocks, payloads, joined rows, cache keys, preview counts và Storage lifecycle assertions. i18n tests kiểm message keys mới khi có thay đổi UI. |
-| Config / docs | `supabase/config.toml` trỏ `./seed.sql` nhưng repo không có seed file; fixtures hiện nằm trong tests. Không thêm seed runtime ở Phase 1. Phase 6 cập nhật DBML, hướng dẫn môi trường/setup và triển khai; không thay credentials/environment của admin. |
-| Flutter / ngoài repo | Không tìm thấy query nội dung/RPC trong `app/lib`; Flutter hiện ngoài phạm vi. Người dùng xác nhận không có client ngoài repo được biết đến. Locale giao diện admin (`vi`/`en`, file tiếng Việt tên `vn.json`) độc lập với locale nội dung; không đổi mã dữ liệu theo tên file. |
+| Queries / mutations | `admin/src/api/{categories,wordPrompts,questionPrompts,dashboard}.ts`: direct writes, category-name joins, search/sort/filter/count, category options/transfer targets, versions, upload/cleanup, delete preview. Use translations/save RPCs; paginate/count base records. |
+| Forms / UI | List/form views in `admin/src/views/{categories,word-prompts,question-prompts}`; category table/form/delete components and both prompt delete dialogs. Add DB language tabs, retain per-tab drafts, explain shared edits/deleting all translations. Dashboard locale in Phase 5. |
+| Validation / types | `admin/src/utils/{categories,wordPrompts,questionPrompts}.ts`, `admin/src/types/{admin,database}.ts`: separate shared/translation fields; categories currently hardcode `vi`. Regenerate DB types with existing script after schema stabilizes. Keep shared unsaved changes helper. |
+| Cache | Existing keys: `categories` list/detail/delete-preview/transfer-targets/word-options/question-options; `word-prompts`, `question-prompts` list/detail; `dashboard/summary`; path-based `word-images`. Add locale to language-dependent queries; invalidate related groups after category/shared/translation edits, including dashboard/delete preview. |
+| SQL / concurrency fixtures | `supabase/tests/{category_management,word_prompt_management,question_prompt_management,admin_dashboard}.sql`, `category_concurrency.py`: old direct-column inserts/queries need translation/RPC fixtures, new permission expectations, translation locks. Do not edit historical migrations to satisfy fixtures. |
+| Admin fixtures | `admin/tests/{categories,wordPrompts,questionPrompts,dashboard}.test.ts`, `*Components.test.ts`, `navigation.test.ts`, `wordStorage.local.ts`: update query mocks, payloads, joins, cache keys, preview counts, Storage lifecycle assertions. i18n tests check new message keys after UI changes. |
+| Config / docs | `supabase/config.toml` points to `./seed.sql`, absent from the repo; fixtures currently live in tests. Add no runtime seeds in Phase 1. Phase 6 updates DBML/environment/setup/deployment docs without changing admin credentials/environment. |
+| Flutter / external | No content/RPC queries found in `app/lib`; Flutter is out of scope. User confirmed no known external clients. Admin UI locale (`vi`/`en`, Vietnamese file `vn.json`) is independent of content locale; do not change data codes to match filenames. |
 
-## Đối chiếu bắt buộc khi thực hiện migration
+## Required migration reconciliation
 
-Thực hiện trong cùng transaction migration, sau khi dừng ghi và trước khi bỏ cột cũ:
+Within the migration transaction, after stopping writes and before dropping old columns:
 
-1. Giữ snapshot đầy đủ các dòng cũ trước backfill. So sánh counts trước/sau theo loại, locale, trạng thái và category; số bản gốc = số dòng cũ, số bản dịch = số dòng cũ cho từng loại.
-2. Anti-join hai chiều theo ID bản gốc và `(ID, locale)` bản dịch: không thiếu, không thừa, không trùng, không tự ghép; không chỉ dựa vào tổng số.
-3. Join bản gốc/bản dịch rồi dựng lại row JSON đúng các keys/types cũ để so từng trường bằng `IS NOT DISTINCT FROM`. Danh mục dùng `old_slug` từ mapping để dựng lại; status danh mục mới được kiểm riêng là `published`. Kiểm metadata trên **cả hai** bản, giữ nulls và timezone nhất quán khi đối chiếu hash manifest.
-4. Kiểm riêng slug đích đúng mapping và unique, danh sách ngôn ngữ giữ đủ mã, toàn bộ FK/category links, ảnh/path và tập objects không thay đổi. Không áp trigger cập nhật timestamp lên metadata backfill.
-5. Có bất kỳ chênh lệch/blocker thì raise error để rollback. Chỉ thay dependencies/bỏ cột cũ khi tất cả assertions đạt; không dùng `DROP ... CASCADE` để bỏ dependency chưa kiểm kê.
+1. Snapshot all old rows before backfill. Compare counts by type, locale, status, category; base count = old row count, translation count = old row count for each type.
+2. Bidirectional anti-join by base ID and translation `(ID, locale)`: no missing/extra/duplicate/automatically merged records; totals alone are insufficient.
+3. Join bases/translations and reconstruct exact old JSON keys/types, comparing every field with `IS NOT DISTINCT FROM`. Reconstruct category slugs with mapped `old_slug`; independently require new category status `published`. Check metadata on **both** sides, retaining nulls and consistent timezones for manifest hashes.
+4. Separately verify target slug mapping/uniqueness, every language code, all FKs/category links, image paths, and unchanged object sets. Do not apply timestamp-update triggers to backfilled metadata.
+5. Any mismatch/blocker raises an error and rolls back. Replace dependencies/drop old columns only after all assertions pass; do not use `DROP ... CASCADE` for unreviewed dependencies.
 
-## Kiểm thử và phần còn lại
+## Testing and remaining work
 
-Đã đạt **6 tests** trong `supabase/tests/audit_content_translations.py`: dữ liệu rỗng; đủ trạng thái, nhiều locale và thứ tự UUID; slug kết quả đụng slug sẵn có; nội dung/locale/link/ảnh không hợp lệ; ảnh giữ lại và FK thiếu; chạy audit live hai lần với dữ liệu/catalog không đổi, read-only và snapshot isolation đúng. Fixtures dùng typed JSON recordsets trong CTE, không insert fixture hoặc sửa schema.
+**6 tests** passed in `supabase/tests/audit_content_translations.py`: empty data; all statuses/multiple locales/UUID ordering; resulting slug collision; invalid content/locale/link/image; retained images/missing FKs; two live audit runs confirming unchanged data/catalog, read-only, and snapshot isolation. Fixtures use typed JSON recordsets in CTEs, without DB inserts or schema changes.
 
-Đã hoàn tất kiểm kê local và hợp đồng migration của Phase 1. Chưa chạy migration/backfill thật nên chưa xác nhận số lượng đích thực tế; việc đó thuộc Phase 2. Không chạy admin build, Storage integration hay concurrency suite vì chưa đổi runtime/schema.
+Local Phase 1 inventory and migration contract are complete. Real migration/backfill has not run, so actual target counts remain unconfirmed until Phase 2. No admin build, Storage integration, or concurrency suite because runtime/schema is unchanged.
 
-Dev cloud `imposter-word` (`pxycsjwjakzehcuygngv`) đang inactive theo Supabase project inventory lúc lập kế hoạch; không resume project hoặc query dữ liệu cloud. Trước triển khai phải chạy lại audit trên DB đích/bản sao hiện hành, kiểm kê dependencies phát sinh và rehearsal theo Phase 6. Baseline local nhỏ không đại diện dữ liệu cloud.
+Dev cloud `imposter-word` (`pxycsjwjakzehcuygngv`) was inactive in project inventory during planning; do not resume or query cloud data. Before deployment, rerun audit on the current target DB/copy, inventory added dependencies, and rehearse per Phase 6. The small local baseline does not represent cloud data.

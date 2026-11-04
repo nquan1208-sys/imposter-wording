@@ -17,6 +17,7 @@ const sorts = computed(() => [{ value: 'sort_order', label: t('categories.fields
     <UFormField :label="t('common.fields.locale')"><USelect :model-value="filters.locale" :items="languages.map(language => ({ value: language.code, label: language.display_name }))" class="tw:w-full" @update:model-value="$emit('filter', 'locale', $event)" /></UFormField>
     <UFormField :label="t('common.fields.gameType')"><USelect :model-value="filters.gameType || 'all'" :items="gameTypes" class="tw:w-full" @update:model-value="$emit('filter', 'type', $event === 'all' ? '' : $event)" /></UFormField>
     <UFormField :label="t('common.fields.status')"><USelect :model-value="filters.active || 'all'" :items="statuses" class="tw:w-full" @update:model-value="$emit('filter', 'active', $event === 'all' ? '' : $event)" /></UFormField>
+    <UFormField :label="t('categories.fields.isFamilyFriendly')"><USelect :model-value="filters.family || 'all'" :items="[{ value: 'all', label: t('categories.filters.all') }, { value: 'true', label: t('categories.yes') }, { value: 'false', label: t('categories.no') }]" class="tw:w-full" @update:model-value="$emit('filter', 'family', $event === 'all' ? '' : $event)" /></UFormField>
     <UFormField :label="t('categories.filters.sort')"><USelect :model-value="filters.sort" :items="sorts" class="tw:w-full" @update:model-value="$emit('filter', 'sort', $event)" /></UFormField>
   </div>
 </template>

@@ -1,0 +1,212 @@
+-- Vietnamese and English sample content. Stable IDs make re-running safe; existing content is retained.
+begin;
+
+insert into public.game_categories (id, game_type, slug, sort_order, is_active, is_family_friendly) values
+  ('5eed0001-0000-0000-0000-000000000001', 'word', 'sample-animals', '1', true, true),
+  ('5eed0001-0000-0000-0000-000000000002', 'word', 'sample-food', '2', true, true),
+  ('5eed0001-0000-0000-0000-000000000003', 'word', 'sample-transport', '3', true, true),
+  ('5eed0001-0000-0000-0000-000000000004', 'word', 'sample-sports', '4', true, true),
+  ('5eed0001-0000-0000-0000-000000000005', 'word', 'sample-instruments', '5', true, true),
+  ('5eed0002-0000-0000-0000-000000000001', 'question', 'sample-daily-life', '1', true, false),
+  ('5eed0002-0000-0000-0000-000000000002', 'question', 'sample-food-drinks', '2', true, false),
+  ('5eed0002-0000-0000-0000-000000000003', 'question', 'sample-travel', '3', true, false),
+  ('5eed0002-0000-0000-0000-000000000004', 'question', 'sample-entertainment', '4', true, false),
+  ('5eed0002-0000-0000-0000-000000000005', 'question', 'sample-imagination', '5', true, false)
+on conflict (game_type, slug) do nothing;
+
+insert into public.game_category_translations (category_id, locale, name, status) values
+  ('5eed0001-0000-0000-0000-000000000001', 'vi', 'Động vật', 'published'),
+  ('5eed0001-0000-0000-0000-000000000002', 'vi', 'Món ăn', 'published'),
+  ('5eed0001-0000-0000-0000-000000000003', 'vi', 'Phương tiện', 'published'),
+  ('5eed0001-0000-0000-0000-000000000004', 'vi', 'Thể thao', 'published'),
+  ('5eed0001-0000-0000-0000-000000000005', 'vi', 'Nhạc cụ', 'published'),
+  ('5eed0002-0000-0000-0000-000000000001', 'vi', 'Đời sống', 'published'),
+  ('5eed0002-0000-0000-0000-000000000002', 'vi', 'Ăn uống', 'published'),
+  ('5eed0002-0000-0000-0000-000000000003', 'vi', 'Du lịch', 'published'),
+  ('5eed0002-0000-0000-0000-000000000004', 'vi', 'Giải trí', 'published'),
+  ('5eed0002-0000-0000-0000-000000000005', 'vi', 'Tưởng tượng', 'published')
+on conflict (category_id, locale) do nothing;
+
+insert into public.word_prompts (id, category_id, difficulty) values
+  ('5eed0011-0000-0000-0000-000000000001', '5eed0001-0000-0000-0000-000000000001', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000002', '5eed0001-0000-0000-0000-000000000001', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000003', '5eed0001-0000-0000-0000-000000000001', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000004', '5eed0001-0000-0000-0000-000000000001', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000005', '5eed0001-0000-0000-0000-000000000001', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000006', '5eed0001-0000-0000-0000-000000000002', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000007', '5eed0001-0000-0000-0000-000000000002', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000008', '5eed0001-0000-0000-0000-000000000002', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000009', '5eed0001-0000-0000-0000-000000000002', 'easy'),
+  ('5eed0011-0000-0000-0000-00000000000a', '5eed0001-0000-0000-0000-000000000002', 'easy'),
+  ('5eed0011-0000-0000-0000-00000000000b', '5eed0001-0000-0000-0000-000000000003', 'easy'),
+  ('5eed0011-0000-0000-0000-00000000000c', '5eed0001-0000-0000-0000-000000000003', 'easy'),
+  ('5eed0011-0000-0000-0000-00000000000d', '5eed0001-0000-0000-0000-000000000003', 'easy'),
+  ('5eed0011-0000-0000-0000-00000000000e', '5eed0001-0000-0000-0000-000000000003', 'easy'),
+  ('5eed0011-0000-0000-0000-00000000000f', '5eed0001-0000-0000-0000-000000000003', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000010', '5eed0001-0000-0000-0000-000000000004', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000011', '5eed0001-0000-0000-0000-000000000004', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000012', '5eed0001-0000-0000-0000-000000000004', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000013', '5eed0001-0000-0000-0000-000000000004', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000014', '5eed0001-0000-0000-0000-000000000004', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000015', '5eed0001-0000-0000-0000-000000000005', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000016', '5eed0001-0000-0000-0000-000000000005', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000017', '5eed0001-0000-0000-0000-000000000005', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000018', '5eed0001-0000-0000-0000-000000000005', 'easy'),
+  ('5eed0011-0000-0000-0000-000000000019', '5eed0001-0000-0000-0000-000000000005', 'easy')
+on conflict (id) do nothing;
+
+insert into public.word_prompt_translations (prompt_id, locale, text, status) values
+  ('5eed0011-0000-0000-0000-000000000001', 'vi', 'Chó', 'published'),
+  ('5eed0011-0000-0000-0000-000000000002', 'vi', 'Mèo', 'published'),
+  ('5eed0011-0000-0000-0000-000000000003', 'vi', 'Voi', 'published'),
+  ('5eed0011-0000-0000-0000-000000000004', 'vi', 'Thỏ', 'published'),
+  ('5eed0011-0000-0000-0000-000000000005', 'vi', 'Hổ', 'published'),
+  ('5eed0011-0000-0000-0000-000000000006', 'vi', 'Pizza', 'published'),
+  ('5eed0011-0000-0000-0000-000000000007', 'vi', 'Hamburger', 'published'),
+  ('5eed0011-0000-0000-0000-000000000008', 'vi', 'Kem', 'published'),
+  ('5eed0011-0000-0000-0000-000000000009', 'vi', 'Bánh sinh nhật', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000a', 'vi', 'Bắp rang', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000b', 'vi', 'Ô tô', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000c', 'vi', 'Xe đạp', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000d', 'vi', 'Máy bay', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000e', 'vi', 'Tàu hỏa', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000f', 'vi', 'Thuyền buồm', 'published'),
+  ('5eed0011-0000-0000-0000-000000000010', 'vi', 'Bóng đá', 'published'),
+  ('5eed0011-0000-0000-0000-000000000011', 'vi', 'Bóng rổ', 'published'),
+  ('5eed0011-0000-0000-0000-000000000012', 'vi', 'Tennis', 'published'),
+  ('5eed0011-0000-0000-0000-000000000013', 'vi', 'Bóng chuyền', 'published'),
+  ('5eed0011-0000-0000-0000-000000000014', 'vi', 'Bóng bàn', 'published'),
+  ('5eed0011-0000-0000-0000-000000000015', 'vi', 'Đàn guitar', 'published'),
+  ('5eed0011-0000-0000-0000-000000000016', 'vi', 'Đàn piano', 'published'),
+  ('5eed0011-0000-0000-0000-000000000017', 'vi', 'Kèn trumpet', 'published'),
+  ('5eed0011-0000-0000-0000-000000000018', 'vi', 'Đàn violin', 'published'),
+  ('5eed0011-0000-0000-0000-000000000019', 'vi', 'Trống', 'published')
+on conflict (prompt_id, locale) do nothing;
+
+insert into public.question_prompts (id, category_id, difficulty) values
+  ('5eed0012-0000-0000-0000-000000000001', '5eed0002-0000-0000-0000-000000000001', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000002', '5eed0002-0000-0000-0000-000000000001', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000003', '5eed0002-0000-0000-0000-000000000001', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000004', '5eed0002-0000-0000-0000-000000000001', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000005', '5eed0002-0000-0000-0000-000000000001', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000006', '5eed0002-0000-0000-0000-000000000002', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000007', '5eed0002-0000-0000-0000-000000000002', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000008', '5eed0002-0000-0000-0000-000000000002', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000009', '5eed0002-0000-0000-0000-000000000002', 'medium'),
+  ('5eed0012-0000-0000-0000-00000000000a', '5eed0002-0000-0000-0000-000000000002', 'medium'),
+  ('5eed0012-0000-0000-0000-00000000000b', '5eed0002-0000-0000-0000-000000000003', 'medium'),
+  ('5eed0012-0000-0000-0000-00000000000c', '5eed0002-0000-0000-0000-000000000003', 'medium'),
+  ('5eed0012-0000-0000-0000-00000000000d', '5eed0002-0000-0000-0000-000000000003', 'medium'),
+  ('5eed0012-0000-0000-0000-00000000000e', '5eed0002-0000-0000-0000-000000000003', 'medium'),
+  ('5eed0012-0000-0000-0000-00000000000f', '5eed0002-0000-0000-0000-000000000003', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000010', '5eed0002-0000-0000-0000-000000000004', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000011', '5eed0002-0000-0000-0000-000000000004', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000012', '5eed0002-0000-0000-0000-000000000004', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000013', '5eed0002-0000-0000-0000-000000000004', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000014', '5eed0002-0000-0000-0000-000000000004', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000015', '5eed0002-0000-0000-0000-000000000005', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000016', '5eed0002-0000-0000-0000-000000000005', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000017', '5eed0002-0000-0000-0000-000000000005', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000018', '5eed0002-0000-0000-0000-000000000005', 'medium'),
+  ('5eed0012-0000-0000-0000-000000000019', '5eed0002-0000-0000-0000-000000000005', 'medium')
+on conflict (id) do nothing;
+
+insert into public.question_prompt_translations (prompt_id, locale, civilian_question, imposter_question, status) values
+  ('5eed0012-0000-0000-0000-000000000001', 'vi', 'Buổi sáng bạn thường mất bao nhiêu phút để chuẩn bị ra ngoài?', 'Buổi tối bạn thường mất bao nhiêu phút để chuẩn bị đi ngủ?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000002', 'vi', 'Việc nhà nào bạn ngại làm nhất?', 'Việc nhà nào bạn thấy dễ làm nhất?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000003', 'vi', 'Bạn thường làm gì đầu tiên sau khi thức dậy?', 'Bạn thường làm gì đầu tiên khi về đến nhà?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000004', 'vi', 'Bạn hay quên mang theo món đồ gì khi ra ngoài?', 'Món đồ nào bạn luôn mang theo khi đi du lịch?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000005', 'vi', 'Bạn thường đi ngủ lúc mấy giờ vào ngày thường?', 'Bạn thường thức dậy lúc mấy giờ vào cuối tuần?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000006', 'vi', 'Món ăn nào bạn có thể ăn cả tuần không chán?', 'Món ăn nào bạn chỉ muốn ăn vào dịp đặc biệt?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000007', 'vi', 'Bạn thích uống gì khi trời nóng?', 'Bạn thích uống gì khi trời lạnh?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000008', 'vi', 'Bạn sẵn sàng trả bao nhiêu tiền cho một bữa sáng?', 'Bạn sẵn sàng trả bao nhiêu tiền cho một ly cà phê?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000009', 'vi', 'Món nào bạn muốn tự học nấu nhất?', 'Món nào bạn muốn được người khác nấu cho nhất?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000a', 'vi', 'Loại trái cây nào bạn thích nhất?', 'Loại trái cây nào bạn thấy khó ăn nhất?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000b', 'vi', 'Bạn muốn đi nghỉ ở thành phố nào nhất?', 'Bạn muốn chuyển đến sống ở thành phố nào nhất?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000c', 'vi', 'Bạn thích làm gì đầu tiên khi đến bãi biển?', 'Bạn thích làm gì đầu tiên khi đến khu cắm trại?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000d', 'vi', 'Bạn thường mang bao nhiêu bộ quần áo cho chuyến đi ba ngày?', 'Bạn thường mang bao nhiêu đôi giày cho chuyến đi một tuần?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000e', 'vi', 'Bạn muốn đi du lịch cùng ai nhất?', 'Bạn muốn cùng ai tham gia một cuộc thi sinh tồn nhất?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000f', 'vi', 'Bạn thích di chuyển bằng phương tiện gì khi đi xa?', 'Bạn thích di chuyển bằng phương tiện gì trong thành phố?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000010', 'vi', 'Bạn có thể xem lại bộ phim nào nhiều lần?', 'Bộ phim nào khiến bạn nhớ mãi dù chỉ xem một lần?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000011', 'vi', 'Bạn thường nghe nhạc khi làm việc gì?', 'Bạn thường nghe podcast khi làm việc gì?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000012', 'vi', 'Bạn muốn thử môn thể thao nào nhất?', 'Bạn muốn xem trực tiếp môn thể thao nào nhất?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000013', 'vi', 'Bạn thường dành bao nhiêu giờ mỗi ngày để dùng mạng xã hội?', 'Bạn thường dành bao nhiêu giờ mỗi ngày để xem phim?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000014', 'vi', 'Bạn muốn gặp ca sĩ nào ngoài đời nhất?', 'Bạn muốn hát song ca với ca sĩ nào nhất?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000015', 'vi', 'Nếu được chọn một siêu năng lực, bạn sẽ chọn gì?', 'Nếu được chọn một siêu năng lực cho bạn thân, bạn sẽ chọn gì?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000016', 'vi', 'Nếu trúng một tỷ đồng, món đầu tiên bạn mua là gì?', 'Nếu chỉ còn một triệu đồng, món đầu tiên bạn mua là gì?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000017', 'vi', 'Bạn muốn trở thành con vật nào trong một ngày?', 'Bạn muốn nuôi con vật nào nếu không cần lo chi phí?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000018', 'vi', 'Nếu được quay về quá khứ, bạn muốn đến năm nào?', 'Nếu được đến tương lai, bạn muốn đến năm nào?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000019', 'vi', 'Nếu sống trên đảo hoang, bạn sẽ mang theo món đồ gì?', 'Nếu bị mất điện một tuần, bạn sẽ cần món đồ gì nhất?', 'published')
+on conflict (prompt_id, locale) do nothing;
+
+-- English translations share the same category/prompt IDs and word images.
+insert into public.game_category_translations (category_id, locale, name, status) values
+  ('5eed0001-0000-0000-0000-000000000001', 'en', 'Animals', 'published'),
+  ('5eed0001-0000-0000-0000-000000000002', 'en', 'Food', 'published'),
+  ('5eed0001-0000-0000-0000-000000000003', 'en', 'Transport', 'published'),
+  ('5eed0001-0000-0000-0000-000000000004', 'en', 'Sports', 'published'),
+  ('5eed0001-0000-0000-0000-000000000005', 'en', 'Musical Instruments', 'published'),
+  ('5eed0002-0000-0000-0000-000000000001', 'en', 'Daily Life', 'published'),
+  ('5eed0002-0000-0000-0000-000000000002', 'en', 'Food and Drinks', 'published'),
+  ('5eed0002-0000-0000-0000-000000000003', 'en', 'Travel', 'published'),
+  ('5eed0002-0000-0000-0000-000000000004', 'en', 'Entertainment', 'published'),
+  ('5eed0002-0000-0000-0000-000000000005', 'en', 'Imagination', 'published')
+on conflict (category_id, locale) do nothing;
+
+insert into public.word_prompt_translations (prompt_id, locale, text, status) values
+  ('5eed0011-0000-0000-0000-000000000001', 'en', 'Dog', 'published'),
+  ('5eed0011-0000-0000-0000-000000000002', 'en', 'Cat', 'published'),
+  ('5eed0011-0000-0000-0000-000000000003', 'en', 'Elephant', 'published'),
+  ('5eed0011-0000-0000-0000-000000000004', 'en', 'Rabbit', 'published'),
+  ('5eed0011-0000-0000-0000-000000000005', 'en', 'Tiger', 'published'),
+  ('5eed0011-0000-0000-0000-000000000006', 'en', 'Pizza', 'published'),
+  ('5eed0011-0000-0000-0000-000000000007', 'en', 'Hamburger', 'published'),
+  ('5eed0011-0000-0000-0000-000000000008', 'en', 'Ice Cream', 'published'),
+  ('5eed0011-0000-0000-0000-000000000009', 'en', 'Birthday Cake', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000a', 'en', 'Popcorn', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000b', 'en', 'Car', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000c', 'en', 'Bicycle', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000d', 'en', 'Airplane', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000e', 'en', 'Train', 'published'),
+  ('5eed0011-0000-0000-0000-00000000000f', 'en', 'Sailboat', 'published'),
+  ('5eed0011-0000-0000-0000-000000000010', 'en', 'Football', 'published'),
+  ('5eed0011-0000-0000-0000-000000000011', 'en', 'Basketball', 'published'),
+  ('5eed0011-0000-0000-0000-000000000012', 'en', 'Tennis', 'published'),
+  ('5eed0011-0000-0000-0000-000000000013', 'en', 'Volleyball', 'published'),
+  ('5eed0011-0000-0000-0000-000000000014', 'en', 'Table Tennis', 'published'),
+  ('5eed0011-0000-0000-0000-000000000015', 'en', 'Guitar', 'published'),
+  ('5eed0011-0000-0000-0000-000000000016', 'en', 'Piano', 'published'),
+  ('5eed0011-0000-0000-0000-000000000017', 'en', 'Trumpet', 'published'),
+  ('5eed0011-0000-0000-0000-000000000018', 'en', 'Violin', 'published'),
+  ('5eed0011-0000-0000-0000-000000000019', 'en', 'Drums', 'published')
+on conflict (prompt_id, locale) do nothing;
+
+insert into public.question_prompt_translations (prompt_id, locale, civilian_question, imposter_question, status) values
+  ('5eed0012-0000-0000-0000-000000000001', 'en', 'How many minutes do you usually spend getting ready to go out in the morning?', 'How many minutes do you usually spend getting ready for bed at night?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000002', 'en', 'Which household chore do you dread the most?', 'Which household chore do you find the easiest?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000003', 'en', 'What is the first thing you usually do after waking up?', 'What is the first thing you usually do when you get home?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000004', 'en', 'What item do you often forget to bring when going out?', 'What item do you always bring when traveling?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000005', 'en', 'What time do you usually go to bed on weekdays?', 'What time do you usually wake up on weekends?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000006', 'en', 'What food could you eat all week without getting bored?', 'What food would you only want to eat on special occasions?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000007', 'en', 'What do you like to drink in hot weather?', 'What do you like to drink in cold weather?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000008', 'en', 'How much would you be willing to pay for breakfast?', 'How much would you be willing to pay for a cup of coffee?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000009', 'en', 'What dish would you most like to learn to cook?', 'What dish would you most like someone else to cook for you?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000a', 'en', 'What is your favorite fruit?', 'Which fruit do you find the hardest to eat?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000b', 'en', 'Which city would you most like to visit on vacation?', 'Which city would you most like to move to?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000c', 'en', 'What do you like to do first when you arrive at the beach?', 'What do you like to do first when you arrive at a campsite?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000d', 'en', 'How many outfits do you usually pack for a three-day trip?', 'How many pairs of shoes do you usually pack for a week-long trip?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000e', 'en', 'Who would you most like to travel with?', 'Who would you most like to team up with in a survival competition?', 'published'),
+  ('5eed0012-0000-0000-0000-00000000000f', 'en', 'What is your favorite way to travel long distances?', 'What is your favorite way to get around a city?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000010', 'en', 'What movie could you watch over and over?', 'What movie has stayed with you even though you only watched it once?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000011', 'en', 'What do you usually do while listening to music?', 'What do you usually do while listening to podcasts?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000012', 'en', 'What sport would you most like to try?', 'What sport would you most like to watch in person?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000013', 'en', 'How many hours a day do you usually spend on social media?', 'How many hours a day do you usually spend watching movies?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000014', 'en', 'Which singer would you most like to meet in person?', 'Which singer would you most like to sing a duet with?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000015', 'en', 'If you could choose one superpower, what would it be?', 'If you could choose one superpower for your best friend, what would it be?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000016', 'en', 'If you won one billion Vietnamese dong, what would you buy first?', 'If you only had one million Vietnamese dong left, what would you buy first?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000017', 'en', 'What animal would you like to be for a day?', 'What animal would you like to keep as a pet if money were no object?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000018', 'en', 'If you could travel to the past, what year would you visit?', 'If you could travel to the future, what year would you visit?', 'published'),
+  ('5eed0012-0000-0000-0000-000000000019', 'en', 'What item would you bring to a deserted island?', 'What item would you need most during a week-long power outage?', 'published')
+on conflict (prompt_id, locale) do nothing;
+
+commit;

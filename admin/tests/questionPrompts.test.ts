@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { deleteQuestionPrompt, saveQuestionPrompt, listQuestionPrompts, questionCategories } from '../src/api/questionPrompts.ts'
 import { questionPromptPayload, questionPromptFilters, questionPromptError } from '../src/utils/questionPrompts.ts'
 const id = '00000000-0000-4000-8000-000000000001'
-const form = { civilian_question: '  Favourite food?  ', imposter_question: ' Worst food? ', category_id: id, difficulty: 'medium', is_family_friendly: false, locale: 'vi' }
+const form = { civilian_question: '  Favourite food?  ', imposter_question: ' Worst food? ', category_id: id, difficulty: 'medium', locale: 'vi' }
 test('question payload trims, requires distinct questions in every state and excludes hint', () => {
   for (const status of ['draft', 'published', 'archived']) {
     assert.deepEqual(questionPromptPayload({ ...form, imposter_hint: 'ignored' }, status), { ...form, civilian_question: 'Favourite food?', imposter_question: 'Worst food?', status })
@@ -30,7 +30,7 @@ test('question list passes selected language, filters and pagination to one RPC'
  const calls: Calls = []
  const client = asClient({ rpc: async (...args: unknown[]) => { calls.push(args); return { data: { rows: [], total: 21 } } } })
  assert.deepEqual(await listQuestionPrompts(client, filters), { rows: [], total: 21 })
- assert.deepEqual(calls, [['admin_list_question_prompts', { p_locale: 'vi', p_search: 'a,b %_', p_category_id: id, p_difficulty: 'hard', p_is_family_friendly: false, p_status: 'archived', p_sort: 'civilian_question', p_page: 2 }]])
+ assert.deepEqual(calls, [['admin_list_question_prompts', { p_locale: 'vi', p_search: 'a,b %_', p_category_id: id, p_difficulty: 'hard', p_status: 'archived', p_sort: 'civilian_question', p_page: 2 }]])
  assert.equal(questionPromptFilters({ page: '-1', locale: '' }).page, 1)
  assert.equal(questionPromptFilters({}).locale, 'vi')
 })
@@ -64,4 +64,20 @@ test('question category discovery reads all pages and labels only the selected l
  assert.equal(requests, 2); assert.equal(rows.length, 100); assert.equal(rows[0]!.name, null)
  assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'game_type' && call[2] === 'question'))
  assert.ok(!calls.some(call => call[0] === 'eq' && call[1] === 'locale'), 'category identity is shared')
+})
+
+test('question category filter preserves seeded IDs through the list RPC and form validation', async () => {
+  for (const category of ['5eed0002-0000-0000-0000-000000000001', id]) {
+    const filters = questionPromptFilters({ category })
+    assert.equal(filters.category, category)
+    const calls: Calls = []
+    const client = asClient({ rpc: async (...args: unknown[]) => { calls.push(args); return { data: { rows: [], total: 0 } } } })
+    await listQuestionPrompts(client, filters)
+    assert.equal((calls[0]![1] as Record<string, unknown>).p_category_id, category)
+    assert.equal(questionPromptPayload({ ...form, category_id: category }, 'draft').category_id, category)
+  }
+  for (const category of ['', 'all', 'invalid', '5eed0002-0000-0000-0000-00000000000g', ['5eed0002-0000-0000-0000-000000000001']]) {
+    assert.equal(questionPromptFilters({ category }).category, '')
+    assert.throws(() => questionPromptPayload({ ...form, category_id: category }, 'draft'), /categoryRequired/)
+  }
 })

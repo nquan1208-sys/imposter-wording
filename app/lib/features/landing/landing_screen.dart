@@ -1,3 +1,6 @@
+import 'package:untitled/widgets/app_hero_card.dart';
+import 'package:untitled/widgets/app_content.dart';
+import 'package:untitled/widgets/app_action_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:untitled/base/dependency/app_service.dart';
@@ -17,71 +20,72 @@ class LandingScreen extends ConsumerWidget {
     final routerService = ref.watch(AppService.router);
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: AppEdgeInsets.all24,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: AppSpacing.xxl),
-                      // ponytail: placeholder art until the illustration asset exists
-                      Container(
-                        width: 160,
-                        height: 160,
-                        decoration: const BoxDecoration(
-                          color: AppColors.yellow,
-                          borderRadius: BorderRadius.all(Radius.circular(20)),
+      body: AppContent(
+        bottom: false,
+        child: ListView(
+          padding: AppEdgeInsets.pageFor(context),
+          children: [
+            AppHeroCard(
+              title: l10n.appTitle,
+              subtitle: l10n.tagline,
+              icon: Icons.theater_comedy_outlined,
+              prominent: true,
+            ),
+            const SizedBox(height: AppSpacing.xxl),
+            Text(
+              l10n.appDescription,
+              style: textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            Card(
+              child: Column(
+                children: [
+                  for (final (index, (icon, label)) in [
+                    (Icons.visibility_outlined, l10n.stepRevealTitle),
+                    (Icons.forum_outlined, l10n.stepHintTitle),
+                    (Icons.person_search_outlined, l10n.stepFindTitle),
+                  ].indexed)
+                    ListTile(
+                      leading: ExcludeSemantics(
+                        child: CircleAvatar(
+                          backgroundColor: AppColors.selection,
+                          foregroundColor: AppColors.accentText,
+                          child: Text('${index + 1}'),
                         ),
-                        child: const Icon(
-                          Icons.theater_comedy,
-                          size: 96,
-                          color: AppColors.charcoal,
-                        ),
                       ),
-                      const SizedBox(height: AppSpacing.xxl),
-                      Text(
-                        l10n.appTitle,
-                        style: textTheme.headlineLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        l10n.tagline,
-                        style: textTheme.titleLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        l10n.appDescription,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.gray,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      title: Text(label),
+                      trailing: ExcludeSemantics(child: Icon(icon)),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: AppActionBar(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FilledButton(
+              onPressed: () => routerService.push(RouteInput.setup()),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(child: Text(l10n.start)),
+                  const SizedBox(width: AppSpacing.md),
+                  const ExcludeSemantics(
+                    child: Icon(Icons.arrow_forward, size: 20),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-              // Setup flow ships in phase 2; keep the entry visible but disabled.
-              FilledButton(onPressed: null, child: Text(l10n.start)),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                l10n.startUnavailable,
-                style: textTheme.bodyMedium?.copyWith(color: AppColors.gray),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              OutlinedButton(
-                onPressed: () => routerService.push(RouteInput.howToPlay()),
-                child: Text(l10n.howToPlay),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton(
+              onPressed: () => routerService.push(RouteInput.howToPlay()),
+              child: Text(l10n.howToPlay),
+            ),
+          ],
         ),
       ),
     );

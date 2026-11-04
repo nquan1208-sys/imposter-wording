@@ -1,39 +1,39 @@
-# Plan: Setup Admin với Supabase
+# Plan: Set Up Admin with Supabase
 
-> Cập nhật 2026-10-24: local đã có schema bản gốc + bản dịch, dashboard và Storage private
-> `word-prompt-images`; Dev cloud INACTIVE, chưa cutover. Hợp đồng hiện tại xem
-> [schema và quyền API](./admin-supabase-new-device-guide.md#8-những-gì-migration-hiện-tại-tạo-ra),
-> [DBML](./database-schema.dbml) và [Phase 6 / cutover](./plans/admin-content-translations/admin-content-translations-phase-6.md).
-> Không push migrations translations theo quickstart; phải backup và rehearsal trước.
-> Các phase bên dưới lưu kế hoạch setup ban đầu; các field nội dung và quyền ghi cũ đã được thay bởi hợp đồng translations ở trên.
+> Update 2026-10-24: local has the base + translation schema, dashboard, and private Storage
+> `word-prompt-images`; Dev cloud is INACTIVE, with no cutover yet. For the current contract, see
+> [schema and API permissions](./admin-supabase-new-device-guide.md#8-what-current-migrations-create),
+> [DBML](./database-schema.dbml) and [Phase 6 / cutover](./plans/admin-content-translations/admin-content-translations-phase-6.md).
+> Do not push translation migrations using the quickstart; back up and rehearse first.
+> Phases below retain the original setup plan; old content fields and write permissions are superseded by the translation contract above.
 
 
-## Mục tiêu
+## Goals
 
-Xây dựng Admin Vue để:
+Build Vue Admin to:
 
-- Đăng nhập bằng Supabase Auth.
-- Quản lý danh mục.
-- Quản lý content trò chơi từ ngữ.
-- Quản lý content trò chơi câu hỏi.
-- Publish, archive và lọc content theo Family Mode.
-- Upload ảnh cho content từ ngữ.
-- Sử dụng Supabase Data REST API thông qua `@supabase/supabase-js`.
+- Log in through Supabase Auth.
+- Manage categories.
+- Manage word-game content.
+- Manage question-game content.
+- Publish, archive, and classify word categories for Family Mode.
+- Upload word-content images.
+- Use Supabase Data REST API through `@supabase/supabase-js`.
 
-## Phạm vi hiện tại
+## Current scope
 
-- Người chơi không đăng nhập.
-- Tên người chơi, câu trả lời, vote và game state lưu local trong app.
-- Admin là nhóm user duy nhất sử dụng Supabase Auth.
-- MVP không có sidebar `Admin users` hoặc `Cài đặt`.
-- Sidebar Admin gồm:
-  - Tổng quan.
-  - Danh mục.
-  - Nội dung từ ngữ.
-  - Nội dung câu hỏi.
-  - Đăng xuất.
+- Players do not log in.
+- Player names, answers, votes, and game state are stored locally in the app.
+- Admins are the only users of Supabase Auth.
+- MVP has no `Admin users` or `Settings` sidebar items.
+- Admin sidebar:
+  - Overview.
+  - Categories.
+  - Word content.
+  - Question content.
+  - Log out.
 
-## Tài liệu liên quan
+## Related documents
 
 - Database diagram: `docs/database-schema.dbml`
 - App screen layout: `docs/layout/screen-layout.md`
@@ -43,38 +43,38 @@ Xây dựng Admin Vue để:
 
 ---
 
-## Phase 0 — Thiết lập environment cho Admin (local/dev/prod)
+## Phase 0 — Configure Admin environments (local/dev/prod)
 
-Admin là Vue 3 chạy bằng Vite, vì vậy app đọc biến môi trường qua
-`import.meta.env`. Vite nạp file theo mode; `localdev` là mode tùy chỉnh, còn
-`development` và `production` là mode chuẩn.
+Admin is Vue 3 running on Vite, reading environment variables through
+`import.meta.env`. Vite loads files by mode; `localdev` is custom,
+while `development` and `production` are standard modes.
 
-### Quy ước môi trường
+### Environment conventions
 
-| Môi trường | Vite mode | File local | Supabase target | Trạng thái |
+| Environment | Vite mode | Local file | Supabase target | Status |
 | --- | --- | --- | --- | --- |
-| Local | `localdev` | `admin/.env.local` | Supabase CLI local stack | Đã điền |
-| Dev | `development` | `admin/.env.development.local` | Project `imposter-word`, ref `pxycsjwjakzehcuygngv` | Đã điền |
-| Prod | `production` | `admin/.env.production.local` | Production project | Chưa cấu hình |
+| Local | `localdev` | `admin/.env.local` | Supabase CLI local stack | Populated |
+| Dev | `development` | `admin/.env.development.local` | Project `imposter-word`, ref `pxycsjwjakzehcuygngv` | Populated |
+| Prod | `production` | `admin/.env.production.local` | Production project | Not configured |
 
-Các file `*.local` không commit vào Git. File mẫu được commit là
-`admin/.env.example`. `admin/.env.production` là file guard rỗng được commit
-để build production không fallback nhầm vào `.env.local` khi project prod chưa
-có.
+Do not commit `*.local` files. The committed example is
+`admin/.env.example`. `admin/.env.production` is a committed empty guard
+preventing production builds from accidentally falling back to `.env.local`
+while no production project exists.
 
-### Các biến được phép dùng trong frontend
+### Allowed frontend variables
 
 ```env
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 ```
 
-`VITE_*` được Vite bundle vào browser. Publishable key được phép dùng ở
-frontend khi RLS và quyền Data API được cấu hình đúng. Không đặt
-`service_role`, Supabase secret key, database password hoặc JWT secret vào
-bất kỳ file `VITE_*` nào.
+Vite bundles `VITE_*` into the browser. Publishable keys are safe for frontend
+use with correct RLS and Data API permissions. Never put
+`service_role`, Supabase secret keys, database passwords, or JWT secrets
+in any `VITE_*` file.
 
-### Lệnh chạy/build
+### Run/build commands
 
 ```bash
 cd admin
@@ -83,46 +83,46 @@ yarn dev:development     # dev cloud, mode development
 yarn build:production    # prod, mode production
 ```
 
-- [x] Tạo `admin/.env.local` với local URL và local publishable key.
-- [x] Tạo `admin/.env.development.local` với dev URL và publishable key.
-- [x] Thêm script Vite cho ba mode.
-- [x] Thêm `admin/.env.example`.
-- [ ] Tạo và điền `admin/.env.production.local` sau khi có project prod.
+- [x] Create `admin/.env.local` with local URL and publishable key.
+- [x] Create `admin/.env.development.local` with Dev URL and publishable key.
+- [x] Add Vite scripts for three modes.
+- [x] Add `admin/.env.example`.
+- [ ] Create/populate `admin/.env.production.local` once a production project exists.
 
 ---
 
-## Phase 1 — Tạo Supabase project
+## Phase 1 — Create Supabase project
 
-### Thực hiện trên Supabase Dashboard
+### In Supabase Dashboard
 
-- [x] Tạo Supabase project.
-- [x] Lưu Project URL.
-- [x] Lấy Publishable key.
-- [x] Không sử dụng `service_role` hoặc Secret key trong frontend.
-- [x] Vào `Authentication → Providers` và bật Email/Password.
-- [x] Quyết định có bật email confirmation hay không.
+- [x] Create a Supabase project.
+- [x] Save Project URL.
+- [x] Obtain Publishable key.
+- [x] Do not use `service_role` or Secret keys in the frontend.
+- [x] Enable Email/Password under `Authentication → Providers`.
+- [x] Decide whether to enable email confirmation.
 
-### Kết quả cần có
+### Required output
 
 ```text
 SUPABASE_URL
 SUPABASE_PUBLISHABLE_KEY
 ```
 
-Project Development hiện tại là `imposter-word`, ref
-`pxycsjwjakzehcuygngv`. Credential được lưu trong
-`admin/.env.development.local` và không commit vào Git.
+Current Development project: `imposter-word`, ref
+`pxycsjwjakzehcuygngv`. Credentials are stored in
+`admin/.env.development.local` and excluded from Git.
 
 ---
 
-## Phase 2 — Khởi tạo Supabase trong repository
+## Phase 2 — Initialize Supabase in the repository
 
-### Thực hiện trong code
+### In code
 
-- [x] Cài Supabase CLI nếu máy chưa có.
-- [x] Chạy `supabase init` tại thư mục gốc repository.
-- [x] Chạy `supabase migration new initial_schema`.
-- [x] Kiểm tra thư mục `supabase/migrations/`.
+- [x] Install Supabase CLI if missing.
+- [x] Run `supabase init` at the repository root.
+- [x] Run `supabase migration new initial_schema`.
+- [x] Check `supabase/migrations/`.
 
 Expected structure:
 
@@ -134,114 +134,114 @@ supabase/
     └── 20261003072909_rls_and_policies.sql
 ```
 
-Hai migration được tạo bằng Supabase CLI: migration đầu tiên chứa schema,
-migration thứ hai chứa RLS và policies.
+Both migrations were created with Supabase CLI: the first contains schema,
+the second RLS and policies.
 
-### Lưu ý
+### Notes
 
-- DBML chỉ để vẽ sơ đồ, không chạy trực tiếp.
-- Không tạo bảng `auth_users` thật.
-- Supabase đã quản lý sẵn bảng `auth.users`.
+- DBML is for diagrams, not direct execution.
+- Do not create an actual `auth_users` table.
+- Supabase already manages `auth.users`.
 
 ---
 
-## Phase 3 — Viết database schema migration
+## Phase 3 — Write database schema migration
 
-### Các enum cần tạo
+### Required enums
 
 - [x] `game_type`: `word`, `question`.
 - [x] `content_status`: `draft`, `published`, `archived`.
 - [x] `difficulty_level`: `easy`, `medium`, `hard`.
 
-### Các bảng cần tạo
+### Required tables
 
 - [x] `public.admin_users`.
 - [x] `public.game_categories`.
 - [x] `public.word_prompts`.
 - [x] `public.question_prompts`.
-- [x] `public.content_languages` và ba bảng bản dịch (local).
+- [x] `public.content_languages` and three translation tables (local).
 
-### Field hiện tại sau translations
+### Current fields after translations
 
-- `admin_users`: user Auth, role và `is_active`.
+- `admin_users`: Auth user, role, `is_active`.
 - `content_languages`: `code`, `display_name`, `sort_order`.
-- `game_categories`: `game_type`, slug duy nhất theo loại trò chơi, `sort_order`, `is_active`.
-- `word_prompts`: `category_id`, `image_path`, `difficulty`, `is_family_friendly`.
-- `question_prompts`: `category_id`, `difficulty`, `is_family_friendly`.
+- `game_categories`: `game_type`, slug unique per game type, `sort_order`, `is_active`, `is_family_friendly` (word categories only).
+- `word_prompts`: `category_id`, `image_path`, `difficulty`.
+- `question_prompts`: `category_id`, `difficulty`.
 - `game_category_translations`: `category_id`, `locale`, `name`, `description`, `status`.
 - `word_prompt_translations`: `prompt_id`, `locale`, `text`, `status`.
 - `question_prompt_translations`: `prompt_id`, `locale`, `civilian_question`, `imposter_question`, `status`.
 
-Bản gốc và bản dịch có metadata tạo/cập nhật; bản dịch dùng khóa ghép ID gốc + locale,
-locale tham chiếu `content_languages`. `imposter_hint` đã bị bỏ. Schema đầy đủ nằm trong
-[DBML](./database-schema.dbml); migrations lịch sử là nguồn triển khai, không sửa lại chúng.
+Base records/translations have creation/update metadata; translations use base ID + locale
+composite keys, with locale referencing `content_languages`. `imposter_hint` was removed.
+Full schema is in [DBML](./database-schema.dbml); historical migrations are the deployment source and must not be edited.
 
 ---
 
-## Phase 4 — Thiết lập RLS và quyền truy cập
+## Phase 4 — Configure RLS and access permissions
 
-### Function kiểm tra admin
+### Admin check function
 
-- [x] Tạo `private.is_admin()`.
-- [x] Function kiểm tra `auth.uid()` với `public.admin_users`.
-- [x] Function dùng `SECURITY DEFINER` an toàn và `search_path = ''`.
-- [x] Không expose function này như public API.
+- [x] Create `private.is_admin()`.
+- [x] Check `auth.uid()` against `public.admin_users`.
+- [x] Use safe `SECURITY DEFINER` and `search_path = ''`.
+- [x] Do not expose this function as a public API.
 
-### Bật RLS
+### Enable RLS
 
-- [x] Bật RLS cho `admin_users`.
-- [x] Bật RLS cho `game_categories`.
-- [x] Bật RLS cho `word_prompts`.
-- [x] Bật RLS cho `question_prompts` và bốn bảng ngôn ngữ/bản dịch.
+- [x] Enable RLS on `admin_users`.
+- [x] Enable RLS on `game_categories`.
+- [x] Enable RLS on `word_prompts`.
+- [x] Enable RLS on `question_prompts` and four language/translation tables.
 
 ### Public app policies
 
-- [x] Public chỉ đọc bản dịch đã published, danh mục đang active; đề cần bản dịch danh mục published cùng locale.
-- [x] Bản gốc chỉ public khi có bản dịch đủ điều kiện; không fallback locale.
-- [x] `anon` không được insert, update hoặc delete.
+- [x] Public reads only published translations under active categories; prompts need published category translations in the same locale.
+- [x] Base records are public only with eligible translations; no locale fallback.
+- [x] `anon` cannot insert, update, or delete.
 
 ### Admin policies
 
-- [x] Admin được đọc toàn bộ content.
-- [x] Admin active tạo/cập nhật/archive qua RPC transactional có kiểm tra phiên bản; client không ghi bảng nội dung trực tiếp.
-- [x] User đã login nhưng không có trong `admin_users` không được thao tác.
+- [x] Admins can read all content.
+- [x] Active admins create/update/archive through transactional, version-checked RPCs; clients cannot directly write content tables.
+- [x] Logged-in users absent from `admin_users` cannot perform these actions.
 
-RLS ban đầu nằm trong `20261003072909_rls_and_policies.sql`; quyền hiện tại được cập nhật bởi các migrations translations ngày 2026-10-24. Function
-`private.is_admin()` bị revoke khỏi `public`, chỉ được cấp execute cho role
-`authenticated`; schema `private` cũng không nằm trong Data API schemas.
+Initial RLS is in `20261003072909_rls_and_policies.sql`; current permissions were updated by translation migrations on 2026-10-24.
+`private.is_admin()` is revoked from `public`, with execute granted only to
+`authenticated`; `private` is also excluded from Data API schemas.
 
 ---
 
-## Phase 5 — Test migration local
+## Phase 5 — Test migrations locally
 
-> Không dùng Phase 5 làm gate của workflow hiện tại. Migration local đã từng
-> được reset/apply để kiểm tra SQL, nhưng các kiểm tra hành vi local được bỏ qua;
-> workflow tiếp tục trực tiếp trên project Dev ở Phase 6.
+> Do not use Phase 5 as a gate for the current workflow. Local migrations were
+> reset/applied to check SQL, but local behavior checks were skipped;
+> the workflow continued directly on Dev in Phase 6.
 
 ```bash
 supabase start
 supabase db reset
 ```
 
-- [x] Migration chạy thành công từ đầu bằng `supabase db reset --local`.
-- [x] Tất cả bảng được tạo.
-- [x] RLS được bật.
-- [x] Không có lỗi foreign key.
-- [x] Không có lỗi policy/function.
+- [x] Migrations run successfully from scratch with `supabase db reset --local`.
+- [x] All tables created.
+- [x] RLS enabled.
+- [x] No foreign-key errors.
+- [x] No policy/function errors.
 
-### Kiểm tra nhanh
+### Smoke checks
 
-- [ ] Anonymous chỉ đọc được content published.
-- [ ] Anonymous không ghi được content.
-- [ ] Admin đọc được draft.
-- [ ] Admin tạo và sửa được content.
-- [ ] Non-admin authenticated user bị từ chối.
+- [ ] Anonymous reads only published content.
+- [ ] Anonymous cannot write content.
+- [ ] Admin reads drafts.
+- [ ] Admin creates/edits content.
+- [ ] Authenticated non-admin users are rejected.
 
 ---
 
-## Phase 6 — Đẩy schema lên Supabase Cloud
+## Phase 6 — Push schema to Supabase Cloud
 
-Trạng thái đánh dấu bên dưới chỉ ghi nhận hai migrations setup ban đầu. Dev hiện INACTIVE; migrations translations chưa được triển khai. Lần cutover tiếp theo phải theo [runbook Phase 6 translations](./plans/admin-content-translations/admin-content-translations-phase-6.md), không chạy riêng lệnh push dưới đây.
+Checkmarks below cover only the two initial setup migrations. Dev is currently INACTIVE; translation migrations are not deployed. The next cutover must follow the [translation Phase 6 runbook](./plans/admin-content-translations/admin-content-translations-phase-6.md), rather than independently running the push command below.
 
 ```bash
 supabase login
@@ -249,34 +249,34 @@ supabase link --project-ref pxycsjwjakzehcuygngv
 supabase db push --linked
 ```
 
-- [x] Link repository với project Dev `pxycsjwjakzehcuygngv`.
-- [x] Kiểm tra dry-run trước khi push.
-- [x] Push hai migration lên project Dev.
-- [x] Kiểm tra migration đã applied trên project thật.
-- [x] Kiểm tra bốn bảng trong database Dev.
-- [x] Kiểm tra RLS policies bằng Supabase CLI.
-- [ ] Bật Leaked Password Protection trong Auth settings của project Dev.
+- [x] Link repository to Dev project `pxycsjwjakzehcuygngv`.
+- [x] Check dry-run before pushing.
+- [x] Push both migrations to Dev.
+- [x] Verify applied migrations on the actual project.
+- [x] Check four Dev database tables.
+- [x] Check RLS policies with Supabase CLI.
+- [ ] Enable Leaked Password Protection in Dev Auth settings.
 
 ---
 
-## Phase 7 — Tạo admin đầu tiên
+## Phase 7 — Create the first admin
 
-### Tạo Auth user local để test trước (tạm bỏ qua)
+### Create a local Auth user for initial testing (temporarily skipped)
 
-Đang tạm bỏ qua bước local để test trực tiếp trên project Dev. User local nếu
-tạo sau này chỉ tồn tại trong Supabase local và không dùng được để đăng nhập
-project Dev.
+Local steps are temporarily skipped in favor of direct Dev testing. Any local user
+created later exists only in local Supabase and cannot log into
+the Dev project.
 
 ```bash
 supabase start
 ```
 
-- [ ] Mở Supabase Studio local tại `http://127.0.0.1:54323`.
-- [ ] Vào `Authentication → Users` → `Add user`.
-- [ ] Tạo email/password test, ví dụ `admin.local@example.com`.
-- [ ] Bật `Auto Confirm` để đăng nhập ngay.
-- [ ] Copy UUID của user local.
-- [ ] Trong SQL Editor local, chạy câu lệnh dưới đây để gán quyền admin:
+- [ ] Open local Supabase Studio at `http://127.0.0.1:54323`.
+- [ ] Open `Authentication → Users` → `Add user`.
+- [ ] Create test email/password, e.g. `admin.local@example.com`.
+- [ ] Enable `Auto Confirm` for immediate login.
+- [ ] Copy the local user's UUID.
+- [ ] Run the following in local SQL Editor to grant admin:
 
 ```sql
 insert into public.admin_users (user_id, role, is_active)
@@ -288,32 +288,32 @@ set role = 'admin',
     is_active = true;
 ```
 
-Chạy Admin bằng `yarn dev:local`, sau đó dùng email/password local để test
-login, route guard và quyền RLS. Không dùng password test hoặc UUID local
-trong migration/repository.
+Run Admin with `yarn dev:local`, then test login, route guards, and RLS using
+local email/password. Do not put test passwords or local UUIDs
+in migrations/repository.
 
-### Tạo Auth user trên Dashboard
+### Create an Auth user in Dashboard
 
-- [ ] Vào `Authentication → Users`.
-- [ ] Chọn `Add user`.
-- [ ] Tạo email/password admin.
-- [ ] Bật Auto Confirm nếu cần đăng nhập ngay.
-- [ ] Copy email hoặc UUID của user.
+- [ ] Open `Authentication → Users`.
+- [ ] Choose `Add user`.
+- [ ] Create admin email/password.
+- [ ] Enable Auto Confirm if immediate login is needed.
+- [ ] Copy the user's email or UUID.
 
-### Gán quyền admin
+### Grant admin access
 
-Tạo file:
+Create:
 
 ```text
 supabase/scripts/grant_admin.sql
 ```
 
-- [x] Tạo file script với email placeholder, không chứa password hoặc secret.
+- [x] Create a script with placeholder email, without passwords/secrets.
 
-Nội dung:
+Contents:
 
 ```sql
--- Chạy sau khi Auth user đã tồn tại.
+-- Run after the Auth user exists.
 insert into public.admin_users (user_id, role, is_active)
 select id, 'admin', true
 from auth.users
@@ -323,69 +323,69 @@ set role = 'admin',
     is_active = true;
 ```
 
-- [ ] Thay email bằng email admin thật.
-- [ ] Chạy script một lần trong Supabase SQL Editor.
-- [ ] Kiểm tra user có role `admin` và `is_active = true`.
+- [ ] Replace the email with the actual admin email.
+- [ ] Run once in Supabase SQL Editor.
+- [ ] Verify role `admin` and `is_active = true`.
 
-### Không làm
+### Do not
 
-- [ ] Không lưu password trong repository.
-- [ ] Không insert trực tiếp password vào `auth.users`.
-- [ ] Không đưa service key vào script frontend.
-- [ ] Không đặt thao tác gán admin vào migration schema.
+- [ ] Do not store passwords in the repository.
+- [ ] Do not insert passwords directly into `auth.users`.
+- [ ] Do not put service keys in frontend scripts.
+- [ ] Do not put admin grants in schema migrations.
 
 ---
 
-## Phase 8 — Kết nối Vue Admin
+## Phase 8 — Connect Vue Admin
 
-### Cài package
+### Install package
 
 ```bash
 cd admin
 yarn add @supabase/supabase-js
 ```
 
-- [x] Cài `@supabase/supabase-js`.
+- [x] Install `@supabase/supabase-js`.
 
-### Tạo biến môi trường
+### Configure environment variables
 
-Phần setup ba môi trường đã được thực hiện ở Phase 0. Khi viết Supabase
-client, dùng các biến giống nhau ở cả ba mode:
+Three environments were configured in Phase 0. Use the same variables
+in Supabase clients for all three modes:
 
 ```env
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 ```
 
-- [x] Các file `*.local` đã được `admin/.gitignore` bỏ qua.
-- [x] Không dùng secret/service key trong frontend.
+- [x] `*.local` files are excluded by `admin/.gitignore`.
+- [x] No secret/service keys in the frontend.
 
-### Tạo Supabase client
+### Create Supabase client
 
-Tạo file:
+Create:
 
 ```text
 admin/src/lib/supabase.js
 ```
 
-- [x] Khởi tạo `createClient()`.
-- [x] Đọc URL và publishable key từ `import.meta.env`.
+- [x] Initialize `createClient()`.
+- [x] Read URL and publishable key from `import.meta.env`.
 
 ---
 
-## Phase 9 — Authentication và route guard
+## Phase 9 — Authentication and route guards
 
 ### Login
 
-- [ ] Tạo màn hình `/login`.
-- [ ] Login bằng `supabase.auth.signInWithPassword()`.
-- [ ] Hiển thị lỗi sai email/password.
-- [ ] Sau khi login, query `admin_users`.
-- [ ] Nếu không phải admin, sign out và hiển thị lỗi.
+- [ ] Create `/login` screen.
+- [ ] Log in with `supabase.auth.signInWithPassword()`.
+- [ ] Show invalid email/password errors.
+- [ ] Query `admin_users` after login.
+- [ ] Sign out and show an error for non-admins.
 
-### Route guard
+### Route guards
 
-Bảo vệ các route:
+Protect:
 
 ```text
 /dashboard
@@ -394,68 +394,68 @@ Bảo vệ các route:
 /question-prompts
 ```
 
-- [ ] Chưa login → chuyển về `/login`.
-- [ ] Không phải admin → không được vào admin pages.
-- [ ] Refresh trang vẫn giữ session hợp lệ.
-- [ ] Nút Đăng xuất gọi `supabase.auth.signOut()`.
+- [ ] Unauthenticated → redirect to `/login`.
+- [ ] Non-admin → deny admin pages.
+- [ ] Page refresh retains valid sessions.
+- [ ] Log out calls `supabase.auth.signOut()`.
 
 ---
 
-## Phase 10 — Xây các màn hình Admin
+## Phase 10 — Build Admin screens
 
 ### Dashboard
 
-- [ ] Tổng số word prompts published.
-- [ ] Tổng số question prompts published.
-- [ ] Tổng số category active.
-- [ ] Tổng số content draft.
+- [ ] Total published word prompts.
+- [ ] Total published question prompts.
+- [ ] Total active categories.
+- [ ] Total draft content.
 
 ### Categories
 
-- [ ] Danh sách category.
-- [ ] Tạo category.
-- [ ] Sửa category.
-- [ ] Bật/tắt category.
-- [ ] Hiển thị số content Classic và Family.
+- [ ] Category list.
+- [ ] Create categories.
+- [ ] Edit categories.
+- [ ] Enable/disable categories.
+- [ ] Show Classic/Family content counts.
 
 ### Word prompts
 
-- [ ] Danh sách word prompts.
-- [ ] Lọc theo category, difficulty, status, Family Mode.
-- [ ] Tạo/sửa prompt.
-- [ ] Upload ảnh.
-- [ ] Preview ảnh.
-- [ ] Lưu draft.
+- [ ] Word prompt list.
+- [ ] Filter category, difficulty, status. Family Mode filters belong only to category lists.
+- [ ] Create/edit prompts.
+- [ ] Upload images.
+- [ ] Preview images.
+- [ ] Save drafts.
 - [ ] Publish.
 - [ ] Archive.
 
 ### Question prompts
 
-- [ ] Danh sách question prompts.
-- [ ] Lọc theo category, difficulty, status, Family Mode.
-- [ ] Nhập civilian question.
-- [ ] Nhập imposter question.
-- [ ] Validate hai câu hỏi không giống nhau.
-- [ ] Lưu draft.
+- [ ] Question prompt list.
+- [ ] Filter category, difficulty, status. Family Mode filters belong only to category lists.
+- [ ] Enter civilian question.
+- [ ] Enter imposter question.
+- [ ] Validate questions differ.
+- [ ] Save drafts.
 - [ ] Publish.
 - [ ] Archive.
 
 ---
 
-## Phase 11 — Storage cho ảnh từ ngữ
+## Phase 11 — Storage for word images
 
-- [x] Tạo bucket private `word-prompt-images` bằng migration; ảnh dùng chung giữa các bản dịch.
-- [x] Bucket private, dùng signed URL; URL đã cấp còn hiệu lực tới hết hạn.
-- [x] Policies cho admin active upload/cleanup; giới hạn JPEG/PNG/WebP, 5 MiB.
-- [x] Cho đọc ảnh khi có bản dịch đề công khai hợp lệ; signed URL đã cấp sống tới hết hạn.
-- [x] Lưu đường dẫn ảnh chung ở `word_prompts.image_path`.
-- [x] Không dùng service key trong frontend. Kết nối Flutter chưa thuộc phạm vi.
+- [x] Create private `word-prompt-images` bucket through migration; images are shared across translations.
+- [x] Private bucket with signed URLs; issued URLs remain valid until expiry.
+- [x] Active-admin upload/cleanup policies; JPEG/PNG/WebP, 5 MiB limits.
+- [x] Read images when a prompt has an eligible public translation; issued URLs last until expiry.
+- [x] Store shared paths in `word_prompts.image_path`.
+- [x] No service keys in frontend. Flutter integration is out of scope.
 
 ---
 
 ## Phase 12 — Data API queries
 
-Query đọc công khai lấy bản dịch theo locale, join phần chung; RLS lọc các dòng không đủ điều kiện:
+Public reads fetch translations by locale and join shared fields; RLS excludes ineligible rows:
 
 ```js
 supabase
@@ -465,14 +465,14 @@ supabase
   .eq('status', 'published')
 ```
 
-Tương tự với `question_prompt_translations` và `game_category_translations`.
-Admin dùng các RPC list/save hiện có thay vì query public này.
-Với query bản dịch ở trên, bộ lọc phần chung phải dùng tên quan hệ:
+Likewise for `question_prompt_translations` and `game_category_translations`.
+Admin uses existing list/save RPCs instead of this public query.
+For the translation query above, shared-field filters must use relation names:
 
 Family Mode:
 
 ```js
-query = query.eq('word_prompts.is_family_friendly', true)
+query = query.eq('game_categories.is_family_friendly', true)
 ```
 
 Category filter:
@@ -481,39 +481,39 @@ Category filter:
 query = query.in('word_prompts.category_id', selectedCategoryIds)
 ```
 
-- [ ] Không chọn category → random trong toàn bộ content hợp lệ.
-- [ ] Có chọn category → chỉ random trong category đã chọn.
-- [ ] Family Mode → thêm `is_family_friendly = true`.
-- [ ] App chỉ nhận content published.
+- [ ] No selected category → random from all eligible content.
+- [ ] Selected categories → random only within those categories.
+- [ ] Word Family Mode → filter `game_categories.is_family_friendly = true`.
+- [ ] App receives only published content.
 
 ---
 
 ## Phase 13 — Verification checklist
 
-- [ ] Admin login thành công.
-- [ ] Non-admin bị chặn.
-- [ ] Admin logout thành công.
-- [ ] Anonymous không sửa được content.
-- [ ] Anonymous chỉ đọc content published.
-- [ ] Admin tạo category thành công.
-- [ ] Admin tạo word prompt thành công.
-- [ ] Admin upload ảnh thành công.
-- [ ] Admin tạo question prompt thành công.
-- [ ] Draft không xuất hiện trong app người chơi.
-- [ ] Archive không xuất hiện trong app người chơi.
-- [ ] Family Mode chỉ lấy content có `is_family_friendly = true`.
-- [ ] Chọn nhiều category lọc đúng content.
-- [ ] Không chọn category random đúng toàn bộ tập content.
-- [ ] `service_role` không xuất hiện trong frontend hoặc Git.
+- [ ] Admin login succeeds.
+- [ ] Non-admins are blocked.
+- [ ] Admin logout succeeds.
+- [ ] Anonymous cannot modify content.
+- [ ] Anonymous reads only published content.
+- [ ] Admin creates categories.
+- [ ] Admin creates word prompts.
+- [ ] Admin uploads images.
+- [ ] Admin creates question prompts.
+- [ ] Drafts do not appear in the player app.
+- [ ] Archived content does not appear in the player app.
+- [ ] Family Mode includes only words under `game_categories.is_family_friendly = true` categories.
+- [ ] Multiple categories filter content correctly.
+- [ ] No category selection randomizes across the entire content set.
+- [ ] `service_role` appears in neither frontend nor Git.
 
 ## Definition of Done
 
-- [ ] Migration nằm trong `supabase/migrations/` và chạy được từ đầu.
-- [ ] Schema Cloud khớp với migration trong repository.
-- [ ] RLS đã được bật và kiểm thử.
-- [ ] Có admin Auth user và bản ghi tương ứng trong `admin_users`.
-- [ ] Admin Vue login/logout hoạt động.
-- [ ] Admin CRUD được categories và hai loại content.
-- [ ] App người chơi chỉ đọc được content published.
-- [ ] Family Mode và category filtering hoạt động đúng.
-- [ ] Ảnh word prompt upload và hiển thị được.
+- [ ] Migrations are in `supabase/migrations/` and run from scratch.
+- [ ] Cloud schema matches repository migrations.
+- [ ] RLS is enabled and tested.
+- [ ] Admin Auth user has a corresponding `admin_users` record.
+- [ ] Vue Admin login/logout works.
+- [ ] Admin CRUD works for categories and both content types.
+- [ ] Player app reads only published content.
+- [ ] Family Mode and category filtering work correctly.
+- [ ] Word prompt images upload and display.

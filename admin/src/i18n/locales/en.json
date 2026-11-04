@@ -118,7 +118,6 @@
       "empty": "No data quality warnings.",
       "emptyCategories": "Categories without content: {count}",
       "duplicateQuestions": "Identical civilian and imposter questions: {count}",
-      "nonFamilyEasyPrompts": "Easy prompts not marked as family friendly: {count}",
       "wordPrompts": "Word prompts",
       "questionPrompts": "Question prompts"
     }
@@ -145,7 +144,8 @@
       "name": "Category name",
       "slug": "Slug",
       "sortOrder": "Display order",
-      "description": "Description"
+      "description": "Description",
+      "isFamilyFriendly": "Family mode"
     },
     "filters": {
       "all": "All",
@@ -213,7 +213,9 @@
       "confirmPurge": "Permanently delete everything",
       "originals": "Original prompts: {total} (word: {word}, question: {question})",
       "translations": "Prompt translations by status"
-    }
+    },
+    "yes": "Yes",
+    "no": "No"
   },
   "wordPrompts": {
     "title": "Word content",
@@ -227,7 +229,6 @@
     "fields": {
       "categoryId": "Category",
       "difficulty": "Difficulty",
-      "isFamilyFriendly": "Family friendly",
       "locale": "Content language",
       "imagePath": "Image",
       "status": "Status",
@@ -313,7 +314,6 @@
     "fields": {
       "categoryId": "Category",
       "difficulty": "Difficulty",
-      "isFamilyFriendly": "Family friendly",
       "locale": "Content language",
       "status": "Status",
       "updatedAt": "Updated",

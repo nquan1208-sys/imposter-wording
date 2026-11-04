@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:untitled/base/store/auto_dispose_manager.dart';
 import 'package:untitled/store/app_store.dart';
+import '../../data/memory_app_settings_storage.dart';
 
 void main() {
   group('AutoDisposeManager', () {
@@ -41,30 +41,19 @@ void main() {
   });
 
   group('AppStore', () {
-    late ProviderContainer container;
+    AppStore createStore() => AppStore(MemoryAppSettingsStorage());
 
-    AppStore createStore() {
-      final provider = Provider<AppStore>((ref) => AppStore(ref));
-      return container.read(provider);
-    }
-
-    setUp(() {
-      container = ProviderContainer();
-    });
-
-    tearDown(() {
-      container.dispose();
-    });
-
-    test('locale defaults to Vietnamese and updates', () {
+    test('locale defaults to Vietnamese and updates', () async {
       final store = createStore();
+      await store.restore();
 
       expect(store.locale, isA<Signal<Locale>>());
       expect(store.locale.value, const Locale('vi'));
 
-      store.setLocale(const Locale('en'));
+      expect(await store.setLocale(const Locale('en')), isTrue);
 
       expect(store.locale.value, const Locale('en'));
+      store.dispose();
     });
 
     test('dispose() disposes owned locale signal', () {

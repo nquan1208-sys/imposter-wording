@@ -47,6 +47,14 @@ class AppConfig {
         '$file: SUPABASE_URL must be an HTTP(S) URL with a host.',
       );
     }
+    if (uri.userInfo.isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment ||
+        (environment != 'local' && uri.scheme != 'https')) {
+      throw StateError(
+        '$file: use a plain backend URL; Dev and Prod require HTTPS.',
+      );
+    }
     if (!key.startsWith('sb_publishable_') ||
         key.length <= 'sb_publishable_'.length) {
       throw StateError(
