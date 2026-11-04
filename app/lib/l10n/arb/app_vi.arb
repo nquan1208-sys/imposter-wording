@@ -1,5 +1,6 @@
 {
-  "appTitle": "Kẻ mạo danh",
+  "appTitle": "OddCue",
+  "startupError": "Chưa thể tải xong dữ liệu. Bạn có thể thử lại hoặc vào trang chủ.",
   "tagline": "Trò chơi từ ngữ",
   "appDescription": "Trò chơi tiệc tùng với từ bí mật và những gợi ý khéo léo. Tìm ra kẻ mạo danh trước khi họ hòa nhập!",
   "start": "Bắt đầu",

@@ -1,4 +1,5 @@
 import 'package:untitled/features/settings/content_language_screen.dart';
+import 'package:untitled/features/splash/splash_screen.dart';
 import 'package:untitled/features/player_presets/player_presets_screen.dart';
 import 'package:untitled/features/question_game/question_game_screen.dart';
 import 'package:untitled/features/question_game/question_game_store.dart';
@@ -15,6 +16,10 @@ import 'package:untitled/features/custom_content/custom_word_screen.dart';
 import 'package:untitled/features/settings/settings_screen.dart';
 
 class RouteScreen {
+  static PageRoute splashPageRoute(RouteSettings settings) => MaterialPageRoute(
+    settings: settings,
+    builder: (_) => const SplashScreen(),
+  );
   static PageRoute customWordsPageRoute(RouteSettings settings) =>
       MaterialPageRoute(
         settings: settings,

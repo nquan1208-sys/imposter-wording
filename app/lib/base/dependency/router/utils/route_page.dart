@@ -6,6 +6,8 @@ import 'package:untitled/base/dependency/router/utils/route_name.dart';
 class RoutePage {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case RouteName.splash:
+        return RouteScreen.splashPageRoute(settings);
       case RouteName.customWords:
         return RouteScreen.customWordsPageRoute(settings);
       case RouteName.questionGame:

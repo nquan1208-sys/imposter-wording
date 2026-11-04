@@ -61,7 +61,7 @@ void main() {
         ThemeMode.dark,
       );
       expect(
-        Theme.of(tester.element(find.text('Kẻ mạo danh'))).brightness,
+        Theme.of(tester.element(find.text('OddCue'))).brightness,
         Brightness.dark,
       );
       final systemBars = tester
@@ -79,7 +79,7 @@ void main() {
       await tester.tap(find.text('Về trang chủ'));
       await tester.pumpAndSettle();
       await navigation;
-      expect(find.text('Kẻ mạo danh'), findsOneWidget);
+      expect(find.text('OddCue'), findsOneWidget);
       expect(find.text('Về trang chủ'), findsNothing);
     },
   );
@@ -120,7 +120,7 @@ void main() {
   ) async {
     await pumpApp(tester);
 
-    expect(find.text('Kẻ mạo danh'), findsOneWidget);
+    expect(find.text('OddCue'), findsOneWidget);
     expect(find.text('Trò chơi từ ngữ'), findsOneWidget);
     final start = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Bắt đầu'),
@@ -201,7 +201,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Imposter'), findsOneWidget);
+    expect(find.text('OddCue'), findsOneWidget);
     expect(find.text('How to play'), findsOneWidget);
     expect(find.text('Coming soon'), findsNothing);
     expect(

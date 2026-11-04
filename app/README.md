@@ -1,4 +1,4 @@
-# EscapeCall Mobile
+# OddCue Mobile
 
 Flutter mobile app with Signals state management, Riverpod DI, a CrazyGames-inspired dark theme (`lib/theme`) and VI/EN localization (default VI).
 
@@ -40,21 +40,35 @@ every build and can be extracted, including the files not selected at startup.
 Open the repository root in VS Code/Cursor with the Flutter extension installed.
 In **Run and Debug**, select **Flutter Local**, **Flutter Dev** or **Flutter Prod**,
 select your device, then press F5. All three launch in debug mode with breakpoints
-and hot reload, using the same app ID; they cannot be installed side by side.
+and hot reload. Each environment has its own native flavor and display name:
 
 Equivalent terminal commands:
 
 ```sh
-flutter run --dart-define=APP_ENV=local
-flutter run --dart-define=APP_ENV=dev
-flutter run --dart-define=APP_ENV=prod
+flutter run --flavor local
+flutter run --flavor dev
+flutter run --flavor prod
 ```
 
-`APP_ENV` selects the file loaded by `flutter_dotenv` before `runApp`. It defaults
-to `local`. Unknown environments, missing/empty files, invalid URLs and missing
-or invalid publishable keys stop startup with a configuration error. There is no
+| Flavor | Home-screen name | Android application ID / iOS bundle ID |
+| --- | --- | --- |
+| `local` | OddCue Local | `com.example.untitled.local` |
+| `dev` | OddCue Dev | `com.example.untitled.dev` |
+| `prod` | OddCue | `com.example.untitled` |
+
+The flavors can be installed side by side. Local and Dev use new app containers,
+so existing data under the original ID stays with Prod; it is not copied to them.
+`flutter run` defaults to the `local` flavor through `pubspec.yaml`.
+The selected flavor chooses the file loaded by `flutter_dotenv` before `runApp`.
+`APP_ENV` remains compatible when it matches the native flavor; a mismatch stops
+startup instead of opening a differently named backend. Unknown environments,
+missing/empty files, invalid URLs and missing or invalid publishable keys stop
+startup with a configuration error. There is no
 fallback to another environment. Dev and Prod cannot start until configured.
 After changing env values or environments, stop and run again.
+
+Native flavors follow Flutter's [Android guide](https://docs.flutter.dev/deployment/flavors)
+and [iOS scheme guide](https://docs.flutter.dev/deployment/flavors-ios).
 
 Start the local Supabase stack from the repository root with `supabase start`.
 Use `http://127.0.0.1:54321` for iOS Simulator. For Android Emulator, edit
@@ -66,6 +80,26 @@ from `package:untitled/config/app_config.dart`. Startup initializes Supabase wit
 the publishable key and no player session, then starts one shared background
 content load. Dev and Prod require HTTPS. Local HTTP is enabled only in Android
 debug and iOS Debug configuration; Release/Profile retain platform TLS protections.
+
+### Splash and startup
+
+Android and iOS show the bundled OddCue logo centered on the app's dark canvas
+while Flutter initializes. Android 12+ uses the system splash API with a padded
+logo safe area; earlier Android versions use density-specific launch drawables.
+iOS uses the LaunchScreen storyboard and 1x/2x/3x image assets. This native screen
+hands off to the Dart `SplashScreen` when Flutter draws its first frame.
+
+The Dart screen shows the same local logo for at least **300 ms** and waits for
+app preferences, saved setup, the selected-language content load, and the language
+list. Previously loaded data remains usable when a refresh fails. Startup without
+usable content or readable settings shows Retry and Back to home; continuing does
+not bypass setup's validation. Image downloads continue in the background. Splash
+is replaced by the landing route, so Back cannot reopen it. If data loading is
+removed later, the minimum 300 ms display still applies.
+
+Logo source: `assets/branding/oddcue-icon.png`. Launch images are native resources,
+so changing them or the home-screen name requires a full rebuild/reinstall, not hot
+reload. iOS can retain cached launch imagery until the app is reinstalled.
 
 ### Word setup and offline content
 
@@ -103,8 +137,8 @@ can change; pagination and Family filtering are also covered with fixtures.
 Fill in production config first:
 
 ```sh
-flutter build appbundle --release --dart-define=APP_ENV=prod
-flutter build ipa --release --dart-define=APP_ENV=prod
+flutter build appbundle --release --flavor prod
+flutter build ipa --release --flavor prod
 ```
 
 IPA builds require macOS/Xcode and signing configuration. Config validation runs
@@ -115,7 +149,7 @@ at application startup, including release; building alone does not validate keys
 ```sh
 flutter analyze
 flutter test
-flutter test integration_test/setup_smoke_test.dart -d <ios-simulator-id> --dart-define=APP_ENV=local
+flutter test integration_test/setup_smoke_test.dart -d <ios-simulator-id> --flavor local
 ```
 
 The integration smoke test requires the current Local Supabase dataset. It reads
