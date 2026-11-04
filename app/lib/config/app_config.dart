@@ -1,4 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart' show appFlavor;
 
 class AppConfig {
   static late final AppConfig current;
@@ -16,9 +17,15 @@ class AppConfig {
   static Future<AppConfig> load({
     String environment = const String.fromEnvironment(
       'APP_ENV',
-      defaultValue: 'local',
+      defaultValue: appFlavor ?? 'local',
     ),
   }) async {
+    const definedEnvironment = String.fromEnvironment('APP_ENV');
+    if (appFlavor != null &&
+        definedEnvironment.isNotEmpty &&
+        definedEnvironment != appFlavor) {
+      throw StateError('APP_ENV must match --flavor ($appFlavor).');
+    }
     if (!const ['local', 'dev', 'prod'].contains(environment)) {
       throw StateError('APP_ENV must be local, dev or prod.');
     }

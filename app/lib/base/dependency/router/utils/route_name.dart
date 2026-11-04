@@ -1,4 +1,5 @@
 class RouteName {
+  static const splash = 'splash';
   static const customWords = 'custom-words';
   static const landing = 'landing';
   static const howToPlay = 'how-to-play';

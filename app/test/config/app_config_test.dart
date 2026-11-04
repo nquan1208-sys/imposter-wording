@@ -46,10 +46,22 @@ void main() {
     });
   }
 
-  test('defaults to local', () async {
-    files['env/.env.local'] = valid;
-    expect((await AppConfig.load()).environment, 'local');
+  test('defaults to the native flavor or local', () async {
+    final expected = appFlavor ?? 'local';
+    files['env/.env.$expected'] = valid;
+    expect((await AppConfig.load()).environment, expected);
   });
+
+  test(
+    'rejects APP_ENV that differs from the native flavor',
+    () async {
+      await expectLater(AppConfig.load(), throwsStateError);
+    },
+    skip:
+        appFlavor == null ||
+        const String.fromEnvironment('APP_ENV').isEmpty ||
+        const String.fromEnvironment('APP_ENV') == appFlavor,
+  );
 
   test('HTTP is restricted to local development', () async {
     final http = valid.replaceFirst(

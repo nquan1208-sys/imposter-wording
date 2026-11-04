@@ -3,6 +3,8 @@ import 'package:untitled/models/game_setup.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:untitled/base/dependency/app_service.dart';
+import 'package:untitled/base/dependency/router/utils/route_input.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -77,6 +79,10 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(container: container, child: const MyApp()),
     );
+    if (!load) {
+      // This case tests setup's loading state independently of startup gating.
+      container.read(AppService.router).pushReplacement(RouteInput.landing());
+    }
     await tester.pumpAndSettle();
     await tester.tap(find.text(english ? 'Start' : 'Bắt đầu'));
     await tester.pumpAndSettle();

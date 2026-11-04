@@ -134,10 +134,26 @@ Use the local stack's **publishable** key; the app validates the `sb_publishable
 | Physical device | Your computer's reachable LAN IP, using port `54321` |
 
 ```sh
-flutter run --dart-define=APP_ENV=local
+flutter run --flavor local
 ```
 
-`APP_ENV` accepts `local`, `dev`, and `prod`, and defaults to `local`. Configure the corresponding file before choosing Dev or Prod; both require HTTPS. Restart the app after changing environment values. VS Code/Cursor launch profiles are also available.
+Native flavors select the backend environment and home-screen name:
+
+| Flavor | Name under the app icon | Run command |
+| --- | --- | --- |
+| Local (default) | OddCue Local | `flutter run --flavor local` |
+| Dev | OddCue Dev | `flutter run --flavor dev` |
+| Production | OddCue | `flutter run --flavor prod` |
+
+Local and Dev have separate application IDs and can be installed alongside Prod.
+Their local data starts in separate app containers; existing data under the original
+ID remains with Prod. Configure the matching environment file before choosing Dev
+or Prod; both require HTTPS. An explicit `APP_ENV` must match the native flavor.
+VS Code/Cursor launch profiles select the matching flavor automatically.
+
+All flavors use the bundled OddCue logo for native launch and a Dart splash that
+waits for startup data, with a minimum display of 300 ms and retry on failure. Restart after
+changing environment values; rebuild/reinstall for native splash or name changes.
 
 Only public client keys belong in these files: **all three environment files are bundled into every build**. Never include secret keys, service-role keys, or passwords.
 
@@ -173,8 +189,8 @@ Run in `app/`:
 ```sh
 flutter analyze
 flutter test
-flutter build appbundle --release --dart-define=APP_ENV=prod
-flutter build ipa --release --dart-define=APP_ENV=prod
+flutter build appbundle --release --flavor prod
+flutter build ipa --release --flavor prod
 ```
 
 Production builds need production environment settings; IPA builds also need macOS/Xcode and signing configuration. Environment validation happens at startup, so a successful build alone does not verify the configuration.
