@@ -1,48 +1,48 @@
-# Guide chạy dự án trên thiết bị mới
+# Guide to Running the Project on a New Machine
 
-Hợp đồng Family Mode hiện hành và quy trình nâng cấp local: [Family Mode theo danh mục](family-mode.md).
-Tài liệu này hướng dẫn thiết lập repository `imposter-wording` trên một máy
-mới, bao gồm:
+Current Family Mode contract and local upgrade procedure: [Category-Based Family Mode](family-mode.md).
+This guide sets up the `imposter-wording` repository on a new machine,
+including:
 
-- Admin Vue/Vite trong thư mục `admin/`.
-- Database, Auth, RLS và migration của Supabase trong thư mục `supabase/`.
-- Hai cách kết nối Supabase: project Dev trên cloud hoặc Supabase local.
+- Vue/Vite Admin in `admin/`.
+- Supabase database, Auth, RLS, and migrations in `supabase/`.
+- Two Supabase connections: Dev cloud or local Supabase.
 
-Guide này được viết dựa trên `docs/admin-supabase-setup-plan.md` và trạng thái
-thực tế của repository.
+Based on `docs/admin-supabase-setup-plan.md` and the repository's
+actual state.
 
-> **Trạng thái 2026-10-24:** local đã có login, route guard, CRUD đa ngôn ngữ,
-> dashboard và bucket private `word-prompt-images`. Dev cloud đang INACTIVE và
-> chưa triển khai bộ migrations translations. Dùng local trước; không push cloud
-> theo quickstart khi chưa làm [quy trình cutover](./plans/admin-content-translations/admin-content-translations-phase-6.md).
+> **Status 2026-10-24:** local includes login, route guards, multilingual CRUD,
+> dashboard, and private `word-prompt-images` bucket. Dev cloud is INACTIVE and
+> translation migrations are not deployed. Use local first; do not push cloud
+> through the quickstart before following the [cutover procedure](./plans/admin-content-translations/admin-content-translations-phase-6.md).
 
-## 1. Chọn cách chạy
+## 1. Choose how to run
 
-### Cách A — Dev cloud, sau khi hoàn tất cutover
+### Option A — Dev cloud, after cutover
 
-Chọn cách này nếu mục tiêu là chạy code Admin trên máy mới và dùng chung
-database Dev hiện tại.
+Choose this to run Admin on a new machine using the existing shared
+Dev database.
 
-- Không cần Docker.
-- Không cần `supabase start`.
-- Cần quyền truy cập Supabase project Dev và Publishable key.
-- Dữ liệu thao tác trên cloud là dữ liệu dùng chung, nên không dùng để thử
-  những migration hoặc dữ liệu có tính phá huỷ.
+- No Docker required.
+- No `supabase start` required.
+- Requires Dev project access and Publishable key.
+- Cloud data is shared; do not use it to test destructive migrations
+  or data operations.
 
-### Cách B — Supabase local, đầy đủ và an toàn hơn
+### Option B — Local Supabase, more complete and safer
 
-Chọn cách này khi cần kiểm tra migration/RLS hoặc muốn thử dữ liệu riêng trên
-máy.
+Choose this to test migrations/RLS or experiment with independent local
+data.
 
-- Cần Docker Desktop, OrbStack hoặc runtime tương thích Docker.
-- Cần Supabase CLI.
-- Dữ liệu local độc lập với project Dev cloud.
+- Requires Docker Desktop, OrbStack, or a Docker-compatible runtime.
+- Requires Supabase CLI.
+- Local data is independent of Dev cloud.
 
-Hiện tại dùng **Cách B** để mở Admin. Cách A chỉ dùng sau khi Dev hoạt động và schema đã tương thích.
+Currently use **Option B** to open Admin. Option A is available only when Dev is running with a compatible schema.
 
-### Lộ trình Dev cloud — chỉ sau cutover
+### Dev cloud path — only after cutover
 
-Sau khi cài Git, Node.js và Yarn, các lệnh chính là:
+After installing Git, Node.js, and Yarn, the main commands are:
 
 ```bash
 git clone <REPOSITORY_URL>
@@ -51,25 +51,25 @@ cd imposter-wording
 cd admin
 yarn install --frozen-lockfile
 cp .env.example .env.development.local
-# Mở .env.development.local và điền Project URL + Publishable key
+# Open .env.development.local and enter Project URL + Publishable key
 
 cd ..
 supabase login
 supabase link --project-ref pxycsjwjakzehcuygngv
 supabase migration list --linked
-# Nếu còn migration pending: thực hiện quy trình cutover, không push trực tiếp.
+# If migrations are pending, follow the cutover procedure; do not push directly.
 
 cd admin
 yarn dev:development
 ```
 
-Chỉ chạy `yarn dev:development` khi Dev đã hoạt động và ledger khớp schema admin mới.
+Run `yarn dev:development` only when Dev is active and its ledger matches the new admin schema.
 
-## 2. Những thứ cần chuẩn bị
+## 2. Prerequisites
 
-### 2.1. Công cụ bắt buộc
+### 2.1. Required tools
 
-Kiểm tra các công cụ đã có:
+Check installed tools:
 
 ```bash
 git --version
@@ -78,13 +78,13 @@ npm --version
 yarn --version
 ```
 
-Khuyến nghị:
+Recommended:
 
-- Node.js 20 trở lên.
-- Yarn `1.22.22`, đúng với `packageManager` trong `admin/package.json`.
+- Node.js 20 or later.
+- Yarn `1.22.22`, matching `packageManager` in `admin/package.json`.
 - Git.
 
-Nếu máy chưa có Yarn 1.22.22, có thể cài bằng Corepack:
+If Yarn 1.22.22 is missing, install through Corepack:
 
 ```bash
 corepack enable
@@ -92,56 +92,56 @@ corepack prepare yarn@1.22.22 --activate
 yarn --version
 ```
 
-Nếu `corepack` không có trên máy, dùng npm:
+If `corepack` is unavailable, use npm:
 
 ```bash
 npm install --global yarn@1.22.22
 yarn --version
 ```
 
-### 2.2. Công cụ chỉ cần cho Supabase local
+### 2.2. Tools needed only for local Supabase
 
-`supabase start` chạy nhiều service bằng container. Cài và mở một trong các
-lựa chọn sau:
+`supabase start` runs multiple services in containers. Install and open one
+of these:
 
-- macOS: OrbStack hoặc Docker Desktop.
-- Windows/Linux: Docker Desktop, Rancher Desktop hoặc Podman tương thích
+- macOS: OrbStack or Docker Desktop.
+- Windows/Linux: Docker Desktop, Rancher Desktop, or Podman compatible with
   Docker API.
 
-Kiểm tra Docker daemon:
+Check Docker daemon:
 
 ```bash
 docker --version
 docker info
 ```
 
-Nếu `docker info` báo không kết nối được daemon, hãy mở Docker Desktop hoặc
-OrbStack rồi chạy lại lệnh.
+If `docker info` cannot connect to the daemon, open Docker Desktop or
+OrbStack and rerun it.
 
-Cài Supabase CLI trên macOS bằng Homebrew:
+Install Supabase CLI on macOS with Homebrew:
 
 ```bash
 brew install supabase/tap/supabase
 supabase --version
 ```
 
-Nếu không muốn cài global, có thể dùng CLI qua `npx` với Node.js 20 trở lên:
+Without global installation, use `npx` with Node.js 20 or later:
 
 ```bash
 npx supabase --version
 ```
 
-Trong phần còn lại, các lệnh được viết bằng `supabase`. Nếu dùng cách `npx`,
-đổi tương ứng, ví dụ:
+Remaining examples use `supabase`. For `npx`, adapt commands,
+for example:
 
 ```bash
 npx supabase start
 npx supabase db push
 ```
 
-## 3. Clone repository trên máy mới
+## 3. Clone the repository on a new machine
 
-Thay `<REPOSITORY_URL>` bằng URL Git thật của repository:
+Replace `<REPOSITORY_URL>` with the actual repository Git URL:
 
 ```bash
 git clone <REPOSITORY_URL>
@@ -149,13 +149,13 @@ cd imposter-wording
 git status
 ```
 
-Nếu repository yêu cầu SSH và máy mới chưa có SSH key, có thể kiểm tra remote:
+If SSH is required and no key is configured, inspect the remote:
 
 ```bash
 git remote -v
 ```
 
-Kiểm tra các file quan trọng đã có:
+Check essential files exist:
 
 ```bash
 test -f admin/package.json && echo "admin/package.json: OK"
@@ -163,107 +163,107 @@ test -f supabase/config.toml && echo "supabase/config.toml: OK"
 test -d supabase/migrations && echo "supabase/migrations: OK"
 ```
 
-Không cần chạy `supabase init` trên máy mới. Thư mục `supabase/` và
-`config.toml` đã được commit trong repository; chạy `supabase init` lần nữa có
-thể làm thay đổi cấu hình hiện có.
+Do not run `supabase init` on the new machine. `supabase/` and
+`config.toml` are committed; rerunning `supabase init` may
+change existing configuration.
 
-## 4. Cài dependency cho Admin
+## 4. Install Admin dependencies
 
-Từ thư mục gốc repository:
+From the repository root:
 
 ```bash
 cd admin
 yarn install --frozen-lockfile
 ```
 
-Lệnh này cài đúng các package theo `admin/yarn.lock`, gồm Vue, Vite và
-`@supabase/supabase-js`.
+This installs exact packages from `admin/yarn.lock`, including Vue, Vite,
+and `@supabase/supabase-js`.
 
-Kiểm tra package đã được cài:
+Check installation:
 
 ```bash
 yarn --version
 test -d node_modules && echo "node_modules: OK"
 ```
 
-Quay lại thư mục gốc khi cần chạy lệnh Supabase:
+Return to the root for Supabase commands:
 
 ```bash
 cd ..
 pwd
 ```
 
-## 5. Tạo file environment cho Admin
+## 5. Create Admin environment files
 
-Các file `*.local` không được commit. Mỗi mode của Vite dùng một file riêng:
+Do not commit `*.local`. Each Vite mode uses its own file:
 
-| Mục đích | Vite mode | File | Supabase target |
+| Purpose | Vite mode | File | Supabase target |
 | --- | --- | --- | --- |
-| Local | `localdev` | `admin/.env.local` | Supabase local |
-| Development | `development` | `admin/.env.development.local` | Project Dev cloud |
-| Production | `production` | `admin/.env.production.local` | Chưa cấu hình |
+| Local | `localdev` | `admin/.env.local` | Local Supabase |
+| Development | `development` | `admin/.env.development.local` | Dev cloud project |
+| Production | `production` | `admin/.env.production.local` | Not configured |
 
-Frontend chỉ được dùng hai biến sau:
+Frontend may use only these two variables:
 
 ```env
 VITE_SUPABASE_URL=...
 VITE_SUPABASE_PUBLISHABLE_KEY=...
 ```
 
-Không đưa các giá trị sau vào file `VITE_*`:
+Never put these values in `VITE_*` files:
 
 - `service_role key`.
 - Secret key.
 - Database password.
 - JWT secret.
 
-Các biến `VITE_*` được bundle vào browser. RLS là lớp bảo vệ chính cho các
-request từ frontend.
+`VITE_*` values are browser-bundled. RLS is the primary protection for
+frontend requests.
 
-### 5.1. Cấu hình Dev cloud
+### 5.1. Configure Dev cloud
 
-Copy file mẫu:
+Copy the example:
 
 ```bash
 cd admin
 cp .env.example .env.development.local
 ```
 
-Mở file bằng editor bất kỳ:
+Open in any editor:
 
 ```bash
 nano .env.development.local
 ```
 
-Điền:
+Enter:
 
 ```env
 VITE_SUPABASE_URL=https://pxycsjwjakzehcuygngv.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<PUBLISHABLE_KEY_LẤY_TỪ_SUPABASE_DASHBOARD>
+VITE_SUPABASE_PUBLISHABLE_KEY=<PUBLISHABLE_KEY_FROM_SUPABASE_DASHBOARD>
 ```
 
-Lấy key tại Supabase Dashboard của project `imposter-word`:
+Get the key from the `imposter-word` Supabase Dashboard:
 
-1. Mở project `imposter-word`.
-2. Vào **Project Settings → API** hoặc **Connect**.
+1. Open project `imposter-word`.
+2. Open **Project Settings → API** or **Connect**.
 3. Copy **Publishable key**.
-4. Dán vào `VITE_SUPABASE_PUBLISHABLE_KEY`.
+4. Paste into `VITE_SUPABASE_PUBLISHABLE_KEY`.
 
-Không copy `service_role` hoặc Secret key.
+Do not copy `service_role` or Secret keys.
 
-Kiểm tra file tồn tại nhưng không in key ra terminal:
+Check the file exists without printing the key:
 
 ```bash
 test -s .env.development.local && echo "Dev env file: OK"
 ```
 
-### 5.2. Cấu hình Supabase local
+### 5.2. Configure local Supabase
 
-Chưa cần tạo file này trước khi `supabase start`, vì local key được CLI in ra
-sau khi stack khởi động. Trước hết quay về root và khởi động local stack theo
-phần 6. Sau đó lấy `API URL` và `anon key` từ `supabase status`.
+This file is not needed before `supabase start`; CLI prints the local key
+after startup. Return to the root and start the local stack per
+section 6, then get `API URL` and `anon key` from `supabase status`.
 
-Tạo file:
+Create:
 
 ```bash
 cd admin
@@ -271,66 +271,66 @@ cp .env.example .env.local
 nano .env.local
 ```
 
-Điền URL local:
+Enter local URL:
 
 ```env
 VITE_SUPABASE_URL=http://127.0.0.1:54321
-VITE_SUPABASE_PUBLISHABLE_KEY=<ANON_KEY_DO_SUPABASE_STATUS_IN_RA>
+VITE_SUPABASE_PUBLISHABLE_KEY=<ANON_KEY_FROM_SUPABASE_STATUS>
 ```
 
-Với local stack, CLI thường gọi key dùng cho frontend là `anon key`. Dùng
-key đó ở biến `VITE_SUPABASE_PUBLISHABLE_KEY`; không dùng `service_role key`.
+For local stacks, CLI usually calls the frontend key `anon key`. Use
+it in `VITE_SUPABASE_PUBLISHABLE_KEY`, never `service_role key`.
 
-## 6. Cách B — Dựng Supabase local
+## 6. Option B — Set up local Supabase
 
-Thực hiện từ thư mục gốc `imposter-wording`.
+Run from the `imposter-wording` root.
 
-### 6.1. Khởi động stack
+### 6.1. Start the stack
 
 ```bash
 cd /path/to/imposter-wording
 supabase start
 ```
 
-Lần đầu chạy có thể mất vài phút vì CLI tải các Docker image. Khi thành công,
-kiểm tra trạng thái:
+First startup may take minutes while CLI downloads Docker images. On success,
+check status:
 
 ```bash
 supabase status
 ```
 
-Các giá trị quan trọng:
+Important values:
 
-- API URL: thường là `http://127.0.0.1:54321`.
-- Studio URL: thường là `http://127.0.0.1:54323`.
-- Mailpit URL: thường là `http://127.0.0.1:54324`.
-- `anon key`: dùng cho `admin/.env.local`.
+- API URL: usually `http://127.0.0.1:54321`.
+- Studio URL: usually `http://127.0.0.1:54323`.
+- Mailpit URL: usually `http://127.0.0.1:54324`.
+- `anon key`: for `admin/.env.local`.
 
-Mở Supabase Studio local:
+Open local Supabase Studio:
 
 ```text
 http://127.0.0.1:54323
 ```
 
-Nếu repository có migration, Supabase sẽ dùng các file trong
-`supabase/migrations/`. Kiểm tra lịch sử migration local:
+Supabase uses repository migrations from
+`supabase/migrations/`. Check local history:
 
 ```bash
 supabase migration list
 ```
 
-### 6.2. Reset database local từ migration
+### 6.2. Reset local database from migrations
 
-Chỉ chạy lệnh này khi chấp nhận xoá toàn bộ database local:
+Run only if you accept deleting the entire local database:
 
 ```bash
 supabase db reset --local
 ```
 
-Lệnh sẽ xoá database local, chạy lại các migration theo thứ tự thời gian và
-chạy seed nếu repository có seed file. Không chạy lệnh này trên project cloud.
+This deletes the local DB, replays migrations chronologically, and
+runs seeds if present. Do not run against a cloud project.
 
-Kiểm tra nhanh các bảng sau khi reset bằng Supabase Studio hoặc SQL Editor:
+Check tables after reset in Studio or SQL Editor:
 
 ```sql
 select table_name
@@ -349,7 +349,7 @@ where table_schema = 'public'
 order by table_name;
 ```
 
-Kiểm tra RLS:
+Check RLS:
 
 ```sql
 select schemaname, tablename, rowsecurity
@@ -368,28 +368,28 @@ where schemaname = 'public'
 order by tablename;
 ```
 
-`rowsecurity` cần là `true` cho cả tám bảng.
+`rowsecurity` must be `true` for all eight tables.
 
-### 6.3. Tạo admin user local để test
+### 6.3. Create a local admin user for testing
 
-User local chỉ tồn tại trong Supabase local. User này không đăng nhập được vào
-project Dev cloud.
+Local users exist only in local Supabase and cannot log into
+Dev cloud.
 
-Có thể mở Studio local:
+Open local Studio:
 
 ```text
 http://127.0.0.1:54323
 ```
 
-Sau đó:
+Then:
 
-1. Vào **Authentication → Users**.
-2. Chọn **Add user**.
-3. Nhập email/password test.
-4. Bật **Auto Confirm** nếu muốn đăng nhập ngay.
-5. Ghi lại email của user.
+1. Open **Authentication → Users**.
+2. Choose **Add user**.
+3. Enter test email/password.
+4. Enable **Auto Confirm** for immediate login if desired.
+5. Record the user's email.
 
-Trong SQL Editor local, chạy:
+Run in local SQL Editor:
 
 ```sql
 insert into public.admin_users (user_id, role, is_active)
@@ -401,7 +401,7 @@ set role = 'admin',
     is_active = true;
 ```
 
-Thay `admin.local@example.com` bằng email vừa tạo. Kiểm tra:
+Replace `admin.local@example.com` with the newly created email. Check:
 
 ```sql
 select au.user_id, u.email, au.role, au.is_active
@@ -409,108 +409,108 @@ from public.admin_users au
 join auth.users u on u.id = au.user_id;
 ```
 
-### 6.4. Chạy Admin với local stack
+### 6.4. Run Admin with the local stack
 
-Mở terminal thứ hai, để terminal chạy `supabase start` tiếp tục hoạt động:
+Open a second terminal, leaving the `supabase start` terminal active:
 
 ```bash
 cd /path/to/imposter-wording/admin
 yarn dev:local
 ```
 
-Mở URL Vite in ra terminal, thường là:
+Open the URL printed by Vite, usually:
 
 ```text
 http://localhost:5173
 ```
 
-Nếu bị thiếu biến môi trường, kiểm tra đúng mode và đúng tên file:
+For missing environment variables, verify mode and filename:
 
-- `yarn dev:local` đọc `.env.local`.
-- `yarn dev:development` đọc `.env.development.local`.
+- `yarn dev:local` reads `.env.local`.
+- `yarn dev:development` reads `.env.development.local`.
 
-### 6.5. Dừng và chạy lại local stack
+### 6.5. Stop and restart local stack
 
-Dừng stack nhưng giữ dữ liệu local:
+Stop while retaining local data:
 
 ```bash
 cd /path/to/imposter-wording
 supabase stop
 ```
 
-Chạy lại:
+Restart:
 
 ```bash
 supabase start
 ```
 
-Muốn xoá dữ liệu local và dựng lại từ migration:
+To delete local data and rebuild from migrations:
 
 ```bash
 supabase db reset --local
 ```
 
-## 7. Cách A — Kết nối project Dev cloud
+## 7. Option A — Connect to Dev cloud
 
-### 7.1. Đăng nhập Supabase CLI
+### 7.1. Log into Supabase CLI
 
-Từ thư mục gốc:
+From the root:
 
 ```bash
 cd /path/to/imposter-wording
 supabase login
 ```
 
-CLI sẽ mở trình duyệt hoặc yêu cầu access token. Dùng tài khoản có quyền truy
-cập project `imposter-word`.
+CLI opens a browser or requests an access token. Use an account with
+access to `imposter-word`.
 
-Kiểm tra project có thể nhìn thấy:
+Check visible projects:
 
 ```bash
 supabase projects list
 ```
 
-### 7.2. Link repository với project Dev
+### 7.2. Link repository to Dev
 
-Project ref hiện tại là `pxycsjwjakzehcuygngv`:
+Current project ref: `pxycsjwjakzehcuygngv`:
 
 ```bash
 supabase link --project-ref pxycsjwjakzehcuygngv
 ```
 
-CLI có thể hỏi database password của project. Đây là database password của
-Supabase project, không phải Publishable key. Không lưu password vào Git hoặc
-file `VITE_*`.
+CLI may request the project's database password. This is the Supabase
+project database password, not the Publishable key. Do not store it in Git
+or `VITE_*` files.
 
-Kiểm tra migration local và cloud:
+Check local/cloud migrations:
 
 ```bash
 supabase migration list --linked
 ```
 
-### 7.3. Áp dụng migration lên Dev
+### 7.3. Apply migrations to Dev
 
-Chỉ chạy bước này trong cửa sổ cutover sau backup và rehearsal theo [Phase 6](./plans/admin-content-translations/admin-content-translations-phase-6.md). Danh sách dry-run đúng chưa đủ để bỏ qua backup hoặc khóa ghi.
+Run only in the cutover window after backup/rehearsal per [Phase 6](./plans/admin-content-translations/admin-content-translations-phase-6.md). A correct dry-run does not replace backups or blocking writes.
 
-Trước tiên xem trước thay đổi:
+Preview changes first:
 
 ```bash
 supabase db push --linked --dry-run
 ```
 
-Nếu danh sách migration đúng, áp dụng:
+If the migration list is correct, apply:
 
 ```bash
 supabase db push --linked
 ```
 
-Kiểm tra lại:
+Recheck:
 
 ```bash
 supabase migration list --linked
 ```
 
-Có thể mở Supabase Dashboard → **Table Editor** để xác nhận tám bảng:
+Open Dashboard → **Table Editor** to verify eight tables:
 
 - `admin_users`
 - `game_categories`
@@ -521,20 +521,20 @@ Có thể mở Supabase Dashboard → **Table Editor** để xác nhận tám b�
 - `word_prompt_translations`
 - `question_prompt_translations`
 
-Không cần chạy `supabase start` khi làm việc với Dev cloud.
+No `supabase start` is needed for Dev cloud.
 
-### 7.4. Tạo admin user trên Dev cloud
+### 7.4. Create a Dev cloud admin user
 
-Thực hiện trong Supabase Dashboard của project Dev:
+In the Dev project's Supabase Dashboard:
 
-1. Vào **Authentication → Users**.
-2. Chọn **Add user**.
-3. Nhập email và password của admin.
-4. Bật **Auto Confirm** nếu chưa cấu hình email confirmation.
-5. Tạo user.
+1. Open **Authentication → Users**.
+2. Choose **Add user**.
+3. Enter admin email/password.
+4. Enable **Auto Confirm** if email confirmation is not configured.
+5. Create the user.
 
-Tiếp theo vào **SQL Editor** và chạy câu lệnh sau. Thay email mẫu bằng email
-admin thật:
+Then open **SQL Editor** and run the following, replacing the sample email
+with the actual admin email:
 
 ```sql
 insert into public.admin_users (user_id, role, is_active)
@@ -546,7 +546,7 @@ set role = 'admin',
     is_active = true;
 ```
 
-Kiểm tra bản ghi admin:
+Check the admin record:
 
 ```sql
 select au.user_id, u.email, au.role, au.is_active
@@ -555,66 +555,66 @@ join auth.users u on u.id = au.user_id
 where u.email = 'admin@example.com';
 ```
 
-Có thể dùng file mẫu `supabase/scripts/grant_admin.sql`, nhưng file này chỉ
-chứa email placeholder. Không ghi password hoặc secret vào file đó.
+You can use `supabase/scripts/grant_admin.sql`, but it contains only
+a placeholder email. Never put passwords/secrets in it.
 
-### 7.5. Chạy Admin với Dev cloud
+### 7.5. Run Admin with Dev cloud
 
-Đảm bảo đã tạo `admin/.env.development.local`, sau đó:
+Ensure `admin/.env.development.local` exists, then:
 
 ```bash
 cd /path/to/imposter-wording/admin
 yarn dev:development
 ```
 
-Mở URL Vite in ra terminal. Admin sẽ gọi API của:
+Open the URL printed by Vite. Admin calls:
 
 ```text
 https://pxycsjwjakzehcuygngv.supabase.co
 ```
 
-Nếu muốn build thử:
+To test a build:
 
 ```bash
 yarn build:development
 ```
 
-Build được tạo trong `admin/dist/`. Đây chỉ là frontend bundle; lệnh build
-không deploy website và cũng không push database.
+Output is in `admin/dist/`. This is only a frontend bundle; building
+does not deploy the website or push the database.
 
-## 8. Những gì migration hiện tại tạo ra
+## 8. What current migrations create
 
-Migration trong repository tạo các enum:
+Repository migrations create enums:
 
 - `game_type`: `word`, `question`.
 - `content_status`: `draft`, `published`, `archived`.
 - `difficulty_level`: `easy`, `medium`, `hard`.
 - `admin_role`: `admin`.
 
-Các bảng chính:
+Main tables:
 
-- `admin_users`: quyền admin của user Auth.
-- `content_languages`: mã, tên và thứ tự ngôn ngữ; ban đầu `vi`, `en`.
-- `game_categories`, `word_prompts`, `question_prompts`: thông tin chung của bản gốc.
-- `game_category_translations`, `word_prompt_translations`, `question_prompt_translations`: nội dung và trạng thái riêng từng locale; khóa ghép ID gốc + locale.
+- `admin_users`: Auth-user admin permissions.
+- `content_languages`: language code, name, order; initially `vi`, `en`.
+- `game_categories`, `word_prompts`, `question_prompts`: base-record shared information.
+- `game_category_translations`, `word_prompt_translations`, `question_prompt_translations`: per-locale content/status; composite base ID + locale keys.
 
-Danh mục giữ slug duy nhất theo `game_type`; ảnh, độ khó và nhãn gia đình thuộc đề gốc.
-Không fallback nội dung sang locale khác. Ngôn ngữ nội dung độc lập locale giao diện.
-Thêm ngôn ngữ bằng dữ liệu `content_languages` qua quyền quản trị DB; chưa có UI quản lý ngôn ngữ.
+Category slugs stay unique by `game_type`; images, difficulty, and Family labels belong to base prompts.
+No cross-locale content fallback. Content language is independent of UI locale.
+Add languages as `content_languages` data with DB admin permissions; no language-management UI yet.
 
-RLS và quyền API:
+RLS and API permissions:
 
-- Public chỉ đọc bản dịch `published`; đề còn cần danh mục đang bật và bản dịch danh mục cùng locale đã xuất bản.
-- Bản gốc chỉ public khi có ít nhất một bản dịch đủ điều kiện.
-- Admin active đọc toàn bộ nội dung; ghi qua các RPC save/delete/toggle/transfer có kiểm tra quyền và phiên bản, không ghi bảng trực tiếp từ client.
-- Lưu chỉ cập nhật phần chung và bản dịch đang chọn trong một transaction. Version cũ trả `PT409`; phải tải lại trước khi ghi tiếp.
-- User đăng nhập không có quyền admin active không được ghi.
+- Public reads only `published` translations; prompts also require enabled categories with published same-locale category translations.
+- Base records are public only with at least one eligible translation.
+- Active admins read all content; write through permission/version-checked save/delete/toggle/transfer RPCs, never directly from clients.
+- Saves update shared fields and the selected translation in one transaction. Stale versions return `PT409`; reload before writing again.
+- Logged-in users without active-admin access cannot write.
 
-Migration không tạo `auth_users`; Supabase đã quản lý `auth.users`.
+Migrations do not create `auth_users`; Supabase manages `auth.users`.
 
-## 9. Quy trình hằng ngày
+## 9. Daily workflow
 
-### 9.1. Làm việc với local
+### 9.1. Working locally
 
 Terminal 1:
 
@@ -630,56 +630,56 @@ cd /path/to/imposter-wording/admin
 yarn dev:local
 ```
 
-### 9.2. Làm việc với Dev cloud
+### 9.2. Working with Dev cloud
 
-Không chạy local stack:
+Without running the local stack:
 
 ```bash
 cd /path/to/imposter-wording/admin
 yarn dev:development
 ```
 
-### 9.3. Khi thay đổi database
+### 9.3. Database changes
 
-Tạo migration mới từ thư mục gốc:
+Create a new migration from the root:
 
 ```bash
 cd /path/to/imposter-wording
-supabase migration new ten_thay_doi
+supabase migration new change_name
 ```
 
-Sau khi viết SQL, kiểm tra bằng rehearsal trên bản sao dùng một lần; không reset DB đang giữ dữ liệu:
+After writing SQL, rehearse on a disposable copy; do not reset DBs containing data to preserve:
 
 ```bash
 rtk proxy python3 supabase/tests/content_translations.py
 ```
 
-Xem trước và push lên Dev:
+Preview and push to Dev:
 
 ```bash
 supabase migration list --linked
-# Nếu còn migration pending: thực hiện quy trình cutover, không push trực tiếp.
+# If migrations are pending, follow the cutover procedure; do not push directly.
 ```
 
-Sau khi migration đã push lên Dev, không sửa file migration cũ. Tạo migration
-mới cho thay đổi tiếp theo, để lịch sử local và cloud không bị lệch.
+After pushing a migration to Dev, never edit that file. Create new migrations
+for subsequent changes so local/cloud histories stay aligned.
 
-### 9.4. Kiểm tra code trước khi bàn giao
+### 9.4. Check code before handoff
 
 ```bash
 cd /path/to/imposter-wording/admin
 yarn build:development
 ```
 
-Nếu chỉ sửa frontend thì không cần `supabase db push`. Chỉ push khi có thay
-đổi migration, RLS, function, trigger hoặc cấu hình database cần triển khai.
+Frontend-only changes do not need `supabase db push`. Push only for deployment
+of migrations, RLS, functions, triggers, or database configuration.
 
 ## 10. Production
 
-Production chưa được cấu hình trong kế hoạch hiện tại. Không tự ý dùng project
-Dev làm production.
+Production is not configured in this plan. Do not repurpose the Dev
+project as production without authorization.
 
-Khi có production project, tạo file local nhưng không commit:
+When a production project exists, create a local, uncommitted file:
 
 ```bash
 cd /path/to/imposter-wording/admin
@@ -687,47 +687,47 @@ cp .env.example .env.production.local
 nano .env.production.local
 ```
 
-Điền URL và Publishable key của production project, sau đó build:
+Enter its URL and Publishable key, then build:
 
 ```bash
 yarn build:production
 ```
 
-Trước khi dùng production cần hoàn thành tối thiểu:
+Minimum production requirements:
 
 - Production Supabase project.
-- Auth provider và policy phù hợp.
-- Migration đã được kiểm tra và push đúng project.
-- Admin user production.
-- Storage bucket private `word-prompt-images` và các policies trong migrations.
-- Hosting cho `admin/dist/`.
+- Appropriate Auth provider/policies.
+- Tested migrations pushed to the correct project.
+- Production admin user.
+- Private `word-prompt-images` bucket and migration policies.
+- Hosting for `admin/dist/`.
 
-File `admin/.env.production` đang để trống có chủ ý, nhằm tránh build
-production tự động dùng nhầm `.env.local`.
+`admin/.env.production` is intentionally empty to prevent production
+builds from accidentally using `.env.local`.
 
-## 11. Storage ảnh từ ngữ
+## 11. Word image Storage
 
-Bucket private `word-prompt-images` đã được tạo bằng migration. Ảnh dùng chung giữa các bản dịch;
-đường dẫn là `<prompt-uuid>/<file-uuid>.jpg|png|webp`, tối đa 5 MiB.
-Admin active upload và cleanup theo policy; không tạo bucket public thay thế.
-Ảnh chỉ được cấp quyền đọc mới khi đề có ít nhất một bản dịch công khai hợp lệ.
-Signed URL đã cấp còn hiệu lực tới hết hạn. Xóa đề giữ bytes và chặn truy cập mới;
-upload/save thất bại dọn ảnh mới theo quy trình editor.
+Private `word-prompt-images` bucket is created by migration. Images are shared across translations;
+paths are `<prompt-uuid>/<file-uuid>.jpg|png|webp`, maximum 5 MiB.
+Active admins upload/clean per policy; do not substitute a public bucket.
+New image reads require at least one publicly eligible prompt translation.
+Issued signed URLs stay valid until expiry. Deleting prompts retains bytes and blocks new access;
+failed upload/save cleans new images through the editor workflow.
 
-Chạy `cd admin && yarn test:storage` với local stack để kiểm tra Storage HTTP.
-DB dump chứa metadata Storage, không chứa bytes ảnh; xem quy trình backup ở báo cáo Phase 6.
+Run `cd admin && yarn test:storage` with the local stack for Storage HTTP checks.
+DB dumps contain Storage metadata, not image bytes; see Phase 6 backup procedures.
 
-## 12. Chạy Flutter app (tuỳ chọn)
+## 12. Run Flutter app (optional)
 
-Phần Supabase Admin ở trên không thay thế việc cài Flutter. Nếu cần chạy app
-mobile trong thư mục `app/`, kiểm tra Flutter/Dart:
+The Supabase Admin setup above does not install Flutter. To run the mobile
+app in `app/`, check Flutter/Dart:
 
 ```bash
 flutter --version
 dart --version
 ```
 
-Sau đó:
+Then:
 
 ```bash
 cd /path/to/imposter-wording/app
@@ -736,33 +736,33 @@ flutter test
 flutter run
 ```
 
-App Flutter hiện tại là phần riêng của repository và `pubspec.yaml` chưa có
-`supabase_flutter`; setup plan Admin/Supabase chưa kết nối app này vào
-Supabase.
+The current Flutter app is a separate repository area, and `pubspec.yaml` does not yet
+include `supabase_flutter`; this Admin/Supabase setup plan does not connect it
+to Supabase.
 
-## 13. Checklist hoàn tất trên máy mới
+## 13. New-machine completion checklist
 
-- [ ] `git clone` thành công.
-- [ ] Node.js và Yarn hoạt động.
-- [ ] `cd admin && yarn install --frozen-lockfile` thành công.
-- [ ] Chọn đúng mode: `localdev` hoặc `development`.
-- [ ] Tạo đúng file `.env.*.local`.
-- [ ] Chỉ dùng Project URL và Publishable/anon key ở frontend.
-- [ ] Nếu dùng local: Docker/OrbStack đang chạy và `supabase status` thành công.
-- [ ] Nếu dùng cloud: `supabase login` và `supabase link` thành công.
-- [ ] Migration đã được kiểm tra bằng `supabase migration list`.
-- [ ] Nếu dùng Dev cloud: đã chạy `supabase db push --linked` khi cần.
-- [ ] Admin Auth user đã được tạo.
-- [ ] Admin user đã có bản ghi trong `public.admin_users`.
-- [ ] `yarn dev:local` hoặc `yarn dev:development` mở được Vite.
-- [ ] `yarn build:development` chạy thành công.
-- [ ] Không có secret/password nào được commit.
+- [ ] `git clone` succeeds.
+- [ ] Node.js and Yarn work.
+- [ ] `cd admin && yarn install --frozen-lockfile` succeeds.
+- [ ] Correct mode chosen: `localdev` or `development`.
+- [ ] Correct `.env.*.local` file created.
+- [ ] Frontend uses only Project URL and Publishable/anon key.
+- [ ] Local: Docker/OrbStack running and `supabase status` succeeds.
+- [ ] Cloud: `supabase login` and `supabase link` succeed.
+- [ ] Migrations checked with `supabase migration list`.
+- [ ] Dev cloud: `supabase db push --linked` run when needed.
+- [ ] Admin Auth user created.
+- [ ] Admin has a `public.admin_users` record.
+- [ ] `yarn dev:local` or `yarn dev:development` opens Vite.
+- [ ] `yarn build:development` succeeds.
+- [ ] No secrets/passwords committed.
 
-## 14. Xử lý lỗi thường gặp
+## 14. Troubleshooting common errors
 
 ### `yarn: command not found`
 
-Cài Yarn 1.22.22:
+Install Yarn 1.22.22:
 
 ```bash
 corepack enable
@@ -772,42 +772,42 @@ yarn --version
 
 ### `Missing VITE_SUPABASE_URL...`
 
-Kiểm tra:
+Check:
 
 ```bash
 cd /path/to/imposter-wording/admin
 ls -la .env*
 ```
 
-Đảm bảo:
+Ensure:
 
-- `yarn dev:local` có `.env.local`.
-- `yarn dev:development` có `.env.development.local`.
-- Tên biến viết đúng chính tả.
-- Sau khi sửa env, dừng và chạy lại Vite.
+- `yarn dev:local` has `.env.local`.
+- `yarn dev:development` has `.env.development.local`.
+- Variable names are spelled correctly.
+- Stop/restart Vite after environment changes.
 
-### `supabase start` không chạy được
+### `supabase start` fails
 
-Kiểm tra Docker daemon:
+Check Docker daemon:
 
 ```bash
 docker info
 supabase status
 ```
 
-Nếu Docker đang chạy nhưng bị xung đột port, kiểm tra các port trong
-`supabase/config.toml`, đặc biệt `54320`, `54321`, `54322`, `54323` và `54324`.
-Không đổi port tuỳ tiện nếu chưa cập nhật URL trong `admin/.env.local`.
+If Docker runs but ports conflict, check `supabase/config.toml`, especially
+`54320`, `54321`, `54322`, `54323`, `54324`.
+Do not change ports without updating `admin/.env.local` URLs.
 
-### `supabase link` yêu cầu database password
+### `supabase link` requests a database password
 
-Dùng database password của project Dev. Không dùng Publishable key, anon key
-hoặc service key. Nếu không có password, người có quyền quản trị project cần
-đặt lại/lấy lại database password trong Supabase Dashboard.
+Use the Dev project's database password, not Publishable, anon,
+or service keys. If unavailable, a project administrator must
+retrieve/reset it in Supabase Dashboard.
 
-### Đăng nhập được nhưng không có quyền admin
+### Login succeeds but admin access is denied
 
-Kiểm tra user có tồn tại trong Auth và bản ghi ánh xạ:
+Check the Auth user and mapping record:
 
 ```sql
 select au.user_id, u.email, au.role, au.is_active
@@ -816,35 +816,33 @@ join auth.users u on u.id = au.user_id
 where u.email = 'admin@example.com';
 ```
 
-Kết quả cần có:
+Required result:
 
 - `role = 'admin'`.
 - `is_active = true`.
 
-Nếu chưa có, chạy lại câu lệnh `insert into public.admin_users` ở phần tạo
-admin user. User local và user cloud là hai user khác nhau.
+If absent, rerun `insert into public.admin_users` from admin-user
+creation. Local and cloud users are separate identities.
 
-### `db push` báo không có migration pending
+### `db push` reports no pending migrations
 
-Đây thường là đúng: tất cả migration local đã có trên cloud. Kiểm tra:
+Usually correct: all local migrations already exist on cloud. Check:
 
 ```bash
 supabase migration list --linked
 ```
 
-Chỉ tạo migration mới khi thực sự có thay đổi database.
+Create migrations only for actual database changes.
 
-### Admin chạy được nhưng lỗi schema/RPC
+### Admin runs but schema/RPC errors occur
 
-Kiểm tra đúng environment và migration ledger. Admin mới cần toàn bộ migrations translations,
-bao gồm migration conflict `20261024093556`; không chạy admin cũ với schema mới.
-Không dùng reset để xử lý trên DB có dữ liệu cần giữ.
+Check environment and migration ledger. New admin needs all translation migrations,
+including conflict migration `20261024093556`; do not use old admin with new schema.
+Do not reset a DB containing data to preserve.
 
-## 15. Tài liệu tham khảo
+## 15. References
 
-- [Supabase CLI: cài đặt và local development](https://supabase.com/docs/guides/local-development/cli/getting-started)
+- [Supabase CLI: installation and local development](https://supabase.com/docs/guides/local-development/cli/getting-started)
 - [Supabase local development workflow](https://supabase.com/docs/guides/local-development/cli-workflows)
 - [Supabase database migrations](https://supabase.com/docs/guides/local-development/database-migrations)
 - [Vite env variables and modes](https://vite.dev/guide/env-and-mode)
-
-

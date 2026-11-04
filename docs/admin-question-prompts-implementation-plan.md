@@ -1,57 +1,57 @@
-# Kế hoạch triển khai Question Prompts
+# Question Prompts Implementation Plan
 
-## Mục tiêu
+## Goal
 
-Hoàn thiện danh sách, tạo/sửa, preview và quản lý trạng thái câu hỏi theo [Kế hoạch triển khai màn hình Admin](admin-screen-implementation-plan.md). Giao diện bám sát Word Prompts hiện tại. Bỏ hoàn toàn `imposter_hint`; app tự xử lý hiển thị danh mục khi bật hint.
+Complete listing, creation/editing, preview, and question status management following the [Admin Screen Implementation Plan](admin-screen-implementation-plan.md). Match the current Word Prompts interface. Remove `imposter_hint` entirely; the app handles category display when hints are enabled.
 
-## Tài liệu tham chiếu
+## References
 
-- [Quy tắc style danh sách Admin](layout/admin-style-rules.md): áp dụng cho màn danh sách Question Prompts, gồm token, class CSS chung, bộ lọc, bảng, nút và responsive. Form tạo/sửa và dialog tiếp tục theo style Word Prompts hiện tại.
+- [Admin List Style Rules](layout/admin-style-rules.md): applies to the Question Prompts list, including tokens, shared CSS classes, filters, tables, buttons, and responsive behavior. Create/edit forms and dialogs continue using the current Word Prompts style.
 
-## Giao diện và luồng thao tác
+## Interface and workflows
 
-- Giữ cùng shell, khoảng cách, typography, card, bộ lọc, bảng, nút và cách responsive của Word Prompts; tái sử dụng CSS phù hợp, không đổi thiết kế màn từ ngữ.
-- Danh sách hiển thị hai câu hỏi, danh mục, độ khó, trạng thái và ngày cập nhật. Nội dung dài được rút gọn; mở form để xem đầy đủ.
-- Tìm kiếm backend trên cả hai câu hỏi, debounce 300 ms; lọc danh mục, độ khó, ngôn ngữ và trạng thái. Phân trang 20 dòng; sắp xếp theo ngày cập nhật giảm dần hoặc câu hỏi civilian tăng dần, có thứ tự phụ theo ID. Giữ bộ lọc trong URL khi tạo/sửa và quay lại.
-- Thêm route `/question-prompts/new` và `/question-prompts/:id/edit`.
-- Form dùng hai textarea cạnh nhau trên desktop, xếp dọc trên màn nhỏ. Phần phân loại và thanh hành động theo Word Prompts.
-- Preview hai card civilian/imposter hiển thị câu hỏi tương ứng. Không có trường hint hay cấu hình hint được lưu vào đề.
-- Có lưu nháp, publish, chuyển về nháp, archive và xóa với cách xác nhận như Word Prompts. Giữ dữ liệu khi lỗi, chặn thao tác lặp và cảnh báo thay đổi chưa lưu khi rời trang hoặc đăng xuất.
-- Có trạng thái loading, danh sách rỗng, lỗi tải/lưu và cách thử lại. Khi lưu hoặc xóa thành công, cập nhật cache câu hỏi và số lượng content của danh mục.
+- Keep the Word Prompts shell, spacing, typography, cards, filters, tables, buttons, and responsive behavior; reuse suitable CSS without redesigning the word screen.
+- List both questions, category, difficulty, status, and update date. Truncate long content; open the form to view it in full.
+- Search both questions on the backend with a 300 ms debounce; filter by category, difficulty, language, and status. Use 20-row pagination; sort by update date descending or civilian question ascending, with ID as a secondary sort. Preserve URL filters when creating/editing and returning.
+- Add `/question-prompts/new` and `/question-prompts/:id/edit` routes.
+- Use two side-by-side textareas on desktop, stacked on small screens. Follow Word Prompts for classification and the action bar.
+- Show civilian/imposter preview cards with their respective questions. Do not store a hint field or hint configuration in the prompt.
+- Support save draft, publish, revert to draft, archive, and delete with the same confirmations as Word Prompts. Preserve data on errors, prevent duplicate actions, and warn about unsaved changes before leaving or logging out.
+- Include loading, empty, load/save error, and retry states. After saving or deleting, update question caches and category content counts.
 
-## API và database
+## API and database
 
-- Tách API, validation và component theo cấu trúc Word Prompts; dùng Vue Query và hệ thống dịch hiện có, không thêm dependency.
-- Payload gồm `civilian_question`, `imposter_question`, `category_id`, `difficulty`, `locale` và `status`. Mặc định đề mới: `vi`, `medium`, trạng thái `draft`.
-- Trim trước khi lưu; cả hai câu hỏi bắt buộc và phải khác nhau sau khi trim, không phân biệt hoa/thường. Áp dụng cùng quy tắc tại frontend và backend cho mọi trạng thái. Không kiểm tra trùng giữa các đề khác nhau.
-- Backend kiểm tra danh mục thuộc loại `question`, cùng locale; publish yêu cầu danh mục đang hoạt động. Đề cũ thuộc danh mục đã tắt vẫn mở được để sửa hoặc archive. Form giữ lựa chọn danh mục cũ khi danh mục đó không còn trong danh sách đang hoạt động.
-- Dùng `updated_at` để phát hiện sửa đồng thời; báo xung đột và yêu cầu tải lại, không ghi đè âm thầm. Khi tải lại mà form có thay đổi, xác nhận bỏ thay đổi trước.
-- Thêm RPC `delete_question_prompt(p_id uuid, p_expected_updated_at timestamptz)` theo mẫu xóa Word Prompts: kiểm tra admin, khóa bản ghi và đối chiếu phiên bản. Không cấp quyền DELETE trực tiếp cho client.
-- Tạo migration mới bỏ cột `question_prompts.imposter_hint`, thêm validation backend và cập nhật timestamp khi ghi. Không sửa migration lịch sử.
-- Giữ quyền đọc published và quyền ghi admin hiện có; kiểm thử cả grants và RLS theo [hướng dẫn Supabase](https://supabase.com/docs/guides/database/postgres/row-level-security).
-- Cập nhật tài liệu triển khai, layout, schema và assertion cũ đang yêu cầu giữ hint. Tài liệu lịch sử phải ghi rõ thay đổi schema hiện tại nếu vẫn mô tả trường này.
+- Separate API, validation, and components following Word Prompts; use Vue Query and the existing translation system without adding dependencies.
+- Payload fields: `civilian_question`, `imposter_question`, `category_id`, `difficulty`, `locale`, and `status`. New prompt defaults: `vi`, `medium`, and `draft`.
+- Trim before saving; both questions are required and must differ after trimming, case-insensitively. Apply the same frontend/backend rule for every status. Do not check duplicates across separate prompts.
+- Backend checks that the category has type `question` and the same locale; publishing requires an active category. Existing prompts in disabled categories remain editable/archivable. Preserve the existing category selection when it is absent from active options.
+- Use `updated_at` to detect concurrent edits; report conflicts and require reload instead of silently overwriting. Confirm discarding changes before reloading a dirty form.
+- Add `delete_question_prompt(p_id uuid, p_expected_updated_at timestamptz)` following Word Prompts deletion: check admin, lock the record, and compare versions. Do not grant direct DELETE access to clients.
+- Create a new migration dropping `question_prompts.imposter_hint`, adding backend validation, and updating timestamps on writes. Do not modify historical migrations.
+- Preserve existing published-read and admin-write permissions; test grants and RLS following the [Supabase guide](https://supabase.com/docs/guides/database/postgres/row-level-security).
+- Update deployment documentation, layout, schema, and old assertions requiring hints. Historical documents describing this field must clearly note the current schema change.
 
-## Kiểm thử và triển khai
+## Testing and deployment
 
-- Unit/API: validation hai câu hỏi, payload không có hint, tìm kiếm hai trường, lọc/phân trang, lỗi quyền và xung đột phiên bản.
-- Component: tải/rỗng/lỗi/thử lại, tạo/sửa, preview, thay đổi trạng thái, xóa, chống gửi lặp và cảnh báo chưa lưu.
-- SQL: cột hint đã bị bỏ; chặn câu hỏi rỗng/trùng, sai loại/locale và publish với danh mục tắt; xác minh quyền admin, đọc published và xóa có kiểm tra phiên bản. Script kiểm thử rollback fixture.
-- Chạy lại kiểm thử danh mục và Word Prompts để kiểm tra luồng chuyển/xóa content và thay đổi assertion về hint.
-- Chạy `yarn test` và `yarn build:local` trong thư mục `admin`; kiểm tra trực quan cạnh Word Prompts ở desktop và màn nhỏ.
-- Áp dụng migration local, không reset dữ liệu. Migration phải được triển khai trước frontend; không tự push remote.
+- Unit/API: question validation, hint-free payloads, two-field search, filtering/pagination, permission errors, and version conflicts.
+- Components: loading/empty/error/retry, create/edit, previews, status changes, deletion, duplicate submission prevention, and unsaved changes warnings.
+- SQL: hint column removed; reject empty/identical questions, incorrect type/locale, and publishing in disabled categories; verify admin permissions, published reads, and version-checked deletion. Test scripts roll back fixtures.
+- Rerun category and Word Prompts tests to check content transfer/deletion and updated hint assertions.
+- Run `yarn test` and `yarn build:local` in `admin`; visually compare with Word Prompts on desktop and small screens.
+- Apply migrations locally without resetting data. Deploy migrations before the frontend; do not automatically push remote.
 
-## Giả định và giới hạn
+## Assumptions and limits
 
-- Xóa cột sẽ xóa dữ liệu hint cũ theo lựa chọn đã chốt.
-- Phạm vi là admin và backend liên quan; không sửa app hoặc thêm logic hint vào admin.
-- Đã triển khai API/validation, danh sách, form, preview, quản lý trạng thái và RPC xóa; không thay đổi app.
+- Dropping the column deletes old hint data as agreed.
+- Scope covers admin and the related backend; do not modify the app or add hint logic to admin.
+- API/validation, list, form, previews, status management, and delete RPC are implemented; the app is unchanged.
 
-## Triển khai và xác minh hiện tại
+## Current implementation and verification
 
-- Migration `20261021045906_question_prompt_management.sql` đã áp dụng local bằng `supabase migration up --local`, không reset dữ liệu. Bỏ `imposter_hint`, trim và kiểm tra hai câu hỏi ở mọi trạng thái, kiểm tra loại/locale/trạng thái danh mục, cập nhật `updated_at` từ server và thêm RPC xóa có kiểm tra phiên bản.
-- Triển khai migration này trước frontend. Chưa push remote.
-- `cd admin && yarn test`: 40 kiểm thử đạt. `yarn build:local`: build thành công.
-- Chạy ba script SQL bằng `psql` với `ON_ERROR_STOP=1`: `supabase/tests/question_prompt_management.sql`, `category_management.sql`, `word_prompt_management.sql`. Mỗi script rollback toàn bộ fixture. Dùng psql vì `supabase db query --file` hiện không chạy được nhiều câu lệnh trong một prepared statement.
-- Kiểm thử `python3 supabase/tests/category_concurrency.py` đạt; fixture đã được dọn.
-- `supabase db advisors --local --type security --level warn`: không có vấn đề.
-- Đã mở danh sách local và xác minh empty state trong trình duyệt. Kiểm thử render bao phủ loading/rỗng/lỗi, hai câu hỏi trong bảng, debounce, hai preview và guard rời form. Kiểm tra trực quan đầy đủ desktop/mobile còn cần thực hiện: công cụ điều khiển Chrome báo `cgWindowNotFound` khi lấy screenshot. Fixture kiểm tra giao diện đã được dọn.
+- Applied `20261021045906_question_prompt_management.sql` locally through `supabase migration up --local`, without resetting data. It removes `imposter_hint`, trims and validates both questions for every status, checks category type/locale/status, updates server-side `updated_at`, and adds version-checked deletion.
+- Deploy this migration before the frontend. Not pushed remote.
+- `cd admin && yarn test`: 40 tests passed. `yarn build:local`: successful.
+- Ran three SQL scripts through `psql` with `ON_ERROR_STOP=1`: `supabase/tests/question_prompt_management.sql`, `category_management.sql`, and `word_prompt_management.sql`. Each rolls back all fixtures. Used psql because `supabase db query --file` currently cannot execute multiple commands in one prepared statement.
+- `python3 supabase/tests/category_concurrency.py` passed; fixtures were cleaned up.
+- `supabase db advisors --local --type security --level warn`: no issues.
+- Opened the local list and verified its empty state in the browser. Render tests cover loading/empty/error states, both table questions, debounce, both previews, and the form navigation guard. Full desktop/mobile visual checks remain pending: the Chrome control tool returned `cgWindowNotFound` during screenshot capture. UI fixtures were cleaned up.

@@ -1,729 +1,729 @@
-# Bố cục màn hình ứng dụng
+# Application Screen Layout
 
-> Bản nháp từ các ảnh tham khảo hiện có. Tài liệu tập trung vào bố cục, nội dung và thành phần giao diện; chưa mô tả màu sắc, font chữ hoặc thông số pixel.
+> Draft based on available reference images. Focuses on layout, content, and UI components; colors, fonts, and pixel specifications are not yet described.
 
-## 1. Màn hình bắt đầu
+## 1. Start screen
 
-### Mục đích
+### Purpose
 
-Giới thiệu nhanh trò chơi và dẫn người dùng vào luồng chính.
+Introduce the game briefly and lead users into the main flow.
 
-### Bố cục từ trên xuống dưới
+### Top-to-bottom layout
 
-1. **Khu vực hình ảnh chính**
-   - Minh họa nhân vật/biểu tượng chủ đề “kẻ mạo danh”.
-   - Đặt ở vùng trung tâm phía trên màn hình.
+1. **Main illustration area**
+   - Character/icon illustration themed around the “imposter”.
+   - Centered near the top.
 
-2. **Tên trò chơi**
-   - Tiêu đề lớn: `Kẻ mạo danh`.
+2. **Game name**
+   - Large title: `Imposter`.
 
-3. **Thông điệp phụ**
-   - Dòng giới thiệu ngắn: `Trò chơi từ ngữ`.
+3. **Subtitle**
+   - Short introduction: `Word game`.
 
-4. **Mô tả trò chơi**
-   - Mô tả ngắn về cách chơi, ví dụ: trò chơi tiệc tùng với từ bí mật và gợi ý.
-   - Căn giữa, nằm dưới tiêu đề.
+4. **Game description**
+   - Brief gameplay description, e.g. a party game with secret words and clues.
+   - Centered below the title.
 
-5. **Nhóm nút hành động ở cuối màn hình**
-   - Nút chính: `Bắt đầu`.
-   - Nút phụ: `Cách chơi`.
-   - Hai nút có cùng chiều rộng và xếp theo chiều dọc.
+5. **Bottom action group**
+   - Primary: `Start`.
+   - Secondary: `How to play`.
+   - Equal-width buttons stacked vertically.
 
-### Luồng điều hướng
+### Navigation
 
-- `Bắt đầu` → màn hình thiết lập ván chơi.
-- `Cách chơi` → màn hình hướng dẫn.
+- `Start` → game setup.
+- `How to play` → instructions.
 
-## 2. Màn hình cách chơi
+## 2. How to Play screen
 
-### Mục đích
+### Purpose
 
-Giải thích luật chơi theo từng bước trước khi người dùng bắt đầu ván đầu tiên.
+Explain rules step by step before the first game.
 
-### Khung màn hình
+### Screen structure
 
-1. **Thanh tiêu đề**
-   - Nút quay lại ở bên trái.
-   - Tiêu đề căn giữa: `Cách chơi`.
-   - Thanh tiêu đề nằm cố định ở đầu màn hình khi nội dung cuộn.
+1. **Header**
+   - Back button on the left.
+   - Centered title: `How to play`.
+   - Fixed at the top while content scrolls.
 
-2. **Danh sách các bước hướng dẫn**
-   - Các bước hiển thị thành từng thẻ lớn, xếp dọc.
-   - Mỗi thẻ gồm:
-     - Biểu tượng minh họa ở bên trái.
-     - Tiêu đề bước.
-     - Mô tả ngắn ở bên phải hoặc phía dưới tiêu đề.
+2. **Instruction steps**
+   - Large vertically stacked cards.
+   - Each card includes:
+     - Illustration icon on the left.
+     - Step title.
+     - Brief description to the right or below the title.
 
-### Nội dung các bước hiện có
+### Existing step content
 
-#### Bước 1 — Thiết lập trò chơi
+#### Step 1 — Set up the game
 
-- Người chơi chọn danh sách người chơi và danh mục từ.
-- Chọn số kẻ mạo danh cố định hoặc ngẫu nhiên trong 1…floor((N−1)/2); người thường luôn chiếm đa số.
-- Biểu tượng: thiết lập/cài đặt.
+- Choose players and word categories.
+- Choose fixed/random imposter count in 1…floor((N−1)/2); civilians always remain the majority.
+- Icon: setup/settings.
 
-#### Bước 2 — Tiết lộ từ
+#### Step 2 — Reveal words
 
-- Mỗi người lần lượt xem thông tin của mình.
-- Người chơi bình thường nhìn thấy từ bí mật.
-- Kẻ mạo danh thấy vai trò; chỉ thấy tên danh mục nếu bật hiển thị danh mục.
-- Biểu tượng: con mắt.
+- Each player privately views their information in turn.
+- Civilians see the secret word.
+- Imposters see their role; category name appears only if category display is enabled.
+- Icon: eye.
 
-#### Bước 3 — Đưa ra gợi ý
+#### Step 3 — Give clues
 
-- Người chơi lần lượt nói các từ liên quan đến từ bí mật.
-- Gợi ý không nên quá rõ ràng để tránh lộ từ.
-- Biểu tượng: tin nhắn/hội thoại.
+- Players take turns saying words related to the secret word.
+- Clues should not be so obvious that they expose the word.
+- Icon: message/conversation.
 
-#### Bước 4 — Tìm kẻ mạo danh
+#### Step 4 — Find the imposter
 
-- Cả nhóm thảo luận.
-- Mọi người bỏ phiếu cho người có khả năng không biết từ bí mật.
-- Nếu nhóm bỏ phiếu sai, kẻ mạo danh thắng.
-- Biểu tượng: tìm kiếm.
+- Discuss as a group.
+- Vote for the person likely not to know the word.
+- If the group votes incorrectly, the imposter wins.
+- Icon: search.
 
-3. **Thẻ mẹo chuyên nghiệp**
-   - Đặt sau danh sách các bước.
-   - Có biểu tượng bóng đèn.
-   - Gồm tiêu đề `Mẹo chuyên nghiệp` và một đoạn lời khuyên ngắn.
-   - Nội dung mẫu: kẻ mạo danh nên lắng nghe cẩn thận, hòa nhập và đưa ra gợi ý phù hợp với danh mục.
+3. **Pro tip card**
+   - After the steps.
+   - Lightbulb icon.
+   - `Pro tip` title with short advice.
+   - Example: imposters should listen carefully, blend in, and offer category-appropriate clues.
 
-### Hành vi
+### Behavior
 
-- Nội dung hướng dẫn có thể cuộn theo chiều dọc.
-- Nút quay lại đưa người dùng về màn hình bắt đầu.
-- Không cần thao tác xác nhận ở cuối màn hình trong bản hiện tại.
+- Instructions scroll vertically.
+- Back returns to the start screen.
+- No final confirmation action in the current version.
 
-## 3. Màn hình cài đặt trò chơi
+## 3. Game Setup screen
 
-### Mục đích
+### Purpose
 
-Cho phép người chơi cấu hình ván chơi trước khi bắt đầu.
-
-### Khung màn hình
-
-1. **Thanh điều hướng đầu màn hình**
-   - Nút quay lại ở bên trái.
-   - Nút cài đặt ở bên phải.
-   - Tiêu đề lớn: `Cài đặt trò chơi`.
-
-2. **Thẻ thông số người chơi**
-   - Hai thẻ nằm cạnh nhau trên cùng một hàng:
-     - `Có bao nhiêu người chơi?` — hiển thị số người chơi hiện tại.
-     - `Có bao nhiêu kẻ mạo danh?` — hiển thị số kẻ mạo danh hiện tại.
-   - Mỗi thẻ có biểu tượng, nhãn mô tả và giá trị số lớn.
-   - Có thể chạm vào thẻ để thay đổi giá trị.
-
-3. **Khu vực chọn loại trò chơi**
-   - Tiêu đề nhóm: `Chế độ trò chơi`.
-   - Hai thẻ lựa chọn xếp thành hai cột:
-     - `Trò chơi từ ngữ` — tìm người không biết từ bí mật.
-     - `Trò chơi câu hỏi` — tìm người nhận câu hỏi khác.
-   - Một thẻ luôn ở trạng thái được chọn.
-
-4. **Chế độ chơi**
-   - Chọn chế độ tại màn danh mục từ ngữ bằng hai tab `Tất cả danh mục` và `Chế độ gia đình`.
-   - Switch `Hiển thị ảnh` chỉ xuất hiện trong tab gia đình; màn thiết lập không có chọn mode hoặc switch ảnh.
-   - Trò câu hỏi luôn là chế độ thường.
-
-5. **Khu vực danh mục**
-   - Tiêu đề nhóm: `Danh mục`.
-   - Một thẻ cấu hình lớn chứa:
-     - Tên danh mục hiện tại: `Tất cả danh mục` khi chưa chọn danh mục cụ thể.
-     - Cho phép chọn một hoặc nhiều danh mục.
-     - Nút mũi tên để mở màn hình chọn danh mục.
-     - Nếu không chọn danh mục, app random trong tất cả content phù hợp với loại game và mode.
-     - Nếu chọn danh mục, app chỉ random trong các danh mục đã chọn.
-
-6. **Các tùy chọn trong ván chơi**
-   - `Hiển thị danh mục cho kẻ mạo danh`.
-   - `Kẻ mạo danh biết nhau`.
-   - Mỗi tùy chọn gồm biểu tượng, nhãn và công tắc bật/tắt.
-   - Danh sách tùy chọn nằm trong cùng một thẻ và được ngăn cách bằng các đường phân chia.
-   - Word chỉ có tiết lộ danh mục, không có công tắc hoặc dữ liệu hint riêng; `Hiển thị danh mục cho kẻ mạo danh` tiếp tục chỉ áp dụng word.
-   - **Bổ sung theo kế hoạch Phase 6, chưa triển khai:** `Kẻ mạo danh biết nhau` hiện cho cả word/question và cả Cổ điển/Gia đình, dùng chung giá trị đã lưu khi đổi loại game, nạp nhóm và chơi lại. Khi bật và có ít nhất hai imposter, chỉ imposter đã mở thẻ riêng thấy tên đồng vai; thẻ khóa/người thường không thấy.
-
-7. **Nút bắt đầu**
-   - Nút cố định gần cuối màn hình: `Bắt đầu trò chơi`.
-   - Nút luôn dễ nhìn thấy khi người dùng cuộn nội dung.
-
-### Trạng thái được quan sát
-
-- `Trò chơi từ ngữ` + `Cổ điển` được chọn, danh mục là `Tất cả danh mục`.
-- `Trò chơi từ ngữ` + `Gia đình` được chọn, danh sách danh mục chỉ hiển thị content phù hợp gia đình.
-- `Trò chơi câu hỏi` + `Gia đình` được chọn, danh sách danh mục chỉ hiển thị question prompt phù hợp gia đình.
-
-### Hành vi
-
-- Có thể cuộn dọc để xem toàn bộ tùy chọn.
-- Nút `Bắt đầu trò chơi` vẫn nằm ở vùng cuối màn hình.
-- Loại trò chơi và mode được chọn quyết định tập content được phép random.
-- Cả hai loại trò chơi đều có hai mode `Cổ điển` và `Gia đình`.
-- Danh mục là tùy chọn, mặc định là `Tất cả danh mục`.
-- Có thể chọn nhiều danh mục cùng lúc.
-- Không chọn danh mục sẽ random trong toàn bộ content đã publish phù hợp với loại game và mode.
-- Chọn một hoặc nhiều danh mục sẽ giới hạn random trong các category đó.
-- Word không có gợi ý riêng ngoài tên danh mục khi bật công tắc tương ứng.
-- Số kẻ mạo danh phải phù hợp với số người chơi.
-- Nút quay lại đưa người dùng về màn hình trước đó.
-
-### Bảng chọn kẻ mạo danh
-
-- Chạm vào thẻ số lượng kẻ mạo danh ở word hoặc question sẽ mở một bảng chọn dạng bottom sheet; tiêu đề `Chọn kẻ mạo danh`.
-- **Bố cục bổ sung Phase 6, chưa triển khai:** theo cấu trúc ảnh `IMG_2987.PNG`, có nền phía sau làm mờ tối, phần đầu có biểu tượng/tiêu đề; hai thẻ `Cố định` và `Ngẫu nhiên` có radio, chỉ một thẻ được chọn. Dùng theme/component hiện có của app.
-- **Style theo rules của app:** ảnh chỉ tham khảo bố cục/tương tác; màu sắc, typography, spacing, bo góc, biểu tượng, trạng thái chọn, lớp phủ modal và theme sáng/tối dùng `AppTheme`/`AppColors`, constants và component hiện có, không tạo bộ style riêng theo ảnh.
-- Hai cách chọn:
-  - `Cố định`: chọn chính xác số kẻ mạo danh cho mỗi ván.
-    - Có nút `−` và `+` để điều chỉnh số lượng.
-    - Hiển thị giá trị lớn ở giữa và dòng phạm vi; số `1` có nhãn `Được khuyến nghị`. Khóa nút tăng/giảm khi tới biên.
-    - Phạm vi hợp lệ là 1…floor((N−1)/2), với N từ 3 đến 100. Giảm N tự hạ số cố định về giới hạn mới.
-  - `Ngẫu nhiên`: chọn đều số lượng trong cùng phạm vi hợp lệ, một lần khi bắt đầu ván. Thu phần tăng/giảm và giữ số cố định trong draft để quay lại.
-- Phase 4 đặt công tắc `Kẻ mạo danh không đi trước` ở setup; **Phase 6 chuyển vào cuối modal**, nhãn `Kẻ mạo danh không bao giờ đi trước`, không hiện trùng ở setup. Chọn `startingPlayerId` trước; khi bật, loại ID này khỏi tập gán vai. Tên hiển thị ở thảo luận dùng cùng ID.
-- Số lượng, chế độ và không đi trước dùng chung draft. Back/kéo đóng/chạm ngoài hủy thay đổi; `Xác nhận` mới áp dụng và lưu, gồm tự cập nhật nhóm đang dùng. Lỗi ghi giữ draft và cho thử lại. Sheet cuộn được trên màn nhỏ/chữ lớn, giữ SafeArea và nhãn truy cập.
-
-## 4. Màn hình chọn danh mục
-
-### Mục đích
-
-Cho phép chọn một hoặc nhiều danh mục, hoặc dùng toàn bộ danh mục có sẵn.
-
-### Khung màn hình
-
-1. **Thanh điều hướng**
-   - Nút quay lại ở bên trái.
-   - Tiêu đề lớn: `Chọn danh mục`.
-
-2. **Thông tin loại game và mode**
-   - Hiển thị dạng badge ở đầu màn hình, ví dụ:
-     - `Trò chơi từ ngữ · Cổ điển`.
-     - `Trò chơi câu hỏi · Gia đình`.
-   - Mode được chọn ở màn hình cài đặt trò chơi; màn hình này chỉ hiển thị danh mục phù hợp với mode đó.
-
-3. **Danh sách danh mục**
-   - Hiển thị các danh mục trong lưới hai cột.
-   - Có thể chọn nhiều danh mục cùng lúc.
-   - Mỗi thẻ gồm:
-     - Checkbox hoặc trạng thái được chọn.
-     - Tên danh mục.
-     - Số lượng content hợp lệ theo loại game và mode hiện tại.
-   - Nội dung ví dụ cho game từ ngữ:
-     - Động vật.
-     - Đồ ăn.
-     - Phim ảnh.
-     - Địa điểm.
-   - Nội dung ví dụ cho game câu hỏi:
-     - Cuộc sống & xã hội.
-     - Tình yêu & mối quan hệ.
-     - Tiền bạc & danh vọng.
-     - Tương lai & công nghệ.
-
-4. **Trạng thái tất cả danh mục**
-   - Có lựa chọn `Tất cả danh mục` ở đầu danh sách.
-   - Đây là trạng thái mặc định.
-   - Khi được chọn, các category cụ thể được bỏ chọn.
-   - App random trong toàn bộ content remote đã publish và custom local hợp lệ thuộc loại game, locale và mode hiện tại; mỗi đề có cơ hội như nhau.
-
-5. **Danh mục tùy chỉnh**
-   - Phase 8 có ô `Tạo danh mục tùy chỉnh` ở cuối cùng lưới word, cùng chiều rộng/kiểu viền/khoảng cách với ô danh mục có sẵn; nền xanh nhạt và biểu tượng dấu cộng để phân biệt hành động tạo. Ô tạo không có checkbox chọn danh mục; Phase 9 cũng hiện trong picker question, kể cả offline.
-   - **Phase 8:** word tùy chỉnh lưu cùng bộ thiết lập local, dùng qua các ván/replay và khởi động lại. Chỉ xóa sau khi xác nhận quay từ thiết lập về trang đầu; mở app ở trang đầu không tự xóa. Phase 9 áp dụng cùng vòng đời cho cặp câu hỏi tùy chỉnh.
-
-### Hành vi
-
-- Chạm vào một hoặc nhiều thẻ danh mục để chọn/bỏ chọn.
-- Chọn `Tất cả danh mục` sẽ bỏ chọn toàn bộ danh mục cụ thể.
-- Nút `Xác nhận` quay về màn hình cài đặt trò chơi và hiển thị số category đã chọn.
-- Nếu không chọn danh mục cụ thể, giữ giá trị `Tất cả danh mục`.
-- Danh sách và số lượng content được lọc theo loại game và mode đã chọn.
-- Tab `Tất cả danh mục` gồm cả danh mục thường và gia đình; tab `Chế độ gia đình` chỉ gồm danh mục `game_categories.is_family_friendly = true` có từ hợp lệ.
-- Tab, danh mục và ảnh là bản nháp. `Xác nhận` ghi cả ba trong một lần; quay lại hủy thay đổi. Lưu lỗi giữ màn hình để thử lại.
-- Đổi tab giữ danh mục còn hợp lệ, loại mục không thuộc tab và thông báo. Không chọn mục cụ thể là tất cả trong tab.
-- Tab gia đình rỗng có thông báo; xác nhận được nhưng không thể bắt đầu ván khi không có từ.
-- Nhớ lựa chọn ảnh; chỉ hiển thị khi chơi từ ngữ ở chế độ gia đình. Cache cũ thiếu cờ danh mục mặc định false, bỏ qua cờ prompt cũ.
-- Không mô tả hoặc triển khai các danh mục Premium trong phạm vi bản nháp này.
-
-## 5. Màn hình tạo tùy chỉnh
-
-### Mục đích
-
-Cho phép người dùng tự tạo danh mục từ (Phase 8) hoặc cặp câu hỏi (Phase 9) để sử dụng trong các ván chơi. Phase 10 đã thêm ảnh local tùy chọn cho từng từ hoặc cả cặp câu hỏi. Dùng theme/component hiện tại của app.
-
-### Bố cục đề xuất
-
-1. **Thanh tiêu đề**
-   - Nút quay lại ở bên trái.
-   - Tiêu đề: `Tạo danh mục tùy chỉnh`.
-
-2. **Tên danh mục**
-   - Ô nhập bắt buộc: `Tên danh mục`.
-   - Placeholder: `Ví dụ: Từ ngữ công ty`.
-
-3. **Danh sách từ**
-   - Tiêu đề nhóm: `Danh sách từ`.
-   - Hiển thị số lượng từ hiện có.
-   - Mỗi từ nằm trên một dòng/thẻ, gồm:
-     - Nội dung từ ở trên; ảnh thu nhỏ và nút thêm/thay ảnh nằm bên dưới để giữ khoảng trống trên màn hình nhỏ.
-     - Nút thêm/thay ảnh.
-     - Nút xóa ở bên phải.
-   - Khi chưa có từ, hiển thị trạng thái trống: `Chưa có từ nào`.
-
-4. **Thêm từ**
-   - Nút `Thêm từ` đặt ngay dưới danh sách.
-   - Chạm vào sẽ mở form thêm từ gồm:
-     - Field `Từ` — bắt buộc trong chế độ `Trò chơi từ ngữ`.
-     - Hai field `Câu hỏi thường dân` và `Câu hỏi kẻ mạo danh` — bắt buộc trong chế độ `Trò chơi câu hỏi`.
-     - Field `Ảnh` — tùy chọn, hiển thị vùng chọn ảnh hoặc ảnh xem trước.
-     - Nút `Lưu từ`.
-   - Cho phép thêm từng từ rồi tiếp tục thêm từ khác.
-
-5. **Nhập nhiều từ**
-   - Nút phụ `Nhập nhiều từ` đặt cạnh hoặc dưới nút `Thêm từ`.
-   - Mở ô nhập văn bản nhiều dòng.
-   - Mỗi dòng được tính là một từ.
-   - Sau khi xác nhận, các dòng hợp lệ được thêm vào danh sách.
-   - Dòng trống được bỏ qua; từ trùng lặp chỉ giữ một bản.
-
-6. **Ảnh minh họa**
-   - Mỗi từ có ảnh riêng; mỗi **cặp câu hỏi có một ảnh dùng chung**; ảnh không bắt buộc.
-   - Chạm vào vùng ảnh của một từ sẽ cho phép:
-     - Chọn ảnh từ thư viện.
-     - Chụp ảnh mới.
-     - Xóa ảnh hiện tại.
-   - Nếu chưa có ảnh, hiển thị nút có biểu tượng và nhãn `Thêm ảnh`. Nếu đã có ảnh, hiện thumbnail và `Thay ảnh`. Sheet có `Thư viện ảnh`, `Máy ảnh`, `Xóa ảnh` khi đã có ảnh, và `Hủy`.
-   - Khi nhập nhiều từ, chỉ tạo các từ; ảnh được thêm sau cho từng từ.
-
-7. **Nút lưu**
-   - Nút cố định ở cuối màn hình: `Lưu danh mục`.
-   - Chỉ bật khi tên danh mục không trống và có ít nhất một từ.
-
-### Trạng thái và hành vi
-
-- Rời màn hình khi chưa lưu phải hỏi xác nhận nếu đã có thay đổi.
-- Tên danh mục không được để trống.
-- Mỗi từ được cắt khoảng trắng đầu/cuối trước khi lưu.
-- So sánh từ sau trim, không phân biệt hoa thường; dòng trống bỏ qua và từ trùng giữ cách viết đầu tiên. Nhập trùng toàn bộ báo cần ít nhất một từ mới.
-- Nếu tên trùng danh mục word remote hoặc custom ở locale hiện tại (kể cả danh mục ngoài tab Gia đình), yêu cầu đổi tên thay vì ghi đè; so sánh sau trim, không phân biệt hoa thường và kiểm tra lại lúc lưu.
-- Lưu thành công trở về `Chọn danh mục`, giữ nguyên tab hiện tại, thêm danh mục mới vào lựa chọn nháp và giữ các lựa chọn trước đó. `Xác nhận` picker mới áp dụng tab/danh mục/ảnh; Back picker chỉ hủy lựa chọn nháp, không xóa category đã lưu.
-- Tạo tại tab Gia đình bắt buộc checkbox xác nhận từ phù hợp chơi cùng gia đình. Category này hiện ở cả hai tab; tạo tại tab Tất cả không được coi là phù hợp Gia đình. Đổi tab/game chỉ ẩn mục không phù hợp, không xóa nội dung.
-- Lưu lỗi giữ nguyên tên/danh sách/checkbox và cho thử lại, không tạo category dở dang; trong khi lưu khóa chỉnh sửa và điều hướng. Ô nhập có label, lỗi gần field, thao tác xóa có nhãn; form cuộn và nút lưu nằm trên bàn phím.
-- Nội dung lưu local cùng setup, giữ qua restart và `Chơi lại`, không đi vào nhóm người chơi đã lưu hoặc backend. Back từ setup về trang đầu phải xác nhận xóa vĩnh viễn nội dung tùy chỉnh; chỉ rời sau khi xóa và bỏ selected IDs thành công. Ghi lỗi giữ nguyên setup cho thử lại.
-- Thẻ danh mục tùy chỉnh hiển thị tên danh mục, tổng số từ và trạng thái có ảnh minh họa.
-
-### Ảnh local — Phase 10
-
-- Dialog thêm một mục có ảnh tùy chọn và nút xác nhận; nhập nhiều vẫn chỉ nhận văn bản. Thumbnail dưới nội dung từng mục; ô danh mục chỉ hiện `Có hình ảnh`, không lộ ảnh.
-- Chấp nhận ảnh giải mã được tối đa 5 MiB. Chọn/hủy/đọc/ghi lỗi giữ ảnh trước đó; lỗi hiển thị ngay cạnh điều khiển, có live-region VI/EN. Quyền bị từ chối/hạn chế hướng dẫn mở Cài đặt hệ thống, camera không khả dụng cho chọn thư viện. File thiếu/hỏng lúc chơi dùng placeholder ổn định.
-- Khóa thao tác và Back khi picker/import/save chạy. Thay đổi ảnh nằm trong draft/discard; save lỗi giữ ảnh và văn bản để thử lại. Dialog cuộn, dùng inset 16 để nút/ảnh còn truy cập được trên màn 320×568 với text scale 2 và bàn phím. Dùng theme, nút và touch target Material hiện tại.
-- Word: chỉ hiện ảnh khi session bật Gia đình + Hiển thị ảnh; người thường sau reveal và kết quả được xem, kẻ mạo danh không xem trong thẻ riêng. Question: ảnh chung dưới câu hỏi của người hiện tại sau reveal; kết quả hiện đúng một lần dưới câu thường dân. Handoff, locked card, common-question, discussion không có ảnh; conceal/background/submit/Back/đổi người gỡ widget và semantics riêng. Nhãn `Ảnh câu hỏi` không nêu vai hoặc câu đối lập.
-- Ảnh đã lưu ở thiết bị suốt vòng đời category, qua replay/restart/offline; không đi vào preset/backend. Draft chưa lưu mất khi process kết thúc. Android startup nhận/bỏ lost-data của picker, thông báo tạo lại draft; không gắn ảnh vào mục mới.
-- Đã kiểm tra bằng unit/widget/semantics: thêm/thay/xóa/hủy, retry, disposal, lifecycle, các stage question VI/EN, ba cấu hình ảnh word, màn nhỏ/text lớn/bàn phím/theme sáng-tối. Không dùng screenshot. Kiểm tra thư viện/camera/quyền/process death trên thiết bị thật vẫn là điều kiện nghiệm thu.
-
-### Question tùy chỉnh — Phase 9
-
-- Dùng chung màn tạo, tên danh mục, nút lưu, lỗi lưu và xác nhận bỏ thay đổi với word. Picker question giữ giao diện chuẩn; không có tab/checkbox Gia đình.
-- Nhóm `Danh sách cặp câu hỏi` hiển thị tổng số cặp; mỗi mục có nhãn thường dân/kẻ mạo danh và nút `Xóa cặp N` có semantics. Có hai hành động `Thêm cặp câu hỏi` và `Nhập nhiều cặp câu hỏi`.
-- Thêm một cặp bằng hai ô có label. Trim hai câu; cấm rỗng và cấm giống nhau không phân biệt hoa thường.
-- Nhập nhiều bằng hai ô nhiều dòng, ghép theo số dòng. Giữ dòng trống khi ghép; nhận LF/CRLF và một newline cuối. Số dòng lệch, câu trống/giống nhau hoặc cặp trùng báo các dòng cần sửa; không thêm một phần. Cặp trùng được so theo thứ tự thường dân/kẻ mạo danh sau trim/lowercase với cả batch và draft. Dùng lại một câu với câu đối ứng khác được phép.
-- Tên chỉ đối chiếu danh mục remote/local cùng loại game và locale; kiểm tra lại trong write queue. Lỗi ghi giữ nguyên draft và counter. Lưu thành công chỉ chọn trong picker draft; Back vẫn giữ danh mục đã lưu.
-- Catalog question kết hợp remote/local dùng chung cho số lượng, điều kiện bắt đầu, random và tên danh mục trong session. Nội dung `vi` và ID `custom-question-N` lưu trong setup; không vào preset/cache remote. Chơi offline, refresh, đổi game, restart và replay giữ nội dung; session chụp cặp/tên lúc bắt đầu.
-- Trước reveal chỉ người đang nhận điện thoại xem câu theo vai của mình; discussion chỉ công bố câu thường dân, kết quả mới công bố câu kẻ mạo danh. Rời setup về trang đầu yêu cầu xác nhận và xóa cả word/question cùng selected IDs trong một lần ghi; ghi lỗi giữ người dùng ở setup.
-
-## 6. Màn hình chọn người chơi
-
-### Mục đích
-
-Cho phép từng người chơi lần lượt mở thông tin bí mật của mình trên cùng một thiết bị.
-
-### Bố cục
-
-- Nút quay lại ở góc trên bên trái.
-- Tiêu đề lớn: `Người chơi`.
-- Hướng dẫn: `Nhấn vào tên của bạn để xem từ, sau đó chuyển thiết bị cho người chơi tiếp theo.`
-- Danh sách người chơi hiển thị dạng lưới hai cột.
-- Mỗi thẻ gồm chữ cái đại diện trong vòng tròn và tên người chơi.
-- Người chơi chưa xem từ có thẻ ở trạng thái có thể chạm.
-- Người chơi đã xem từ bị làm mờ và không thể mở lại.
-
-### Hành vi
-
-- Chạm vào thẻ tên của mình sẽ mở màn hình tiết lộ từ.
-- Sau khi xác nhận xong, quay lại màn hình này và chuyển sang người chơi tiếp theo.
-- Chỉ khi tất cả người chơi đã xem thông tin, ván mới chuyển sang bước đưa ra gợi ý.
-
-## 7. Màn hình tiết lộ từ
-
-### Trạng thái trước khi tiết lộ
-
-- Nút quay lại ở góc trên bên trái.
-- Khu vực trung tâm hiển thị tên người nhận, ví dụ `Từ dành cho Hà`.
-- Khi thẻ còn che, không hiện danh mục hoặc nội dung bí mật qua heading hay screen reader.
-- Vùng nội dung bí mật là một thẻ che kín từ.
-- Hướng dẫn bên dưới: `Nhấn để hiển thị`.
-
-### Trạng thái sau khi tiết lộ
-
-- Thẻ bí mật hiển thị từ dành cho người chơi, ví dụ `Inception`.
-- Từ được căn giữa và là nội dung nổi bật nhất trên thẻ. Người thường thấy thêm tên danh mục sau khi mở thẻ.
-- Nút hành động cuối màn hình: `Hiểu rồi!`.
-
-### Hành vi
-
-- Chạm vào thẻ bí mật sẽ chuyển từ trạng thái che sang trạng thái hiển thị.
-- Người chơi thường nhìn thấy từ bí mật.
-- Kẻ mạo danh thấy vai trò và tên danh mục của từ được chọn khi bật `Hiển thị danh mục cho kẻ mạo danh`; khi tắt chỉ thấy vai trò. Không hiển thị từ, hint hoặc ảnh bí mật. Thiết lập thuộc ván và lưu local, không thuộc từng đề.
-- Chạm `Hiểu rồi!` sẽ quay về màn hình `Người chơi` và đánh dấu người chơi hiện tại đã hoàn tất.
-- Không cho phép hiển thị lại từ của người chơi đã hoàn tất.
-- Phase 4 hỗ trợ nhiều kẻ mạo danh; khi bật `Biết nhau`, chỉ imposter đã mở thẻ mới thấy tên các imposter khác. Không hiện từ/ảnh cho imposter. Phase 7 hiển thị ảnh local dưới từ cho người thường đã mở thẻ; thiếu/lỗi ảnh giữ placeholder cao 180dp, không có image path thì chỉ hiện chữ. Ảnh tới sau tự cập nhật và bị gỡ khỏi widget/semantics khi che thẻ.
-- Back khi xem thẻ che nội dung và về danh sách, chưa đánh dấu hoàn tất. App ra nền che thẻ; khi trở lại phải chủ động mở lại.
-
-## 8. Màn hình giai đoạn bầu chọn
-
-### Mục đích
-
-Hướng dẫn nhóm thảo luận và bầu chọn kẻ mạo danh sau khi tất cả người chơi đã xem từ.
-
-### Bố cục
-
-- Nút quay lại ở góc trên bên trái.
-- Tiêu đề lớn: `Giai Đoạn Bầu Chọn`.
-- Mô tả: `Đã đến lúc thảo luận và bầu chọn kẻ mạo danh!`.
-- Tiêu đề phụ: `Cách Bầu Chọn`.
-- Các bước hướng dẫn hiển thị thành các thẻ xếp dọc:
-  1. `Người Chơi Bắt Đầu` — chọn ngẫu nhiên một lần khi tạo ván; khi bật ràng buộc không đi trước, người này không được gán vai imposter.
-  2. `Thảo Luận Nhóm` — tiếp tục lần lượt theo chiều kim đồng hồ.
-  3. `Thời Gian Bầu Chọn` — mỗi người nói một từ liên quan đến từ bí mật, có thể thực hiện nhiều vòng.
-  4. `Giai Đoạn Tiết Lộ` — bầu chọn người bị nghi ngờ, sau đó chạm để xem kết quả.
-- Nút cuối màn hình: `Thông báo kết quả`.
-
-### Hành vi
-
-- Chỉ mở giai đoạn này sau khi tất cả người chơi xác nhận đã xem thẻ.
-- Nhóm thảo luận và bầu bằng lời; app không thu từng phiếu.
-- `Thông báo kết quả` mở bottom sheet chọn đúng K người bị nhóm bầu, K bằng số imposter thực của ván (kể cả chế độ ngẫu nhiên). Mặc định chưa chọn; chỉ bật xác nhận khi chọn đủ K ID riêng biệt.
-- Nếu hòa, nhóm bầu lại trước khi xác nhận. Hủy/back sheet không ghi nhận người bị bầu hoặc công bố bí mật.
-- Xác nhận mới chuyển sang kết quả. Nhóm chỉ thắng nếu tập K ID bị bầu trùng toàn bộ tập imposter; sai bất kỳ người nào thì phe mạo danh thắng.
-- Back từ danh sách hoặc giai đoạn thảo luận yêu cầu xác nhận kết thúc; hủy giữ nguyên tiến độ.
-
-## 9. Màn hình tiết lộ kết quả
-
-### Bố cục
-
-- Hiển thị thông báo kẻ mạo danh, ví dụ `KẺ MẠO DANH LÀ`.
-- Hiển thị tên toàn bộ kẻ mạo danh thật, những người bị nhóm bầu và bên thắng.
-- Hiển thị nhãn `TỪ BÍ MẬT`.
-- Hiển thị từ bí mật lớn ở trung tâm, ví dụ `BÁNH STRUDEL TÁO`.
-- Nút cuối màn hình: `Chơi lại`.
-
-### Hành vi
-
-- Kết quả chỉ xuất hiện sau khi nhóm hoàn tất bước bầu chọn.
-- `Chơi lại` kết thúc ván và quay về màn thiết lập trò chơi, giữ nguyên danh sách người chơi, mode và danh mục để có thể chỉnh trước ván tiếp theo.
-- Chỉ tạo session mới và random lại từ/vai/người bắt đầu khi nhấn `Bắt đầu trò chơi` tại màn thiết lập; được phép trùng từ khi tập nhỏ. Thiếu nội dung thì màn thiết lập chặn bắt đầu theo quy tắc chung.
-- Back từ kết quả về thiết lập và hủy session. Ván không được khôi phục sau khi hệ điều hành đóng tiến trình.
-- Nếu tập bị bầu không đúng toàn bộ imposter, màn hình vẫn hiển thị kết quả thực tế và phe mạo danh thắng.
-
-## 10. Màn hình chọn người chơi — Trò chơi câu hỏi
-
-### Bố cục
-
-- Tiêu đề: `Người chơi`.
-- Hướng dẫn: `Mỗi người chơi sẽ thấy câu hỏi của họ và gửi câu trả lời riêng tư.`
-- Danh sách người chơi hiển thị dạng lưới hai cột.
-- Mỗi thẻ gồm chữ cái đại diện và tên người chơi.
-- Thẻ chưa trả lời có thể chạm để mở câu hỏi.
-- Thẻ đã gửi câu trả lời được đánh dấu là đã hoàn tất.
-
-## 11. Màn hình trả lời câu hỏi
-
-### Bố cục
-
-- Tiêu đề trên cùng: `Câu hỏi cho [Tên người chơi]`.
-- Hiển thị tên người chơi ở trung tâm.
-- Hiển thị danh mục câu hỏi bên dưới, ví dụ `Danh mục: Tiền Bạc & Danh Vọng`.
-- Thẻ câu hỏi hiển thị câu hỏi dành riêng cho người chơi.
-- Bên dưới là vùng nhập nhiều dòng với placeholder `Nhập câu trả lời của bạn ở đây...`.
-- Nút `Gửi câu trả lời` nằm dưới vùng nhập.
-- Bộ đếm cuối màn hình: `0 / 5 câu trả lời đã gửi`.
-
-### Trạng thái câu hỏi bí mật
-
-- Tất cả người chơi có cùng thẻ khóa. Phase 5 không báo vai hoặc tên đồng vai; **Phase 6 bổ sung** hiển thị tên các imposter khác khi bật `Kẻ mạo danh biết nhau`, có ít nhất hai imposter và chính imposter đã mở thẻ riêng. Không đưa chính mình vào danh sách, lọc bằng ID khi tên trùng. Khi tắt hoặc chỉ có một imposter, giữ hành vi không báo vai/đồng vai.
-- Hiển thị biểu tượng khóa và dòng `Nhấn để hiển thị`.
-- Sau khi chạm, câu hỏi mới được hiển thị để người chơi trả lời.
-- Câu hỏi, danh mục và ô trả lời chỉ hiện sau khi mở thẻ, chỉ dành cho người chơi hiện tại. Danh sách đồng vai cũng chỉ hiện trong thẻ riêng đủ điều kiện; không lộ trên thẻ khóa, danh sách chuyển máy hoặc thảo luận. Không tiết lộ câu hỏi của phe còn lại hoặc câu trả lời riêng của người khác.
-- App ra nền che câu hỏi/ô nhập và danh sách đồng vai, bỏ focus bàn phím và yêu cầu mở lại khi trở về. Back, gửi hoặc chuyển người cũng che danh sách đồng vai. Giá trị `knowEachOther` lấy từ snapshot khi bắt đầu ván.
-
-### Hành vi
-
-- Nút `Gửi câu trả lời` chỉ bật khi câu trả lời không trống.
-- Sau khi gửi, tăng bộ đếm đã gửi và quay về màn hình `Người chơi`.
-- Không cho phép sửa hoặc xem lại câu trả lời sau khi đã gửi. Trước khi gửi, back về danh sách giữ bản nháp riêng theo ID người chơi trong bộ nhớ; chỉ hiện lại sau khi mở thẻ của đúng người đó. Không lưu câu trả lời/bản nháp xuống đĩa hoặc backend.
-- Khi tất cả người chơi đã gửi, chuyển sang bước thảo luận và tìm người nhận câu hỏi khác.
-
-## 12. Màn hình xem câu hỏi chung
-
-### Bố cục
-
-- Tiêu đề: `Câu trả lời của mọi người`.
-- Hiển thị một câu hỏi chung trong thẻ lớn ở trung tâm.
-- Hiển thị hướng dẫn: `Đây là câu hỏi. Sắp tới bạn sẽ thấy tất cả câu trả lời và sau đó thảo luận xem ai đang nói dối về câu trả lời của họ.`
-- Nút cuối màn hình: `Bắt đầu vòng`.
-
-### Hành vi
-
-- Chỉ mở màn hình này sau khi tất cả người chơi đã gửi câu trả lời.
-- `Bắt đầu vòng` chuyển sang màn hình giai đoạn thảo luận.
-
-## 13. Màn hình giai đoạn thảo luận — Trò chơi câu hỏi
-
-### Bố cục
-
-- Tiêu đề: `Giai đoạn thảo luận`.
-- Hiển thị câu hỏi chung ở thẻ đầu màn hình.
-- Danh sách câu trả lời hiển thị thành các thẻ theo thứ tự đánh số.
-- Mỗi thẻ gồm số thứ tự, tên người chơi và câu trả lời của họ.
-- Nút cuối màn hình: `Tìm kẻ giả mạo`.
-
-### Hành vi
-
-- Người chơi thảo luận dựa trên các câu trả lời được công khai.
-- Không hiển thị câu hỏi riêng của người nhận câu hỏi khác trước khi tìm kẻ giả mạo.
-- `Tìm kẻ giả mạo` công bố trực tiếp mọi kẻ mạo danh; không mở sheet bầu hoặc tính bên thắng trong game câu hỏi. Các luật bầu/thắng của word giữ nguyên.
-
-## 14. Màn hình kết quả — Trò chơi câu hỏi
-
-### Bố cục
-
-- Giữ tiêu đề `Giai đoạn thảo luận` và câu hỏi chung ở đầu màn hình.
-- Các câu trả lời vẫn hiển thị trong danh sách.
-- Thẻ của mọi người nhận câu hỏi khác được đánh dấu nổi bật bằng nhãn `Kẻ mạo danh`.
-- Thẻ này hiển thị thêm câu hỏi riêng mà người đó đã nhận.
-- Nút cuối màn hình: `Chơi lại`.
-
-### Hành vi
-
-- Chỉ sau khi công bố kết quả mới hiển thị câu hỏi riêng của mọi kẻ mạo danh. Số imposter cố định/ngẫu nhiên và luật không đi trước dùng lại Phase 4; hiện tên người bắt đầu khi thảo luận. Back trước kết quả hỏi kết thúc ván.
-- `Chơi lại` kết thúc ván và quay về màn thiết lập trò chơi, giữ nguyên danh sách người chơi và thiết lập. Ván mới chỉ được tạo sau khi nhấn bắt đầu tại màn thiết lập.
-
-## 15. Màn hình tên người chơi
-
-### Mục đích
-
-Cho phép nhập, sắp xếp và quản lý danh sách người chơi trước khi chơi.
-
-Editor danh sách hiện tại thuộc Phase 4; thư viện nhóm đã lưu thuộc Phase 6. Phase 6 phụ thuộc Phase 4–5 do bổ sung tùy chọn biết nhau cho question. Đặc tả Phase 6 được chốt ngày 27/10/2026, chưa phải trạng thái triển khai. Ảnh tham khảo dùng cho bố cục/tương tác; giao diện tiếp tục theo theme, component và rules hiện tại của app.
-
-### Bố cục chính
-
-1. **Thanh tiêu đề**
-   - Nút quay lại ở bên trái.
-   - Tiêu đề: `Chỉnh sửa người chơi`, dùng cách căn chỉnh của AppBar hiện tại.
-
-2. **Thẻ danh sách đang chọn**
-   - Hiển thị biểu tượng thư mục.
-   - Đặt trên cùng nội dung, trước thông tin số người và roster.
-   - Hiển thị tên nhóm đang chọn trong draft, ví dụ `Ban Văn Thể`; không chọn nhóm thì hiện `Trò chơi chưa lưu`.
-   - Cả thẻ có thể chạm, có dấu hiệu mở bottom sheet `Danh sách đã lưu`.
-
-3. **Thông tin số người chơi**
-   - Hiển thị số lượng hiện tại, ví dụ `4 người chơi` hoặc `5 người chơi`.
-   - Hiển thị giới hạn cho phép: `3–100`.
-
-4. **Danh sách người chơi**
-   - Mỗi người chơi nằm trong một thẻ riêng.
-   - Thẻ gồm chữ cái đại diện, tên người chơi, số thứ tự và nút xóa.
-   - Khi thêm người chơi vượt quá danh sách tên có sẵn, dùng tên mặc định như `Người chơi 5`.
-
-5. **Thanh hành động cuối màn hình**
-   - Giữ nút `Thêm` và nút xóa trên từng người; không thêm thao tác xóa hàng loạt.
-   - Giữ nút `Xác nhận` cuối màn hình để áp dụng draft theo editor hiện tại.
-
-### Hành vi danh sách hiện tại (Phase 4)
-
-- Mở từ ô `Người chơi` tại setup. Phase 4 chỉ chỉnh danh sách hiện tại; Phase 6 bổ sung thẻ chọn nhóm và thư viện bên dưới.
-- Nhập tên, trim khi xác nhận, chặn tên trống. Cho phép trùng tên vì vai được gắn bằng ID riêng ổn định.
-- Thêm/xóa trong giới hạn 3–100; dùng số tên mặc định còn trống trong danh sách hiện tại, ID mới không tái sử dụng.
-- Nút lên/xuống sắp xếp từng người, dùng được với screen reader; không cần kéo thả.
-- Thao tác nằm trong draft; `Xác nhận` mới áp dụng/lưu. Back có thay đổi hỏi bỏ draft; hủy giữ nguyên form.
-- Phase 4 báo lỗi lưu tại setup; khi triển khai Phase 6, xác nhận editor phải chờ ghi xong. Lỗi giữ draft, báo chưa lưu và cho thử lại ngay tại editor.
-
-### Danh sách đã lưu
-
-- Mở bằng cách chạm thẻ nhóm trên cùng editor.
-- Hiển thị dưới dạng bottom sheet có tiêu đề `Danh sách đã lưu`.
-- Có mục `Trò chơi chưa lưu`, mô tả `Chơi nhanh không cần lưu`.
-- Các nhóm đã lưu hiển thị biểu tượng thư mục, tên, số người chơi và dấu chọn theo lựa chọn trong draft.
-- Có hai hành động ở cuối:
-  - `Lưu thành danh sách…` để lưu roster và luật trong draft thành nhóm mới.
-  - `Quản lý danh sách` để mở màn hình quản lý.
-- Chọn nhóm nạp roster/luật vào draft rồi đóng sheet; chưa đổi setup. Chọn `Trò chơi chưa lưu` giữ roster/luật trong draft và bỏ liên kết nhóm. Đóng sheet không chọn giữ nguyên draft.
-- Hai hành động cuối xuống hàng khi thiếu chiều rộng; sheet cuộn được khi có nhiều nhóm hoặc chữ lớn.
-
-### Lưu thành danh sách mới
-
-- Đóng sheet chọn trước khi mở dialog `Lưu thành danh sách mới…`.
-- Có trường nhập `Tên danh sách` với placeholder `Nhập tên danh sách`.
-- Có hai hành động: `Hủy` và `Lưu`.
-- Khi trường nhập được chọn, bàn phím hệ thống xuất hiện.
-- Tên nhóm được trim, chặn rỗng và trùng sau trim/không phân biệt hoa thường. Roster phải hợp lệ, gồm 3–100 người và không có tên trống; tên người chơi có thể trùng vì dùng ID riêng.
-- `Lưu` tạo nhóm từ roster/luật trong draft. Sau khi ghi thành công, đóng dialog và chọn nhóm mới trong editor; setup chỉ đổi sau `Xác nhận`.
-- Hủy dialog giữ nguyên draft và thư viện. Nếu đã tạo nhóm thành công rồi bỏ draft editor, nhóm mới vẫn tồn tại, setup giữ lựa chọn đã xác nhận trước đó.
-- Đang lưu chặn gửi lặp; lỗi giữ nội dung nhập, hiển thị thông báo và cho thử lại. Không đóng dialog hoặc báo thành công trước khi ghi xong.
-
-### Quản lý danh sách
-
-- Đóng sheet chọn trước khi mở màn riêng; thanh tiêu đề có nút quay lại và tiêu đề `Quản lý danh sách`. Back trở về editor, giữ draft.
-- Mỗi nhóm là một card có biểu tượng thư mục, tên, số người chơi, nhãn `Đang dùng` nếu là nhóm đã xác nhận ở setup và nút ba chấm dọc.
-- Chạm card mở chi tiết, không chuyển nhóm. Nút ba chấm mở popover neo tại nút, không đồng thời kích hoạt card, gồm:
-  - `Chi tiết`.
-  - `Đổi tên danh sách`.
-  - `Xóa`.
-- Ngăn cách thao tác xóa bằng divider, dùng màu lỗi từ theme. Đóng menu trước khi mở sheet/dialog tiếp theo.
-- Khi chưa có nhóm, hiển thị hướng dẫn quay lại editor để dùng `Lưu thành danh sách…`. Loading/lỗi đọc có trạng thái rõ và nút thử lại; không coi lỗi đọc là thư viện rỗng.
-
-### Đổi tên và xóa nhóm
-
-- `Đổi tên danh sách` mở dialog điền sẵn tên, có `Hủy`/`Lưu`; validation giống tạo nhóm và bỏ qua chính nhóm đang đổi khi kiểm tra trùng. Đổi tên giữ ID, roster và luật; cập nhật tên ở mọi nơi khi ghi thành công.
-- `Xóa` mở dialog xác nhận có tên nhóm, nút hủy và nút xóa. Hủy giữ dữ liệu; thành công chỉ xóa nhóm đó.
-- Xóa nhóm đang dùng giữ nguyên roster/luật của setup và chuyển sang `Trò chơi chưa lưu`. Draft đang mở giữ nội dung nhưng bỏ liên kết nếu nhóm được chọn đã bị xóa; xác nhận sau đó không được tạo lại nhóm đã xóa.
-- Lỗi ghi giữ dialog và nội dung để thử lại; không đóng hoặc báo thành công trước khi ghi xong. Chặn thao tác gửi lặp trong lúc ghi.
-
-### Chi tiết danh sách
-
-- Chạm card hoặc chọn `Chi tiết` mở cùng một bottom sheet chỉ đọc; không chọn/nạp nhóm vào setup hoặc draft.
-- Hiển thị thẻ tổng quan gồm tên danh sách và số người chơi.
-- Phần `Tên người chơi` hiển thị các tên dưới dạng chip/thẻ nhỏ theo đúng thứ tự đã lưu, tự xuống dòng.
-- Phần `Cài đặt trò chơi` hiển thị:
-  - Số lượng kẻ mạo danh cố định hoặc chế độ `Ngẫu nhiên`; không hiển thị số đã random của ván.
-  - Trạng thái tùy chọn `Kẻ mạo danh không bao giờ đi trước`.
-  - Trạng thái `Hiển thị danh mục cho kẻ mạo danh`.
-  - Trạng thái `Kẻ mạo danh biết nhau`.
-- Bỏ dòng `Hiển thị số kẻ mạo danh` vì app chưa có setting này; không thêm luật mới để khớp ảnh.
-- Ghi chú: sửa người chơi được lưu khi `Xác nhận`; sửa luật ở setup tự lưu vào nhóm đang dùng. Các luật chỉ áp dụng với loại game đang hỗ trợ chúng.
-
-### Dữ liệu, bản nháp và lưu trữ
-
-- Nhóm lưu ID/tên nhóm, roster có ID/tên/thứ tự, bộ đếm ID tiếp theo và các luật imposter hiện có: số lượng, cố định/ngẫu nhiên, không đi trước, hiển thị danh mục và biết nhau.
-- Không lưu loại game, mode, danh mục nội dung, UI/content locale, nội dung tùy chỉnh hoặc session vào nhóm. Chọn nhóm giữ nguyên các lựa chọn này của setup.
-- Editor giữ draft riêng cho roster, luật và ID nhóm. Thêm/xóa/sửa/sắp xếp và chuyển nhóm chỉ thay draft. `Xác nhận` mới áp dụng vào setup và cập nhật nhóm được chọn nếu còn tồn tại; back có thay đổi hỏi bỏ draft. Bỏ draft không cập nhật nhóm cũ, không xóa nhóm mới đã lưu.
-- Chọn `Trò chơi chưa lưu` chỉ bỏ liên kết nhóm sau `Xác nhận`, không xóa hay ghi đè nhóm vừa rời. Giảm số người tiếp tục giới hạn lại số imposter theo luật Phase 4.
-- Luật chỉnh tại setup tự lưu vào nhóm đã xác nhận đang dùng; thay đổi người chơi chỉ lưu sau `Xác nhận`. Đổi tên/xóa trong màn quản lý lưu độc lập với draft editor.
-- Dùng Hive/`LocalJsonStore` hiện có, ghi tuần tự và nguyên tử khi cập nhật setup/liên kết/thư viện để giữ dữ liệu nhất quán. Dữ liệu setup cũ khôi phục với thư viện rỗng, `Trò chơi chưa lưu` và nguyên roster/luật; giữ migration JSON → Hive hiện có.
-- Lỗi đọc không tự reset hoặc ghi đè dữ liệu; cho thử lại và chặn ghi liên quan khi chưa đọc/validate được. Lỗi ghi giữ draft/form, báo chưa lưu và cho thử lại; không báo thành công chỉ vì state trong bộ nhớ đã đổi.
-- Dữ liệu chỉ nằm trên thiết bị, không gửi tên người chơi/luật lên backend. Session đang chơi giữ nguyên snapshot.
-
-### Quy tắc giao diện và kiểm tra
-
-- Dùng `AppTheme`/`AppColors`, `AppContent`, spacing, routing, Signals/Riverpod và ARB VI/EN hiện có; không sao chép palette tím/nền tối trong ảnh.
-- Sheet/modal hỗ trợ cuộn, SafeArea, bàn phím, màn nhỏ và text scale 2; nút biểu tượng có nhãn truy cập, trạng thái chọn/đang dùng có chữ hoặc dấu chọn.
-- Kiểm tra bằng unit/widget test và đóng/mở storage thật: chọn/xác nhận/hủy draft, tạo nhóm rồi bỏ draft, tự lưu luật, chi tiết, đổi tên, xóa nhóm đang dùng, draft không khôi phục nhóm đã xóa, lỗi/retry và dữ liệu cũ. Hồi quy word sau khi nạp nhóm; chạy l10n/analyze/test khi triển khai.
-- Không yêu cầu chụp ảnh hoặc image-based UI verification cho Phase 6. Không thêm đồng bộ, đăng nhập hoặc luật chơi mới.
-
-## 16. Màn hình cài đặt
-
-### Mục đích
-
-Cho phép người dùng thay đổi ngôn ngữ, mở hướng dẫn, gửi đánh giá hoặc phản hồi và xem thông tin nhận diện ứng dụng.
-
-### Bố cục
-
-1. **Thanh tiêu đề**
-   - Nút quay lại ở bên trái.
-   - Tiêu đề căn giữa: `Cài đặt`.
-
-2. **Nhóm tùy chọn chung**
-   - `Ngôn ngữ`: một lựa chọn dùng chung cho giao diện, danh mục và đề; tên/mã từ DB, chỉ hiện VI/EN đã có UI.
-   - `Cách chơi`: có biểu tượng và mũi tên mở màn hình hướng dẫn.
-   - Hai mục nằm trong cùng một thẻ và được ngăn cách bằng đường phân chia.
-
-3. **Nhóm đánh giá và phản hồi**
-   - `Đánh giá ứng dụng`: mở trang đánh giá ứng dụng trên cửa hàng tương ứng với nền tảng khi đã cấu hình đích.
-   - `Gửi phản hồi`: mở kênh gửi phản hồi cho nhà phát triển khi đã cấu hình đích.
-   - Nếu chưa có URL/app ID hoặc kênh phản hồi, hai mục ở trạng thái chưa khả dụng và giải thích rõ; không gắn URL giả.
-   - Hai mục nằm trong cùng một thẻ và được ngăn cách bằng đường phân chia.
-
-4. **Thông tin ứng dụng**
-   - Tiêu đề nhóm: `Thông tin ứng dụng`.
-   - `Phiên bản ứng dụng`: hiển thị phiên bản và build hiện tại, ví dụ `4.2.2 (158)`.
-    - `ID cài đặt`: hiển thị ID ẩn danh chỉ lưu trên thiết bị ở dạng rút gọn và có nút sao chép toàn bộ.
-   - Hai mục nằm trong cùng một thẻ và được ngăn cách bằng đường phân chia.
-
-### Hành vi
-
-- Chọn Ngôn ngữ đổi đồng thời giao diện và nội dung game sau khi ghi setup thành công. Chỉ một giá trị lưu; lỗi ghi giữ ngôn ngữ cũ.
-- Màn `Ngôn ngữ` dùng Card/ListTile: tên DB, mã locale, biểu tượng và semantics đã chọn. Giữ màn sau khi chọn để hiển thị tiến trình, lỗi lưu và nút thử lại; ghi thành công mới chuyển nội dung.
-- Danh sách phân trang, sắp theo `sort_order`, rồi `code`; có loading, lỗi/thử lại và thông báo dùng cache. Không suy danh sách từ ARB. Ngôn ngữ biến mất sau tải thành công được đánh dấu không khả dụng, giữ lựa chọn cũ và chặn bắt đầu.
-- Setup và picker đều có dòng mở màn Ngôn ngữ. Locale mới chưa có snapshot thì chặn xác nhận/bắt đầu; rỗng thì báo chưa có nội dung và cho đổi ngôn ngữ. Đổi locale hủy lựa chọn nháp trong picker, giữ ID danh mục còn hợp lệ theo snapshot mới.
-- Không đổi ngôn ngữ trong ván. Session giữ prompt/tên danh mục đã chụp; chơi lại về setup. Form tùy chỉnh giữ locale lúc mở và không bị xóa khi đổi ngôn ngữ.
-- Chạm `Cách chơi` mở màn hình hướng dẫn hiện có.
-- Chạm `Đánh giá ứng dụng` hoặc `Gửi phản hồi` chuyển sang ứng dụng phù hợp trên thiết bị nếu đã cấu hình; nếu chưa, mục bị vô hiệu hóa và nêu lý do.
-- Chạm nút sao chép lưu toàn bộ ID cài đặt vào clipboard dù giá trị trên màn hình đang được rút gọn.
-- Nút quay lại đưa người dùng về màn hình trước đó.
-
-## 17. Quy tắc bố cục dùng chung
-
-- Màn hình dùng bố cục dọc, ưu tiên thiết bị di động.
-- Nội dung chính được căn giữa theo chiều ngang.
-- Các khối nội dung lớn dùng thẻ bo góc.
-- Nút hành động chính đặt gần cuối màn hình bắt đầu.
-- Văn bản hướng dẫn chia thành tiêu đề ngắn và mô tả dễ đọc.
-- Các màn hình dài phải hỗ trợ cuộn dọc.
-- Giữ vùng an toàn cho thanh trạng thái và thanh điều hướng hệ điều hành.
-
-## 18. Luồng hiện đã xác định
+Configure a game before starting.
+
+### Screen structure
+
+1. **Top navigation**
+   - Back on the left.
+   - Settings on the right.
+   - Large title: `Game setup`.
+
+2. **Player settings cards**
+   - Two side-by-side cards:
+     - `How many players?` — current player count.
+     - `How many imposters?` — current imposter count.
+   - Each has an icon, label, and large numeric value.
+   - Tap to change values.
+
+3. **Game type selection**
+   - Group title: `Game mode`.
+   - Two-column choice cards:
+     - `Word game` — find who does not know the secret word.
+     - `Question game` — find who received a different question.
+   - Exactly one card is selected.
+
+4. **Play mode**
+   - Select in the word category screen through `All categories` / `Family mode` tabs.
+   - `Show images` appears only in Family; setup has no mode selector or image switch.
+   - Question games always use normal mode.
+
+5. **Categories**
+   - Group title: `Categories`.
+   - One large settings card containing:
+     - Current name: `All categories` when none is explicitly selected.
+     - One or more category selections.
+     - Arrow opening category selection.
+     - With no selection, randomize across all content eligible for game type/mode.
+     - With selections, randomize only within them.
+
+6. **Game options**
+   - `Show category to imposters`.
+   - `Imposters know each other`.
+   - Each has an icon, label, and switch.
+   - Options share one card with dividers.
+   - Words only reveal category names; no separate hint switch/data. `Show category to imposters` remains word-only.
+   - **Planned Phase 6 addition, not implemented:** show `Imposters know each other` for word/question and Classic/Family, sharing its saved value across game switches, preset loads, and replay. With at least two imposters, only revealed imposter cards show teammates; locked cards/civilians do not.
+
+7. **Start button**
+   - Fixed near the bottom: `Start game`.
+   - Remains visible while scrolling.
+
+### Observed states
+
+- `Word game` + `Classic`, with `All categories`.
+- `Word game` + `Family`, showing only family-friendly content categories.
+- `Question game` + `Family`, showing only family-friendly question-prompt categories.
+
+### Behavior
+
+- Vertically scroll to access all options.
+- `Start game` remains at the bottom.
+- Selected game type/mode determines eligible random content.
+- Both games have `Classic` / `Family` modes.
+- Categories are optional, defaulting to `All categories`.
+- Multiple categories may be selected.
+- No selection randomizes across all published content eligible for game type/mode.
+- One or more selections restrict randomization to those categories.
+- Words have no separate clue beyond the category name when enabled.
+- Imposter count must be valid for player count.
+- Back returns to the previous screen.
+
+### Imposter selection sheet
+
+- Tap imposter count in either game to open a bottom sheet titled `Choose imposters`.
+- **Planned Phase 6 layout, not implemented:** follow `IMG_2987.PNG` structure: dim backdrop, icon/title header, `Fixed` / `Random` cards with mutually exclusive radios. Use existing app theme/components.
+- **App style rules:** images guide layout/interactions only; colors, typography, spacing, radii, icons, selection, modal overlays, and light/dark styles use `AppTheme`/`AppColors`, constants, and existing components, without a separate image-derived style system.
+- Two methods:
+  - `Fixed`: exact imposter count per game.
+    - `−` / `+` adjust count.
+    - Large central value and range text; `1` is `Recommended`. Disable decrement/increment at limits.
+    - Valid range 1…floor((N−1)/2), N from 3 to 100. Reducing N clamps fixed count to the new maximum.
+  - `Random`: uniformly choose within the same range once at game start. Collapse count controls, retaining fixed count in draft for switching back.
+- Phase 4 places `Imposters do not start` in setup; **Phase 6 moves it to the modal bottom**, labeled `Imposters never start`, without a duplicate in setup. Choose `startingPlayerId` first; when enabled, exclude this ID from role assignment. Discussion shows the same ID's name.
+- Count, method, and never-start share one draft. Back/drag dismissal/outside tap discards; `Confirm` applies/saves, including active-preset updates. Write failures retain draft for retry. Sheet scrolls on small screens/large text with SafeArea and accessible labels.
+
+## 4. Category Selection screen
+
+### Purpose
+
+Choose one or more categories or use all available categories.
+
+### Screen structure
+
+1. **Navigation**
+   - Back on the left.
+   - Large title: `Choose categories`.
+
+2. **Game type/mode information**
+   - Top badge, e.g.:
+     - `Word game · Classic`.
+     - `Question game · Family`.
+   - Mode is selected in setup; this screen shows eligible categories.
+
+3. **Category list**
+   - Two-column grid.
+   - Multiple selections allowed.
+   - Each card contains:
+     - Checkbox or selected state.
+     - Category name.
+     - Eligible content count for current game type/mode.
+   - Word examples:
+     - Animals.
+     - Food.
+     - Movies.
+     - Places.
+   - Question examples:
+     - Life & society.
+     - Love & relationships.
+     - Money & fame.
+     - Future & technology.
+
+4. **All categories state**
+   - `All categories` at the top.
+   - Default state.
+   - Selecting it deselects specific categories.
+   - Randomize across published remote and eligible local custom content for current game type/locale/mode; every prompt has equal probability.
+
+5. **Custom categories**
+   - Phase 8 adds `Create custom category` as the last word-grid tile, matching existing tile width/borders/spacing; light-blue background and plus icon distinguish creation. It has no category checkbox. Phase 9 also shows it in question pickers, including offline.
+   - **Phase 8:** custom words live with local setup across games/replay/restarts. Delete only after confirmed setup → landing navigation; launching on landing does not delete them. Phase 9 uses the same lifecycle for custom question pairs.
+
+### Behavior
+
+- Tap cards to select/deselect one or more categories.
+- `All categories` deselects all specific categories.
+- `Confirm` returns to setup with selected count.
+- No explicit selection keeps `All categories`.
+- Lists/counts are filtered by selected game type/mode.
+- `All categories` includes regular/Family categories; `Family mode` includes only `game_categories.is_family_friendly = true` categories with valid words.
+- Tab, categories, and images are drafts. `Confirm` saves all three together; back discards. Failed saves retain the screen for retry.
+- Switching tabs retains eligible categories, removes others, and notifies. No specific selection means all in the tab.
+- Empty Family tabs show a message; confirmation is allowed but games cannot start without words.
+- Remember image choice; show only in Family word games. Old caches default missing category flags to false, ignoring old prompt flags.
+- Premium categories are outside this draft's scope.
+
+## 5. Custom Content Creation screen
+
+### Purpose
+
+Create custom word categories (Phase 8) or question pairs (Phase 9) for gameplay. Phase 10 added optional local images per word or question pair. Use current theme/components.
+
+### Proposed layout
+
+1. **Header**
+   - Back on the left.
+   - Title: `Create custom category`.
+
+2. **Category name**
+   - Required `Category name` input.
+   - Placeholder: `Example: Office words`.
+
+3. **Word list**
+   - Group title: `Word list`.
+   - Current word count.
+   - One row/card per word:
+     - Word above; thumbnail and add/replace image below for small-screen space.
+     - Add/replace image button.
+     - Delete on the right.
+   - Empty state: `No words yet`.
+
+4. **Add word**
+   - `Add word` directly below the list.
+   - Opens a form with:
+     - `Word` — required in `Word game`.
+     - `Civilian question` and `Imposter question` — required in `Question game`.
+     - Optional `Image` selection/preview.
+     - `Save word`.
+   - Add one word and continue adding others.
+
+5. **Bulk word entry**
+   - Secondary `Enter multiple words` beside/below `Add word`.
+   - Opens multiline input.
+   - Each line is one word.
+   - Confirmation adds valid lines.
+   - Ignore blank lines and retain one instance of duplicates.
+
+6. **Illustrations**
+   - Each word has its own image; each **question pair shares one image**; optional.
+   - Tapping an item's image area allows:
+     - Photo library selection.
+     - Taking a photo.
+     - Removing the current image.
+   - No image: icon + `Add image`. Existing image: thumbnail + `Replace image`. Sheet offers `Photo library`, `Camera`, `Remove image` when present, and `Cancel`.
+   - Bulk entry creates text only; images are added individually afterward.
+
+7. **Save button**
+   - Fixed bottom `Save category`.
+   - Enabled only with nonempty name and at least one word.
+
+### States and behavior
+
+- Confirm leaving with unsaved changes.
+- Category names cannot be empty.
+- Trim each word before saving.
+- Compare trimmed words case-insensitively; ignore blanks and retain the first spelling of duplicates. Entirely duplicate batches require at least one new word.
+- Names matching remote/custom word categories in the current locale (including outside Family) require renaming, never overwriting; compare trimmed/case-insensitive and recheck on save.
+- Successful saves return to `Choose categories`, retain the current tab, add the new category to picker drafts, and preserve previous choices. Picker `Confirm` applies tab/categories/images; Back discards only draft selections, not saved categories.
+- Family-tab creation requires a family-suitability checkbox. The category appears in both tabs; All-tab creation is not implicitly family-friendly. Tab/game changes hide unsuitable categories without deleting content.
+- Save errors retain name/list/checkbox for retry, without partial categories; lock edits/navigation while saving. Inputs have labels/nearby errors, delete actions are labeled, forms scroll, save stays above keyboard.
+- Content is local with setup across restart/replay, outside presets/backend. Setup → landing requires permanent custom-content deletion confirmation; leave only after successful deletion and selected-ID removal. Write errors keep setup for retry.
+- Custom category cards show names, word counts, and image availability.
+
+### Local images — Phase 10
+
+- Single-item dialogs have optional image and confirmation; bulk remains text-only. Thumbnails sit below item content; category tiles show only `Has images`, without exposing images.
+- Accept decodable images up to 5 MiB. Canceled selection/read/write errors preserve prior images; errors appear beside controls with VI/EN live regions. Denied/restricted permissions direct users to system Settings; unavailable cameras offer library selection. Missing/corrupt gameplay files use stable placeholders.
+- Lock actions/Back during picker/import/save. Image changes participate in drafts/discard; failed saves retain images/text for retry. Dialogs scroll with inset 16 so buttons/images remain accessible at 320×568, text scale 2, with keyboard. Use current Material theme/buttons/touch targets.
+- Words: show only with Family + Show images; revealed civilians and results may see images, imposters' private cards may not. Questions: shared image below the current player's revealed question; results show it once below the civilian question. No images on handoff, locked cards, common-question, or discussion screens; conceal/background/submit/Back/player changes remove private widgets/semantics. `Question image` labels reveal neither role nor opposing question.
+- Saved images remain on-device throughout category lifetime, including replay/restart/offline; excluded from presets/backend. Unsaved drafts are lost on process termination. Android startup receives/discards picker lost-data and asks users to recreate drafts; never attach it to a new item.
+- Unit/widget/semantics checks cover add/replace/delete/cancel, retry, disposal, lifecycle, question stages VI/EN, three word-image configurations, small/large-text/keyboard/light-dark layouts. No screenshots. Real-device library/camera/permissions/process-death checks remain acceptance requirements.
+
+### Custom questions — Phase 9
+
+- Reuse word creation screen, category name, save button/errors, and discard confirmation. Question picker keeps standard UI without Family tabs/checkboxes.
+- `Question pairs` shows total; each item has civilian/imposter labels and accessible `Delete pair N`. Actions: `Add question pair` / `Enter multiple question pairs`.
+- Add pairs through two labeled fields. Trim both; reject empty or case-insensitively identical questions.
+- Bulk uses two multiline inputs paired by line number. Preserve blank lines while pairing; accept LF/CRLF and one trailing newline. Unequal counts, empty/identical questions, or duplicate pairs identify lines to fix; never partially add. Compare ordered civilian/imposter pairs after trim/lowercase against batch/draft. Reusing one question with a different counterpart is allowed.
+- Compare category names only within the same game type/locale across remote/local; recheck in the write queue. Failures preserve draft/counter. Successful saves select only in picker draft; Back retains the saved category.
+- Combined remote/local question catalogs drive counts, start eligibility, randomization, and session category names. `vi` content and `custom-question-N` IDs are stored in setup, outside presets/remote cache. Offline/refresh/game switches/restart/replay retain content; sessions snapshot pairs/names at start.
+- Before public reveal, only the current phone recipient sees their role-specific question; discussion reveals civilian question only, results reveal imposter question. Setup → landing confirms and atomically deletes word/question content with selected IDs; failures keep setup open.
+
+## 6. Player Selection screen
+
+### Purpose
+
+Let players privately open their secret information on one shared device.
+
+### Layout
+
+- Back at top left.
+- Large title: `Players`.
+- Instructions: `Tap your name to see your word, then pass the device to the next player.`
+- Two-column player grid.
+- Each card shows a circular initial and name.
+- Unseen cards are tappable.
+- Seen cards are dimmed and cannot reopen.
+
+### Behavior
+
+- Tap your name to open word reveal.
+- Confirm completion to return and hand off.
+- Advance to clues only after everyone views their information.
+
+## 7. Word Reveal screen
+
+### Before reveal
+
+- Back at top left.
+- Recipient name centered, e.g. `Word for Ha`.
+- Hidden cards expose no category or secrets through headings/screen readers.
+- Secret content is fully concealed in a card.
+- Instructions below: `Tap to reveal`.
+
+### After reveal
+
+- Card shows the player's word, e.g. `Inception`.
+- Centered word is most prominent. Civilians also see category name after reveal.
+- Bottom action: `Got it!`.
+
+### Behavior
+
+- Tap toggles concealed → revealed.
+- Civilians see the secret word.
+- Imposters see role and selected category name only when `Show category to imposters` is enabled; otherwise role only. Never show secret word, hint, or image. This is a local game setting, not a per-prompt field.
+- `Got it!` returns to `Players` and marks the current player complete.
+- Completed players cannot reveal again.
+- Phase 4 supports multiple imposters; with `Know each other`, only revealed imposters see other imposter names. No word/image for imposters. Phase 7 shows local images below revealed civilian words; missing/failed images retain a 180dp placeholder, no image path means text only. Late images update automatically and are removed from widgets/semantics on conceal.
+- Back conceals and returns without completion. Backgrounding conceals; returning requires explicit reveal.
+
+## 8. Voting Stage screen
+
+### Purpose
+
+Guide discussion and imposter voting after everyone has seen their word.
+
+### Layout
+
+- Back at top left.
+- Large title: `Voting stage`.
+- Description: `Time to discuss and vote for the imposter!`.
+- Subtitle: `How to vote`.
+- Vertically stacked instruction cards:
+  1. `Starting player` — randomized once at session creation; never-start rules exclude this player from imposters.
+  2. `Group discussion` — continue clockwise.
+  3. `Voting time` — everyone says a related word; multiple rounds are allowed.
+  4. `Reveal stage` — vote for suspects, then tap to see results.
+- Bottom: `Announce results`.
+
+### Behavior
+
+- Available only after everyone confirms their card.
+- Discussion/voting is verbal; the app does not collect individual ballots.
+- `Announce results` opens a sheet selecting exactly K distinct voted player IDs, K being actual imposter count, including random mode. Initially none selected; enable confirmation only at exactly K.
+- Ties require group revoting before confirmation. Cancel/back records no votes or secrets.
+- Confirmation opens results. Civilians win only if all K voted IDs exactly match all imposters; any incorrect choice gives imposters victory.
+- Back from player list/discussion asks to end the game; cancel preserves progress.
+
+## 9. Results Reveal screen
+
+### Layout
+
+- Imposter announcement, e.g. `THE IMPOSTER IS`.
+- All actual imposter names, voted players, and winning side.
+- `SECRET WORD` label.
+- Large centered word, e.g. `APPLE STRUDEL`.
+- Bottom: `Play again`.
+
+### Behavior
+
+- Results appear only after voting is complete.
+- `Play again` ends the session and returns to setup, retaining players/mode/categories for changes before the next game.
+- Create/randomize a new session, word/roles/starter only when `Start game` is pressed in setup; repeats are allowed for small sets. Missing content blocks starting under shared rules.
+- Back from results returns to setup and destroys the session. Sessions need not survive OS process termination.
+- Incorrect voted sets still show actual results and imposter victory.
+
+## 10. Player Selection — Question Game
+
+### Layout
+
+- Title: `Players`.
+- Instructions: `Each player sees their question and submits a private answer.`
+- Two-column player grid.
+- Cards show initials and names.
+- Unanswered cards open questions.
+- Submitted cards are marked complete.
+
+## 11. Answer Question screen
+
+### Layout
+
+- Top title: `Question for [Player name]`.
+- Player name centered.
+- Category below, e.g. `Category: Money & Fame`.
+- Card shows the player's private question.
+- Multiline input below: `Enter your answer here...`.
+- `Submit answer` below input.
+- Bottom counter: `0 / 5 answers submitted`.
+
+### Secret question state
+
+- All players have identical locked cards. Phase 5 reveals no role/teammates; **Phase 6 adds** other imposter names when `Imposters know each other` is enabled, at least two imposters exist, and the current imposter reveals their private card. Exclude self and compare IDs for duplicate names. Disabled/single-imposter cases retain no role/teammate disclosure.
+- Lock icon and `Tap to reveal`.
+- Questions appear only after tapping.
+- Question, category, and input appear only after reveal for the current player. Teammates appear only in eligible private cards, never locked cards, handoff lists, or discussion. Do not expose opposing questions or other private answers.
+- Backgrounding conceals question/input/teammates, dismisses keyboard focus, and requires reveal on return. Back/submission/player changes also conceal teammates. `knowEachOther` comes from the initial session snapshot.
+
+### Behavior
+
+- Enable `Submit answer` only for nonempty answers.
+- Submission increments the counter and returns to `Players`.
+- Submitted answers cannot be edited/reopened. Before submission, back retains an in-memory draft by stable player ID, visible only after revealing that player's card. Do not persist answers/drafts to disk/backend.
+- Once everyone submits, advance to discussion and identify who received a different question.
+
+## 12. Common Question screen
+
+### Layout
+
+- Title: `Everyone's answers`.
+- One common question in a large centered card.
+- Instructions: `Here is the question. Next you will see all answers and discuss who is lying about theirs.`
+- Bottom: `Start round`.
+
+### Behavior
+
+- Opens only after all answers are submitted.
+- `Start round` opens discussion.
+
+## 13. Discussion Stage — Question Game
+
+### Layout
+
+- Title: `Discussion stage`.
+- Common question in the top card.
+- Numbered answer cards.
+- Each shows number, player name, and answer.
+- Bottom: `Find the imposter`.
+
+### Behavior
+
+- Discuss using public answers.
+- Do not show the alternate private question before finding imposters.
+- `Find the imposter` directly reveals all imposters; no vote sheet or winning-side calculation for questions. Word voting/win rules stay unchanged.
+
+## 14. Results — Question Game
+
+### Layout
+
+- Keep `Discussion stage` title and common question at the top.
+- Answers remain listed.
+- Highlight every alternate-question recipient with `Imposter`.
+- These cards also show their private question.
+- Bottom: `Play again`.
+
+### Behavior
+
+- Reveal all imposter questions only after results. Reuse Phase 4 fixed/random counts and never-start rules; show starting player during discussion. Back before results asks to end the game.
+- `Play again` ends the game and returns to setup with players/settings retained. Only pressing start in setup creates a new session.
+
+## 15. Player Names screen
+
+### Purpose
+
+Enter, order, and manage players before playing.
+
+Current roster editor belongs to Phase 4; saved-preset library to Phase 6. Phase 6 depends on Phases 4–5 because it adds question teammate visibility. Phase 6 specification was finalized on 2026-10-27 and is not implementation status. References guide layout/interactions; use current app theme/components/rules.
+
+### Main layout
+
+1. **Header**
+   - Back on the left.
+   - `Edit players`, aligned using the current AppBar.
+
+2. **Selected list card**
+   - Folder icon.
+   - Top of content, before count/roster.
+   - Selected draft preset name, e.g. `Activities Committee`; no preset shows `Unsaved game`.
+   - Entire card opens `Saved lists` bottom sheet with a clear affordance.
+
+3. **Player count**
+   - Current count, e.g. `4 players` / `5 players`.
+   - Allowed range: `3–100`.
+
+4. **Player list**
+   - One card per player.
+   - Initial, name, sequence number, delete.
+   - Additional players use defaults such as `Player 5`.
+
+5. **Bottom actions**
+   - Keep `Add` and per-player delete; no bulk deletion.
+   - Keep bottom `Confirm` to apply drafts using current editor behavior.
+
+### Current list behavior (Phase 4)
+
+- Open from setup's `Players` tile. Phase 4 edits only the current roster; Phase 6 adds the preset card/library below.
+- Trim names on confirmation; reject empty names. Duplicate names are allowed because roles use stable unique IDs.
+- Add/delete within 3–100; use unused default-name numbers, never reuse IDs.
+- Accessible up/down ordering, without requiring drag-and-drop.
+- All actions affect drafts; `Confirm` applies/saves. Dirty Back asks to discard; cancel retains form.
+- Phase 4 reports save errors in setup; Phase 6 editor confirmation must await persistence. Failures retain drafts with unsaved/retry feedback inside the editor.
+
+### Saved lists
+
+- Tap the top preset card to open.
+- Bottom sheet titled `Saved lists`.
+- `Unsaved game` option, description `Quick play without saving`.
+- Saved presets show folder icon, name, count, and check matching draft selection.
+- Two footer actions:
+  - `Save as list…` creates a preset from draft roster/rules.
+  - `Manage lists` opens management.
+- Selecting a preset loads roster/rules into draft and closes the sheet without changing setup. `Unsaved game` retains draft roster/rules while clearing linkage. Dismissal without selection retains draft.
+- Footer actions wrap when narrow; sheets scroll for many presets/large text.
+
+### Save a new list
+
+- Close selection sheet before opening `Save as new list…` dialog.
+- `List name` input, placeholder `Enter list name`.
+- `Cancel` / `Save`.
+- Focusing input opens system keyboard.
+- Trim preset names; reject empty/case-insensitive duplicates. Roster must contain 3–100 nonempty names; duplicate player names remain valid through IDs.
+- `Save` persists draft roster/rules as a new preset. On success, close and select it in editor; setup changes only on `Confirm`.
+- Cancel retains draft/library. A successfully created preset survives discarded editor drafts; setup keeps its previously confirmed selection.
+- Block repeated submissions while saving; failures retain input with error/retry. Do not close/report success before persistence completes.
+
+### Manage lists
+
+- Close selection sheet before opening a separate screen; header has Back and `Manage lists`. Back returns to editor with draft retained.
+- Each card shows folder icon, name, count, `In use` if confirmed in setup, and vertical ellipsis.
+- Card tap opens details without switching presets. Ellipsis opens an anchored popover without triggering the card:
+  - `Details`.
+  - `Rename list`.
+  - `Delete`.
+- Divider before delete, using theme error color. Close menus before opening another sheet/dialog.
+- Empty libraries explain returning to the editor for `Save as list…`. Explicit loading/read-error/retry; read failures are not empty libraries.
+
+### Rename/delete presets
+
+- `Rename list` opens prefilled dialog with `Cancel`/`Save`; same name validation, excluding itself from duplicates. Preserve ID/roster/rules; update names everywhere only after persistence.
+- `Delete` confirms with preset name, cancel/delete. Cancel retains data; success deletes only that preset.
+- Deleting the active preset preserves setup roster/rules and changes to `Unsaved game`. Open drafts retain content but clear deleted-preset linkage; later confirmation must not recreate it.
+- Write failures retain dialog/content for retry; no premature close/success. Block repeated writes.
+
+### List details
+
+- Card tap or `Details` opens the same read-only bottom sheet, without selecting/loading into setup/draft.
+- Summary card: list name and count.
+- `Player names`: chips/cards in saved order, wrapping.
+- `Game settings`:
+  - Fixed imposter count or `Random`, never the sampled game count.
+  - `Imposters never start` status.
+  - `Show category to imposters` status.
+  - `Imposters know each other` status.
+- Omit `Show imposter count`; the app has no such setting. Do not invent rules to match images.
+- Note: player edits save on `Confirm`; setup rule edits autosave to the active preset. Rules apply only to supporting game types.
+
+### Data, drafts, persistence
+
+- Presets store ID/name, stable player IDs/names/order, next-ID counter, and existing imposter rules: count, fixed/random, never-start, category display, teammate visibility.
+- Exclude game type, mode, content categories, UI/content locale, custom content, and sessions. Preset selection retains those setup choices.
+- Editors draft roster/rules/preset ID independently. Add/delete/edit/reorder/switch affects drafts only. `Confirm` applies setup and updates the selected preset if it still exists; dirty Back asks to discard. Discarding neither updates old presets nor deletes newly saved ones.
+- `Unsaved game` clears linkage only after `Confirm`, without deleting/overwriting the previous preset. Reducing players still clamps imposters under Phase 4 rules.
+- Setup rule edits autosave to the confirmed preset; player edits save only after `Confirm`. Management rename/delete persists independently of editor drafts.
+- Use existing Hive/`LocalJsonStore`, serialized atomic setup/link/library updates. Old setup restores with empty library, `Unsaved game`, and original roster/rules; preserve JSON → Hive migration.
+- Read failures never reset/overwrite automatically; allow retry and block dependent writes until read/validation succeeds. Write failures retain drafts/forms with unsaved/retry feedback; changed in-memory state alone is not success.
+- Data remains on-device; do not send player names/rules to backend. Active sessions retain snapshots.
+
+### UI rules and checks
+
+- Reuse `AppTheme`/`AppColors`, `AppContent`, spacing, routing, Signals/Riverpod, and VI/EN ARB; do not copy reference purple/dark palettes.
+- Sheets/modals support scrolling, SafeArea, keyboard, small screens, text scale 2; icon buttons have labels, selected/in-use states have text/checks.
+- Unit/widget and real storage close/reopen checks: select/confirm/cancel drafts, create then discard, rule autosave, details, rename, active-preset deletion, no resurrection, errors/retries, legacy data. Regress word games after preset loading; run l10n/analyze/test during implementation.
+- No screenshot/image-based verification required for Phase 6. Add no synchronization, login, or new game rules.
+
+## 16. Settings screen
+
+### Purpose
+
+Change language, open instructions, rate/send feedback, and view app identification.
+
+### Layout
+
+1. **Header**
+   - Back on the left.
+   - Centered `Settings`.
+
+2. **General options**
+   - `Language`: one choice for UI/categories/prompts; names/codes from DB, showing only VI/EN supported by UI.
+   - `How to play`: icon/arrow to instructions.
+   - Both in one card with divider.
+
+3. **Rating/feedback**
+   - `Rate app`: opens configured platform store rating page.
+   - `Send feedback`: opens configured developer feedback channel.
+   - Missing URLs/app IDs/channels show unavailable with reasons; no fake URLs.
+   - Both in one card with divider.
+
+4. **App information**
+   - Group title: `App information`.
+   - `App version`: current version/build, e.g. `4.2.2 (158)`.
+   - `Installation ID`: abbreviated, anonymous device-local ID with full-copy action.
+   - Both in one card with divider.
+
+### Behavior
+
+- Language changes UI/game content together only after successful setup persistence. One saved value; write failures keep old language.
+- `Language` uses Card/ListTile with DB name, locale code, icon, selected semantics. Keep screen open to show progress/save errors/retry; change content only after persistence.
+- Paginated list ordered by `sort_order`, then `code`; loading/error/retry/cache notices. Do not derive it from ARB. Languages disappearing after successful refresh are unavailable; retain old selection and block starting.
+- Setup/picker link to Language. New locales without snapshots block confirmation/start; empty snapshots explain no content and offer language changes. Locale changes discard picker drafts and retain category IDs eligible in the new snapshot.
+- No language changes mid-game. Sessions retain prompt/category snapshots; replay returns to setup. Custom forms retain opening locale and are not deleted by language changes.
+- `How to play` opens existing instructions.
+- `Rate app` / `Send feedback` open appropriate apps when configured; otherwise disabled with reasons.
+- Copy writes the entire installation ID to clipboard even when displayed abbreviated.
+- Back returns to the previous screen.
+
+## 17. Shared layout rules
+
+- Vertical, mobile-first screens.
+- Horizontally centered main content.
+- Large content blocks use rounded cards.
+- Primary actions sit near the start screen bottom.
+- Instructions use short titles and readable descriptions.
+- Long screens scroll vertically.
+- Respect status/navigation bar safe areas.
+
+## 18. Defined flows
 
 ```text
-Màn hình bắt đầu
-├── Bắt đầu
-│   └── Cài đặt trò chơi
-│       ├── Cài đặt
-│       │   ├── Ngôn ngữ
-│       │   └── Cách chơi
-│       ├── Chọn loại trò chơi
-│       │   ├── Trò chơi từ ngữ
-│       │   └── Trò chơi câu hỏi
-│       ├── Chọn mode
-│       │   ├── Cổ điển
-│       │   └── Gia đình
-│       ├── Chọn danh mục
-│       │   ├── Tất cả danh mục
-│       │   ├── Một hoặc nhiều danh mục cụ thể
-│       │   └── Tạo danh mục tùy chỉnh
-│       ├── Tên người chơi
-│           ├── Danh sách đã lưu
-│           │   ├── Lưu thành danh sách mới
-│           │   └── Quản lý danh sách
-│           │       └── Chi tiết danh sách
-│       └── Bắt đầu trò chơi
-│           └── Người chơi
-│               └── Tiết lộ từ
-│                   ├── Giai đoạn bầu chọn
-│                   └── Tiết lộ kết quả
-│           └── Trò chơi câu hỏi
-│               ├── Người chơi
-│               ├── Trả lời câu hỏi
-│               ├── Câu trả lời của mọi người
-│               ├── Giai đoạn thảo luận
-│               └── Kết quả + Chơi lại
-└── Cách chơi
-    └── Danh sách hướng dẫn + Mẹo chuyên nghiệp
+Start screen
+├── Start
+│   └── Game setup
+│       ├── Settings
+│       │   ├── Language
+│       │   └── How to play
+│       ├── Choose game type
+│       │   ├── Word game
+│       │   └── Question game
+│       ├── Choose mode
+│       │   ├── Classic
+│       │   └── Family
+│       ├── Choose categories
+│       │   ├── All categories
+│       │   ├── One or more specific categories
+│       │   └── Create custom category
+│       ├── Player names
+│           ├── Saved lists
+│           │   ├── Save as new list
+│           │   └── Manage lists
+│           │       └── List details
+│       └── Start game
+│           └── Players
+│               └── Word reveal
+│                   ├── Voting stage
+│                   └── Results reveal
+│           └── Question game
+│               ├── Players
+│               ├── Answer question
+│               ├── Everyone's answers
+│               ├── Discussion stage
+│               └── Results + Play again
+└── How to play
+    └── Instructions + Pro tips
 ```
 
-## 19. Các màn hình chờ bổ sung ảnh
+## 19. Screens awaiting additional images
 
-- Tiết lộ vai trò hoặc từ bí mật.
-- Đưa ra gợi ý.
-- Bỏ phiếu.
-- Kết quả ván chơi.
-- Các màn hình phụ khác nếu có.
+- Role/secret-word reveal.
+- Giving clues.
+- Voting.
+- Game results.
+- Other supporting screens as needed.
 
-## Tài liệu liên quan
+## Related documents
 
-- [Kế hoạch triển khai ứng dụng theo phase/PR](../app-implementation-plan.md)
-- [Bố cục màn hình Admin](admin-screen-layout.md)
+- [Phase/PR application implementation plan](../app-implementation-plan.md)
+- [Admin Screen Layout](admin-screen-layout.md)
 
-### Ghi chú nghiệm thu Phase 7 — 27/10/2026
+### Phase 7 acceptance notes — 2026-10-27
 
-- App bar setup có `Làm mới nội dung` / `Refresh content`, tooltip/semantics và trạng thái disabled trong lúc đồng bộ. Nội dung giữ lại vẫn chơi được; thành công rỗng thay snapshot và category không còn hợp lệ được bỏ chọn.
-- Ảnh word local nằm dưới từ ở thẻ người thường đã mở và màn kết quả. Không có ảnh/semantics ảnh ở thẻ che, imposter, danh sách người chơi hoặc thảo luận. Màn kết quả dùng cùng widget ảnh và vùng cuộn hiện có.
-- Widget tests kiểm tra ảnh tới sau, file thiếu/decode lỗi, placeholder, lifecycle/semantics, không đổi session khi refresh, 320×568 với text scale 2 ở cả hai theme. Bộ test hiện có còn kiểm tra kết quả/voting ở 320×568, 844×390 và 1024×768.
-- Không chụp screenshot; chưa kiểm tra trên thiết bị thật hoặc bản Release.
+- Setup app bar has `Refresh content`, tooltip/semantics, disabled while syncing. Retained content remains playable; successful empty refresh replaces snapshots and removes invalid category selections.
+- Local word images appear below revealed civilian words and on results. No image widgets/semantics on hidden cards, imposters, player lists, or discussion. Results reuse the image widget and scroll area.
+- Widget tests cover late images, missing/decode failures, placeholders, lifecycle/semantics, sessions unchanged by refresh, 320×568 at text scale 2 in both themes. Existing tests also check results/voting at 320×568, 844×390, 1024×768.
+- No screenshots; real-device/Release checks remain pending.

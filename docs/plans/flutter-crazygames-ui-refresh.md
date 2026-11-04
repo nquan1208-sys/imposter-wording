@@ -1,176 +1,175 @@
-# Kế hoạch UX/UI Flutter — CrazyGames inspired
+# Flutter UX/UI Plan — CrazyGames Inspired
 
-Ngày lập: 2026-11-02. Trạng thái: đã triển khai; gap smoke setup live do backend local chưa chạy.
+Created: 2026-11-02. Status: implemented; live setup smoke gap because the local backend was not running.
 
-Nguồn thiết kế: [CrazyGames](../www.crazygames.com-DESIGN.md).
-Phạm vi: toàn bộ `app/` Flutter; không bao gồm `admin/`.
-Kế hoạch này thay hướng Bumble cho đợt redesign tiếp theo. Giữ
-[checkpoint cũ](flutter-ui-refresh.md) làm lịch sử, không sửa kết quả đã ghi.
+Design source: [CrazyGames](../www.crazygames.com-DESIGN.md).
+Scope: all Flutter `app/`, excluding `admin/`.
+This plan replaces the Bumble direction for the next redesign. Retain the
+[previous checkpoint](flutter-ui-refresh.md) as history without changing recorded results.
 
-## 1. Mục tiêu và quyết định thiết kế
+## 1. Goals and design decisions
 
-- Tạo cảm giác party game: nền tối, tiêu đề nổi bật, card rõ nhóm, CTA xanh lime.
-- Người dùng quét nhanh cấu hình, biết bước tiếp theo và trạng thái đã hoàn thành.
-- Thiết kế lại phân cấp thông tin và tương tác, không chỉ đổi bảng màu.
-- Giữ luật chơi, route/input, lưu trữ, nội dung offline, validation và retry hiện có.
-- Dùng dark theme làm giao diện mặc định trên cả thiết bị đang bật light mode.
-  Không thêm công tắc theme hoặc thiết kế light theme trong đợt này.
-- Tái sử dụng component hiện có, Material icons và font BeVietnamPro đã bundle.
-  Dùng weight thật 400/500/600 đang có; chưa thêm font mới hoặc giả lập 900.
-- Không thêm package, backend/schema, tính năng tìm kiếm, tài khoản, leaderboard
-  hoặc danh mục game kiểu portal.
+- Create a party-game feel: dark background, prominent headings, clearly grouped cards, lime CTAs.
+- Let users scan settings quickly, understand the next step, and recognize completed states.
+- Redesign information hierarchy and interactions, beyond changing colors.
+- Preserve game rules, routes/inputs, storage, offline content, validation, and retries.
+- Default to dark theme even on devices using light mode.
+  No theme toggle or light-theme design in this iteration.
+- Reuse existing components, Material icons, and bundled BeVietnamPro.
+  Use available real weights 400/500/600; no new font or simulated 900.
+- Add no packages, backend/schema, search, accounts, leaderboards,
+  or portal-style game directories.
 
-Các quyết định trên là phương án mặc định của kế hoạch; yêu cầu mới của người dùng
-được ưu tiên khi triển khai.
+These are the plan's defaults; new user requirements take priority
+during implementation.
 
-## 2. Hiện trạng và điểm phải xử lý
+## 2. Current state and required fixes
 
-| Hiện trạng từ code | Hướng sửa |
+| Current code | Direction |
 | --- | --- |
-| `AppTheme.dark = light`; `main.dart` chưa đặt `themeMode` | Tạo palette dark thật, dùng `ThemeMode.dark`; bỏ giả định dark bằng light trong test |
-| `AppColors` đặt tên theo màu Bumble, nhiều screen tham chiếu trực tiếp | Chuyển sang token theo vai trò, cập nhật tất cả nơi dùng; không đổi giá trị `white` thành màu tối để lách migration |
-| Theme, hero, selection, footer có gradient/shadow riêng | Đồng bộ theo bảng màu và vai trò; gradient dành cho hero/section, CTA lime đặc |
-| `app/DESIGN_RULES.md` vẫn mô tả Bumble và cấm gradient, khác code hiện tại | Cập nhật contract cùng phase nền tảng để người triển khai có một nguồn quy tắc |
-| `AppRadii.card = 24`, `hero = 28` | Card 16, hero/sheet 22, button dạng pill; input nhiều dòng giữ góc vừa phải |
-| `AppContent` giới hạn 640; grid đã hỗ trợ chữ lớn và hai cột | Giữ nền tảng responsive, tránh sao chép grid web tám cột |
-| Test theme đang assert vàng, light và contrast trên nền trắng | Thay bằng contract dark và contrast đúng bề mặt/gradient; giữ test hành vi |
-| README có mô tả font/theme cũ | Đồng bộ tài liệu sau triển khai; không coi số test lịch sử là baseline mới |
+| `AppTheme.dark = light`; `main.dart` does not set `themeMode` | Create a real dark palette and use `ThemeMode.dark`; remove dark-equals-light test assumptions |
+| `AppColors` uses Bumble color names, referenced directly by many screens | Migrate to role-based tokens and update every caller; do not turn `white` into a dark value to bypass migration |
+| Theme, hero, selection, footer have separate gradients/shadows | Align palette/roles; reserve gradients for hero/sections and use solid lime CTAs |
+| `app/DESIGN_RULES.md` still describes Bumble and bans gradients, unlike current code | Update the contract in the foundation phase for one rule source |
+| `AppRadii.card = 24`, `hero = 28` | Cards 16, hero/sheets 22, pill buttons; moderate multiline-input corners |
+| `AppContent` caps at 640; grids support large text and two columns | Keep responsive foundations; do not copy an eight-column web grid |
+| Theme tests assert yellow, light, and white-background contrast | Replace with dark contract and actual surface/gradient contrast; retain behavioral tests |
+| README describes old font/theme | Synchronize after implementation; historical test counts are not the new baseline |
 
-## 3. Chuyển tài liệu tham chiếu thành contract mobile
+## 3. Adapt references into a mobile contract
 
-Tài liệu nguồn là bản trích xuất alpha từ một trang, có stylesheet bị chặn và
-thiếu trạng thái. Bảng dưới là quyết định cho app, không phải tất cả đều là token
-đã đo từ CrazyGames.
+The source is an alpha extraction from one page with a blocked stylesheet and
+missing states. These are app decisions, not all measured CrazyGames tokens.
 
-| Vai trò | Giá trị / quy tắc dự kiến |
+| Role | Proposed value / rule |
 | --- | --- |
 | Canvas | `#0C0D14` |
-| Surface / surface raised | `#1F2026` / `#2F3148`; phân tầng card, input, sheet |
-| Text chính / body / muted | `#FFFFFF` / `#E5E6EE` / `#BDBFCE` |
-| CTA / chữ trên CTA | `#C7FF5B` / `#0F1A00` |
-| Accent / accent text | `#7361FF` / `#A48EFF`; dùng text sáng trên nền tối, kiểm tra contrast trước khi dùng tím làm nền chữ |
-| Selection | Surface nhuộm tím + viền rõ + check/radio + selected semantics |
-| Secondary action | Surface trắng alpha 10%, chữ sáng; phải đo trên nền đã blend |
-| Border / focus | Border trung tính; focus 2 logical px sáng, không xóa focus ring |
-| Error / warning / success | Token riêng cho dark, chốt giá trị bằng contrast test; luôn có nhãn/icon, giữ retry và nội dung giải thích |
-| Gradient | Chọn tối đa hai gradient tím/teal từ nguồn cho hero/section; đặt chữ trên vùng nền bảo đảm contrast |
-| Spacing | Tái sử dụng thang 4/8/12/16/24/32 hiện có; gutter 16 trên màn hẹp, 24 khi đủ rộng |
-| Typography | Heading 24/28/32, title 18/20, body 16, phụ 14; line-height 1.4–1.5, cho phép wrap và text scaling |
-| Controls | CTA tối thiểu cao 50, icon hit area tối thiểu 48×48; chiều cao tăng theo nội dung |
-| Motion | Tái sử dụng `AppEffects` và reduced-motion; phản hồi nhấn nhẹ, không phóng card 1.1–1.2× trên mobile |
+| Surface / raised surface | `#1F2026` / `#2F3148`; layered cards, inputs, sheets |
+| Primary / body / muted text | `#FFFFFF` / `#E5E6EE` / `#BDBFCE` |
+| CTA / CTA text | `#C7FF5B` / `#0F1A00` |
+| Accent / accent text | `#7361FF` / `#A48EFF`; light text on dark surfaces; check contrast before using purple behind text |
+| Selection | Purple-tinted surface + clear border + check/radio + selected semantics |
+| Secondary action | 10% alpha white surface, light text; measure on composited backgrounds |
+| Border / focus | Neutral borders; bright 2 logical px focus, never remove focus rings |
+| Error / warning / success | Dedicated dark tokens finalized through contrast tests; always labels/icons, retaining retry/explanations |
+| Gradient | At most two source purple/teal gradients for hero/sections; place text in contrast-safe areas |
+| Spacing | Reuse 4/8/12/16/24/32; gutter 16 on narrow screens, 24 when wider |
+| Typography | Headings 24/28/32, titles 18/20, body 16, secondary 14; line-height 1.4–1.5, wrapping and text scaling |
+| Controls | CTA minimum height 50, icon targets at least 48×48; height grows with content |
+| Motion | Reuse `AppEffects` and reduced-motion; subtle press feedback, no 1.1–1.2× mobile card scaling |
 
-Các ngoại lệ chủ động so với bản trích xuất:
+Deliberate exceptions to the extraction:
 
-- Không dùng icon hit area 28 hoặc nút 34–40 cho thao tác mobile.
-- Không áp `outline: none`, `active opacity: 0`, hay làm cả control mờ đến khó đọc.
-- Không áp tám cột, zero gutter, hoặc cỡ chữ cố định vào màn hình điện thoại.
-- Không ép APK Protocol/Artex khi repo không có font; giữ font hỗ trợ tiếng Việt.
-- Bổ sung semantic status vì app có lỗi lưu, lỗi mạng và trạng thái hoàn thành;
-  sự thiếu dữ liệu trong nguồn không phải lý do loại bỏ phản hồi lỗi.
-- Không sao chép logo/brand CrazyGames. Không thêm hover làm điều kiện để dùng app.
+- No 28px icon targets or 34–40px buttons for mobile actions.
+- Do not use `outline: none`, `active opacity: 0`, or fade whole controls until illegible.
+- Do not apply eight columns, zero gutters, or fixed text sizes to phones.
+- Do not force APK Protocol/Artex without assets; retain Vietnamese-supporting fonts.
+- Add semantic statuses for save/network failures and completion;
+  missing source data is no reason to remove error feedback.
+- Do not copy CrazyGames branding/logo or require hover to use the app.
 
-## 4. UX theo màn hình
+## 4. UX by screen
 
-| Nhóm | Thay đổi cần làm | Điều phải giữ |
+| Group | Required changes | Preserve |
 | --- | --- | --- |
-| Landing, hướng dẫn | Hero gradient gọn; tên app → mô tả → ba bước chơi; một CTA lime “Bắt đầu”, hướng dẫn là action phụ | Nội dung VI/EN và điều hướng hiện có |
-| Setup | Nhóm theo thứ tự: người chơi/imposter → loại game và luật liên quan → nội dung/chế độ/danh mục → trạng thái tải; CTA bắt đầu cố định cuối màn | Hai cột trên điện thoại thường; tùy chọn hiện danh mục ngay dưới loại game, chỉ word; know-each-other cho cả hai; hint tiếp tục ẩn |
-| Imposter sheet | Fixed/random rõ lựa chọn; count và never-start trong cùng draft; giải thích giới hạn sát control | Confirm mới commit; back/cancel bỏ draft; cảnh báo nhóm 3–4 người |
-| Danh mục, Family/All | Card/chip có selected state rõ, nhãn wrap; tóm tắt lựa chọn và xác nhận rõ | Phân biệt chọn tất cả/chọn riêng, lọc eligibility và back bỏ thay đổi |
-| Người chơi, preset | Danh sách tên dễ sửa, số thứ tự rõ; phân cấp chọn danh sách/lưu/quản lý; thao tác xóa tách khỏi action chính | Draft, autosave, rename/delete identity, cảnh báo mất thay đổi và retry |
-| Custom content, ảnh | Chia tên danh mục/nội dung/ảnh thành nhóm; empty state có hướng dẫn; lỗi sát field; dialog cuộn khi mở keyboard | Thêm/sửa/xóa word và question, ảnh local, recovery, validation và dữ liệu nháp |
-| Word game | Phân biệt chọn người → chuyển máy → mở thẻ → thảo luận → vote → kết quả bằng tiêu đề, tiến độ và một action chính; hoàn thành có check/nhãn | Quyền mở thẻ, luật vote/scoring, ảnh chỉ trong vùng được phép, replay và exit confirmation |
-| Question game | Cùng ngôn ngữ card với word; khu vực nhập câu trả lời có label và trạng thái gửi; public answers dễ đọc sau khi hoàn tất | Không mở lại câu trả lời đã khóa, draft theo ID, reveal kết quả và luật riêng của question |
-| Settings, ngôn ngữ, fallback | Group tile rõ; selection/focus nhất quán; lỗi có retry, màn không tìm thấy có đường quay lại | Locale/content-language hiện có, ID chỉ copy khi yêu cầu, action chưa cấu hình vẫn disabled |
+| Landing, instructions | Compact gradient hero; app name → description → three steps; one lime “Start” CTA, secondary instructions action | Existing VI/EN content and navigation |
+| Setup | Group players/imposters → game type/relevant rules → content/mode/categories → load status; fixed bottom start CTA | Two columns on typical phones; word-only category display immediately below game type; know-each-other for both; hint stays hidden |
+| Imposter sheet | Clear fixed/random selection; count and never-start in one draft; constraints beside controls | Confirm commits; back/cancel discards; warnings for groups of 3–4 |
+| Categories, Family/All | Clear selected cards/chips, wrapped labels, selection summary and confirmation | All versus explicit selection, eligibility filtering, back discards |
+| Players, presets | Easily edited names, clear numbers, choose/save/manage hierarchy; deletion separate from primary actions | Drafts, autosave, rename/delete identity, discard warnings, retry |
+| Custom content, images | Group category name/content/images; helpful empty states; field errors; dialogs scroll with keyboard | Word/question CRUD, local images, recovery, validation, drafts |
+| Word game | Distinguish player selection → handoff → reveal → discussion → vote → results with titles, progress, one primary action, completion checks/labels | Reveal permissions, vote/scoring, image eligibility, replay, exit confirmation |
+| Question game | Same card language as word; labeled answer input/submission state; readable completed public answers | Locked answers stay closed, ID-based drafts, result reveal, question-specific rules |
+| Settings, language, fallback | Clear tile groups, consistent selection/focus, retry errors, not-found return path | Existing locale/content language, ID copied only on request, unconfigured actions disabled |
 
-Không gộp hay bỏ bước chuyển máy/mở thẻ để rút ngắn luồng. Thẻ đang ẩn phải
-giống nhau giữa các vai trò; trạng thái công khai không tiết lộ imposter sớm.
+Do not merge/remove handoff or reveal steps to shorten flows. Hidden cards must
+look identical across roles; public states must not reveal imposters early.
 
-## 5. Các phase triển khai
+## 5. Implementation phases
 
-Thực hiện tuần tự. Mỗi phase cập nhật trạng thái và ghi kết quả kiểm tra thực tế
-vào kế hoạch này; không ghi “pass” cho việc chưa chạy.
+Run sequentially. Each phase updates status and actual check results here;
+never record “pass” for checks not run.
 
-### Phase 1 — Contract, token, Material theme
+### Phase 1 — Contract, tokens, Material theme
 
-File: `app/DESIGN_RULES.md`, `app/lib/theme/{app_colors,app_theme,app_effects}.dart`,
+Files: `app/DESIGN_RULES.md`, `app/lib/theme/{app_colors,app_theme,app_effects}.dart`,
 `app/lib/constants/{app_radii,app_spacing,app_edge_insets}.dart`, `app/lib/main.dart`.
 
-- Chốt semantic token và contrast; kiểm kê tất cả caller `AppColors` trước khi đổi tên.
-- Định nghĩa dark `ColorScheme`, text, app bar, button, input, sheet/dialog,
-  chip, list tile, switch/check/radio, tab, progress, snackbar và system bar.
-- Chọn dark tường minh trong `MaterialApp`; bỏ alias dark=light. Rà caller/test
-  dùng `AppTheme.light`, giữ tương thích tạm thời nếu cần để từng phase vẫn chạy.
-- Giữ tất cả luồng chọn ngôn ngữ hiện tại; không sửa locale behavior ngoài scope.
-- Đạt khi theme tests xác nhận dark thật, chữ/CTA/error đủ contrast, focus và
-  disabled phân biệt rõ; static analysis không có tham chiếu token hỏng.
+- Finalize semantic tokens/contrast; inventory all `AppColors` callers before renaming.
+- Define dark `ColorScheme`, text, app bars, buttons, inputs, sheets/dialogs,
+  chips, list tiles, switches/checks/radios, tabs, progress, snackbars, system bars.
+- Explicitly select dark in `MaterialApp`; remove dark=light alias. Review callers/tests
+  using `AppTheme.light`, keeping temporary compatibility if needed between phases.
+- Preserve all language-selection flows; no out-of-scope locale changes.
+- Complete when theme tests confirm real dark mode, sufficient text/CTA/error contrast,
+  distinguishable focus/disabled states, and static analysis finds no broken token references.
 
-### Phase 2 — Component dùng chung
+### Phase 2 — Shared components
 
-File: `app/lib/widgets/{app_content,app_action_bar,app_hero_card,app_selection_card,
+Files: `app/lib/widgets/{app_content,app_action_bar,app_hero_card,app_selection_card,
 app_card_grid,app_notice,player_cards}.dart`.
 
-- Đồng bộ surface, spacing, radius, gradient và state; giữ API đang dùng nếu có thể.
-- Giữ content max-width 640, lazy player rows, hai cột khi content width ≥280
-  và text scale ≤1.5; fallback một cột, card cao theo nội dung.
-- Footer không cộng keyboard/safe inset hai lần; notice có message và action rõ.
-- Đạt khi component tests bao phủ tap/focus/disabled/selected semantics,
-  reduced-motion, text scale 2 và layout hẹp; không có overflow/hit-test warning.
+- Align surfaces, spacing, radii, gradients, and states; preserve APIs where possible.
+- Keep max-width 640, lazy player rows, two columns at content width ≥280
+  and text scale ≤1.5; otherwise one column, with content-sized cards.
+- Footers must not double-count keyboard/safe insets; notices have clear messages/actions.
+- Complete when tests cover tap/focus/disabled/selected semantics,
+  reduced-motion, text scale 2, and narrow layouts without overflow/hit-test warnings.
 
-### Phase 3 — Landing, hướng dẫn, setup, danh mục
+### Phase 3 — Landing, instructions, setup, categories
 
-File: `features/landing/`, `how_to_play/`, `setup/` và các test tương ứng.
+Files: `features/landing/`, `how_to_play/`, `setup/`, and related tests.
 
-- Áp cấu trúc UX ở mục 4; thu gọn trang trí để cấu hình và CTA là nội dung chính.
-- Giữ nút bắt đầu loading/disabled chống mở hai game; thông báo lỗi đọc/lưu và
-  content cũ vẫn có trạng thái/retry đúng.
-- Đạt khi navigation, chọn mode/danh mục, imposter draft, category word-only,
-  offline/loading/empty/error và hai cột 360/375/430 vẫn đúng.
+- Apply section 4 UX; reduce decoration so settings/CTAs remain primary.
+- Preserve loading/disabled start prevention of duplicate games, read/save errors,
+  and correct stale-content states/retries.
+- Complete when navigation, mode/category selection, imposter drafts, word-only category display,
+  offline/loading/empty/error states, and two columns at 360/375/430 remain correct.
 
-### Phase 4 — Player editor, preset, custom content
+### Phase 4 — Player editor, presets, custom content
 
-File: `features/player_names/`, `player_presets/`, `custom_content/`.
+Files: `features/player_names/`, `player_presets/`, `custom_content/`.
 
-- Áp các nhóm form, action hierarchy, selection và dialog dark.
-- Giữ bàn phím không che field/action; back/cancel/delete có hành vi như trước.
-- Đạt khi test roster/preset/custom word/custom question và ảnh local pass,
-  bao gồm lưu thất bại, giữ draft, landscape + keyboard và text scale 2.
+- Apply form groups, action hierarchy, selection, and dark dialogs.
+- Keep fields/actions visible above keyboards; preserve back/cancel/delete behavior.
+- Complete when roster/preset/custom word/custom question/local-image tests pass,
+  including failed saves, retained drafts, landscape + keyboard, text scale 2.
 
-### Phase 5 — Word game và question game
+### Phase 5 — Word and question games
 
-File: `features/word_game/`, `question_game/`, `widgets/player_cards.dart` nếu cần.
+Files: `features/word_game/`, `question_game/`, `widgets/player_cards.dart` if needed.
 
-- Áp ngôn ngữ card/progress/action thống nhất cho từng stage và kết quả.
-- Không dùng animation giữ widget bí mật cũ khi conceal; không dựng nội dung
-  bí mật rồi che bằng opacity/offstage. Conceal phải loại cả widget và semantics.
-- Đạt khi full flow hai game pass, có test lifecycle/background, thẻ chưa mở,
-  teammate/category visibility, câu trả lời khóa/draft, vote/result/replay,
-  ảnh word và danh sách đến 100 người.
+- Apply consistent cards/progress/actions to every stage and results.
+- Conceal animations must not retain old secret widgets; do not build secrets
+  then hide using opacity/offstage. Conceal removes widgets and semantics.
+- Complete when both full flows pass, including lifecycle/background, unopened cards,
+  teammate/category visibility, locked/draft answers, vote/results/replay,
+  word images, and lists up to 100 players.
 
-### Phase 6 — Settings, locale và fallback
+### Phase 6 — Settings, locale, fallback
 
-File: `features/settings/`, `unknown/`, `app/lib/l10n/arb/app_{vi,en}.arb` nếu đổi copy.
+Files: `features/settings/`, `unknown/`, `app/lib/l10n/arb/app_{vi,en}.arb` if copy changes.
 
-- Đồng bộ tiles, language picker và trạng thái unavailable; kiểm tra bản dịch
-  ở mọi label mới, không hardcode copy tiếng Việt vào widget.
-- Đạt khi language selection, lỗi đọc/ghi/retry, copy ID và navigation pass;
-  nội dung dài VI/EN không bị cắt mất thông tin cần thao tác.
+- Align tiles, language picker, unavailable states; verify every new label's translation,
+  without hardcoded Vietnamese widget copy.
+- Complete when language selection, read/write errors/retries, ID copy, and navigation pass;
+  long VI/EN text must retain all information needed for actions.
 
-### Phase 7 — Regression và tài liệu bàn giao
+### Phase 7 — Regression and handoff documentation
 
-- Rà toàn bộ `app/lib` và test/fixture/harness: bỏ token Bumble còn dùng,
-  cập nhật theme fixture sang dark; không đổi expected behavior để che regression.
-- Đồng bộ `app/README.md`, `app/DESIGN_RULES.md` và test mô tả theo giao diện mới.
-- Chạy kiểm tra mục 6, ghi số test pass/skip và gap thực tế.
-- Đạt khi toàn bộ app dùng contract mới, analyzer sạch, full suite pass,
-  không thay dependency, route contract, store/model hoặc dữ liệu đã lưu.
+- Review all `app/lib` and tests/fixtures/harnesses: remove remaining Bumble tokens,
+  migrate theme fixtures to dark; never change expected behavior to hide regressions.
+- Synchronize `app/README.md`, `app/DESIGN_RULES.md`, and test descriptions.
+- Run section 6 checks, recording pass/skip counts and actual gaps.
+- Complete when all app screens use the contract, analyzer/full suite pass,
+  without dependency, route-contract, store/model, or saved-data changes.
 
-## 6. Chiến lược kiểm chứng
+## 6. Verification strategy
 
-Trước khi sửa, ghi baseline mới bằng analyzer và test suite; kết quả cũ chỉ là
-lịch sử. Trong mỗi phase chạy test đúng vùng ảnh hưởng; cuối đợt chạy full suite.
+Record a fresh analyzer/test baseline before changes; old results are historical.
+Run affected tests per phase and the full suite at the end.
 
-Từ `app/` (các env asset cần tồn tại theo README, không in giá trị credential):
+From `app/` (environment assets must exist per README; do not print credentials):
 
 ```sh
 rtk proxy flutter gen-l10n
@@ -178,87 +177,87 @@ rtk proxy flutter analyze --no-pub
 rtk proxy flutter test --no-pub
 ```
 
-Từ repo root: `rtk git diff --check`.
+From repository root: `rtk git diff --check`.
 
-Ma trận widget tests: 320/360/375/430 logical px, tablet 768, landscape có keyboard;
-text scale 1 và 2; VI/EN; loading/empty/error/offline/selected/disabled; reduced
-motion. Dùng test hiện có và bổ sung ca thiếu, không nhân toàn bộ suite theo mọi
-tổ hợp. Contrast test kiểm tra alpha compositing và vùng gradient đặt chữ;
-control thiết yếu có focus/label và vùng chạm tối thiểu 48×48.
+Widget matrix: 320/360/375/430 logical px, tablet 768, landscape with keyboard;
+text scales 1/2; VI/EN; loading/empty/error/offline/selected/disabled; reduced motion.
+Reuse tests and add missing cases instead of multiplying the entire suite by every
+combination. Contrast tests check alpha compositing and text-bearing gradient regions;
+essential controls have focus/labels and minimum 48×48 targets.
 
-Rà các suite trong `app/integration_test/`; chạy smoke setup/word/question offline
-trên iOS Simulator và Android emulator khi môi trường sẵn sàng. Ghi rõ nếu chưa
-chạy được. Backend HTTP/live checks giữ opt-in hiện có; redesign không cần đổi
-backend để đạt tiêu chí UI. Không thêm screenshot, golden hoặc kiểm chứng bằng ảnh.
+Review `app/integration_test/`; run setup/word/question offline smoke tests on
+iOS Simulator and Android emulator when available. Explicitly record unavailable checks.
+Existing HTTP/live checks stay opt-in; UI redesign needs no backend changes.
+Do not add screenshots, goldens, or image-based verification.
 
-## 7. Rủi ro và cách giới hạn
+## 7. Risks and limits
 
-- Đổi palette trung tâm không tự sửa mọi màu inline: rà toàn bộ caller, kể cả
-  dialog, ảnh placeholder, foreground trên lime và semantics của thẻ riêng tư.
-- Nguồn không cung cấp đầy đủ pressed/error/focus: contract mobile và contrast
-  tests là căn cứ cho phần bổ sung; không tuyên bố khớp pixel với website.
-- Font chỉ có weight đến 600: tạo phân cấp bằng size/spacing; nếu sau này cần
-  font khác thì xử lý thành yêu cầu riêng sau khi có asset phù hợp.
-- Test widget không chứng minh cảm nhận thị giác trên máy thật. Ghi gap thiết bị
-  thực tế trong bàn giao; không tự bổ sung kiểm chứng bằng ảnh.
+- Central palette changes do not fix inline colors: review all callers, including
+  dialogs, image placeholders, lime foregrounds, and private-card semantics.
+- Source lacks complete pressed/error/focus states: mobile contract/contrast
+  tests justify additions; do not claim website pixel matching.
+- Font weights stop at 600: establish hierarchy through size/spacing; another font
+  requires a separate request and suitable assets.
+- Widget tests do not prove real-device visual quality. Record device gaps
+  at handoff without adding image verification automatically.
 
-## 8. Theo dõi
+## 8. Tracking
 
-| Phase | Trạng thái | Bằng chứng |
+| Phase | Status | Evidence |
 | --- | --- | --- |
-| 1. Contract/theme | Hoàn tất | Theme tests: 3 passed; contrast trên surface/alpha/gradient, focus, disabled và kích thước control |
-| 2. Components | Hoàn tất | 14 component tests passed: focus/keyboard/semantics/reduced-motion/text/keyboard layouts |
-| 3. Onboarding/setup | Hoàn tất | 54 focused tests passed; final suite không còn cảnh báo hit-test; giữ hai cột 360/375/430 |
-| 4. Editors/content | Hoàn tất | 28 tests passed: preset, word/question form, ảnh local, draft/error, keyboard và text scale 2 |
-| 5. Gameplay | Hoàn tất | Full suite pass: flow hai game, lifecycle/semantics, word images, question draft/locked và 100 người cho cả hai |
-| 6. Settings/fallback | Hoàn tất | Settings/language tests pass, retry gắn notice; dark trên light device và fallback về landing pass |
-| 7. Regression/docs | Hoàn tất, có gap môi trường | gen-l10n/analyzer/diff-check sạch; 305 passed / 12 skipped; 4 offline smoke pass mỗi nền tảng, live setup fail vì backend |
+| 1. Contract/theme | Complete | 3 theme tests passed; surface/alpha/gradient contrast, focus, disabled, control sizes |
+| 2. Components | Complete | 14 component tests passed: focus/keyboard/semantics/reduced-motion/text/keyboard layouts |
+| 3. Onboarding/setup | Complete | 54 focused tests passed; final suite has no hit-test warnings; two columns at 360/375/430 |
+| 4. Editors/content | Complete | 28 tests passed: presets, word/question forms, local images, draft/error, keyboard, text scale 2 |
+| 5. Gameplay | Complete | Full suite passed: both flows, lifecycle/semantics, word images, question draft/locked, 100 players in both |
+| 6. Settings/fallback | Complete | Settings/language tests pass; notice retry; dark on light devices and landing fallback pass |
+| 7. Regression/docs | Complete, environment gap | Clean gen-l10n/analyzer/diff-check; 305 passed / 12 skipped; 4 offline smoke tests passed per platform, live setup fails due to backend |
 
-### Baseline thực tế — 2026-11-02
+### Actual baseline — 2026-11-02
 
 - `flutter analyze --no-pub`: No issues found (2.9s).
 - `flutter test --no-pub`: 298 passed, 12 skipped (backend opt-in).
-- Working tree sạch trước triển khai. Counter demo không còn trong repo;
-  đối chiếu store/provider/router hiện có và skill, không tạo lại demo.
+- Clean working tree before implementation. Counter demo is absent;
+  follow existing stores/providers/router and skill, without recreating it.
 
-### Regression thực tế — 2026-11-02
+### Actual regression — 2026-11-02
 
-- `flutter gen-l10n`: thành công; chỉ sửa ARB, file generated do Flutter sinh.
+- `flutter gen-l10n`: successful; only ARB edited, generated files produced by Flutter.
 - `flutter analyze --no-pub`: No issues found (7.0s).
-- `flutter test --no-pub`: **305 passed, 12 skipped** (28s ở lần cuối).
-  Không có overflow/hit-test warning trong log full suite.
-- Bổ sung 7 widget cases: 5 adaptive-gutter widths 320/360/375/430/768,
-  dark trên thiết bị light + fallback navigation, question lazy/private 100 người.
-  Theme assertions kiểm tra alpha blending, gradient nội suy 11 điểm, focus,
-  disabled và control size; fixture form dùng dark ở cả hai system appearances.
-- Không thêm package, không sửa store/model, route names/arguments, backend/schema
-  hay định dạng lưu. Thêm typed `RouteInput.landing()` cho fallback đã có route.
-- Counter demo không có trong checkout hiện tại: đối chiếu provider/router hiện
-  hành; giữ lifecycle store hiện có, không tạo lại demo hay đổi state management.
-- Không screenshot/golden/image verification. Chưa thử máy vật lý hoặc
-  TalkBack/VoiceOver; widget semantics không thay thế kiểm tra screen reader thật.
+- `flutter test --no-pub`: **305 passed, 12 skipped** (28s final run).
+  No overflow/hit-test warnings in full-suite logs.
+- Added 7 widget cases: 5 adaptive-gutter widths 320/360/375/430/768,
+  dark on light devices + fallback navigation, question lazy/private 100-player case.
+  Theme assertions check alpha blending, 11-point gradient interpolation, focus,
+  disabled, control sizes; form fixtures use dark for both system appearances.
+- No packages, store/model, route names/arguments, backend/schema,
+  or storage-format changes. Added typed `RouteInput.landing()` for an existing fallback route.
+- Counter demo is absent from this checkout: follow current provider/router;
+  retain store lifecycles without recreating demos or changing state management.
+- No screenshot/golden/image verification. Physical devices and
+  TalkBack/VoiceOver remain unchecked; widget semantics do not replace actual screen-reader checks.
 
-### Simulator/emulator và bàn giao — 2026-11-02
+### Simulator/emulator and handoff — 2026-11-02
 
-Đã chạy `flutter test --no-pub integration_test -d <device>
---dart-define=APP_ENV=local` trên cả hai nền tảng, không chụp ảnh:
+Ran `flutter test --no-pub integration_test -d <device>
+--dart-define=APP_ENV=local` on both platforms without image capture:
 
-| Thiết bị | Offline question | Offline word | Setup có bước backend live |
+| Device | Offline question | Offline word | Setup with live backend step |
 | --- | --- | --- | --- |
-| iPhone 17 Pro, iOS 26.5 Simulator | 2 passed | 2 passed | 1 failed: repository loadFailed trước khi vào UI |
-| Android Sm_Phone_test, API 36 emulator | 2 passed | 2 passed | 1 failed cùng precondition |
+| iPhone 17 Pro, iOS 26.5 Simulator | 2 passed | 2 passed | 1 failed: repository loadFailed before UI |
+| Android Sm_Phone_test, API 36 emulator | 2 passed | 2 passed | 1 failed with the same precondition |
 
-- Mỗi lệnh integration tổng kết **4 passed / 1 failed**, không báo full integration
-  suite pass. Live setup thất bại ở `setup_smoke_test.dart:60`, xác nhận endpoint
-  local cấu hình trả `ConnectionRefusedError` khi kiểm tra TCP từ host. Android
-  đang dùng cấu hình loopback hiện có; chưa đổi env hay giả định host routing đã sẵn.
-- Cả hai offline suites bao gồm setup → start, khôi phục disk/cache khi offline,
-  các bước riêng tư, vote/reveal, replay và trở lại setup.
-- Không khởi động/thay backend hoặc sửa expectation để làm live setup xanh. Cần
-  backend local đang chạy, dataset có nội dung và host mapping đúng để chạy lại
-  smoke setup live; 12 HTTP/backend unit checks vẫn opt-in như baseline.
-- Sau full suite, bổ sung system-bar annotation cho landing không có AppBar;
-  chạy lại 9 onboarding tests: passed. Analyzer cuối: sạch.
-- `rtk git diff --check`: passed. README và design contract đã đồng bộ.
-- Chưa kiểm tra máy vật lý, TalkBack/VoiceOver hay cảm nhận thị giác bằng ảnh.
-  Đây là gap kiểm chứng, không phải xác nhận pixel-match với CrazyGames.
+- Each integration command reported **4 passed / 1 failed**; the full integration
+  suite did not pass. Live setup fails at `setup_smoke_test.dart:60`; host TCP checks
+  confirmed the configured local endpoint returns `ConnectionRefusedError`. Android
+  retains existing loopback settings; no environment changes or assumed host routing readiness.
+- Both offline suites include setup → start, offline disk/cache restoration,
+  private steps, vote/reveal, replay, and return to setup.
+- Did not start/change the backend or alter expectations to pass live setup. Reruns
+  need a running local backend, populated dataset, and correct host mapping;
+  12 HTTP/backend unit checks remain opt-in as in the baseline.
+- Added system-bar annotation for landing without AppBar after the full suite;
+  reran 9 onboarding tests: passed. Final analyzer: clean.
+- `rtk git diff --check`: passed. README/design contract synchronized.
+- Physical devices, TalkBack/VoiceOver, and image-based visual quality remain unchecked.
+  These are verification gaps, not proof of CrazyGames pixel matching.

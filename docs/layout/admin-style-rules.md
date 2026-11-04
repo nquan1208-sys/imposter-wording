@@ -1,50 +1,50 @@
-# Quy tắc style Admin
+# Admin Style Rules
 
-Danh sách Word Prompt là mẫu tham chiếu cho danh sách Danh mục. Khi thêm màn danh sách admin, dùng các quy tắc dưới đây và các class chung trong `admin/src/styles/admin-lists.css`.
+The Word Prompt list is the reference for the Category list. When adding admin lists, use the rules below and shared classes in `admin/src/styles/admin-lists.css`.
 
-## Token và bố cục
+## Tokens and layout
 
-- Dùng token trong `admin/src/styles/theme.css`; không chép mã màu hoặc khoảng cách sang từng màn.
-- Nền trang dùng `--color-gray-50`, chữ chính `--color-charcoal`, chữ phụ `--color-charcoal-soft`.
-- Các khối nội dung cách nhau `--space-4` (20px). Toolbar và phân trang dùng flex, căn giữa theo chiều dọc, hai đầu theo chiều ngang, gap `--space-3` (16px).
-- Toolbar đặt mô tả bên trái, nút tạo mới có icon plus bên phải. Giữ tiêu đề ở admin shell.
-- Vùng chứa bảng cần `min-width: 0`; với grid dùng `minmax(0, 1fr)` để bảng không đẩy rộng trang.
+- Use tokens from `admin/src/styles/theme.css`; do not duplicate colors or spacing in each screen.
+- Page background: `--color-gray-50`; primary text: `--color-charcoal`; secondary text: `--color-charcoal-soft`.
+- Separate content blocks by `--space-4` (20px). Toolbars and pagination use flex, vertically centered, horizontally space-between, with `--space-3` (16px) gaps.
+- Place toolbar descriptions on the left and the create button with a plus icon on the right. Keep titles in the admin shell.
+- Table containers need `min-width: 0`; grids use `minmax(0, 1fr)` so tables do not widen the page.
 
-## Bộ lọc
+## Filters
 
-- Dùng `admin-filter-grid`, không bọc thêm card. Mỗi input/select có `UFormField` với label rõ ràng và rộng 100%.
-- Desktop: 4 cột bằng nhau, gap `--space-3`. Từ 1000px trở xuống: 2 cột; từ 600px trở xuống: 1 cột.
-- Giữ tìm kiếm ở đầu, bộ lọc theo nghiệp vụ ở giữa, sắp xếp ở cuối. Giữ nguyên cách lưu bộ lọc trên URL của mỗi màn.
+- Use `admin-filter-grid` without an additional card. Each input/select has a clearly labeled `UFormField` and 100% width.
+- Desktop: 4 equal columns, gap `--space-3`. At 1000px and below: 2 columns; at 600px and below: 1 column.
+- Keep search first, business filters in the middle, and sorting last. Preserve each screen's URL filter behavior.
 
-## Bảng
+## Tables
 
-- Wrapper dùng `admin-table-scroll`: nền trắng, viền `--color-teal-border` 1px, bo `--radius-md` (12px), cuộn ngang bên trong.
-- Table dùng `admin-table`: rộng 100%, gộp viền, padding ô `--space-3`, căn trái và căn giữa theo chiều dọc.
-- Header dùng nền `--color-teal-surface`, chữ 14px, weight 600. Nội dung dùng cỡ chữ body. Các hàng ngăn bằng viền teal, hàng cuối không có viền dưới.
-- Với `UTable`, đặt class wrapper trên component, truyền `base: 'admin-table …'` và `tbody: 'tw:divide-y-0'` qua `ui`. Giữ caption, thông báo rỗng và loading của component.
-- Chiều rộng tối thiểu phụ thuộc số cột: Danh mục 1100px, Word Prompt 1240px, Question Prompts 1400px. Không ép bảng co đến mức mất nút hoặc cắt nội dung.
-- Tên/nội dung chính và tên danh mục dài được xuống dòng, có `overflow-wrap: anywhere`; giới hạn ô text ở 320px. Thông tin ngắn như ngày, trạng thái và thao tác không xuống dòng.
-- Tên có thể sửa dùng `UButton` neutral/link, padding 0, căn trái. Slug là dòng chữ phụ bên dưới. Trạng thái Danh mục tiếp tục dùng badge.
-- Question Prompts rút gọn hai câu hỏi tối đa ba dòng; mở form để đọc toàn bộ.
-- Quy tắc riêng như ảnh Word Prompt 96×96px và độ rộng từng cột nằm trong CSS của màn.
+- Use `admin-table-scroll` on the wrapper: white background, 1px `--color-teal-border`, `--radius-md` (12px) corners, internal horizontal scrolling.
+- Use `admin-table` on the table: 100% width, collapsed borders, `--space-3` cell padding, left-aligned and vertically centered.
+- Header: `--color-teal-surface` background, 14px text, weight 600. Content uses body text size. Separate rows with teal borders; omit the bottom border on the last row.
+- For `UTable`, put the wrapper class on the component and pass `base: 'admin-table …'` and `tbody: 'tw:divide-y-0'` through `ui`. Preserve component captions, empty messages, and loading states.
+- Minimum width depends on column count: Categories 1100px, Word Prompt 1240px, Question Prompts 1400px. Do not shrink tables until buttons disappear or content is clipped.
+- Wrap long primary names/content and category names with `overflow-wrap: anywhere`; limit text cells to 320px. Keep short details such as dates, statuses, and actions on one line.
+- Editable names use neutral/link `UButton`, zero padding, left alignment. Show slugs as secondary text below. Category status continues using badges.
+- Truncate each Question Prompts question to three lines; open the form to read it in full.
+- Screen-specific rules such as 96×96px Word Prompt images and individual column widths belong in the screen's CSS.
 
-## Nút và trạng thái
+## Buttons and states
 
-- Nút tạo mới dùng primary mặc định. Các thao tác trong bảng dùng neutral/outline; Xóa dùng error/outline.
-- Nhóm thao tác trong bảng nằm trên một hàng, gap `--space-1` (8px), nút không co lại. Nhóm nút ngoài bảng được phép wrap.
-- Giữ `UAlert` cho thành công/lỗi, loading và retry hiện có. Empty state dùng nội dung dịch của từng màn.
-- Giữ nguyên disabled/loading khi đang xử lý, xác nhận thao tác, nhãn truy cập và focus bàn phím; thay style không được đổi hành vi CRUD.
+- Create buttons use default primary styling. Table actions use neutral/outline; Delete uses error/outline.
+- Table action groups stay on one line with `--space-1` (8px) gaps and non-shrinking buttons. Button groups outside tables may wrap.
+- Preserve existing success/error `UAlert`, loading, and retry behavior. Empty states use each screen's translated messages.
+- Preserve disabled/loading states during processing, confirmations, accessible labels, and keyboard focus; styling changes must not alter CRUD behavior.
 
-## Responsive và kiểm tra
+## Responsive behavior and checks
 
-- Ở ≤600px, toolbar và phân trang xếp dọc; bảng vẫn cuộn ngang trong wrapper.
-- Kiểm tra desktop, tablet, mobile với tên dài, bảng rỗng, loading và hàng đủ nút thao tác. Trang không được có cuộn ngang do bảng gây ra.
-- Các quy tắc danh sách không áp dụng trực tiếp cho form hoặc dialog. Form danh mục dùng quy tắc riêng bên dưới; các form và dialog khác giữ style hiện có.
+- At ≤600px, stack toolbars and pagination; tables still scroll horizontally within their wrappers.
+- Check desktop, tablet, and mobile with long names, empty tables, loading, and rows containing every action. Tables must not cause page-level horizontal scrolling.
+- List rules do not apply directly to forms or dialogs. Category forms follow the rules below; other forms and dialogs retain their current styling.
 
-## Form tạo/sửa danh mục
+## Category create/edit form
 
-- Giữ `UCard` rộng 100%, tối đa 850px: nền `--color-white`, viền `--color-teal-border` 1px, bo `--radius-md`, không shadow hoặc ring mặc định. Padding nội dung và khoảng cách giữa các khối dùng `--space-4`.
-- Các trường ngắn nằm trong lưới 2 cột `minmax(0, 1fr)`, gap `--space-3`; ở ≤600px chuyển thành 1 cột. Mô tả chiếm toàn chiều rộng; input/select/textarea rộng 100% ô và không gây tràn ngang.
-- Label dùng `--color-charcoal`, chữ trợ giúp dùng `--color-charcoal-soft`. Giữ hiển thị lỗi validation và focus bàn phím của component.
-- Lưu dùng primary mặc định; Hủy dùng neutral/outline. Nhóm nút được wrap, gap `--space-1`.
-- Style đặt riêng trong `CategoryForm.vue` để không thay đổi các màn đang dùng chung class `category-form-*`. Giữ nguyên validation, trạng thái pending/disabled và hành vi tạo/sửa.
+- Keep `UCard` at 100% width, maximum 850px: `--color-white` background, 1px `--color-teal-border`, `--radius-md` corners, no default shadow or ring. Content padding and block spacing use `--space-4`.
+- Short fields use a 2-column `minmax(0, 1fr)` grid with `--space-3` gaps; switch to 1 column at ≤600px. Description spans the full width; input/select/textarea fill their cells without horizontal overflow.
+- Labels use `--color-charcoal`, helper text uses `--color-charcoal-soft`. Preserve component validation errors and keyboard focus.
+- Save uses default primary; Cancel uses neutral/outline. Button groups may wrap with `--space-1` gaps.
+- Scope styles to `CategoryForm.vue` so screens sharing `category-form-*` classes remain unchanged. Preserve validation, pending/disabled states, and create/edit behavior.

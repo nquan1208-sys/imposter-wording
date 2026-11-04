@@ -1,53 +1,53 @@
-# Nghiên cứu chế độ gia đình cho trò câu hỏi
+# Research: Family Mode for Question Games
 
-Ngày nghiên cứu: 03/11/2026. Cập nhật triển khai: 04/11/2026.
-Đã có dữ liệu mẫu, bộ lọc Family cho trò câu hỏi, điều khiển admin và kiểm tra tự động.
-Luật chơi giữ nguyên; đánh giá độ phù hợp và cân bằng bằng chơi thử vẫn đang chờ.
+Research date: 2026-11-03. Implementation update: 2026-11-04.
+Sample data, question Family filters, admin controls, and automated checks are implemented.
+Game rules are unchanged; suitability and balance still await playtesting.
 
-## Tham khảo và hướng chọn
+## References and chosen direction
 
-| Nguồn chính thức | Cơ chế liên quan | Áp dụng cho dự án |
+| Official source | Relevant mechanism | Application to this project |
 | --- | --- | --- |
-| [Herd Mentality — Big Potato](https://bigpotato.co.uk/blogs/how-to-play/herd-mentality) | Viết đáp án riêng, so đáp án theo số đông; nhà phát hành ghi 10+ | Dùng sở thích và tình huống quen thuộc, không đòi kiến thức chuyên môn. Không thêm tính điểm theo đa số. |
-| [Insider — Oink Games](https://oinkgames.com/en/games/analog/insider/) | Hỏi đáp, thảo luận và tìm người ẩn vai; nhà phát hành ghi 9+ | Giữ phần suy luận từ câu trả lời và thảo luận. Không thêm quản trò hay vòng đố có đáp án đúng. |
+| [Herd Mentality — Big Potato](https://bigpotato.co.uk/blogs/how-to-play/herd-mentality) | Write answers privately and compare with the majority; publisher lists ages 10+ | Use familiar preferences and situations requiring no specialist knowledge. Do not add majority scoring. |
+| [Insider — Oink Games](https://oinkgames.com/en/games/analog/insider/) | Questions, discussion, and finding a hidden role; publisher lists ages 9+ | Retain deduction from answers and discussion. Do not add a moderator or a quiz round with a correct answer. |
 
-Đề xuất riêng cho app: giữ lượt xem câu hỏi bí mật → nhập đáp án → xem câu hỏi
-chung → thảo luận → lộ vai. Thử nghiệm trước với người có thể tự đọc và nhập đáp án,
-khoảng 10 tuổi trở lên; đây là giả thuyết cần chơi thử, không phải phân loại tuổi đã xác nhận.
+App-specific proposal: keep secret question reveal → answer entry → shared question
+reveal → discussion → role reveal. Initially test with people able to read and type
+answers independently, around age 10 and up; this is a playtesting hypothesis, not a validated age rating.
 
-## Tiêu chí biên soạn
+## Authoring criteria
 
-- Mỗi câu yêu cầu một đáp án ngắn; hai câu trong cặp cùng kiểu đáp án: món ăn,
-  hoạt động, địa điểm, màu sắc hoặc đồ vật. Ví dụ: trái cây làm nước ép / làm kem.
-- Hai hoàn cảnh khác nhau nhưng có vùng đáp án giao nhau; tránh cặp quá xa khiến
-  người ẩn vai lộ ngay, hoặc gần như đồng nghĩa khiến không có manh mối.
-- Không hỏi thu nhập, tình cảm, bí mật, ngoại hình, xếp hạng thành viên hay trải
-  nghiệm bắt buộc như từng đi máy bay. Không yêu cầu biết người nổi tiếng.
-- Không chép bộ thẻ của nguồn tham khảo. 15 cặp trong seed được biên soạn mới.
-- `easy` là nhãn biên tập ban đầu; phù hợp nội dung không đồng nghĩa đã cân bằng
-  độ khó suy luận. Cần thử với nhóm có trẻ em và người lớn.
+- Each question requests a short answer; both questions in a pair require the same
+  answer type: food, activity, place, color, or object. Example: fruit for juice / ice cream.
+- Use different contexts with overlapping possible answers; avoid pairs so distant
+  that the imposter is immediately exposed, or nearly synonymous pairs offering no clues.
+- Do not ask about income, romance, secrets, appearance, member rankings, or required
+  experiences such as flying. Do not require knowledge of celebrities.
+- Do not copy reference games' card sets. The 15 seed pairs are newly authored.
+- `easy` is an initial editorial label; suitable content does not establish balanced
+  deduction difficulty. Test with groups containing children and adults.
 
-## Dữ liệu đã thêm
+## Added data
 
-| Danh mục | Slug | Số cặp |
+| Category | Slug | Pairs |
 | --- | --- | --- |
-| Gia đình · Bữa ăn vui vẻ | `family-mealtime` | 5 |
-| Gia đình · Cùng nhau mỗi ngày | `family-together` | 5 |
-| Gia đình · Tưởng tượng ngộ nghĩnh | `family-imagination` | 5 |
+| Family · Happy Mealtimes | `family-mealtime` | 5 |
+| Family · Everyday Together | `family-together` | 5 |
+| Family · Playful Imagination | `family-imagination` | 5 |
 
-Mỗi cặp và danh mục có bản Việt/Anh đã publish, dùng chung ID. Trong trò câu hỏi,
-vào Danh mục → Chế độ gia đình → Xác nhận. Không chọn riêng danh mục nghĩa là
-chơi toàn bộ danh mục được gắn cờ Family; không trộn câu hỏi ngoài bộ lọc.
-Tab Tất cả danh mục vẫn cho chơi nội dung thông thường và nội dung tự tạo.
-Cần kết nối backend local và tải mới nội dung; cache cũ thiếu cờ Family sẽ cho
-kết quả rỗng trong Family thay vì dùng nội dung chưa được duyệt.
+Each pair and category has published Vietnamese/English translations sharing one ID.
+In the question game, open Categories → Family mode → Confirm. Selecting no specific
+category plays all Family-flagged categories; questions outside the filter are excluded.
+The All categories tab still supports regular and custom content.
+Connect to the local backend and refresh content; old caches missing the Family flag
+produce empty Family results instead of using unreviewed content.
 
-Seed nằm ở `supabase/seed_family_questions.sql`, chạy trong một transaction,
-ID cố định và `ON CONFLICT ... DO NOTHING` để giữ chỉnh sửa đã có. File được khai
-báo sau `seed.sql` trong `config.toml` nên DB mới cũng nhận dữ liệu này theo
-[cơ chế seed của Supabase](https://supabase.com/docs/guides/local-development/seeding-your-database).
+The seed is in `supabase/seed_family_questions.sql`, runs in one transaction,
+and uses fixed IDs with `ON CONFLICT ... DO NOTHING` to preserve existing edits.
+It is listed after `seed.sql` in `config.toml`, so new databases also receive it through
+[Supabase seeding](https://supabase.com/docs/guides/local-development/seeding-your-database).
 
-Nạp thêm vào stack local đang chạy, không reset và không nạp lại seed khác:
+Load into the running local stack without resetting or reloading other seeds:
 
 ```bash
 rtk proxy supabase migration up --local
@@ -55,36 +55,36 @@ rtk proxy sh -c 'docker exec -i supabase_db_imposter-wording psql -U postgres -d
 rtk proxy sh -c 'docker exec -i supabase_db_imposter-wording psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/family_question_seed.sql'
 ```
 
-Kiểm tra SQL dùng role `anon`: 3 danh mục, mỗi mục 5 cặp easy, đủ bản dịch publish
-ở cả hai ngôn ngữ. Chạy lại seed không thêm trùng, không cập nhật nội dung cũ.
+SQL checks use the `anon` role: 3 categories, 5 easy pairs each, with published
+translations in both languages. Rerunning the seed neither duplicates nor updates existing content.
 
-## Bộ lọc Family đã triển khai
+## Implemented Family filtering
 
-- DB: migration `20261104082852_question_family_mode.sql` bỏ CHECK
-  `family_word_categories_only`, bật cờ cho đúng 3 ID/slug seed nêu trên nếu đã tồn tại.
-  Seed mới tạo danh mục có cờ Family; chạy lại không ghi đè chỉnh sửa đã có.
-  RPC, RLS và cấu trúc types giữ nguyên vì đã hỗ trợ cờ ở cấp danh mục.
-- Admin: form cho bật/tắt Family với cả word và question, giữ cờ khi đổi loại game;
-  danh sách và bộ lọc dùng lại cột/RPC có sẵn.
-- App: hai loại game dùng chung tab Tất cả/Family và cơ chế bản nháp → xác nhận.
-  Lọc từ danh mục đã duyệt xuyên suốt số lượng, lựa chọn và tạo phiên chơi.
-  Family được lưu và giữ khi chuyển game hoặc đổi ngôn ngữ; danh mục không còn
-  hợp lệ được bỏ khỏi lựa chọn. Không có nội dung Family thì không bắt đầu ván.
-- Câu hỏi tự tạo không được tự gắn cờ; chỉ hiện và tham gia trò chơi ở chế độ
-  Tất cả. Tab Family của câu hỏi không có nút tạo danh mục. Nội dung đã lưu vẫn còn.
-  Tuỳ chọn hiển thị ảnh ở tab Family tiếp tục dành riêng cho trò từ.
+- DB: migration `20261104082852_question_family_mode.sql` removes CHECK
+  `family_word_categories_only` and enables the flag for exactly the 3 seed IDs/slugs above if present.
+  New seeds create flagged categories; reruns do not overwrite existing edits.
+  RPCs, RLS, and type structures are unchanged because they already support category flags.
+- Admin: forms allow Family for both word and question types and preserve it when switching game type;
+  lists and filters reuse the existing column/RPC.
+- App: both game types share All/Family tabs and the draft → confirm workflow.
+  Approved categories govern counts, selections, and session creation throughout.
+  Family is saved and preserved across game/language changes; invalid categories
+  are removed from selections. Games cannot start without Family content.
+- Custom questions are not automatically flagged; they appear and participate only
+  in All mode. The question Family tab has no create-category button. Saved content remains intact.
+  The Family image option remains exclusive to word games.
 
-Migration đã áp dụng trên DB local, không reset dữ liệu. Khi triển khai môi trường
-khác, phát hành app có model mới trước khi bật cờ Family cho câu hỏi: app cũ từ chối
-snapshot có danh mục question mang cờ này. Chưa triển khai remote/production.
+The migration was applied to the local DB without resetting data. For other environments,
+release the app with the new model before enabling Family on questions: older apps reject
+snapshots containing flagged question categories. No remote/production deployment has occurred.
 
-Các kiểm tra tự động bao gồm lọc category (không tin cờ prompt cũ), cache thiếu cờ,
-VI/EN, đổi ngôn ngữ, chuyển game, lưu/khôi phục Family, danh mục rỗng, loại câu hỏi
-tự tạo, hủy bản nháp, lỗi lưu và thử lại; SQL kiểm tra quyền anon/admin và RPC.
+Automated checks cover category filtering (ignoring old prompt flags), missing cache flags,
+VI/EN, language changes, game switching, saving/restoring Family, empty categories, exclusion
+of custom questions, discarding drafts, save failures, and retries; SQL checks anon/admin permissions and RPCs.
 
-## Chơi thử còn chờ
+## Pending playtesting
 
-Cần chơi thử 15 cặp với nhóm có trẻ em và người lớn: ghi cặp khó hiểu, đáp án thường
-gặp và trường hợp người ẩn vai lộ chỉ vì kiểu đáp án. Chưa có kết quả chơi thử để
-xác nhận độ cân bằng hoặc độ tuổi phù hợp; nhãn `easy` chỉ là đánh giá biên tập.
-Không suy từ nhãn tuổi của game tham khảo rằng bộ câu hỏi đã phù hợp mọi gia đình.
+Test the 15 pairs with groups containing children and adults: record confusing pairs, common
+answers, and cases where the imposter is exposed solely by answer type. No playtest results
+currently validate balance or age suitability; `easy` remains an editorial assessment.
+Do not infer suitability for every family from the reference games' age labels.

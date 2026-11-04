@@ -1,18 +1,18 @@
-# Family Mode theo danh mục từ ngữ
+# Category-Based Family Mode for Words
 
-Hợp đồng hiện hành từ migration `20261027050239_category_family_mode.sql`.
+Current contract from migration `20261027050239_category_family_mode.sql`.
 
-Nghiên cứu mở rộng cho trò câu hỏi và dữ liệu mẫu local:
-[Chế độ gia đình cho trò câu hỏi](family-question-mode.md).
+Research on extending question games and local sample data:
+[Family Mode for Question Games](family-question-mode.md).
 
-- `game_categories.is_family_friendly`: boolean, NOT NULL, mặc định false; CHECK chỉ cho `game_type = 'word'` bật cờ. Cờ dùng chung cho mọi bản dịch.
-- Migration giữ nguyên danh mục, prompt, bản dịch và ảnh. Mọi danh mục cũ đều tắt Family để admin duyệt lại; không chuyển cờ từ prompt lên danh mục.
-- `word_prompts` và `question_prompts` không còn `is_family_friendly`.
-- Admin quản lý cờ, cột và bộ lọc Family ở danh mục. Prompt và dashboard không còn trường/bộ lọc/cảnh báo Family.
+- `game_categories.is_family_friendly`: boolean, NOT NULL, default false; CHECK permits the flag only for `game_type = 'word'`. The flag is shared across translations.
+- The migration preserves categories, prompts, translations, and images. Family is disabled on all existing categories for admin review; prompt flags are not transferred to categories.
+- `word_prompts` and `question_prompts` no longer have `is_family_friendly`.
+- Admin manages the Family flag, column, and filter on categories. Prompts and the dashboard no longer have Family fields/filters/warnings.
 
 ## RPC
 
-Giữ tên RPC, thay chữ ký; không giữ overload cũ:
+Keep RPC names, change signatures; do not retain old overloads:
 
 ```sql
 save_category(p_id uuid, p_game_type game_type, p_slug text,
@@ -38,23 +38,23 @@ admin_list_question_prompts(p_locale text, p_search text, p_category_id uuid,
   p_difficulty difficulty_level, p_status content_status, p_sort text, p_page integer)
 ```
 
-Bộ lọc nullable nghĩa là tất cả. Giữ phân trang 20 dòng, kiểm tra admin đang hoạt động, khóa giao dịch, bản dịch độc lập và `PT409` khi phiên bản gốc đã thay đổi. RPC quản trị chỉ cấp EXECUTE cho authenticated và vẫn kiểm tra quyền admin trong hàm.
+Nullable filters mean all. Preserve 20-row pagination, active-admin checks, transaction locks, independent translations, and `PT409` when the base version changes. Admin RPCs grant EXECUTE only to authenticated users and still check admin permissions internally.
 
 ## App
 
-Màn danh mục từ ngữ có hai tab: **Tất cả danh mục** (gồm cả gia đình) và **Chế độ gia đình** (chỉ danh mục bật cờ và có từ hợp lệ). Family lấy toàn bộ từ hợp lệ trong danh mục, không lọc độ khó hay cờ prompt. Số lượng trên thẻ dùng cùng quy tắc.
+The word category screen has two tabs: **All categories** (including Family) and **Family mode** (only flagged categories with valid words). Family includes all valid words in a category without difficulty or prompt-flag filtering. Card counts use the same rule.
 
-Tab, danh mục và **Hiển thị ảnh** là bản nháp, ghi chung một lần khi **Xác nhận**. Quay lại hủy bản nháp; lỗi ghi giữ nguyên cấu hình cũ và màn chọn để thử lại. Đổi tab loại danh mục không hợp lệ và thông báo; không chọn mục cụ thể nghĩa là tất cả trong tab. Tab gia đình rỗng có thông báo, không bắt đầu ván khi không có từ.
+Tab, categories, and **Show images** are draft selections saved together on **Confirm**. Going back discards the draft; write errors preserve the previous settings and selection screen for retry. Switching tabs removes invalid categories and notifies the user; no specific selection means all categories in the tab. An empty Family tab shows a message and cannot start a game without words.
 
-Nhớ lựa chọn ảnh nhưng chỉ hiển thị khi chơi từ ngữ ở chế độ gia đình. Trò câu hỏi không có tab Family hay lọc Family; chuyển sang câu hỏi hoặc khôi phục cấu hình câu hỏi cũ đưa mode về thường. Cache cũ thiếu cờ danh mục mặc định false, bỏ qua cờ prompt cũ và vẫn chơi offline ở tab tất cả.
+Remember the image preference but display images only in Family word games. Question games have no Family tab or filter; switching to questions or restoring old question settings resets the mode to normal. Old caches without category flags default to false, ignore old prompt flags, and remain playable offline in the All tab.
 
-## Áp dụng local và xác minh
+## Local application and verification
 
-1. Sao lưu toàn bộ DB trước khi chạy migration bằng `pg_dump -Fc`; lưu bản sao bên ngoài Git.
-2. Chạy `supabase migration up --local`, không reset. Sinh types bằng `cd admin && yarn types:database`.
-3. Chạy `python3 supabase/tests/content_translations.py`: diễn tập trên DB sao chép dùng một lần, kiểm tra backfill, dữ liệu, SQL và cạnh tranh khóa.
-4. Chạy `supabase db lint --local` và `supabase db advisors --local --type security`.
-5. Admin: `yarn test`, `yarn build:local` (gồm typecheck). App: `flutter analyze`, `flutter test`.
-6. Chạy các kiểm tra HTTP theo `postman/simulations/phase-7.context.md` khi cần xác minh Supabase client qua mock HTTP.
+1. Back up the entire DB with `pg_dump -Fc` before migration; store the backup outside Git.
+2. Run `supabase migration up --local` without resetting. Generate types with `cd admin && yarn types:database`.
+3. Run `python3 supabase/tests/content_translations.py`: rehearse on a disposable database copy, checking backfill, data, SQL, and lock contention.
+4. Run `supabase db lint --local` and `supabase db advisors --local --type security`.
+5. Admin: `yarn test`, `yarn build:local` (includes typecheck). App: `flutter analyze`, `flutter test`.
+6. Run HTTP checks from `postman/simulations/phase-7.context.md` when verifying the Supabase client through mock HTTP.
 
-Chỉ áp dụng local trong thay đổi này. Cloud cần triển khai DB, admin và app cùng hợp đồng: client cũ sẽ lỗi vì cột và chữ ký RPC cũ đã bị xóa. Tab gia đình rỗng cho tới khi admin bật danh mục.
+This change is local only. Cloud deployment must align DB, admin, and app contracts: old clients fail because old columns and RPC signatures were removed. The Family tab stays empty until an admin enables categories.
