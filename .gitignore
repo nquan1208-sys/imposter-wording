@@ -10,3 +10,10 @@
 /ios/Flutter/ephemeral/
 /ios/Runner/GeneratedPluginRegistrant.[hm]
 /lib/l10n/gen_l10n/
+
+# Keep machine-specific environment values out of Git.
+.env
+.env.*
+!.env.example
+!.env.*.example
+!/admin/.env.production

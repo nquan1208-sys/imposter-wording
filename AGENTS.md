@@ -1,6 +1,8 @@
 # Project instructions
 
-@/Users/nguyenhongquan/.codex/RTK.md
+## Shell commands
+
+- Always prefix shell commands with `rtk`. Use `rtk proxy <command>` when raw output is needed.
 
 ## Planning and verification
 

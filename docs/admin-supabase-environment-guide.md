@@ -66,7 +66,7 @@ correct Data API permissions.
 Open the first terminal at the repository root:
 
 ```bash
-cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
+cd /path/to/imposter-wording
 supabase start
 ```
 
@@ -81,7 +81,7 @@ If `API URL: http://127.0.0.1:54321` appears, the local stack is running.
 Open a second terminal:
 
 ```bash
-cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording/admin
+cd /path/to/imposter-wording/admin
 yarn dev:local
 ```
 
@@ -106,7 +106,7 @@ supabase start
 No `supabase start` is needed. Simply run:
 
 ```bash
-cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording/admin
+cd /path/to/imposter-wording/admin
 yarn dev:development
 ```
 
@@ -117,7 +117,7 @@ Admin uses `admin/.env.development.local` to connect to the Dev cloud project.
 Run once per machine:
 
 ```bash
-cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
+cd /path/to/imposter-wording
 
 supabase login
 supabase link --project-ref pxycsjwjakzehcuygngv
@@ -145,7 +145,7 @@ the login screen, or `admin/.env.development.local`. Check those changes
 with:
 
 ```bash
-cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording/admin
+cd /path/to/imposter-wording/admin
 yarn dev:development
 ```
 
@@ -156,7 +156,7 @@ For translation migrations, push only during the [Phase 6](./plans/admin-content
 After each meaningful database change tested locally:
 
 ```bash
-cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
+cd /path/to/imposter-wording
 
 # Test on a copy, preserving the local DB
 rtk proxy python3 supabase/tests/content_translations.py
@@ -194,7 +194,7 @@ when you want to update the Dev database.
 After creating migration files in `supabase/migrations/`, check first:
 
 ```bash
-cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
+cd /path/to/imposter-wording
 supabase db push --linked --dry-run
 ```
 
@@ -257,7 +257,7 @@ yarn preview
 ### Working locally
 
 ```bash
-cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
+cd /path/to/imposter-wording
 supabase status
 supabase start                 # only if the stack is not already running
 
@@ -268,14 +268,14 @@ yarn dev:local
 ### Working with Dev cloud
 
 ```bash
-cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording/admin
+cd /path/to/imposter-wording/admin
 yarn dev:development
 ```
 
 ### After changing database schema
 
 ```bash
-cd /Users/nguyenhongquan/Documents/PERSONAL_PROJECT/imposter-wording
+cd /path/to/imposter-wording
 supabase db push --linked --dry-run
 supabase db push --linked
 ```
