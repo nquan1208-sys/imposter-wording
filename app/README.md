@@ -1,4 +1,4 @@
-# EscapeCall Mobile
+# OddCue Mobile
 
 Flutter mobile app with Signals state management, Riverpod DI, a CrazyGames-inspired dark theme (`lib/theme`) and VI/EN localization (default VI).
 
